@@ -302,6 +302,10 @@ EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSe
         src->mode_decision_configuration_process_init_count;
     dst->enc_dec_process_init_count        = src->enc_dec_process_init_count;
     dst->entropy_coding_process_init_count = src->entropy_coding_process_init_count;
+#if NEW_THREAD
+    dst->stat_fifo_init_count              = src->stat_fifo_init_count;
+    dst->stat_process_init_count           = src->stat_process_init_count;
+#endif
     dst->total_process_init_count          = src->total_process_init_count;
     dst->left_padding                      = src->left_padding;
     dst->right_padding                     = src->right_padding;

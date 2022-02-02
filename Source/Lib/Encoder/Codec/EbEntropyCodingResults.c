@@ -30,3 +30,22 @@ EbErrorType entropy_coding_results_creator(EbPtr *object_dbl_ptr, EbPtr object_i
 
     return EB_ErrorNone;
 }
+
+#if NEW_SRM
+EbErrorType stat_results_ctor(StatResults *context_ptr,
+    EbPtr                 object_init_data_ptr) {
+    (void)context_ptr;
+    (void)object_init_data_ptr;
+
+    return EB_ErrorNone;
+}
+EbErrorType stat_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
+    StatResults *obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, stat_results_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
+}
+#endif

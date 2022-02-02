@@ -30,11 +30,30 @@ typedef struct EntropyCodingResultsInitData {
     uint32_t junk;
 } EntropyCodingResultsInitData;
 
+
+#if NEW_SRM
+typedef struct StatResults {
+    EbDctor          dctor;
+    EbObjectWrapper *pcs_wrapper_ptr;
+} StatResults;
+
+typedef struct statResultsInitData {
+    uint32_t junk;
+} StatResultsInitData;
+#endif
+
+
+
 /**************************************
      * Extern Function Declarations
      **************************************/
 extern EbErrorType entropy_coding_results_creator(EbPtr *object_dbl_ptr,
                                                   EbPtr  object_init_data_ptr);
+
+#if NEW_SRM
+extern EbErrorType stat_results_creator(EbPtr *object_dbl_ptr,
+    EbPtr  object_init_data_ptr);
+#endif
 
 #ifdef __cplusplus
 }

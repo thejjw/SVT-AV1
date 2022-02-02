@@ -68,6 +68,15 @@ typedef struct EntropyCodingContext {
     TOKENEXTRA *tok;
 } EntropyCodingContext;
 
+#if NEW_THREAD
+typedef struct StatContext {
+    EbDctor  dctor;
+    EbFifo  *input_fifo_ptr;  // from entropy
+    EbFifo  *output_fifo_ptr; // to   packetization      
+} StatContext;
+#endif
+
+
 /**************************************
  * Extern Function Declarations
  **************************************/
@@ -76,5 +85,11 @@ extern EbErrorType entropy_coding_context_ctor(EbThreadContext *  thread_context
                                                int rate_control_index);
 
 extern void *entropy_coding_kernel(void *input_ptr);
+
+#if NEW_THREAD
+extern EbErrorType stat_context_ctor(EbThreadContext *  thread_context_ptr,
+    const EbEncHandle *enc_handle_ptr, int32_t index);
+extern void *stat_kernel(void *input_ptr);
+#endif
 
 #endif // EbEntropyCodingProcess_h

@@ -87,8 +87,15 @@ EbErrorType packetization_context_ctor(EbThreadContext *  thread_context_ptr,
     thread_context_ptr->dctor = packetization_context_dctor;
 
         context_ptr->dctor                         = packetization_context_dctor;
+
+#if NEW_SRM
+        //Let PKT get its input FIFO from Stat Process
+        context_ptr->entropy_coding_input_fifo_ptr = svt_system_resource_get_consumer_fifo(
+            enc_handle_ptr->stat_results_resource_ptr, 0);
+#else
         context_ptr->entropy_coding_input_fifo_ptr = svt_system_resource_get_consumer_fifo(
             enc_handle_ptr->entropy_coding_results_resource_ptr, 0);
+#endif
         context_ptr->rate_control_tasks_output_fifo_ptr = svt_system_resource_get_producer_fifo(
             enc_handle_ptr->rate_control_tasks_resource_ptr, rate_control_index);
         context_ptr->picture_demux_fifo_ptr = svt_system_resource_get_producer_fifo(

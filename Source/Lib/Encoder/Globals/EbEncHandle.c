@@ -748,6 +748,9 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->mode_decision_configuration_fifo_init_count = 300 * (MIN(9, 1<<scs_ptr->static_config.tile_rows));
     scs_ptr->motion_estimation_fifo_init_count           = 300;
     scs_ptr->entropy_coding_fifo_init_count              = 300;
+#if NEW_SRM
+    scs_ptr->stat_fifo_init_count                        = 300;
+#endif
     scs_ptr->enc_dec_fifo_init_count                     = 300;
     scs_ptr->dlf_fifo_init_count                         = 300;
     scs_ptr->cdef_fifo_init_count                        = 300;
@@ -840,6 +843,12 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->total_process_init_count += (scs_ptr->cdef_process_init_count                        = clamp(max_cdef_proc, 1, max_cdef_proc));
         scs_ptr->total_process_init_count += (scs_ptr->rest_process_init_count                        = clamp(max_rest_proc, 1, max_rest_proc));
     }
+
+
+#if NEW_THREAD
+    scs_ptr->total_process_init_count += (scs_ptr->stat_process_init_count = 1);
+#endif
+
 
     scs_ptr->total_process_init_count += 6; // single processes count
     if (scs_ptr->static_config.pass == 0 || scs_ptr->static_config.pass == 3){
@@ -1030,7 +1039,10 @@ static void svt_enc_handle_stop_threads(EbEncHandle *enc_handle_ptr)
 
     // Entropy Coding Process
     EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->entropy_coding_thread_handle_array, control_set_ptr->entropy_coding_process_init_count);
-
+#if NEW_THREAD
+    // Stat Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->stat_thread_handle_array, control_set_ptr->stat_process_init_count);
+#endif
     // Packetization
     EB_DESTROY_THREAD(enc_handle_ptr->packetization_thread_handle);
 }
@@ -1083,6 +1095,9 @@ static void svt_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->cdef_results_resource_ptr);
     EB_DELETE(enc_handle_ptr->rest_results_resource_ptr);
     EB_DELETE(enc_handle_ptr->entropy_coding_results_resource_ptr);
+#if NEW_SRM
+    EB_DELETE(enc_handle_ptr->stat_results_resource_ptr);
+#endif
 
     EB_DELETE(enc_handle_ptr->resource_coordination_context_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->scs_instance_array[0]->scs_ptr->picture_analysis_process_init_count);
@@ -2021,10 +2036,23 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             NULL);
     }
 
+
+
+
     // Entropy Coding Results
     {
         EntropyCodingResultsInitData entropy_coding_results_init_data;
-
+#if NEW_SRM
+        EB_NEW(
+            enc_handle_ptr->entropy_coding_results_resource_ptr,
+            svt_system_resource_ctor,
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->entropy_coding_fifo_init_count,
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->entropy_coding_process_init_count,
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->stat_process_init_count, // <---------------------
+            entropy_coding_results_creator,
+            &entropy_coding_results_init_data,
+            NULL);
+#else
         EB_NEW(
             enc_handle_ptr->entropy_coding_results_resource_ptr,
             svt_system_resource_ctor,
@@ -2034,8 +2062,25 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             entropy_coding_results_creator,
             &entropy_coding_results_init_data,
             NULL);
+#endif
     }
 
+#if NEW_SRM
+    // Stat Results
+    {
+        StatResultsInitData stat_results_init_data;
+
+        EB_NEW(
+            enc_handle_ptr->stat_results_resource_ptr,
+            svt_system_resource_ctor,
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->stat_fifo_init_count,
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->stat_process_init_count,
+            EB_PacketizationProcessInitCount,
+            stat_results_creator,
+            &stat_results_init_data,
+            NULL);
+    }
+#endif
 
     /************************************
     * App Callbacks
@@ -2215,6 +2260,21 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
                 rate_control_port_lookup(RATE_CONTROL_INPUT_PORT_ENTROPY_CODING, process_index));
         }
 
+
+#if NEW_THREAD
+        // Stat Contexts
+        EB_ALLOC_PTR_ARRAY(enc_handle_ptr->stat_context_ptr_array, enc_handle_ptr->scs_instance_array[0]->scs_ptr->stat_process_init_count);
+
+        for (process_index = 0; process_index < enc_handle_ptr->scs_instance_array[0]->scs_ptr->stat_process_init_count; ++process_index) {
+            EB_NEW(
+                enc_handle_ptr->stat_context_ptr_array[process_index],
+                stat_context_ctor,
+                enc_handle_ptr,
+                process_index);
+        }
+#endif
+
+
     // Packetization Context
     EB_NEW(
         enc_handle_ptr->packetization_context_ptr,
@@ -2294,6 +2354,13 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             entropy_coding_kernel,
             enc_handle_ptr->entropy_coding_context_ptr_array);
 
+#if NEW_THREAD
+        // Stat collection Process
+        EB_CREATE_THREAD_ARRAY(enc_handle_ptr->stat_thread_handle_array, control_set_ptr->stat_process_init_count,
+            stat_kernel,
+            enc_handle_ptr->stat_context_ptr_array);
+#endif
+
     // Packetization
     EB_CREATE_THREAD(enc_handle_ptr->packetization_thread_handle, packetization_kernel, enc_handle_ptr->packetization_context_ptr);
 
@@ -2325,6 +2392,9 @@ EB_API EbErrorType svt_av1_enc_deinit(EbComponentType *svt_enc_component){
         svt_shutdown_process(handle->enc_dec_tasks_resource_ptr);
         svt_shutdown_process(handle->enc_dec_results_resource_ptr);
         svt_shutdown_process(handle->entropy_coding_results_resource_ptr);
+#if NEW_SRM
+        svt_shutdown_process(handle->stat_results_resource_ptr);
+#endif
         svt_shutdown_process(handle->dlf_results_resource_ptr);
         svt_shutdown_process(handle->cdef_results_resource_ptr);
         svt_shutdown_process(handle->rest_results_resource_ptr);

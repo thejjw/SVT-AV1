@@ -74,6 +74,9 @@ struct _EbEncHandle {
     EbHandle *mode_decision_configuration_thread_handle_array;
     EbHandle *enc_dec_thread_handle_array;
     EbHandle *entropy_coding_thread_handle_array;
+#if NEW_THREAD
+    EbHandle *stat_thread_handle_array;
+#endif
     EbHandle *dlf_thread_handle_array;
     EbHandle *cdef_thread_handle_array;
     EbHandle *rest_thread_handle_array;
@@ -93,6 +96,9 @@ struct _EbEncHandle {
     EbThreadContext **mode_decision_configuration_context_ptr_array;
     EbThreadContext **enc_dec_context_ptr_array;
     EbThreadContext **entropy_coding_context_ptr_array;
+#if NEW_THREAD
+    EbThreadContext **stat_context_ptr_array;
+#endif
     EbThreadContext **dlf_context_ptr_array;
     EbThreadContext **cdef_context_ptr_array;
     EbThreadContext **rest_context_ptr_array;
@@ -117,6 +123,9 @@ struct _EbEncHandle {
     EbSystemResource * enc_dec_tasks_resource_ptr;
     EbSystemResource * enc_dec_results_resource_ptr;
     EbSystemResource * entropy_coding_results_resource_ptr;
+#if NEW_SRM
+    EbSystemResource * stat_results_resource_ptr;
+#endif
     EbSystemResource * dlf_results_resource_ptr;
     EbSystemResource * cdef_results_resource_ptr;
     EbSystemResource * rest_results_resource_ptr;

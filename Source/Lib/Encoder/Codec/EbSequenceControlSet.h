@@ -220,6 +220,9 @@ typedef struct SequenceControlSet {
     uint32_t mode_decision_configuration_fifo_init_count;
     uint32_t enc_dec_fifo_init_count;
     uint32_t entropy_coding_fifo_init_count;
+#if NEW_SRM
+    uint32_t stat_fifo_init_count;
+#endif
     uint32_t dlf_fifo_init_count;
     uint32_t cdef_fifo_init_count;
     uint32_t rest_fifo_init_count;
@@ -231,6 +234,9 @@ typedef struct SequenceControlSet {
     uint32_t         mode_decision_configuration_process_init_count;
     uint32_t         enc_dec_process_init_count;
     uint32_t         entropy_coding_process_init_count;
+#if NEW_THREAD
+    uint32_t         stat_process_init_count;
+#endif
     uint32_t         dlf_process_init_count;
     uint32_t         cdef_process_init_count;
     uint32_t         rest_process_init_count;

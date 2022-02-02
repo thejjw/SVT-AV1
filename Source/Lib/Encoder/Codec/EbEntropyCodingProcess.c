@@ -371,3 +371,70 @@ void *entropy_coding_kernel(void *input_ptr) {
 
     return NULL;
 }
+
+#if NEW_THREAD
+/******************************************************
+ * Stat  Context Constructor
+ ******************************************************/
+
+EbErrorType stat_context_ctor(EbThreadContext *thread_context_ptr,
+    const EbEncHandle *enc_handle_ptr, int32_t index)
+{
+    StatContext *context_ptr;
+    EB_CALLOC_ARRAY(context_ptr, 1);
+    thread_context_ptr->priv = context_ptr;
+    thread_context_ptr->dctor = rest_context_dctor;
+
+    // Input/Output System Resource Manager FIFOs
+    context_ptr->input_fifo_ptr = svt_system_resource_get_consumer_fifo(
+        enc_handle_ptr->entropy_coding_results_resource_ptr, index);
+
+    context_ptr->output_fifo_ptr = svt_system_resource_get_producer_fifo(
+        enc_handle_ptr->stat_results_resource_ptr, index);
+    
+
+    return EB_ErrorNone;
+}
+/**********************************
+   Stat collection thread
+***********************************/
+void *stat_kernel(void *input_ptr) {
+    // Context & SCS & PCS
+    EbThreadContext *     thread_context_ptr = (EbThreadContext *)input_ptr;
+    StatContext *context_ptr = (StatContext *)thread_context_ptr->priv;
+
+    // Input
+    EbObjectWrapper *in_results_wrapper_ptr;
+
+    // Output
+    EbObjectWrapper *     out_results_wrapper_ptr;
+    StatResults *stat_results_ptr;
+
+    for (;;) {
+        // Get Full Input Results
+        EB_GET_FULL_OBJECT(context_ptr->input_fifo_ptr, &in_results_wrapper_ptr);
+        EntropyCodingResults *in_results_ptr = (EntropyCodingResults *)in_results_wrapper_ptr->object_ptr;
+        PictureControlSet *pcs_ptr = (PictureControlSet *)in_results_ptr->pcs_wrapper_ptr->object_ptr;
+       
+        printf("[Stat] input pic : %lld \n", pcs_ptr->picture_number);
+     
+        // Get Empty Output Results
+        svt_get_empty_object(context_ptr->output_fifo_ptr, &out_results_wrapper_ptr);
+        stat_results_ptr = (StatResults *)out_results_wrapper_ptr->object_ptr;
+        stat_results_ptr->pcs_wrapper_ptr = in_results_ptr->pcs_wrapper_ptr;
+
+
+        printf("              [Stat] out pic : %lld \n", pcs_ptr->picture_number);
+        // Post EntropyCoding Results
+        svt_post_full_object(out_results_wrapper_ptr);
+      
+
+
+        // Release Input Results
+        svt_release_object(in_results_wrapper_ptr);
+    }
+
+    return NULL;
+}
+
+#endif
