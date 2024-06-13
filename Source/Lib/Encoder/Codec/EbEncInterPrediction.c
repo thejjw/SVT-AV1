@@ -2459,7 +2459,8 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
         // If dual filter is disabled, only test combos that use the same horizontal and vertical filter
         if (enable_dual_filter == 0 && (filter_sets[i][0] != filter_sets[i][1]))
             continue;
-
+        if (scs->static_config.fast_decode == 3 && (filter_sets[i][0] == 2 || filter_sets[i][1] == 2))
+            continue;
         cand_bf->cand->interp_filters = av1_make_interp_filters((InterpFilter)filter_sets[i][0],
                                                                 (InterpFilter)filter_sets[i][1]);
 
