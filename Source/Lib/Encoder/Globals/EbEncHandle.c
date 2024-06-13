@@ -4197,7 +4197,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     else
         scs->enable_dg = scs->static_config.enable_dg;
 
-#if OPT_FAST_DECODE_LVLS
+#if 0//OPT_FAST_DECODE_LVLS
     // Multi fast-decode levels only supported for M7
     if (scs->static_config.fast_decode != 0 && scs->static_config.enc_mode != ENC_M7)
         scs->static_config.fast_decode = 1;
