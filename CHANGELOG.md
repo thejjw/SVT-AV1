@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.0-rc1] - 2024-09-24
+
+API updates
+- svt_av1_enc_get_packet API is now a blocking call for low-delay enforcing a picture in, picture out model
+- --fast-decode range changed from 0-1 to 0-2
+
+Encoder
+- NEW FAST DECODE MODE - (!2280)
+-  New fast-decode (2) to allow for an average AV1 software cycle reduction of 25-50% vs fast-decode 0 with a 1-3% BD-Rate loss across the presets
+-  Improved fast-decode (1) option to increase its AV1 software cycle reduction by ~10% while maintaining the same quality levels
+- Further ARM-based optimizations improving the efficiency of previously written ARM-neon implementations by an average of 30%
+- Address speed regressions for 4k first pass encode by tuning the threading parameters
+
+Cleanup Build and bug fixes and documentation
+- Improved the unit test coverage for ARM-neon code
+- Updated documentation
+
+
 ## [2.2.0] - 2024-08-19
 
 API updates
