@@ -34,6 +34,7 @@
 #include <limits.h>
 #include "pack_unpack_c.h"
 #include "pic_operators.h"
+#include "ac_bias.h"
 
 #undef _MM_HINT_T2
 #define _MM_HINT_T2 1
@@ -4007,12 +4008,14 @@ static uint32_t filt_unfilt_dist(
 
     uint32_t pic_width_in_b64 = (ppcs->aligned_width + ppcs->scs->b64_size - 1) / ppcs->scs->b64_size;
     uint32_t pic_height_in_b64 = (ppcs->aligned_height + ppcs->scs->b64_size - 1) / ppcs->scs->b64_size;
+    const double           effective_ac_bias = get_effective_ac_bias(
+        ppcs->scs->static_config.ac_bias, ppcs->slice_type == I_SLICE, ppcs->temporal_layer_index);
 
     EbSpatialFullDistType spatial_full_dist_type_fun = is_highbd
         ? svt_full_distortion_kernel16_bits
         : svt_spatial_full_distortion_kernel;
 
-    uint32_t dist = 0;
+    uint64_t dist = 0;
     for (uint32_t y_b64_idx = 0; y_b64_idx < pic_height_in_b64; ++y_b64_idx) {
         for (uint32_t x_b64_idx = 0; x_b64_idx < pic_width_in_b64; ++x_b64_idx) {
 
@@ -4021,8 +4024,7 @@ static uint32_t filt_unfilt_dist(
 
             uint32_t buffer_index = b64_origin_y * stride_y + b64_origin_x;
 
-
-            dist += (uint32_t)(spatial_full_dist_type_fun(
+            dist += spatial_full_dist_type_fun(
                 filt,
                 buffer_index,
                 stride_y,
@@ -4030,7 +4032,20 @@ static uint32_t filt_unfilt_dist(
                 buffer_index,
                 stride_y,
                 ppcs->scs->b64_size,
-                ppcs->scs->b64_size));
+                ppcs->scs->b64_size);
+            if (effective_ac_bias > 0.0) {
+                dist += get_svt_psy_full_dist(
+                    filt,
+                    buffer_index,
+                    stride_y,
+                    unfil,
+                    buffer_index,
+                    stride_y,
+                    ppcs->scs->b64_size,
+                    ppcs->scs->b64_size,
+                    (uint8_t)is_highbd,
+                    effective_ac_bias);
+            }
 
         }
     }
