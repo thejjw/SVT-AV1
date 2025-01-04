@@ -2667,9 +2667,17 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
 
     // Resource Coordination
     EB_CREATE_THREAD(enc_handle_ptr->resource_coordination_thread_handle, svt_aom_resource_coordination_kernel, enc_handle_ptr->resource_coordination_context_ptr);
-    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,control_set_ptr->picture_analysis_process_init_count,
-        svt_aom_picture_analysis_kernel,
-        enc_handle_ptr->picture_analysis_context_ptr_array);
+
+    // Check if scene detection is enabled. Use seperate kernel to avoid feature checks every picture.
+    if (config_ptr->level_of_parallelism != 1 && config_ptr->screen_content_mode == 2 && control_set_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE) {
+        EB_CREATE_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,control_set_ptr->picture_analysis_process_init_count,
+            svt_aom_picture_analysis_kernel_sc_detect,
+            enc_handle_ptr->picture_analysis_context_ptr_array);
+    } else {
+        EB_CREATE_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,control_set_ptr->picture_analysis_process_init_count,
+            svt_aom_picture_analysis_kernel,
+            enc_handle_ptr->picture_analysis_context_ptr_array);
+    }
 
     // Picture Decision
     EB_CREATE_THREAD(enc_handle_ptr->picture_decision_thread_handle, svt_aom_picture_decision_kernel, enc_handle_ptr->picture_decision_context_ptr);
