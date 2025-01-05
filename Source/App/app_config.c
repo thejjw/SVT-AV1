@@ -2058,97 +2058,98 @@ uint32_t get_color_help(int32_t argc, char *const argv[]) {
     printf("This command line flag reproduces information provided by Appendix A.2 of the SVT-AV1 User Guide.\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf("The available options for --color-primaries are:\n\n");
+    printf(
+        "The available options for --color-primaries are:\n\n"
 #else
     printf(
         "The available options for \x1b[32m--color-primaries\x1b[0m are:\n\n"
 #endif
-           "\t1: bt709, BT.709\n"
-           "\t2: unspecified, default\n"
-           "\t4: bt470m, BT.470 System M (historical)\n"
-           "\t5: bt470bg, BT.470 System B, G (historical)\n"
-           "\t6: bt601, BT.601\n"
-           "\t7: smpte240, SMPTE 240\n"
-           "\t8: film, Generic film (color filters using illuminant C)\n"
-           "\t9: bt2020, BT.2020, BT.2100\n"
-           "\t10: xyz, SMPTE 428 (CIE 1921 XYZ)\n"
-           "\t11: smpte431, SMPTE RP 431-2\n"
-           "\t12: smpte432, SMPTE EG 432-1\n"
-           "\t22: ebu3213, EBU Tech. 3213-E\n\n");
+        "\t1: bt709, BT.709\n"
+        "\t2: unspecified, default\n"
+        "\t4: bt470m, BT.470 System M (historical)\n"
+        "\t5: bt470bg, BT.470 System B, G (historical)\n"
+        "\t6: bt601, BT.601\n"
+        "\t7: smpte240, SMPTE 240\n"
+        "\t8: film, Generic film (color filters using illuminant C)\n"
+        "\t9: bt2020, BT.2020, BT.2100\n"
+        "\t10: xyz, SMPTE 428 (CIE 1921 XYZ)\n"
+        "\t11: smpte431, SMPTE RP 431-2\n"
+        "\t12: smpte432, SMPTE EG 432-1\n"
+        "\t22: ebu3213, EBU Tech. 3213-E\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The available options for --transfer-characteristics are:\n\n"
+    printf(
+        "The available options for --transfer-characteristics are:\n\n"
 #else
     printf(
         "The available options for \x1b[32m--transfer-characteristics\x1b[0m are:\n\n"
 #endif
-               "\t1: bt709, BT.709\n"
-               "\t2: unspecified, default\n"
-               "\t4: bt470m, BT.470 System M (historical)\n"
-               "\t5: bt470bg, BT.470 System B, G (historical)\n"
-               "\t6: bt601, BT.601\n"
-               "\t7: smpte240, SMPTE 240 M\n"
-               "\t8: linear, Linear\n"
-               "\t9: log100, Logarithmic (100 : 1 range)\n"
-               "\t10: log100-sqrt10, Logarithmic (100 * Sqrt(10) : 1 range)\n"
-               "\t11: iec61966, IEC 61966-2-4\n"
-               "\t12: bt1361, BT.1361\n"
-               "\t13: srgb, sRGB or sYCC\n"
-               "\t14: bt2020-10, BT.2020 10-bit systems\n"
-               "\t15: bt2020-12, BT.2020 12-bit systems\n"
-               "\t16: smpte2084, SMPTE ST 2084, ITU BT.2100 PQ\n"
-               "\t17: smpte428, SMPTE ST 428\n"
-               "\t18: hlg, BT.2100 HLG, ARIB STD-B67\n\n");
+        "\t1: bt709, BT.709\n"
+        "\t2: unspecified, default\n"
+        "\t4: bt470m, BT.470 System M (historical)\n"
+        "\t5: bt470bg, BT.470 System B, G (historical)\n"
+        "\t6: bt601, BT.601\n"
+        "\t7: smpte240, SMPTE 240 M\n"
+        "\t8: linear, Linear\n"
+        "\t9: log100, Logarithmic (100 : 1 range)\n"
+        "\t10: log100-sqrt10, Logarithmic (100 * Sqrt(10) : 1 range)\n"
+        "\t11: iec61966, IEC 61966-2-4\n"
+        "\t12: bt1361, BT.1361\n"
+        "\t13: srgb, sRGB or sYCC\n"
+        "\t14: bt2020-10, BT.2020 10-bit systems\n"
+        "\t15: bt2020-12, BT.2020 12-bit systems\n"
+        "\t16: smpte2084, SMPTE ST 2084, ITU BT.2100 PQ\n"
+        "\t17: smpte428, SMPTE ST 428\n"
+        "\t18: hlg, BT.2100 HLG, ARIB STD-B67\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The available options for --matrix-coefficients are:\n\n"
+    printf(
+        "The available options for --matrix-coefficients are:\n\n"
 #else
     printf(
         "The available options for \x1b[32m--matrix-coefficients\x1b[0m are:\n\n"
 #endif
-               "\t0: identity, Identity matrix\n"
-               "\t1: bt709, BT.709\n"
-               "\t2: unspecified, default\n"
-               "\t4: fcc, US FCC 73.628\n"
-               "\t5: bt470bg, BT.470 System B, G (historical)\n"
-               "\t6: bt601, BT.601\n"
-               "\t7: smpte240, SMPTE 240 M\n"
-               "\t8: ycgco, YCgCo\n"
-               "\t9: bt2020-ncl, BT.2020 non-constant luminance, BT.2100 YCbCr\n"
-               "\t10: bt2020-cl, BT.2020 constant luminance\n"
-               "\t11: smpte2085, SMPTE ST 2085 YDzDx\n"
-               "\t12: chroma-ncl, Chromaticity-derived non-constant luminance\n"
-               "\t13: chroma-cl, Chromaticity-derived constant luminance\n"
-               "\t14: ictcp, BT.2100 ICtCp\n\n");
+        "\t0: identity, Identity matrix\n"
+        "\t1: bt709, BT.709\n"
+        "\t2: unspecified, default\n"
+        "\t4: fcc, US FCC 73.628\n"
+        "\t5: bt470bg, BT.470 System B, G (historical)\n"
+        "\t6: bt601, BT.601\n"
+        "\t7: smpte240, SMPTE 240 M\n"
+        "\t8: ycgco, YCgCo\n"
+        "\t9: bt2020-ncl, BT.2020 non-constant luminance, BT.2100 YCbCr\n"
+        "\t10: bt2020-cl, BT.2020 constant luminance\n"
+        "\t11: smpte2085, SMPTE ST 2085 YDzDx\n"
+        "\t12: chroma-ncl, Chromaticity-derived non-constant luminance\n"
+        "\t13: chroma-cl, Chromaticity-derived constant luminance\n"
+        "\t14: ictcp, BT.2100 ICtCp\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The available options for --color-range are:\n\n"
+    printf(
+        "The available options for --color-range are:\n\n"
 #else
     printf(
         "The available options for \x1b[32m--color-range\x1b[0m are:\n\n"
 #endif
-               "\t0: studio (default)\n"
-               "\t1: full\n\n");
+        "\t0: studio (default)\n"
+        "\t1: full\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The available options for --chroma-sample-position are:\n\n"
+    printf(
+        "The available options for --chroma-sample-position are:\n\n"
 #else
     printf(
         "The available options for \x1b[32m--chroma-sample-position\x1b[0m are:\n\n"
 #endif
-               "\t0: unknown, default\n"
-               "\t1: vertical/left, horizontally co-located with luma samples, vertical position in the middle between "
-               "two luma samples\n"
-               "\t2: colocated/topleft, co-located with luma samples\n\n");
+        "\t0: unknown, default\n"
+        "\t1: vertical/left, horizontally co-located with luma samples, vertical position in the middle between "
+        "two luma samples\n"
+        "\t2: colocated/topleft, co-located with luma samples\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The --mastering-display and --content-light parameters are used to set the mastering display and "
-               "content light level in the AV1 bitstream.\n\n");
+    printf(
+        "The --mastering-display and --content-light parameters are used to set the mastering display and "
+        "content light level in the AV1 bitstream.\n\n");
 #else
     printf(
         "The \x1b[32m--mastering-display\x1b[0m and \x1b[32m--content-light\x1b[0m parameters are used to set the "
@@ -2156,25 +2157,25 @@ uint32_t get_color_help(int32_t argc, char *const argv[]) {
 #endif
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "--mastering-display takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
+    printf(
+        "--mastering-display takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
 #else
     printf(
         "\x1b[32m--mastering-display\x1b[0m takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
 #endif
-               "\t- G(x,y) is the green channel of the mastering display\n"
-               "\t- B(x,y) is the blue channel of the mastering display\n"
-               "\t- R(x,y) is the red channel of the mastering display\n"
-               "\t- WP(x,y) is the white point of the mastering display\n"
-               "\t- L(max,min) is the light level of the mastering display\n\n");
+        "\t- G(x,y) is the green channel of the mastering display\n"
+        "\t- B(x,y) is the blue channel of the mastering display\n"
+        "\t- R(x,y) is the red channel of the mastering display\n"
+        "\t- WP(x,y) is the white point of the mastering display\n"
+        "\t- L(max,min) is the light level of the mastering display\n\n");
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "The x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max values "
-               "can be floating point values representing candelas per square meter, or nits.\n"
-               "The max,min values are generally specified in the range of 0.0 to 1.0 but there are no constraints on "
-               "the provided values.\n"
-               "Invalid values will be clipped accordingly.\n\n");
+    printf(
+        "The x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max values "
+        "can be floating point values representing candelas per square meter, or nits.\n"
+        "The max,min values are generally specified in the range of 0.0 to 1.0 but there are no constraints on "
+        "the provided values.\n"
+        "Invalid values will be clipped accordingly.\n\n");
 #else
     printf(
         "\x1b[38;5;248mThe x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max "
@@ -2185,16 +2186,16 @@ uint32_t get_color_help(int32_t argc, char *const argv[]) {
 #endif
 
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-           printf(
-               "--content-light takes the format of max_cll,max_fall where both values are integers clipped into a "
-               "range of 0 to 65535.\n");
+    printf(
+        "--content-light takes the format of max_cll,max_fall where both values are integers clipped into a "
+        "range of 0 to 65535.\n");
 #else
     printf(
         "\x1b[32m--content-light\x1b[0m takes the format of max_cll,max_fall where both values are integers clipped "
         "into a range of 0 to 65535.\n");
 #endif
 
-           return 1;
+    return 1;
 }
 
 /******************************************************
