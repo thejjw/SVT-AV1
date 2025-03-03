@@ -2828,8 +2828,11 @@ static int ref_pics_modulation(
     PictureParentControlSet* pcs,
     int32_t noise_levels_log1p_fp16) {
     int offset = 0;
-
+#if KEY_TF_OFF
+    if (pcs->slice_type == I_SLICE || pcs->filt_to_unfilt_diff == (uint32_t)~0) {
+#else
     if (pcs->slice_type == I_SLICE) {
+#endif
         // Adjust number of filtering frames based on noise and quantization factor.
         // Basically, we would like to use more frames to filter low-noise frame such
         // that the filtered frame can provide better predictions for more frames.

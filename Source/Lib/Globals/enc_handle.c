@@ -3685,6 +3685,7 @@ static void derive_tf_params(SequenceControlSet *scs) {
             tf_level = scs->static_config.screen_content_mode == 1 ? 0 :
             enc_mode <= ENC_M8 ? scs->input_resolution >= INPUT_SIZE_720p_RANGE ? 1 : 0 : scs->input_resolution >= INPUT_SIZE_720p_RANGE ? 2 : 0;
         tf_ld_controls(scs, tf_level);
+
         return;
     }
     if (do_tf == 0) {
@@ -3711,6 +3712,9 @@ static void derive_tf_params(SequenceControlSet *scs) {
         tf_level = 9;
      }
     tf_controls(scs, tf_level);
+#if KEY_TF_OFF
+    scs->tf_params_per_type[0].enabled = 0;
+#endif
 }
 
 
@@ -4747,6 +4751,7 @@ static void copy_api_from_app(
     // Rate Control
     scs->static_config.scene_change_detection = ((EbSvtAv1EncConfiguration*)config_struct)->scene_change_detection;
     scs->static_config.rate_control_mode = ((EbSvtAv1EncConfiguration*)config_struct)->rate_control_mode;
+#if !REMOVE_LD_PRESET_CONSTRAINT
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
 
         if (scs->static_config.enc_mode < ENC_M7) {
@@ -4754,6 +4759,7 @@ static void copy_api_from_app(
             SVT_WARN("Low delay mode only support encodermode [7-%d]. Forcing encoder mode to 7\n", ENC_M13);
         }
     }
+#endif
     scs->static_config.tune = config_struct->tune;
     scs->static_config.hierarchical_levels = ((EbSvtAv1EncConfiguration*)config_struct)->hierarchical_levels;
 

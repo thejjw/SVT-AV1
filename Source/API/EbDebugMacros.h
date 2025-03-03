@@ -34,6 +34,10 @@
 extern "C" {
 #endif // __cplusplus
 
+#define REMOVE_LD_PRESET_CONSTRAINT 1
+#define KEY_TF_OFF                  0
+#define DELTA_Q_OFF                 0
+
 #define CLN_LP_LVLS             1 // Change --lp input to represent the levels of parallelization that are actually implemented in the code
 
 //FOR DEBUGGING - Do not remove
