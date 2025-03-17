@@ -35,6 +35,8 @@ extern "C" {
 #endif // __cplusplus
 
 #define REMOVE_LD_PRESET_CONSTRAINT 1
+#define REMOVE_RTC_SETTINGS         1
+
 #define KEY_TF_OFF                  1
 #define DELTA_Q_OFF                 1
 

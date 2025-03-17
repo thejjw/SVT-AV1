@@ -643,7 +643,11 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         }
 
         FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+#if REMOVE_RTC_SETTINGS
+        pcs->rtc_tune = false;
+#else
         pcs->rtc_tune        = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
         // Mode Decision Configuration Kernel Signal(s) derivation
         svt_aom_sig_deriv_mode_decision_config(scs, pcs);
 

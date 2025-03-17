@@ -3394,8 +3394,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 : 0;
 
                         // If LPD0 is used, a more conservative level can be set for complex SBs
+#if REMOVE_RTC_SETTINGS
+                        const bool rtc_tune = false;
+#else
                         const bool rtc_tune = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true
                                                                                                               : false;
+#endif
                         if (!(rtc_tune && !pcs->ppcs->sc_class1) && md_ctx->lpd0_ctrls.pd0_level > REGULAR_PD0) {
                             lpd0_detector(pcs, md_ctx, pic_width_in_sb);
                         }

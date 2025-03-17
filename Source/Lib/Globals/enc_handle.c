@@ -1937,7 +1937,11 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.input_resolution = enc_handle_ptr->scs_instance_array[instance_index]->scs->input_resolution;
         input_data.is_scale = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.superres_mode > SUPERRES_NONE ||
                               enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.resize_mode > RESIZE_NONE;
+#if REMOVE_RTC_SETTINGS
+        input_data.rtc_tune = false;
+#else
         input_data.rtc_tune = (enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
         input_data.enable_variance_boost = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.enable_variance_boost;
         input_data.variance_boost_strength = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.variance_boost_strength;
         input_data.variance_octile = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.variance_octile;
@@ -4321,7 +4325,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // in 240P resolution, sb size is set to 64
     if ((scs->static_config.fast_decode && scs->static_config.qp <= 56 && !(scs->input_resolution <= INPUT_SIZE_360p_RANGE)) ||
         scs->static_config.resize_mode > RESIZE_NONE ||
+#if !REMOVE_RTC_SETTINGS // SB128
         scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B ||
+#endif
         (scs->input_resolution == INPUT_SIZE_240p_RANGE) ||
         scs->static_config.enable_variance_boost)
         scs->super_block_size = 64;
@@ -4550,7 +4556,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     // MRP level
     uint8_t mrp_level;
-
+#if !REMOVE_RTC_SETTINGS
     if (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.enc_mode <= ENC_M10) {
             mrp_level = 10;
@@ -4560,6 +4566,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         }
     }
     else {
+#endif
         if (scs->static_config.enc_mode <= ENC_MR) {
             if (!(scs->input_resolution <= INPUT_SIZE_360p_RANGE) && !(scs->static_config.fast_decode <= 1))
                 mrp_level = 9;
@@ -4590,7 +4597,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else {
             mrp_level = 12;
         }
+#if !REMOVE_RTC_SETTINGS
     }
+#endif
     set_mrp_ctrl(scs, mrp_level);
     scs->is_short_clip = scs->static_config.gop_constraint_rc ? 1 : 0; // set to 1 if multipass and less than 200 frames in resourcecordination
 
@@ -4607,16 +4616,23 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     scs->resize_pending_params.resize_state = ORIG;
     scs->resize_pending_params.resize_denom = SCALE_NUMERATOR;
+#if REMOVE_RTC_SETTINGS // lambda
+    scs->stats_based_sb_lambda_modulation = 1;
+#else
     scs->stats_based_sb_lambda_modulation = scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS &&
                                                 scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR
         ? 1
         : 0;
+#endif
+#if REMOVE_RTC_SETTINGS // low_latency_kf
+    scs->low_latency_kf = 0;
+#else
     scs->low_latency_kf = ((scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_P
         || scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) &&
         scs->static_config.enc_mode <= ENC_M9)
         ? 1
         : 0;
-
+#endif
     scs->max_heirachical_level = scs->static_config.hierarchical_levels;
 }
 static void copy_api_from_app(

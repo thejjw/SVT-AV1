@@ -139,7 +139,11 @@ uint8_t svt_aom_derive_gm_level(PictureParentControlSet *pcs, bool super_res_off
  * Set HME Search area parameters
  ************************************************/
 static void set_hme_search_params(PictureParentControlSet *pcs, MeContext *me_ctx, EbInputResolution input_resolution) {
+#if REMOVE_RTC_SETTINGS
+    const bool rtc_tune = false;
+#else
     const bool rtc_tune = (pcs->scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     // Set number of HME level 0 search regions to use
     me_ctx->num_hme_sa_w = 2;
     me_ctx->num_hme_sa_h = 2;
@@ -220,7 +224,11 @@ static void set_me_search_params(SequenceControlSet *scs, PictureParentControlSe
     const EncMode enc_mode            = pcs->enc_mode;
     const uint8_t sc_class1           = pcs->sc_class1;
     uint32_t      hierarchical_levels = pcs->hierarchical_levels;
+#if REMOVE_RTC_SETTINGS
+    const bool    rtc_tune = false;
+#else
     const bool    rtc_tune            = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     // Whether to modulate ME (w,h) using qp
     uint8_t q_mult = 0;
     // Set the min and max ME search area
@@ -685,7 +693,11 @@ void svt_aom_sig_deriv_me(SequenceControlSet *scs, PictureParentControlSet *pcs,
     EncMode           enc_mode         = pcs->enc_mode;
     const uint8_t     sc_class1        = pcs->sc_class1;
     EbInputResolution input_resolution = scs->input_resolution;
+#if REMOVE_RTC_SETTINGS
+    const bool        rtc_tune = false;
+#else
     const bool        rtc_tune         = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     const bool        is_base          = pcs->temporal_layer_index == 0;
     // Set ME search area
     set_me_search_params(scs, pcs, me_ctx, input_resolution);
@@ -1787,7 +1799,11 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet *scs, PictureParentCon
     const uint8_t           is_base          = pcs->temporal_layer_index == 0;
     const EbInputResolution input_resolution = pcs->input_resolution;
     const uint8_t           fast_decode      = scs->static_config.fast_decode;
+#if REMOVE_RTC_SETTINGS
+    const bool              rtc_tune = false;
+#else
     const bool              rtc_tune  = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     const uint8_t           sc_class1 = pcs->sc_class1;
     const uint8_t           is_not_last_layer = !pcs->is_highest_layer;
     // Set GM ctrls assuming super-res is off for gm-pp need
@@ -3973,8 +3989,11 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
                                      uint32_t me_64x64_distortion, uint8_t l0_was_skip, uint8_t l1_was_skip,
                                      uint8_t ref_skip_perc) {
     CandReductionCtrls *cand_reduction_ctrls = &ctx->cand_reduction_ctrls;
+#if REMOVE_RTC_SETTINGS
+    const bool          rtc_tune = false;
+#else
     const bool          rtc_tune = (pcs->scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
-
+#endif
     switch (cand_reduction_level) {
     case 0:
 
@@ -7023,7 +7042,11 @@ void svt_aom_sig_deriv_enc_dec_common(SequenceControlSet *scs, PictureControlSet
     set_detect_high_freq_ctrls(ctx, pcs->vq_ctrls.detect_high_freq_lvl);
     ctx->high_freq_present    = 0;
     ctx->high_freq_satd_to_me = (uint32_t)~0;
+#if REMOVE_RTC_SETTINGS
+    const bool rtc_tune = false;
+#else
     const bool rtc_tune       = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     if (ctx->detect_high_freq_ctrls.enabled) {
         svt_aom_check_high_freq(pcs, sb_ptr, ctx);
     }
@@ -7260,7 +7283,11 @@ void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet *scs, PictureControl
     const Pd0Level           pd0_level = ctx->lpd0_ctrls.pd0_level;
     PictureParentControlSet *ppcs      = pcs->ppcs;
     const uint8_t            is_islice = pcs->slice_type == I_SLICE;
+#if REMOVE_RTC_SETTINGS
+    const bool               rtc_tune = false;
+#else
     const bool               rtc_tune  = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     const bool               is_not_last_layer = !ppcs->is_highest_layer;
     ctx->md_disallow_nsq_search                = 1;
 
@@ -7390,7 +7417,11 @@ void svt_aom_sig_deriv_enc_dec_light_pd1(PictureControlSet *pcs, ModeDecisionCon
     uint32_t       me_64x64_distortion  = (uint32_t)~0;
     uint8_t        l0_was_skip = 0, l1_was_skip = 0;
     uint8_t        l0_was_64x64_mvp = 0, l1_was_64x64_mvp = 0;
+#if REMOVE_RTC_SETTINGS
+    const bool     rtc_tune = false;
+#else
     const bool     rtc_tune  = (pcs->scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     const uint8_t  sc_class1 = ppcs->sc_class1;
     const EncMode  enc_mode  = pcs->enc_mode;
     const Bool     disable_rdoq_rtc = enc_mode <= ENC_M10 ? 0 : rtc_tune && sc_class1 ? 1 : 0;
@@ -7631,7 +7662,11 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
     uint32_t                 me_64x64_distortion  = (uint32_t)~0;
     uint8_t                  l0_was_skip = 0, l1_was_skip = 0;
     uint8_t                  ref_skip_perc = pcs->ref_skip_percentage;
+#if REMOVE_RTC_SETTINGS
+    const bool               rtc_tune = false;
+#else
     const bool               rtc_tune = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     svt_aom_set_nsq_search_ctrls(pcs, ctx, pcs->nsq_search_level, input_resolution);
     svt_aom_set_nic_controls(ctx, ctx->pd_pass == PD_PASS_0 ? 20 : pcs->nic_level);
     set_cand_reduction_ctrls(pcs,
@@ -8062,7 +8097,11 @@ static void set_pic_lpd0_lvl(PictureControlSet *pcs, EncMode enc_mode) {
     const uint8_t is_islice          = pcs->slice_type == I_SLICE;
     const Bool    transition_present = (ppcs->transition_present == 1);
     const uint8_t sc_class1          = ppcs->sc_class1;
+#if REMOVE_RTC_SETTINGS
+    const bool    rtc_tune = false;
+#else
     const bool    rtc_tune  = (ppcs->scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     InputCoeffLvl coeff_lvl = pcs->coeff_lvl;
     const EbInputResolution input_resolution   = ppcs->input_resolution;
     uint8_t                 ldp0_lvl_offset[4] = {2, 2, 1, 0};
@@ -8348,7 +8387,11 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     const uint8_t            fast_decode         = scs->static_config.fast_decode;
     const uint32_t           hierarchical_levels = ppcs->hierarchical_levels;
     const Bool               transition_present  = (ppcs->transition_present == 1);
+#if REMOVE_RTC_SETTINGS
+    const bool               rtc_tune = false;
+#else
     const bool               rtc_tune = (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) ? true : false;
+#endif
     const bool               is_not_last_layer = !ppcs->is_highest_layer;
     const uint32_t           sq_qp             = scs->static_config.qp;
     //MFMV
