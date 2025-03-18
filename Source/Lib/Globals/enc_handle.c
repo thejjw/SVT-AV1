@@ -3688,6 +3688,9 @@ static void derive_tf_params(SequenceControlSet *scs) {
         else
             tf_level = scs->static_config.screen_content_mode == 1 ? 0 :
             enc_mode <= ENC_M8 ? scs->input_resolution >= INPUT_SIZE_720p_RANGE ? 1 : 0 : scs->input_resolution >= INPUT_SIZE_720p_RANGE ? 2 : 0;
+#if REMOVE_RTC_SETTINGS
+        tf_level = 0;
+#endif
         tf_ld_controls(scs, tf_level);
 
         return;
