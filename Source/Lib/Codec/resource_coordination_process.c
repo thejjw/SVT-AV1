@@ -45,11 +45,10 @@ typedef struct ResourceCoordinationContext {
 
     // Picture Number Array
     uint64_t *picture_number_array;
-
-    uint64_t average_enc_mod;
-    uint8_t  prev_enc_mod;
-    int8_t   prev_enc_mode_delta;
-    uint8_t  prev_change_cond;
+    uint64_t  average_enc_mod;
+    uint8_t   prev_enc_mod;
+    int8_t    prev_enc_mode_delta;
+    uint8_t   prev_change_cond;
 
     int64_t previous_mode_change_buffer;
     int64_t previous_mode_change_frame_in;
@@ -120,7 +119,6 @@ EbErrorType svt_aom_resource_coordination_context_ctor(EbThreadContext *thread_c
     context_ptr->encode_instances_total_count       = enc_handle_ptr->encode_instance_total_count;
 
     EB_CALLOC_ARRAY(context_ptr->picture_number_array, context_ptr->encode_instances_total_count);
-
     context_ptr->average_enc_mod                    = 0;
     context_ptr->prev_enc_mod                       = 0;
     context_ptr->prev_enc_mode_delta                = 0;
@@ -301,6 +299,7 @@ void speed_buffer_control(ResourceCoordinationContext *context_ptr, PictureParen
     svt_release_mutex(scs->enc_ctx->sc_buffer_mutex);
     context_ptr->prev_enc_mod = scs->enc_ctx->enc_mode;
 }
+
 // Film grain (assigning the random-seed)
 static void assign_film_grain_random_seed(PictureParentControlSet *pcs) {
     uint16_t *fgn_random_seed_ptr              = &pcs->scs->film_grain_random_seed;
@@ -430,8 +429,13 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet *pcs) {
 
     SequenceControlSet *scs           = pcs->scs;
     pcs->me_segments_completion_count = 0;
-    pcs->me_segments_column_count     = (uint8_t)(scs->me_segment_column_count_array[0]);
-    pcs->me_segments_row_count        = (uint8_t)(scs->me_segment_row_count_array[0]);
+#if CLN_SEG_COUNTS
+    pcs->me_segments_column_count = (uint8_t)(scs->me_segment_col_count_array);
+    pcs->me_segments_row_count    = (uint8_t)(scs->me_segment_row_count_array);
+#else
+    pcs->me_segments_column_count = (uint8_t)(scs->me_segment_column_count_array[0]);
+    pcs->me_segments_row_count    = (uint8_t)(scs->me_segment_row_count_array[0]);
+#endif
 
     pcs->me_segments_total_count = (uint16_t)(pcs->me_segments_column_count * pcs->me_segments_row_count);
     pcs->tpl_disp_coded_sb_count = 0;
