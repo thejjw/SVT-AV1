@@ -916,6 +916,19 @@ typedef struct EbSvtAv1EncConfiguration {
      * 10 + (4 - 4) = 10 (2x stronger) */
     uint8_t tf_strength;
 
+    /**
+     * @brief Min quant matrix flatness. Applicable when enable_qm is true.
+     * Min value is 0.
+     * Max value is 15.
+     * Default is 8. */
+    uint8_t min_chroma_qm_level;
+    /**
+     * @brief Max quant matrix flatness. Applicable when enable_qm is true.
+     * Min value is 0.
+     * Max value is 15.
+     * Default is 15. */
+    uint8_t max_chroma_qm_level;
+
     /* Stores the optional film grain synthesis info */
     AomFilmGrain *fgs_table;
 
