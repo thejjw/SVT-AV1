@@ -402,7 +402,11 @@ static void early_hme_b64(
     int16_t    sa_height, // search area height
     EbPictureBufferDesc* sixteenth_ref_pic_ptr, // sixteenth-downsampled reference picture
     uint64_t* best_sad, // output: Level0 SAD
+#if CLN_UNIFY_MV_TYPE
+    Mv* sr_center // output: Level0 xMV, Level0 yMV
+#else
     MV* sr_center // output: Level0 xMV, Level0 yMV
+#endif
 ) {
     // round up the search region width to nearest multiple of 8 because the SAD calculation performance (for
     // intrinsic functions) is the same for search region width from 1 to 8
@@ -469,8 +473,13 @@ static void early_hme_b64(
         block_width,
         /* results */
         best_sad,
+#if CLN_UNIFY_MV_TYPE
+        &sr_center->x,
+        &sr_center->y,
+#else
         &sr_center->col,
         &sr_center->row,
+#endif
         /* range */
         sixteenth_ref_pic_ptr->stride_y,
         0, // skip search line
@@ -481,10 +490,17 @@ static void early_hme_b64(
         ? *best_sad
         : *best_sad * 2; // Multiply by 2 because considered only ever other line
 
+#if CLN_UNIFY_MV_TYPE
+    sr_center->x += sa_origin_x;
+    sr_center->x *= 4; // Multiply by 4 because operating on 1/4 resolution
+    sr_center->y += sa_origin_y;
+    sr_center->y *= 4; // Multiply by 4 because operating on 1/4 resolution
+#else
     sr_center->col += sa_origin_x;
     sr_center->col *= 4; // Multiply by 4 because operating on 1/4 resolution
     sr_center->row += sa_origin_y;
     sr_center->row *= 4; // Multiply by 4 because operating on 1/4 resolution
+#endif
 
     return;
 }
@@ -498,7 +514,11 @@ void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_i
     int16_t sa_height = ppcs->input_resolution <= INPUT_SIZE_360p_RANGE ? 16 : ppcs->input_resolution <= INPUT_SIZE_480p_RANGE ? 64 : 128;
 
     uint64_t hme_level0_sad = (uint64_t)~0;
+#if CLN_UNIFY_MV_TYPE
+    Mv sr_center = { .as_int = 0 };
+#else
     MV sr_center = { 0,0 };
+#endif
 
     uint8_t hme_search_method = FULL_SAD_SEARCH;
 
@@ -543,6 +563,43 @@ void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_i
             ppcs->dg_detector->metrics.tot_dist += hme_level0_sad;
 
             ppcs->dg_detector->metrics.tot_cplx += (hme_level0_sad > (16 * 16 * 30));
+#if CLN_UNIFY_MV_TYPE
+            ppcs->dg_detector->metrics.tot_active += ((abs(sr_center.x) > 0) || (abs(sr_center.y) > 0));
+            if (y_b64_idx < pic_height_in_b64 / 2) {
+                if (sr_center.y > 0) {
+                    --ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+                else if (sr_center.y < 0) {
+                    ++ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+            }
+            else if (y_b64_idx > pic_height_in_b64 / 2) {
+                if (sr_center.y > 0) {
+                    ++ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+                else if (sr_center.y < 0) {
+                    --ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+            }
+
+            // Does the col vector point inwards or outwards?
+            if (x_b64_idx < pic_width_in_b64 / 2) {
+                if (sr_center.x > 0) {
+                    --ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+                else if (sr_center.x < 0) {
+                    ++ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+            }
+            else if (x_b64_idx > pic_width_in_b64 / 2) {
+                if (sr_center.x > 0) {
+                    ++ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+                else if (sr_center.x < 0) {
+                    --ppcs->dg_detector->metrics.sum_in_vectors;
+                }
+            }
+#else
             ppcs->dg_detector->metrics.tot_active += ((abs(sr_center.col) > 0) || (abs(sr_center.row) > 0));
             if (y_b64_idx < pic_height_in_b64 / 2) {
                 if (sr_center.row > 0) {
@@ -578,6 +635,7 @@ void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_i
                     --ppcs->dg_detector->metrics.sum_in_vectors;
                 }
             }
+#endif
             svt_release_mutex(ppcs->dg_detector->metrics_mutex);
         }
     }
@@ -824,6 +882,9 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
     }
     ctx->list0_only = 0;
     if (scs->list0_only_base_ctrls.enabled) {
+#if CLN_CALCULATE_VARIANCE
+        ctx->list0_only = 1;
+#else
         if (scs->list0_only_base_ctrls.list0_only_base_th == ((uint16_t)~0)) {
             ctx->list0_only = 1;
         }
@@ -839,6 +900,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
                     ctx->list0_only = 1;
             }
         }
+#endif
     }
 }
 
@@ -917,7 +979,11 @@ uint8_t is_pic_cutting_short_ra_mg(PictureDecisionContext   *pd_ctx, PicturePare
 {
     //if the size < complete MG or if there is usage of closed GOP
     if ((pd_ctx->mini_gop_length[mg_idx] < pcs->pred_struct_ptr->pred_struct_period || pd_ctx->mini_gop_idr_count[mg_idx] > 0) &&
+#if CLN_REMOVE_LDP
+        pcs->pred_struct_ptr->pred_type == RANDOM_ACCESS &&
+#else
         pcs->pred_struct_ptr->pred_type == SVT_AV1_PRED_RANDOM_ACCESS &&
+#endif
         pcs->idr_flag == false &&
         pcs->cra_flag == false) {
 
@@ -1059,6 +1125,13 @@ static void prune_refs(Av1RpsNode *av1_rps, unsigned ref_list0_count, unsigned r
         av1_rps->ref_poc_array[LAST2] = av1_rps->ref_poc_array[LAST];
     }
 
+#if CLN_REMOVE_P_SLICE
+    // If not list 1 refs are used, set the refs to the list 0 ref
+    if (ref_list1_count < 1) {
+        av1_rps->ref_dpb_index[BWD] = av1_rps->ref_dpb_index[LAST];
+        av1_rps->ref_poc_array[BWD] = av1_rps->ref_poc_array[LAST];
+    }
+#endif
     if (ref_list1_count < 3) {
         av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[BWD];
         av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[BWD];
@@ -1077,18 +1150,30 @@ static bool set_frame_display_params(
         PictureDecisionContext        *pd_ctx,
         uint32_t                       mini_gop_index)
 {
+#if !OPT_NEW_LD_RPS
     Av1RpsNode *av1_rps = &pcs->av1_ref_signal;
+#endif
     FrameHeader *frm_hdr = &pcs->frm_hdr;
 
+#if CLN_REMOVE_LDP
+    if (pcs->pred_struct_ptr->pred_type == LOW_DELAY || pcs->is_overlay) {
+#else
     if (pcs->pred_struct_ptr->pred_type == SVT_AV1_PRED_LOW_DELAY_P || pcs->is_overlay ||
         pcs->pred_struct_ptr->pred_type == SVT_AV1_PRED_LOW_DELAY_B) {
+#endif
+#if !OPT_NEW_LD_RPS
         //P frames
         av1_rps->ref_dpb_index[BWD] = av1_rps->ref_dpb_index[ALT2] = av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[LAST];
         av1_rps->ref_poc_array[BWD] = av1_rps->ref_poc_array[ALT2] = av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[LAST];
+#endif
 
         frm_hdr->show_frame = true;
         pcs->has_show_existing = false;
+#if CLN_REMOVE_LDP
+    } else if (pcs->pred_struct_ptr->pred_type == RANDOM_ACCESS) {
+#else
     } else if (pcs->pred_struct_ptr->pred_type == SVT_AV1_PRED_RANDOM_ACCESS) {
+#endif
         //Decide on Show Mecanism
         if (pcs->slice_type == I_SLICE) {
             //3 cases for I slice:  1:Key Frame treated above.  2: broken MiniGop due to sc or intra refresh  3: complete miniGop due to sc or intra refresh
@@ -1131,8 +1216,13 @@ static void set_sframe_type(PictureParentControlSet *ppcs, EncodeContext *enc_ct
     const EbSFrameMode sframe_mode = enc_ctx->sf_cfg.sframe_mode;
 
     // s-frame supports low-delay
+#if CLN_REMOVE_LDP
+    svt_aom_assert_err(scs->static_config.pred_structure == LOW_DELAY,
+        "S-frame supports only low delay");
+#else
     svt_aom_assert_err(scs->static_config.pred_structure == 0 || scs->static_config.pred_structure == 1,
         "S-frame supports only low delay");
+#endif
     // handle multiple hierarchical levels only, no flat IPPP support
     svt_aom_assert_err(ppcs->hierarchical_levels > 0, "S-frame doesn't support flat IPPP...");
 
@@ -1196,7 +1286,7 @@ This miniGOP has P frames with predStruct=LDP, and the last frame=I with pred st
 * 5) part of non-complete LDP MiniGop at the end of the stream.This miniGOP has P frames with
 predStruct=LDP, and the last frame=I with pred struct=RA.
 *
-*Note: the  SceneChange I has pred_type = SVT_AV1_PRED_RANDOM_ACCESS. if SChange is aligned on the miniGop,
+*Note: the  SceneChange I has pred_type = RANDOM_ACCESS. if SChange is aligned on the miniGop,
 we do not break the GOP.
 *************************************************/
 /*
@@ -1223,7 +1313,11 @@ bool svt_aom_is_pic_used_as_ref(uint32_t hierarchical_levels, uint32_t temporal_
     case 1:
         return true;
     case 2:
+#if OPT_NEW_LD_RPS
+        return referencing_scheme == 0 ? false : referencing_scheme == 1 ? true : (picture_index == 0);
+#else
         return referencing_scheme == 0 ? false : (picture_index == 0);
+#endif
     case 3:
         return referencing_scheme == 0 ? false : referencing_scheme == 1 ? true : (picture_index == 0);
     case 4:
@@ -1284,7 +1378,11 @@ static void set_ref_list_counts(PictureParentControlSet* pcs) {
             : (is_base ? mrp_ctrls->base_ref_list0_count    : mrp_ctrls->non_base_ref_list0_count));
     assert(pcs->ref_list0_count);
 
+#if CLN_REMOVE_P_SLICE
+    if (svt_aom_is_incomp_mg_frame(pcs) || pcs->is_overlay) {
+#else
     if (pcs->slice_type == P_SLICE /*|| pcs->is_overlay*/) {
+#endif
         pcs->ref_list1_count = 0;
         return;
     }
@@ -1326,7 +1424,11 @@ static void set_ref_list_counts(PictureParentControlSet* pcs) {
             is_sc ? (is_base ? mrp_ctrls->sc_base_ref_list1_count : mrp_ctrls->sc_non_base_ref_list1_count)
             : (is_base ? mrp_ctrls->base_ref_list1_count    : mrp_ctrls->non_base_ref_list1_count));
     // Old assert fails when M13 uses non-zero mrp
+#if CLN_REMOVE_LDP
+    assert(!(pcs->ref_list1_count == 0 && pcs->scs->static_config.pred_structure == RANDOM_ACCESS));
+#else
     assert(!(pcs->ref_list1_count == 0 && pcs->scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS));
+#endif
 }
 static INLINE void update_ref_poc_array(uint8_t* ref_dpb_idx, uint64_t* ref_poc_array, DpbEntry* dpb) {
     ref_poc_array[LAST]  = dpb[ref_dpb_idx[LAST]].picture_number;
@@ -1348,8 +1450,13 @@ static void  av1_generate_rps_info(
     Av1RpsNode *av1_rps = &pcs->av1_ref_signal;
     FrameHeader *frm_hdr = &pcs->frm_hdr;
     SequenceControlSet *scs = pcs->scs;
+#if OPT_NEW_LD_RPS
+    const uint8_t hierarchical_levels = pcs->hierarchical_levels;
+    const uint8_t temporal_layer = pcs->temporal_layer_index;
+#else
     const unsigned int hierarchical_levels = pcs->hierarchical_levels;
     const unsigned int temporal_layer = pcs->temporal_layer_index;
+#endif
     const uint8_t more_5L_refs = pcs->scs->mrp_ctrls.more_5L_refs;
     pcs->is_ref =
         svt_aom_is_pic_used_as_ref(hierarchical_levels,
@@ -1385,7 +1492,85 @@ static void  av1_generate_rps_info(
     uint8_t* ref_dpb_index = av1_rps->ref_dpb_index;
     uint64_t* ref_poc_array = av1_rps->ref_poc_array;
 
+#if OPT_NEW_LD_RPS
+#if OPT_RTC && !TUNE_LD_RTC
+    if (scs->static_config.pred_structure == LOW_DELAY) {
+#else
+    if (scs->static_config.pred_structure == LOW_DELAY && scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF) {
+#endif
+
+        uint8_t lay0_toggle = ctx->lay0_toggle;
+        uint8_t lay1_toggle = ctx->lay1_toggle; // lay1 toggle is for all non-base pics in LD
+
+        // For LD, the prediction structure is generally the previous 3 non-base frames + the previous 3 base frames + 1 long-term ref
+        const uint8_t  base0_idx = lay0_toggle == 0 ? 0 : lay0_toggle == 1 ? 1 : 2; //the oldest L0 picture in the DPB
+        const uint8_t  base1_idx = lay0_toggle == 0 ? 1 : lay0_toggle == 1 ? 2 : 0; //the middle L0 picture in the DPB
+        const uint8_t  base2_idx = lay0_toggle == 0 ? 2 : lay0_toggle == 1 ? 0 : 1; //the newest L0 picture in the DPB
+
+        const uint8_t  lay1_0_idx = lay1_toggle == 0 ? LAY1_OFF + 0 : lay1_toggle == 1 ? LAY1_OFF + 1 : LAY1_OFF + 2; //the oldest L1/2 picture in the DPB
+        const uint8_t  lay1_1_idx = lay1_toggle == 0 ? LAY1_OFF + 1 : lay1_toggle == 1 ? LAY1_OFF + 2 : LAY1_OFF + 0; //the middle L1/2 picture in the DPB
+        const uint8_t  lay1_2_idx = lay1_toggle == 0 ? LAY1_OFF + 2 : lay1_toggle == 1 ? LAY1_OFF + 0 : LAY1_OFF + 1; //the newest L1/2 picture in the DPB
+        const uint8_t  long_base_idx = 7;
+        const uint16_t long_base_pic = 128;
+
+        assert(!pcs->is_overlay && "overlays not supported in LD");
+
+        const MrpCtrls* const mrp_ctrls = &pcs->scs->mrp_ctrls;
+        const bool is_base = temporal_layer == 0;
+        const bool is_sc = pcs->sc_class1;
+        uint8_t ref_list1_count = is_sc ? (is_base ? mrp_ctrls->sc_base_ref_list1_count : mrp_ctrls->sc_non_base_ref_list1_count)
+                                     : (is_base ? mrp_ctrls->base_ref_list1_count : mrp_ctrls->non_base_ref_list1_count);
+
+        const uint8_t lay1_pic_idx = (hierarchical_levels == 0) ? 0 : ((1 << (hierarchical_levels - 1)) - 1);
+        // When list1 is not used, the pics after the layer 1 pic should use the layer 1 pic as ref instead of previous base
+        ref_dpb_index[LAST] = (pic_idx > lay1_pic_idx) && !is_base && ref_list1_count == 0 ? lay1_2_idx : base2_idx;
+#if OPT_RTC && !TUNE_LD_RTC
+        ref_dpb_index[LAST2] = ref_list1_count == 0 ? base1_idx : lay1_1_idx;
+        ref_dpb_index[LAST3] = ref_list1_count == 0 ? lay1_2_idx : long_base_idx;
+#else
+        ref_dpb_index[LAST2] = lay1_1_idx;
+        ref_dpb_index[LAST3] = long_base_idx;
+#endif
+        ref_dpb_index[GOLD] = base0_idx;
+
+        ref_dpb_index[BWD] = lay1_2_idx;
+        ref_dpb_index[ALT2] = lay1_0_idx;
+        ref_dpb_index[ALT] = base1_idx;
+
+        if (temporal_layer == 0) {
+            av1_rps->refresh_frame_mask = 1 << ctx->lay0_toggle;
+            //Layer0 toggle 0->1->2
+            ctx->lay0_toggle = circ_inc(3, 1, ctx->lay0_toggle);
+        }
+        else {
+            if (pcs->is_ref) {
+                av1_rps->refresh_frame_mask = 1 << (LAY1_OFF + ctx->lay1_toggle);
+                //Layer1 toggle 0->1->2
+                ctx->lay1_toggle = circ_inc(3, 1, ctx->lay1_toggle);
+            }
+            else {
+                av1_rps->refresh_frame_mask = 0;
+            }
+        }
+
+        update_ref_poc_array(ref_dpb_index, ref_poc_array, ctx->dpb);
+
+        set_ref_list_counts(pcs);
+        // to make sure the long base reference is in base layer
+        if (/*scs->static_config.pred_structure == LOW_DELAY &&*/ (pcs->picture_number - ctx->last_long_base_pic) >= long_base_pic &&
+            pcs->temporal_layer_index == 0) {
+            av1_rps->refresh_frame_mask |= (1 << long_base_idx);
+                ctx->last_long_base_pic = pcs->picture_number;
+        }
+        prune_refs(av1_rps, pcs->ref_list0_count, pcs->ref_list1_count);
+        set_frame_display_params(pcs, ctx, mg_idx);
+        //frm_hdr->show_frame = true;
+        //pcs->has_show_existing = false;
+    }
+    else if (hierarchical_levels == 0) {
+#else
     if (hierarchical_levels == 0) {
+#endif
 
         const uint8_t  base0_idx = (ctx->lay0_toggle + 8 - 1) % 8; // the newest L0 picture in the DPB
         const uint8_t  base1_idx = (ctx->lay0_toggle + 8 - 2) % 8; // the 2nd-newest L0 picture in the DPB
@@ -1432,8 +1617,13 @@ static void  av1_generate_rps_info(
         delay, the first half of the higher level pics will be before the layer 1 toggle, while the second half
         will come after the toggle.  Hence, the layer 1 toggle only needs to be updated for the first half of
         the pictures. */
+#if CLN_REMOVE_LDP
+        if (pcs->pred_struct_ptr->pred_type != RANDOM_ACCESS && temporal_layer) {
+            assert(IMPLIES(scs->static_config.pred_structure == RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#else
         if (pcs->pred_struct_ptr->pred_type != SVT_AV1_PRED_RANDOM_ACCESS && temporal_layer) {
             assert(IMPLIES(scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#endif
             lay0_toggle = circ_inc(3, 1, lay0_toggle);
             // No layer 1 toggling needed because there's only one non-base frame
         }
@@ -1531,8 +1721,13 @@ static void  av1_generate_rps_info(
         delay, the first half of the higher level pics will be before the layer 1 toggle, while the second half
         will come after the toggle.  Hence, the layer 1 toggle only needs to be updated for the first half of
         the pictures. */
+#if CLN_REMOVE_LDP
+        if (pcs->pred_struct_ptr->pred_type != RANDOM_ACCESS && temporal_layer) {
+            assert(IMPLIES(scs->static_config.pred_structure == RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#else
         if (pcs->pred_struct_ptr->pred_type != SVT_AV1_PRED_RANDOM_ACCESS && temporal_layer) {
             assert(IMPLIES(scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#endif
             lay0_toggle = circ_inc(3, 1, lay0_toggle);
             if (pic_idx == 0)
                 lay1_toggle = 1 - lay1_toggle;
@@ -1554,7 +1749,11 @@ static void  av1_generate_rps_info(
             //{ 4, 8, 0, 0 } // GOP Index 0 - Ref List 1
             ref_dpb_index[LAST] = base2_idx;
             ref_dpb_index[LAST2] = base0_idx;
+#if CLN_REMOVE_LDP
+            if (scs->static_config.pred_structure == LOW_DELAY)
+#else
             if (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B)
+#endif
                 ref_dpb_index[LAST3] = long_base_idx;
             else
                 ref_dpb_index[LAST3] = ref_dpb_index[LAST];
@@ -1636,7 +1835,11 @@ static void  av1_generate_rps_info(
 
         set_ref_list_counts(pcs);
         // to make sure the long base reference is in base layer
+#if CLN_REMOVE_LDP
+        if (scs->static_config.pred_structure == LOW_DELAY && (pcs->picture_number - ctx->last_long_base_pic) >= long_base_pic &&
+#else
         if (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B && (pcs->picture_number - ctx->last_long_base_pic) >= long_base_pic &&
+#endif
             pcs->temporal_layer_index == 0) {
             av1_rps->refresh_frame_mask |= (1 << long_base_idx);
             ctx->last_long_base_pic = pcs->picture_number;
@@ -1673,8 +1876,13 @@ static void  av1_generate_rps_info(
         delay, the first half of the higher level pics will be before the layer 1 toggle, while the second half
         will come after the toggle.  Hence, the layer 1 toggle only needs to be updated for the first half of
         the pictures. */
+#if CLN_REMOVE_LDP
+        if (pcs->pred_struct_ptr->pred_type != RANDOM_ACCESS && temporal_layer) {
+            assert(IMPLIES(scs->static_config.pred_structure == RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#else
         if (pcs->pred_struct_ptr->pred_type != SVT_AV1_PRED_RANDOM_ACCESS && temporal_layer) {
             assert(IMPLIES(scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#endif
             lay0_toggle = circ_inc(3, 1, lay0_toggle);
             if (pic_idx < 3)
                 lay1_toggle = 1 - lay1_toggle;
@@ -1878,8 +2086,13 @@ static void  av1_generate_rps_info(
         delay, the first half of the higher level pics will be before the layer 1 toggle, while the second half
         will come after the toggle.  Hence, the layer 1 toggle only needs to be updated for the first half of
         the pictures. */
+#if CLN_REMOVE_LDP
+        if (pcs->pred_struct_ptr->pred_type != RANDOM_ACCESS && temporal_layer) {
+            assert(IMPLIES(scs->static_config.pred_structure == RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#else
         if (pcs->pred_struct_ptr->pred_type != SVT_AV1_PRED_RANDOM_ACCESS && temporal_layer) {
             assert(IMPLIES(scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#endif
             lay0_toggle = circ_inc(3, 1, lay0_toggle);
             if (pic_idx < 7)
                 lay1_toggle = 1 - lay1_toggle;
@@ -2189,8 +2402,13 @@ static void  av1_generate_rps_info(
         delay, the first half of the higher level pics will be before the layer 1 toggle, while the second half
         will come after the toggle.  Hence, the layer 1 toggle only needs to be updated for the first half of
         the pictures. */
+#if CLN_REMOVE_LDP
+        if (pcs->pred_struct_ptr->pred_type != RANDOM_ACCESS && temporal_layer) {
+            assert(IMPLIES(scs->static_config.pred_structure == RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#else
         if (pcs->pred_struct_ptr->pred_type != SVT_AV1_PRED_RANDOM_ACCESS && temporal_layer) {
             assert(IMPLIES(scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS, ctx->cut_short_ra_mg));
+#endif
             lay0_toggle = circ_inc(3, 1, lay0_toggle);
             if (pic_idx < 15)
                 lay1_toggle = 1 - lay1_toggle;
@@ -2749,6 +2967,9 @@ static void  av1_generate_rps_info(
         pcs->sc_class1 = pcs->alt_ref_ppcs_ptr->sc_class1;
         pcs->sc_class2 = pcs->alt_ref_ppcs_ptr->sc_class2;
         pcs->sc_class3 = pcs->alt_ref_ppcs_ptr->sc_class3;
+#if OPT_SC_ME
+        pcs->sc_class4 = pcs->alt_ref_ppcs_ptr->sc_class4;
+#endif
     }
 /***************************************************************************************************
  * Initialize the overlay frame
@@ -2766,7 +2987,11 @@ void initialize_overlay_frame(PictureParentControlSet     *pcs) {
     pcs->hierarchical_layers_diff = 0;
     pcs->init_pred_struct_position_flag = false;
     pcs->pre_assignment_buffer_count = pcs->alt_ref_ppcs_ptr->pre_assignment_buffer_count;
+#if CLN_REMOVE_P_SLICE
+    pcs->slice_type = B_SLICE;
+#else
     pcs->slice_type = P_SLICE;
+#endif
     // set the overlay frame as non reference frame with max temporal layer index
     pcs->temporal_layer_index = (uint8_t)pcs->hierarchical_levels;
     pcs->is_highest_layer = true;
@@ -2812,8 +3037,11 @@ int32_t search_this_pic(PictureParentControlSet**buf, uint32_t buf_size, uint64_
 */
 bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
 
-
+#if CLN_REMOVE_LDP
+    if ((pcs->idr_flag || pcs->cra_flag) && pcs->pred_structure == RANDOM_ACCESS) {
+#else
     if ((pcs->idr_flag || pcs->cra_flag) && pcs->pred_structure == SVT_AV1_PRED_RANDOM_ACCESS) {
+#endif
         if (pcs->scs->static_config.intra_period_length == 0 || pcs->end_of_sequence_flag)
             return 0;
         else if (pcs->idr_flag || (pcs->cra_flag && pcs->pre_assignment_buffer_count < pcs->pred_struct_ptr->pred_struct_period))
@@ -2825,8 +3053,10 @@ bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
         return 0;
 }
 void first_pass_frame_end_one_pass(PictureParentControlSet *pcs);
+#if !CLN_FUNCS_HEADER
 void svt_aom_pack_highbd_pic(const EbPictureBufferDesc *pic_ptr, uint16_t *buffer_16bit[3], uint32_t ss_x,
     uint32_t ss_y, bool include_padding);
+#endif
 #define HIGH_BAND 250000
 /* modulate_ref_pics()
  For INTRA, the modulation uses the noise level, and towards increasing the number of ref_pics
@@ -2928,8 +3158,24 @@ static int ref_pics_modulation(
         }
     }
     // Modulate offset using qp
+#if OPT_USE_EXP_TF
+    if (pcs->tf_ctrls.qp_opt) {
+        uint32_t q_weight, q_weight_denom;
+#if TUNE_MR_2
+#if OPT_ALLINTRA_STILLIMAGE
+        svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.tf_ref_qp_based_th_scaling, &q_weight, &q_weight_denom, pcs->scs->static_config.qp);
+#else
+        svt_aom_get_qp_based_th_scaling_factors(pcs->scs, &q_weight, &q_weight_denom, pcs->scs->static_config.qp);
+#endif
+#else
+        svt_aom_get_qp_based_th_scaling_factors(pcs->scs->static_config.qp, &q_weight, &q_weight_denom);
+#endif
+        offset = DIVIDE_AND_ROUND(offset * q_weight, q_weight_denom);
+    }
+#else
     if (pcs->tf_ctrls.qp_opt)
         offset = (offset * CLIP3(100, 1000, (int)(int)(45 * pcs->scs->static_config.qp) - 1000)) / 1000;
+#endif
     return offset;
 }
 
@@ -3063,7 +3309,11 @@ static EbErrorType derive_tf_window_params(
     pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= VQ_NOISE_LVL_TH);
     // Adjust the number of filtering frames
     int offset = pcs->tf_ctrls.modulate_pics ? ref_pics_modulation(pcs, noise_levels_log1p_fp16[0]) : 0;
+#if CLN_REMOVE_LDP
+    if (scs->static_config.pred_structure != RANDOM_ACCESS) {
+#else
     if (scs->static_config.pred_structure != SVT_AV1_PRED_RANDOM_ACCESS) {
+#endif
         int num_past_pics = pcs->tf_ctrls.num_past_pics + (pcs->tf_ctrls.modulate_pics ? offset : 0);
         num_past_pics = MIN(pcs->tf_ctrls.max_num_past_pics, num_past_pics);
         int num_future_pics = pcs->tf_ctrls.num_future_pics + (pcs->tf_ctrls.modulate_pics ? offset : 0);
@@ -3386,7 +3636,11 @@ static void mctf_frame(
     SequenceControlSet      *scs,
     PictureParentControlSet *pcs,
     PictureDecisionContext  *pd_ctx) {
+#if CLN_REMOVE_LDP
+    if (scs->static_config.pred_structure != RANDOM_ACCESS &&
+#else
     if (scs->static_config.pred_structure != SVT_AV1_PRED_RANDOM_ACCESS &&
+#endif
         scs->tf_params_per_type[1].enabled)
         low_delay_store_tf_pictures(
             scs,
@@ -3443,7 +3697,11 @@ static void mctf_frame(
 
     pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= VQ_NOISE_LVL_TH);
 
+#if CLN_REMOVE_LDP
+    if (scs->static_config.pred_structure != RANDOM_ACCESS &&
+#else
     if (scs->static_config.pred_structure != SVT_AV1_PRED_RANDOM_ACCESS &&
+#endif
         scs->tf_params_per_type[1].enabled&&
         pcs->temporal_layer_index == 0)
         low_delay_release_tf_pictures(pd_ctx);
@@ -3564,14 +3822,22 @@ void store_gf_group(
     PictureParentControlSet *pcs,
     PictureDecisionContext  *ctx,
     uint32_t                 mg_size) {
+#if CLN_REMOVE_P_SLICE
+    if (pcs->slice_type == I_SLICE || (!svt_aom_is_delayed_intra(pcs) && pcs->temporal_layer_index == 0) || svt_aom_is_incomp_mg_frame(pcs)) {
+#else
     if (pcs->slice_type == I_SLICE || (!svt_aom_is_delayed_intra(pcs) && pcs->temporal_layer_index == 0) || pcs->slice_type == P_SLICE) {
+#endif
         if (svt_aom_is_delayed_intra(pcs)) {
             pcs->gf_group[0] = (void*)pcs;
             EB_MEMCPY(&pcs->gf_group[1], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
             pcs->gf_interval = 1 + mg_size;
         }
         else {
+#if CLN_REMOVE_P_SLICE
+            if (svt_aom_is_incomp_mg_frame(pcs) && mg_size > 0 && ctx->mg_pictures_array[mg_size - 1]->idr_flag)
+#else
             if (pcs->slice_type == P_SLICE && mg_size > 0 && ctx->mg_pictures_array[mg_size - 1]->idr_flag)
+#endif
                 mg_size = MAX(0, (int)mg_size - 1);
             EB_MEMCPY(&pcs->gf_group[0], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
             pcs->gf_interval = mg_size;
@@ -3583,13 +3849,23 @@ void store_gf_group(
         }
 
         for (int pic_i = 0; pic_i < pcs->gf_interval; ++pic_i) {
+#if CLN_REMOVE_P_SLICE
+            if (pcs->gf_group[pic_i]->slice_type == I_SLICE || (!svt_aom_is_delayed_intra(pcs) && pcs->gf_group[pic_i]->temporal_layer_index == 0) ||
+                svt_aom_is_incomp_mg_frame(pcs->gf_group[pic_i]))
+#else
             if (pcs->gf_group[pic_i]->slice_type == I_SLICE || (!svt_aom_is_delayed_intra(pcs) && pcs->gf_group[pic_i]->temporal_layer_index == 0) || pcs->gf_group[pic_i]->slice_type == P_SLICE)
+#endif
                 pcs->gf_group[pic_i]->gf_update_due = 1;
             else
                 pcs->gf_group[pic_i]->gf_update_due = 0;
 
+#if CLN_REMOVE_P_SLICE
+            // For P picture that come after I, we need to set the gf_group pictures. It is used later in RC
+            if (pcs->slice_type == I_SLICE && svt_aom_is_incomp_mg_frame(pcs->gf_group[pic_i]) && pcs->picture_number < pcs->gf_group[pic_i]->picture_number) {
+#else
             // For P picture that come after I, we need to set the gf_group pictures. It is used later in RC
             if (pcs->slice_type == I_SLICE && pcs->gf_group[pic_i]->slice_type == P_SLICE && pcs->picture_number < pcs->gf_group[pic_i]->picture_number) {
+#endif
                 pcs->gf_group[pic_i]->gf_interval = pcs->gf_interval - 1;
                 EB_MEMCPY(&pcs->gf_group[pic_i]->gf_group[0], &ctx->mg_pictures_array[1], pcs->gf_group[pic_i]->gf_interval * sizeof(PictureParentControlSet*));
                 pcs->gf_group[pic_i]->gf_update_due = 0;
@@ -3610,8 +3886,13 @@ void print_pre_ass_buffer(EncodeContext *ctx, PictureParentControlSet *pcs, uint
             SVT_LOG("PRE-ASSIGN COMPLETE   (%i pictures)  POC:%lld \n", ctx->pre_assignment_buffer_count, pcs->picture_number);
         if (ctx->pre_assignment_buffer_eos_flag == 1)
             SVT_LOG("PRE-ASSIGN EOS   (%i pictures)  POC:%lld \n", ctx->pre_assignment_buffer_count, pcs->picture_number);
+#if CLN_REMOVE_LDP
+        if (pcs->pred_structure == LOW_DELAY)
+            SVT_LOG("PRE-ASSIGN LD   (%i pictures)  POC:%lld \n", ctx->pre_assignment_buffer_count, pcs->picture_number);
+#else
         if (pcs->pred_structure == SVT_AV1_PRED_LOW_DELAY_P)
             SVT_LOG("PRE-ASSIGN LDP   (%i pictures)  POC:%lld \n", ctx->pre_assignment_buffer_count, pcs->picture_number);
+#endif
 
         SVT_LOG("\n Pre-Assign(%i):  ", ctx->pre_assignment_buffer_count);
         for (uint32_t pic = 0; pic < ctx->pre_assignment_buffer_count; pic++) {
@@ -3643,8 +3924,12 @@ static PaReferenceEntry * search_ref_in_ref_queue_pa(
 static void copy_tf_params(SequenceControlSet *scs, PictureParentControlSet *pcs) {
 
     // Map TF settings sps -> pcs
+#if CLN_REMOVE_LDP
+    if (scs->static_config.pred_structure != RANDOM_ACCESS) {
+#else
    if (scs->static_config.pred_structure != SVT_AV1_PRED_RANDOM_ACCESS)
    {
+#endif
         if (pcs->slice_type != I_SLICE && pcs->temporal_layer_index == 0)
             pcs->tf_ctrls = scs->tf_params_per_type[1];
         else
@@ -3764,7 +4049,11 @@ static void set_frame_update_type(PictureParentControlSet *ppcs) {
     if (ppcs->frm_hdr.frame_type == KEY_FRAME) {
         ppcs->update_type = SVT_AV1_KF_UPDATE;
     }
+#if CLN_REMOVE_LDP
+    else if (scs->max_temporal_layers > 0 && ppcs->pred_structure != LOW_DELAY) {
+#else
     else if (scs->max_temporal_layers > 0 && ppcs->pred_structure != SVT_AV1_PRED_LOW_DELAY_B) {
+#endif
         if (ppcs->temporal_layer_index == 0) {
             ppcs->update_type = SVT_AV1_ARF_UPDATE;
         }
@@ -3775,7 +4064,11 @@ static void set_frame_update_type(PictureParentControlSet *ppcs) {
             ppcs->update_type = SVT_AV1_INTNL_ARF_UPDATE;
         }
     }
+#if CLN_REMOVE_LDP
+    else if (ppcs->pred_structure == LOW_DELAY && (ppcs->frame_offset % MAX_GF_INTERVAL) == 0) {
+#else
     else if (ppcs->pred_structure == SVT_AV1_PRED_LOW_DELAY_B && (ppcs->frame_offset % MAX_GF_INTERVAL) == 0) {
+#endif
         ppcs->update_type = SVT_AV1_GF_UPDATE;
     }
     else {
@@ -3921,7 +4214,11 @@ static void set_mini_gop_structure(SequenceControlSet* scs, EncodeContext* enc_c
     // as a regular MG, you will change the hierarchical_levels to the minimum.
     // For low-delay pred strucutres, pre_assignment_buffer_count will be 1, but no need to change the default
     // hierarchical levels.
+#if CLN_REMOVE_LDP
+    else if (enc_ctx->pre_assignment_buffer_count > 1 || (!enc_ctx->pre_assignment_buffer_intra_count && scs->static_config.pred_structure == RANDOM_ACCESS)) {
+#else
     else if (enc_ctx->pre_assignment_buffer_count > 1 || (!enc_ctx->pre_assignment_buffer_intra_count && scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS)) {
+#endif
         initialize_mini_gop_activity_array(scs, pcs, enc_ctx, ctx);
 
         generate_picture_window_split(
@@ -3949,21 +4246,36 @@ static void perform_sc_detection(SequenceControlSet* scs, PictureParentControlSe
                 if (scs->input_resolution <= INPUT_SIZE_1080p_RANGE)
                     svt_aom_is_screen_content(pcs);
                 else
+#if OPT_SC_ME
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 0;
+#else
                     pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = 0;
+#endif
             }
             else
+#if OPT_SC_ME
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = scs->static_config.screen_content_mode;
+#else
                 pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = scs->static_config.screen_content_mode;
+#endif
         }
         ctx->last_i_picture_sc_class0 = pcs->sc_class0;
         ctx->last_i_picture_sc_class1 = pcs->sc_class1;
         ctx->last_i_picture_sc_class2 = pcs->sc_class2;
         ctx->last_i_picture_sc_class3 = pcs->sc_class3;
+#if OPT_SC_ME
+        ctx->last_i_picture_sc_class4 = pcs->sc_class4;
+#endif
+
     }
     else {
         pcs->sc_class0 = ctx->last_i_picture_sc_class0;
         pcs->sc_class1 = ctx->last_i_picture_sc_class1;
         pcs->sc_class2 = ctx->last_i_picture_sc_class2;
         pcs->sc_class3 = ctx->last_i_picture_sc_class3;
+#if OPT_SC_ME
+        pcs->sc_class4 = ctx->last_i_picture_sc_class4;
+#endif
     }
 }
 
@@ -3982,13 +4294,32 @@ static void update_pred_struct_and_pic_type(SequenceControlSet* scs, EncodeConte
             enc_ctx->pred_struct_position -= pcs->pred_struct_ptr->init_pic_index;
         pcs->pred_struct_ptr = svt_aom_get_prediction_structure(
             enc_ctx->prediction_structure_group_ptr,
+#if CLN_REMOVE_LDP
+            LOW_DELAY,
+#else
             SVT_AV1_PRED_LOW_DELAY_P,
+#endif
             pcs->hierarchical_levels);
+#if CLN_REMOVE_P_SLICE
+        *picture_type = B_SLICE;
+#else
         *picture_type = P_SLICE;
+#endif
         ctx->cut_short_ra_mg = 1;
     }
     else {
         // Set the Picture Type
+#if CLN_REMOVE_P_SLICE
+        *picture_type = (pcs->idr_flag || pcs->cra_flag) ? I_SLICE : B_SLICE;
+#else
+#if CLN_REMOVE_LDP
+        *picture_type =
+            (pcs->idr_flag || pcs->cra_flag) ? I_SLICE :
+            (pcs->pred_structure == LOW_DELAY) ? B_SLICE :
+            (pcs->pre_assignment_buffer_count == pcs->pred_struct_ptr->pred_struct_period) ? B_SLICE :
+            (enc_ctx->pre_assignment_buffer_eos_flag) ? P_SLICE :
+            B_SLICE;
+#else
         *picture_type =
             (pcs->idr_flag) ? I_SLICE :
             (pcs->cra_flag) ? I_SLICE :
@@ -3997,6 +4328,8 @@ static void update_pred_struct_and_pic_type(SequenceControlSet* scs, EncodeConte
             (pcs->pre_assignment_buffer_count == pcs->pred_struct_ptr->pred_struct_period) ? B_SLICE :
             (enc_ctx->pre_assignment_buffer_eos_flag) ? P_SLICE :
             B_SLICE;
+#endif
+#endif
     }
         // If mini GOP switch, reset position
         if (pcs->init_pred_struct_position_flag)
@@ -4033,7 +4366,11 @@ static void update_pred_struct_and_pic_type(SequenceControlSet* scs, EncodeConte
 static uint32_t get_pic_idx_in_mg(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx, uint32_t pic_idx, uint32_t mini_gop_index) {
 
     uint32_t pic_idx_in_mg = 0;
+#if CLN_REMOVE_LDP
+    if (scs->static_config.pred_structure == RANDOM_ACCESS) {
+#else
     if (scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS) {
+#endif
         pic_idx_in_mg = pic_idx - ctx->mini_gop_start_index[mini_gop_index];
     }
     else {
@@ -4073,7 +4410,11 @@ static void set_ref_frame_sign_bias(SequenceControlSet* scs, PictureParentContro
 static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     FrameHeader* frm_hdr = &pcs->frm_hdr;
     pcs->allow_comp_inter_inter = pcs->slice_type != I_SLICE;
+#if CLN_REMOVE_P_SLICE
+    frm_hdr->reference_mode = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF : svt_aom_is_incomp_mg_frame(pcs) ? SINGLE_REFERENCE : REFERENCE_MODE_SELECT;
+#else
     frm_hdr->reference_mode = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF : pcs->slice_type == P_SLICE ? SINGLE_REFERENCE : REFERENCE_MODE_SELECT;
+#endif
 
     pcs->av1_cm->mi_cols = pcs->aligned_width >> MI_SIZE_LOG2;
     pcs->av1_cm->mi_rows = pcs->aligned_height >> MI_SIZE_LOG2;
@@ -4093,11 +4434,21 @@ static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* 
     copy_tf_params(scs, pcs);
     // TODO: put this in EbMotionEstimationProcess?
     // ME Kernel Multi-Processes Signal(s) derivation
+#if CLN_MISC
+    svt_aom_sig_deriv_multi_processes(scs, pcs);
+#else
         svt_aom_sig_deriv_multi_processes(scs, pcs, ctx);
+#endif
 
     update_count_try(scs, pcs);
 
     if (ctx->transition_detected == 1) {
+#if CLN_REMOVE_P_SLICE
+        if (pcs->temporal_layer_index == 0) {
+            pcs->transition_present = 1;
+            ctx->transition_detected = 0;
+        }
+#else
         if (pcs->slice_type == P_SLICE) {
             pcs->transition_present = 1;
         }
@@ -4105,6 +4456,7 @@ static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* 
             pcs->transition_present = 1;
             ctx->transition_detected = 0;
         }
+#endif
     }
 
     if (ctx->list0_only && pcs->slice_type == B_SLICE && pcs->temporal_layer_index == 0)
@@ -4141,6 +4493,13 @@ static void store_mg_picture_arrays(PictureDecisionContext* ctx) {
     }
 }
 
+#if CLN_REMOVE_P_SLICE
+// return true if the frame is part of an incomplete MG (at the end of a GOP)
+bool svt_aom_is_incomp_mg_frame(PictureParentControlSet* pcs) {
+    return (pcs->pred_struct_ptr->pred_type == LOW_DELAY && pcs->scs->static_config.pred_structure == RANDOM_ACCESS);
+}
+#endif
+
 static void assign_and_release_pa_refs(EncodeContext* enc_ctx, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
 
     const unsigned int mg_size = ctx->mg_size;
@@ -4153,18 +4512,25 @@ static void assign_and_release_pa_refs(EncodeContext* enc_ctx, PictureParentCont
 #if !OPT_LD_LATENCY2
         eos_reached |= pcs->end_of_sequence_flag;
 #endif
+#if CLN_REMOVE_P_SLICE
+        if (pcs->slice_type == B_SLICE) {
+            for (REF_FRAME_MINUS1 ref = LAST; ref < ALT + 1; ref++) {
+#else
         if ((pcs->slice_type == P_SLICE) || (pcs->slice_type == B_SLICE)) {
             uint8_t max_ref_count = (pcs->slice_type == B_SLICE) ? ALT + 1 : BWD; // no list1 refs for P_SLICE
             for (REF_FRAME_MINUS1 ref = LAST; ref < max_ref_count; ref++) {
+#endif
                 // hardcode the reference for the overlay frame
                 uint64_t ref_poc = pcs->is_overlay ? pcs->picture_number : pcs->av1_ref_signal.ref_poc_array[ref];
 
                 uint8_t list_idx = get_list_idx(ref + 1);
                 uint8_t ref_idx = get_ref_frame_idx(ref + 1);
+#if !CLN_REMOVE_P_SLICE
                 assert(IMPLIES(pcs->is_overlay, list_idx == 0));
                 if ((list_idx == 0 && ref_idx >= pcs->ref_list0_count) ||
                     (list_idx == 1 && ref_idx >= pcs->ref_list1_count))
                     continue;
+#endif
 #if OPT_LD_LATENCY2
                 svt_block_on_mutex(enc_ctx->pd_dpb_mutex);
 #endif
@@ -4361,8 +4727,24 @@ static void process_pics(SequenceControlSet* scs, PictureDecisionContext* ctx) {
     //split MG into two for these two special cases
     uint8_t ldp_delayi_mg = 0;
     uint8_t ldp_i_eos_mg = 0;
+
+#if CLN_REMOVE_P_SLICE
+    // Special considerations for I_SLICE after incomplete MG pic
+    if (ctx->mg_pictures_array[mg_size - 1]->slice_type == I_SLICE &&
+        svt_aom_is_incomp_mg_frame(ctx->mg_pictures_array[0])) {
+        if (svt_aom_is_delayed_intra(ctx->mg_pictures_array[mg_size - 1]))
+            ldp_delayi_mg = 1;
+        else if (ctx->mg_pictures_array[mg_size - 1]->slice_type == I_SLICE &&
+            ctx->mg_pictures_array[mg_size - 1]->end_of_sequence_flag)
+            ldp_i_eos_mg = 1;
+    }
+#else
     // TODO: does it matter which pcs is used for the pred_type check?
+#if CLN_REMOVE_LDP
+    if (pcs->pred_struct_ptr->pred_type == RANDOM_ACCESS &&
+#else
     if (pcs->pred_struct_ptr->pred_type == SVT_AV1_PRED_RANDOM_ACCESS &&
+#endif
         ctx->mg_pictures_array[0]->slice_type == P_SLICE) {
         if (svt_aom_is_delayed_intra(ctx->mg_pictures_array[mg_size - 1]))
             ldp_delayi_mg = 1;
@@ -4370,6 +4752,7 @@ static void process_pics(SequenceControlSet* scs, PictureDecisionContext* ctx) {
             ctx->mg_pictures_array[mg_size - 1]->end_of_sequence_flag)
             ldp_i_eos_mg = 1;
     }
+#endif
 
     for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i) {
 
@@ -4385,6 +4768,15 @@ static void process_pics(SequenceControlSet* scs, PictureDecisionContext* ctx) {
         }
         else {
             pcs->ext_mg_id = ctx->mg_progress_id;
+#if CLN_REMOVE_P_SLICE
+            pcs->ext_mg_size = ldp_delayi_mg || ldp_i_eos_mg ? mg_size - 1 : mg_size;
+
+            if (ldp_i_eos_mg && pcs->slice_type == I_SLICE) {
+                ctx->mg_progress_id++;
+                pcs->ext_mg_id = ctx->mg_progress_id;
+                pcs->ext_mg_size = 1;
+            }
+#else
             pcs->ext_mg_size = ldp_delayi_mg ? mg_size - 1 : mg_size;
 
             if (ldp_i_eos_mg) {
@@ -4397,6 +4789,7 @@ static void process_pics(SequenceControlSet* scs, PictureDecisionContext* ctx) {
                     pcs->ext_mg_size = 1;
                 }
             }
+#endif
            pcs->gm_pp_detected = ctx->gm_pp_last_detected;
             send_picture_out(scs, pcs, ctx);
         }
@@ -4419,7 +4812,24 @@ static void update_dpb(PictureParentControlSet* pcs, PictureDecisionContext* ctx
         }
     }
 }
+#if OPT_SC_ME
+static uint32_t calc_ahd_pd(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
+    // accumulative histogram (absolute) differences between the past and current frame
+    uint32_t ahd = 0;
+    uint32_t  region_in_picture_width_index;
+    uint32_t  region_in_picture_height_index;
+    // Loop over regions inside the picture
+    for (region_in_picture_width_index = 0; region_in_picture_width_index < scs->picture_analysis_number_of_regions_per_width; region_in_picture_width_index++) {  // loop over horizontal regions
+        for (region_in_picture_height_index = 0; region_in_picture_height_index < scs->picture_analysis_number_of_regions_per_height; region_in_picture_height_index++) { // loop over vertical regions
 
+            for (int bin = 0; bin < HISTOGRAM_NUMBER_OF_BINS; ++bin) {
+                ahd += ABS((int32_t)pcs->picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin] - (int32_t)ctx->prev_picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin]);
+            }
+        }
+    }
+    return(ahd);
+}
+#endif
 /* Picture Decision Kernel */
 
 /***************************************************************************************************
@@ -4586,6 +4996,12 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
             bool window_avail, eos_reached;
             check_window_availability(scs, enc_ctx, pcs, queue_entry_ptr, &window_avail, &eos_reached);
 
+#if OPT_SC_ME
+            pcs->ahd_error = (uint32_t) ~0;
+            if (window_avail == true && queue_entry_ptr->picture_number > 0 && scs->calc_hist) {
+                pcs->ahd_error = calc_ahd_pd(scs, pcs, ctx);
+            }
+#endif
             // If the relevant frames are available, perform scene change detection
             if (window_avail == true && queue_entry_ptr->picture_number > 0) {
                 perform_scene_change_detection(scs, pcs, ctx);
@@ -4609,9 +5025,23 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
                 ctx->prev_delayed_intra = NULL;
 
             release_prev_picture_from_reorder_queue(enc_ctx);
+#if OPT_ALLINTRA
+            assert(IMPLIES(scs->allintra, scs->static_config.intra_period_length == 0));
+            // If the Intra period length is 0, then introduce an intra for every picture
+            if (scs->allintra) {
+                assert(scs->static_config.intra_period_length == 0);
+#if FTR_USE_KEY_IF_ALLINTRA
+                pcs->idr_flag = true;
+                pcs->cra_flag = false;
+#else
+                pcs->cra_flag = true;
+#endif
+            }
+#else
             // If the Intra period length is 0, then introduce an intra for every picture
             if (scs->static_config.intra_period_length == 0)
                 pcs->cra_flag = true;
+#endif
             // If an #IntraPeriodLength has passed since the last Intra, then introduce a CRA or IDR based on Intra Refresh type
             else if (scs->static_config.intra_period_length != -1) {
 
@@ -4668,8 +5098,12 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
             if ((enc_ctx->pre_assignment_buffer_intra_count > 0) ||
                 (enc_ctx->pre_assignment_buffer_count == (uint32_t)(1 << next_mg_hierarchical_levels)) ||
                 (enc_ctx->pre_assignment_buffer_eos_flag == true) ||
+#if CLN_REMOVE_LDP
+                (pcs->pred_structure == LOW_DELAY))
+#else
                 (pcs->pred_structure == SVT_AV1_PRED_LOW_DELAY_P) ||
                 (pcs->pred_structure == SVT_AV1_PRED_LOW_DELAY_B))
+#endif
             {
 #if LAD_MG_PRINT
                 print_pre_ass_buffer(enc_ctx, pcs, 0);
@@ -4754,7 +5188,9 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
                                         ctx->key_poc = pcs->picture_number; // log latest key frame poc
                                     }
                                     break;
+#if !CLN_REMOVE_P_SLICE
                                 case P_SLICE:
+#endif
                                 case B_SLICE:
                                     // Reset CRA and IDR Flag
                                     pcs->cra_flag = false;
@@ -4807,7 +5243,11 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
                         // Set the Decode Order
                         if ((ctx->mini_gop_idr_count[mini_gop_index] == 0) &&
                             (ctx->mini_gop_length[mini_gop_index] == pcs->pred_struct_ptr->pred_struct_period) &&
+#if CLN_REMOVE_LDP
+                            (scs->static_config.pred_structure == RANDOM_ACCESS) &&
+#else
                             (scs->static_config.pred_structure == SVT_AV1_PRED_RANDOM_ACCESS) &&
+#endif
                             !pcs->is_overlay) {
                             pcs->decode_order = enc_ctx->decode_base_number + pcs->pred_struct_ptr->pred_struct_entry_ptr_array[pcs->pred_struct_index]->decode_order;
                         }

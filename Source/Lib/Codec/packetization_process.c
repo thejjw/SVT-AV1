@@ -608,7 +608,11 @@ void *svt_aom_packetization_kernel(void *input_ptr) {
             if (ppcs->tpl_ctrls.enable) {
                 if (ppcs->temporal_layer_index == 0) {
                     for (uint32_t i = 0; i < ppcs->tpl_group_size; i++) {
+#if CLN_REMOVE_P_SLICE
+                        if (svt_aom_is_incomp_mg_frame(ppcs->tpl_group[i])) {
+#else
                         if (ppcs->tpl_group[i]->slice_type == P_SLICE) {
+#endif
                             if (ppcs->tpl_group[i]->ext_mg_id == ppcs->ext_mg_id + 1) {
                                 svt_aom_release_pa_reference_objects(scs, ppcs->tpl_group[i]);
                             }
@@ -668,6 +672,16 @@ void *svt_aom_packetization_kernel(void *input_ptr) {
 
             // Delayed call from Entropy Coding process
             {
+#if CLN_REMOVE_P_SLICE
+                // Release the reference Pictures from both lists
+                for (REF_FRAME_MINUS1 ref = LAST; ref < ALT + 1; ref++) {
+                    const uint8_t list_idx = get_list_idx(ref + 1);
+                    const uint8_t ref_idx  = get_ref_frame_idx(ref + 1);
+                    if (pcs->ref_pic_ptr_array[list_idx][ref_idx] != NULL) {
+                        svt_release_object(pcs->ref_pic_ptr_array[list_idx][ref_idx]);
+                    }
+                }
+#else
                 // Release the List 0 Reference Pictures
                 for (uint32_t ref_idx = 0; ref_idx < pcs->ppcs->ref_list0_count; ++ref_idx) {
                     if (pcs->ref_pic_ptr_array[0][ref_idx] != NULL) {
@@ -681,6 +695,7 @@ void *svt_aom_packetization_kernel(void *input_ptr) {
                         svt_release_object(pcs->ref_pic_ptr_array[1][ref_idx]);
                     }
                 }
+#endif
 
                 //free palette data
                 if (pcs->tile_tok[0][0])
@@ -723,10 +738,21 @@ void *svt_aom_packetization_kernel(void *input_ptr) {
         output_stream_ptr->n_filled_len = 0;
         output_stream_ptr->pts          = pcs->ppcs->input_ptr->pts;
         // we output one temporal unit a time, so dts alwasy equals to pts.
-        output_stream_ptr->dts                  = output_stream_ptr->pts;
-        output_stream_ptr->pic_type             = pcs->ppcs->is_ref
-                        ? pcs->ppcs->idr_flag ? EB_AV1_KEY_PICTURE : (EbAv1PictureType)pcs->slice_type
-                        : EB_AV1_NON_REF_PICTURE;
+        output_stream_ptr->dts = output_stream_ptr->pts;
+#if CLN_REMOVE_P_SLICE
+        if (pcs->ppcs->idr_flag)
+            output_stream_ptr->pic_type = EB_AV1_KEY_PICTURE;
+        else if (pcs->slice_type == I_SLICE)
+            output_stream_ptr->pic_type = EB_AV1_INTRA_ONLY_PICTURE;
+        else if (pcs->ppcs->is_ref)
+            output_stream_ptr->pic_type = EB_AV1_INTER_PICTURE;
+        else
+            output_stream_ptr->pic_type = EB_AV1_NON_REF_PICTURE;
+#else
+        output_stream_ptr->pic_type = pcs->ppcs->is_ref
+            ? pcs->ppcs->idr_flag ? EB_AV1_KEY_PICTURE : (EbAv1PictureType)pcs->slice_type
+            : EB_AV1_NON_REF_PICTURE;
+#endif
         output_stream_ptr->p_app_private        = pcs->ppcs->input_ptr->p_app_private;
         output_stream_ptr->temporal_layer_index = pcs->ppcs->temporal_layer_index;
         output_stream_ptr->qp                   = pcs->ppcs->picture_qp;

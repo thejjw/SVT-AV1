@@ -920,6 +920,67 @@ static inline void svt_sad_loop_kernel128xh_neon(uint8_t *src, uint32_t src_stri
     }
 }
 
+uint32_t svt_sad_nxm_combined_neon(const uint8_t *src, uint32_t src_stride, const uint8_t *ref, uint32_t ref_stride,
+                                   int32_t height, int32_t width) {
+    // these must match block widths implemented in svt_nxm_sad_kernel_helper_neon
+    // 1, 2, 3 are added for convenience and will be handled by C code
+    static const int available_widths[] = {1, 2, 3, 4, 8, 16, 24, 32, 40, 48, 56, 64};
+    int              i                  = sizeof(available_widths) / sizeof(available_widths[0]);
+    uint32_t         sad                = 0;
+    while (width > 0) {
+        while (--i >= 0) {
+            int w = available_widths[i];
+            if (w <= width) {
+                if (w == 4 && (height & 1)) {
+                    // sad4xh_neon only handles even heights
+                    sad += svt_fast_loop_nxm_sad_kernel(src, src_stride, ref, ref_stride, height, w);
+                } else {
+                    sad += svt_nxm_sad_kernel_helper_neon(src, src_stride, ref, ref_stride, height, w);
+                }
+                width -= w;
+                src += w;
+                ref += w;
+                break;
+            }
+        }
+    }
+    return sad;
+}
+
+void svt_sad_loop_kernel_anyxh_neon(uint8_t  *src, // input parameter, source samples Ptr
+                                    uint32_t  src_stride, // input parameter, source stride
+                                    uint8_t  *ref, // input parameter, reference samples Ptr
+                                    uint32_t  ref_stride, // input parameter, reference stride
+                                    uint32_t  block_height, // input parameter, block height (M)
+                                    uint32_t  block_width, // input parameter, block width (N)
+                                    uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center,
+                                    uint32_t src_stride_raw, // input parameter, source stride (no line skipping)
+                                    uint8_t skip_search_line, int16_t search_area_width, int16_t search_area_height) {
+    int16_t   x_search_index;
+    int16_t   y_search_index;
+    const int skip_line_value = (block_width == 16 && block_height <= 16 && skip_search_line) ? 0 : -1;
+
+    for (y_search_index = 0; y_search_index < search_area_height; y_search_index++) {
+        if ((y_search_index & 1) == skip_line_value) {
+            ref += src_stride_raw;
+            continue;
+        }
+        for (x_search_index = 0; x_search_index < search_area_width; x_search_index++) {
+            uint32_t sad = svt_sad_nxm_combined_neon(
+                src, src_stride, ref + x_search_index, ref_stride, block_height, block_width);
+
+            // Update results
+            if (sad < *best_sad) {
+                *best_sad        = sad;
+                *x_search_center = x_search_index;
+                *y_search_center = y_search_index;
+            }
+        }
+
+        ref += src_stride_raw;
+    }
+}
+
 void svt_sad_loop_kernel_neon(uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                               uint32_t block_height, uint32_t block_width, uint64_t *best_sad, int16_t *x_search_center,
                               int16_t *y_search_center, uint32_t src_stride_raw, uint8_t skip_search_line,
@@ -1068,19 +1129,19 @@ void svt_sad_loop_kernel_neon(uint8_t *src, uint32_t src_stride, uint8_t *ref, u
         break;
     }
     default: {
-        svt_sad_loop_kernel_c(src,
-                              src_stride,
-                              ref,
-                              ref_stride,
-                              block_height,
-                              block_width,
-                              best_sad,
-                              x_search_center,
-                              y_search_center,
-                              src_stride_raw,
-                              skip_search_line,
-                              search_area_width,
-                              search_area_height);
+        svt_sad_loop_kernel_anyxh_neon(src,
+                                       src_stride,
+                                       ref,
+                                       ref_stride,
+                                       block_height,
+                                       block_width,
+                                       best_sad,
+                                       x_search_center,
+                                       y_search_center,
+                                       src_stride_raw,
+                                       skip_search_line,
+                                       search_area_width,
+                                       search_area_height);
         break;
     }
     }
@@ -1089,13 +1150,22 @@ void svt_sad_loop_kernel_neon(uint8_t *src, uint32_t src_stride, uint8_t *ref, u
 static inline uint32x4_t get_mv_cost_vector(const struct svt_mv_cost_param *mv_cost_params, int16_t row, int16_t col,
                                             int16_t mvx, int16_t mvy, int16_t search_position_start_x,
                                             int16_t search_position_start_y) {
-    const MV   baseMv = {(int16_t)(mvy + (search_position_start_y + row) * 8),
-                         (int16_t)(mvx + (search_position_start_x + col) * 8)};
-    const MV   mvs[4] = {{baseMv.row, baseMv.col + 8 * 0},
-                         {baseMv.row, baseMv.col + 8 * 1},
-                         {baseMv.row, baseMv.col + 8 * 2},
-                         {baseMv.row, baseMv.col + 8 * 3}};
-    uint32_t   costs[4];
+#if CLN_UNIFY_MV_TYPE
+    const Mv baseMv = {
+        {(int16_t)(mvx + (search_position_start_x + col) * 8), (int16_t)(mvy + (search_position_start_y + row) * 8)}};
+    const Mv mvs[4] = {{{baseMv.y, baseMv.x + 8 * 0}},
+                       {{baseMv.y, baseMv.x + 8 * 1}},
+                       {{baseMv.y, baseMv.x + 8 * 2}},
+                       {{baseMv.y, baseMv.x + 8 * 3}}};
+#else
+    const MV baseMv = {(int16_t)(mvy + (search_position_start_y + row) * 8),
+                       (int16_t)(mvx + (search_position_start_x + col) * 8)};
+    const MV mvs[4] = {{baseMv.row, baseMv.col + 8 * 0},
+                       {baseMv.row, baseMv.col + 8 * 1},
+                       {baseMv.row, baseMv.col + 8 * 2},
+                       {baseMv.row, baseMv.col + 8 * 3}};
+#endif
+    uint32_t costs[4];
     costs[0] = (uint32_t)svt_aom_fp_mv_err_cost(&mvs[0], mv_cost_params);
     costs[1] = (uint32_t)svt_aom_fp_mv_err_cost(&mvs[1], mv_cost_params);
     costs[2] = (uint32_t)svt_aom_fp_mv_err_cost(&mvs[2], mv_cost_params);
