@@ -183,6 +183,8 @@
 #define ENABLE_QM_TOKEN "--enable-qm"
 #define MIN_QM_LEVEL_TOKEN "--qm-min"
 #define MAX_QM_LEVEL_TOKEN "--qm-max"
+#define MIN_CHROMA_QM_LEVEL_TOKEN "--chroma-qm-min"
+#define MAX_CHROMA_QM_LEVEL_TOKEN "--chroma-qm-max"
 
 #define STARTUP_MG_SIZE_TOKEN "--startup-mg-size"
 #define STARTUP_QP_OFFSET_TOKEN "--startup-qp-offset"
@@ -923,6 +925,14 @@ ConfigEntry config_entry_rc[] = {
     {SINGLE_INPUT, MIN_QM_LEVEL_TOKEN, "Min quant matrix flatness, default is 8 [0-15]", set_cfg_generic_token},
     {SINGLE_INPUT, MAX_QM_LEVEL_TOKEN, "Max quant matrix flatness, default is 15 [0-15]", set_cfg_generic_token},
     {SINGLE_INPUT,
+     MIN_CHROMA_QM_LEVEL_TOKEN,
+     "Min chroma quant matrix flatness, default is 8 [0-15]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
+     MAX_CHROMA_QM_LEVEL_TOKEN,
+     "Max chroma quant matrix flatness, default is 15 [0-15]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      ROI_MAP_FILE_TOKEN,
      "Enable Region Of Interest and specify a picture based QP Offset map file, default is off",
      set_cfg_roi_map_file},
@@ -1370,6 +1380,8 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, ENABLE_QM_TOKEN, "EnableQM", set_cfg_generic_token},
     {SINGLE_INPUT, MIN_QM_LEVEL_TOKEN, "MinQmLevel", set_cfg_generic_token},
     {SINGLE_INPUT, MAX_QM_LEVEL_TOKEN, "MaxQmLevel", set_cfg_generic_token},
+    {SINGLE_INPUT, MIN_CHROMA_QM_LEVEL_TOKEN, "MinChromaQmLevel", set_cfg_generic_token},
+    {SINGLE_INPUT, MAX_CHROMA_QM_LEVEL_TOKEN, "MaxChromaQmLevel", set_cfg_generic_token},
 
     // ROI
     {SINGLE_INPUT, ROI_MAP_FILE_TOKEN, "RoiMapFile", set_cfg_roi_map_file},
