@@ -946,7 +946,7 @@ ConfigDescription config_entry_variance_boost[] = {
     {VARIANCE_OCTILE_TOKEN, "Octile for variance boost, default is 6 [1-8]"},
     {VARIANCE_BOOST_CURVE_TOKEN, "Curve for variance boost, default is 0 [0-2]"},
     // QP scale compress
-    {QP_SCALE_COMPRESS_STRENGTH_TOKEN, "[PSY] QP scale compress strength, default is 1 [0-3]"},
+    {QP_SCALE_COMPRESS_STRENGTH_TOKEN, "QP scale compress strength, default is 1 [0-3]"},
 	// Termination
     {NULL, NULL}};
 
