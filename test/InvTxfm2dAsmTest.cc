@@ -17,6 +17,34 @@
 #include <stdlib.h>
 #include <algorithm>
 
+///////////////////////////////////////////////////////////////////////////////
+// For some tests we need to use C implementations of low level functions,
+// however compile time macros can disable C implementations references to
+// reduce code size for deployment builds. Below trick is to redefine
+// svt_aom_setup_common_rtcd_internal() disregarding *_GUARANTEED macros
+#ifdef CONFIG_X86_AVX2_IS_GUARANTEED
+#undef CONFIG_X86_AVX2_IS_GUARANTEED
+#endif
+#ifdef CONFIG_ARM_NEON_IS_GUARANTEED
+#undef CONFIG_ARM_NEON_IS_GUARANTEED
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define svt_aom_setup_common_rtcd_internal svt_aom_setup_common_rtcd_4_tests
+#define RTCD_C
+#include "common_dsp_rtcd.h"
+#include "pic_operators.h"
+#include "pack_unpack_c.h"
+#include "common_dsp_rtcd_template.h"
+
+#ifdef __cplusplus
+}
+#endif
+///////////////////////////////////////////////////////////////////////////////
+
 #include "definitions.h"
 #include "transforms.h"
 #include "random.h"
