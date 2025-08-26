@@ -1728,8 +1728,12 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet *scs, PictureParentCon
         if (rtc_tune) {
             intrabc_level = 0;
         } else {
-            if (enc_mode <= ENC_M5)
+            if (enc_mode <= ENC_M0)
                 intrabc_level = 1;
+            else if (enc_mode <= ENC_M2)
+                intrabc_level = 2;
+            else if (enc_mode <= ENC_M4)
+                intrabc_level = 4;
             else if (enc_mode <= ENC_M7)
                 intrabc_level = 6;
             else
