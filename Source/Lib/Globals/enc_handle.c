@@ -4647,6 +4647,21 @@ static void copy_api_from_app(
 
     // QP scaling compression
     scs->static_config.qp_scale_compress_strength = config_struct->qp_scale_compress_strength;
+
+    // Override settings for Still Picture tune
+    if (scs->static_config.tune == 3) {
+        SVT_WARN("Tune 3: Still Picture overrides: sharpness, enable Variance Boost (strength and curve), and enable-qm and min/max level\n");
+        scs->static_config.enable_qm = 1;
+        scs->static_config.min_qm_level = 4;
+        scs->static_config.max_qm_level = 10;
+        scs->static_config.min_chroma_qm_level = 4;
+        scs->static_config.max_chroma_qm_level = 10;
+        scs->static_config.sharpness = 7;
+        scs->static_config.enable_variance_boost = 1;
+        scs->static_config.variance_boost_strength = 3;
+        scs->static_config.variance_boost_curve = 2;
+    }
+
     return;
 }
 
