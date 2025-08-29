@@ -321,80 +321,64 @@ void svt_av1_apply_temporal_filter_planewise_medium_neon(
     }
 }
 
-// Divide two int32x4 vectors
-static uint32x4_t div_u32(const uint32x4_t *a, const uint32x4_t *b) {
-    uint32x4_t result = vdupq_n_u32(0);
-    result            = vsetq_lane_u32(vdups_laneq_u32(*a, 0) / vdups_laneq_u32(*b, 0), result, 0);
-    result            = vsetq_lane_u32(vdups_laneq_u32(*a, 1) / vdups_laneq_u32(*b, 1), result, 1);
-    result            = vsetq_lane_u32(vdups_laneq_u32(*a, 2) / vdups_laneq_u32(*b, 2), result, 2);
-    result            = vsetq_lane_u32(vdups_laneq_u32(*a, 3) / vdups_laneq_u32(*b, 3), result, 3);
-    return result;
-}
-
 static void process_block_hbd_neon(int h, int w, uint16_t *buff_hbd_start, uint32_t *accum, uint16_t *count,
                                    uint32_t stride) {
-    int i, j;
-    int pos = 0;
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j += 8) {
-            //buff_lbd_start[pos] = (uint8_t)OD_DIVU(accum[k] + (count[k] >> 1), count[k]);
-            //buff_lbd_start[pos] = (uint8_t)((accum[k] + (count[k] >> 1))/ count[k]);
-            uint32x4_t accum_a = vld1q_u32(accum);
-            uint32x4_t accum_b = vld1q_u32(&accum[4]);
+    do {
+        int width = w;
+        do {
+            // buff_lbd_start[pos] = (uint8_t)OD_DIVU(accum[k] + (count[k] >> 1), count[k]);
+            // buff_lbd_start[pos] = (uint8_t)((accum[k] + (count[k] >> 1))/ count[k]);
+            uint32x4_t accum0 = vld1q_u32(accum);
+            uint32x4_t accum1 = vld1q_u32(&accum[4]);
+
+            uint16x8_t count_u16 = vld1q_u16(count);
+
+            // accum[k] / count[k]
+            float32x4_t count0_f16 = vcvtq_f32_u32(vmovl_u16(vget_low_u16(count_u16)));
+            float32x4_t count1_f16 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(count_u16)));
+            uint32x4_t  d0         = vcvtaq_u32_f32(vdivq_f32(vcvtq_f32_u32(accum0), count0_f16));
+            uint32x4_t  d1         = vcvtaq_u32_f32(vdivq_f32(vcvtq_f32_u32(accum1), count1_f16));
+            uint16x8_t  d01        = vcombine_u16(vmovn_u32(d0), vmovn_u32(d1));
+
+            vst1q_u16(buff_hbd_start, d01);
+
             accum += 8;
-
-            uint32x4_t count_a = vmovl_u16(vld1_u16(count));
-            uint32x4_t count_b = vmovl_u16(vld1_u16(&count[4]));
             count += 8;
-
-            //accum[k] + (count[k] >> 1)
-            uint32x4_t tmp_a = vaddq_u32(accum_a, vshrq_n_u32(count_a, 1));
-            uint32x4_t tmp_b = vaddq_u32(accum_b, vshrq_n_u32(count_b, 1));
-
-            //accum[k] + (count[k] >> 1))/ count[k]
-            tmp_a             = div_u32(&tmp_a, &count_a);
-            tmp_b             = div_u32(&tmp_b, &count_b);
-            uint16x8_t tmp_ab = vqmovn_high_u32(vqmovn_u32(tmp_a), tmp_b);
-
-            vst1q_u16(buff_hbd_start + pos, tmp_ab);
-
-            pos += 8;
-        }
-        pos += stride;
-    }
+            buff_hbd_start += 8;
+            width -= 8;
+        } while (width != 0);
+        buff_hbd_start += stride;
+    } while (--h != 0);
 }
 
 static void process_block_lbd_neon(int h, int w, uint8_t *buff_lbd_start, uint32_t *accum, uint16_t *count,
                                    uint32_t stride) {
-    int i, j;
-    int pos = 0;
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < w; j += 8) {
-            //buff_lbd_start[pos] = (uint8_t)OD_DIVU(accum[k] + (count[k] >> 1), count[k]);
-            //buff_lbd_start[pos] = (uint8_t)((accum[k] + (count[k] >> 1))/ count[k]);
-            uint32x4_t accum_a = vld1q_u32(accum);
-            uint32x4_t accum_b = vld1q_u32(&accum[4]);
+    do {
+        int width = w;
+        do {
+            // buff_lbd_start[pos] = (uint8_t)OD_DIVU(accum[k] + (count[k] >> 1), count[k]);
+            // buff_lbd_start[pos] = (uint8_t)((accum[k] + (count[k] >> 1))/ count[k]);
+            uint32x4_t accum0 = vld1q_u32(accum);
+            uint32x4_t accum1 = vld1q_u32(&accum[4]);
+
+            uint16x8_t count_u16 = vld1q_u16(count);
+
+            // accum[k] / count[k]
+            float32x4_t count0_f16 = vcvtq_f32_u32(vmovl_u16(vget_low_u16(count_u16)));
+            float32x4_t count1_f16 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(count_u16)));
+            uint32x4_t  d0         = vcvtaq_u32_f32(vdivq_f32(vcvtq_f32_u32(accum0), count0_f16));
+            uint32x4_t  d1         = vcvtaq_u32_f32(vdivq_f32(vcvtq_f32_u32(accum1), count1_f16));
+            uint16x8_t  d01        = vcombine_u16(vmovn_u32(d0), vmovn_u32(d1));
+
+            vst1_u8(buff_lbd_start, vmovn_u16(d01));
+
             accum += 8;
-
-            uint32x4_t count_a = vmovl_u16(vld1_u16(count));
-            uint32x4_t count_b = vmovl_u16(vld1_u16(&count[4]));
             count += 8;
-
-            //accum[k] + (count[k] >> 1)
-            uint32x4_t tmp_a = vaddq_u32(accum_a, vshrq_n_u32(count_a, 1));
-            uint32x4_t tmp_b = vaddq_u32(accum_b, vshrq_n_u32(count_b, 1));
-
-            //accum[k] + (count[k] >> 1))/ count[k]
-            tmp_a              = div_u32(&tmp_a, &count_a);
-            tmp_b              = div_u32(&tmp_b, &count_b);
-            uint16x8_t tmp_ab1 = vqmovn_high_u32(vqmovn_u32(tmp_a), tmp_b);
-
-            vst1_u8(buff_lbd_start + pos, vqmovn_u16(tmp_ab1));
-
-            pos += 8;
-        }
-        pos += stride;
-    }
+            buff_lbd_start += 8;
+            width -= 8;
+        } while (width != 0);
+        buff_lbd_start += stride;
+    } while (--h != 0);
 }
 
 void svt_aom_get_final_filtered_pixels_neon(MeContext *me_ctx, EbByte *src_center_ptr_start,
