@@ -3925,6 +3925,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             // update the look ahead size
             update_look_ahead(scs);
     }
+
+#if OPT_HW_PART
+    scs->super_block_size = 64;
+#else
     // when resize mode is used, use sb 64 because of a r2r when 128 is used
     // In low delay mode, sb size is set to 64
     // in 240P resolution, sb size is set to 64
@@ -3976,6 +3980,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // When switch frame is on, all renditions must have same super block size. See spec 5.5.1, 5.9.15.
     if (scs->static_config.sframe_dist != 0)
         scs->super_block_size = 64;
+#endif
     // Set config info related to SB size
     if (scs->super_block_size == 128) {
         scs->seq_header.sb_size = BLOCK_128X128;
@@ -4263,6 +4268,16 @@ static void copy_api_from_app(
     scs->static_config.multiply_keyint = config_struct->multiply_keyint;
     scs->static_config.intra_refresh_type = ((EbSvtAv1EncConfiguration*)config_struct)->intra_refresh_type;
     scs->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+#if FTR_HW_LIKE_ENCODER
+    if (scs->static_config.enc_mode != ENC_MR) {
+        scs->static_config.enc_mode = ENC_MR;
+        SVT_WARN("Preset forced to MR: the only supported mode for the Hardware-Friendly SVT-AV1 Encoder\n");
+    }
+    EbInputResolution input_resolution;
+    svt_aom_derive_input_resolution(
+        &input_resolution,
+        scs->max_input_luma_width * scs->max_input_luma_height);
+#else
     if(scs->static_config.rtc) {
         if (scs->static_config.enc_mode > ENC_M12) {
             SVT_WARN("Preset M%d is mapped to M12.\n", scs->static_config.enc_mode);
@@ -4283,7 +4298,7 @@ static void copy_api_from_app(
         scs->static_config.enc_mode = ENC_M9;
         SVT_WARN("Setting preset to M9 as it is the highest supported preset for 4k and higher resolutions in Random Access mode\n");
     }
-
+#endif
     scs->static_config.use_qp_file = ((EbSvtAv1EncConfiguration*)config_struct)->use_qp_file;
     scs->static_config.use_fixed_qindex_offsets = ((EbSvtAv1EncConfiguration*)config_struct)->use_fixed_qindex_offsets;
     scs->static_config.key_frame_chroma_qindex_offset = ((EbSvtAv1EncConfiguration*)config_struct)->key_frame_chroma_qindex_offset;
@@ -4402,6 +4417,12 @@ static void copy_api_from_app(
             SVT_WARN("Flat structure for rtc is supported only with presets M11 or M12, use default hierarchical_levels\n");
         }
     }
+#if FTR_HW_LIKE_ENCODER
+    if (scs->static_config.hierarchical_levels == 0) {
+        scs->static_config.hierarchical_levels = HIERARCHICAL_LEVELS_AUTO;
+        scs->use_flat_ipp = 1;
+    }
+#endif
     // Set the default hierarchical levels
     if (scs->static_config.hierarchical_levels == HIERARCHICAL_LEVELS_AUTO) {
         scs->static_config.hierarchical_levels = scs->static_config.pred_structure == LOW_DELAY &&
@@ -4619,6 +4640,17 @@ static void copy_api_from_app(
     // Sharpness
     scs->static_config.sharpness = config_struct->sharpness;
 
+#if OPT_HW_CBR //---
+    memcpy(scs->static_config.qualcomm_input_qp_log_path,
+        ((EbSvtAv1EncConfiguration*)config_struct)->qualcomm_input_qp_log_path,
+        sizeof(scs->static_config.qualcomm_input_qp_log_path));
+
+
+    memcpy(scs->static_config.qualcomm_b64_qp_log_path,
+        ((EbSvtAv1EncConfiguration*)config_struct)->qualcomm_b64_qp_log_path,
+        sizeof(scs->static_config.qualcomm_b64_qp_log_path));
+
+#endif
     return;
 }
 
