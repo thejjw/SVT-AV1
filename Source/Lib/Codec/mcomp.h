@@ -124,6 +124,11 @@ static INLINE void svt_av1_set_subpel_mv_search_range(SubpelMvLimits *subpel_lim
 }
 
 static INLINE int svt_av1_is_subpelmv_in_range(const SubpelMvLimits *mv_limits, Mv mv) {
+#if OPT_HW_LIMIT_PA_MD
+    if ((abs(mv.x) > (96 << 3)) || (abs(mv.y) > (32 << 3)))
+        return 0;
+#endif
+
     return (mv.x >= mv_limits->col_min) && (mv.x <= mv_limits->col_max) && (mv.y >= mv_limits->row_min) &&
         (mv.y <= mv_limits->row_max);
 }

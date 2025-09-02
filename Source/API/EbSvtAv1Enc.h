@@ -951,6 +951,12 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is false.
      */
     bool rtc;
+
+#if OPT_HW_CBR //---
+    char qualcomm_input_qp_log_path[512];
+    char qualcomm_b64_qp_log_path[512];
+#endif
+
     // clang-format off
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     uint8_t padding[128 - (sizeof(uint8_t) * 2)

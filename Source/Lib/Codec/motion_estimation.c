@@ -1241,12 +1241,12 @@ uint16_t svt_aom_get_scaled_picture_distance(uint16_t dist) {
     uint8_t round_up = ((dist % 8) == 0) ? 0 : 1;
     return ((dist * 5) / 8) + round_up;
 }
+
 static const double search_area_multipliers[3][5] = {
      { 1.0, 1.0, 3.0, 4.0, 5.0 }, /* boost=1 */
      { 1.0, 1.0, 2.5, 3.5, 4.5 }, /* boost=2 */
      { 1.0, 1.0, 2.0, 2.5, 3.5 }  /* boost=3 */
 };
-
 static void apply_me_sa_boost(int16_t *width, int16_t *height, int hme_sad, int sc_class_me_boost) {
 
     int index;
@@ -1265,6 +1265,7 @@ static void apply_me_sa_boost(int16_t *width, int16_t *height, int hme_sad, int 
     *width  = (int16_t)(*width  * mult);
     *height = (int16_t)(*height * mult);
 }
+
 /*******************************************
  *   performs integer search motion estimation for
  all avaiable references frames
@@ -1294,7 +1295,6 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
     int16_t              y_search_center = 0;
     EbPictureBufferDesc *ref_pic_ptr;
     num_of_list_to_search = me_ctx->num_of_list_to_search;
-
     // Uni-Prediction motion estimation loop
     // List Loop
     for (list_index = REF_LIST_0; list_index < num_of_list_to_search; ++list_index) {
@@ -1314,47 +1314,55 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
             // Get hme results
             if (me_ctx->search_results[list_index][ref_pic_index].do_ref == 0)
                 continue; //so will not get ME results for those references.
-            x_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_x;
-            y_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_y;
-            search_area_width  = me_ctx->me_sa.sa_min.width;
-            search_area_height = me_ctx->me_sa.sa_min.height;
 
-            // factor to slowdown the ME search region growth to MAX
-            if (me_ctx->me_type != ME_MCTF) {
-                dist = svt_aom_get_scaled_picture_distance(dist);
-            }
-            search_area_width  = MIN((search_area_width * dist), me_ctx->me_sa.sa_max.width);
-            search_area_height = MIN((search_area_height * dist), me_ctx->me_sa.sa_max.height);
-            if (me_ctx->mv_based_sa_adj.enabled && (!me_ctx->mv_based_sa_adj.nearest_ref_only || ref_pic_index == 0)) {
-                if (ABS(x_search_center) > me_ctx->mv_based_sa_adj.mv_size_th)
-                    search_area_width *= me_ctx->mv_based_sa_adj.sa_multiplier;
-                if (ABS(y_search_center) > me_ctx->mv_based_sa_adj.mv_size_th)
-                    search_area_height *= me_ctx->mv_based_sa_adj.sa_multiplier;
-            }
-            if (me_ctx->sc_class_me_boost &&
-                (pcs->ahd_error == (uint32_t)~0 || // Use ahd_error only when it is derived
-                 pcs->ahd_error < ((((20 * pcs->enhanced_pic->width * pcs->enhanced_pic->height) / 128)) * (uint32_t) (INPUT_SIZE_COUNT - pcs->input_resolution)))) { // Only if there are low temporal variations between frames
-                const uint64_t hme_sad = me_ctx->search_results[list_index][ref_pic_index].hme_sad;
-                apply_me_sa_boost(&search_area_width, &search_area_height, hme_sad, me_ctx->sc_class_me_boost);
-            }
-            // Constrain x_ME to be a multiple of 8 (round up)
-            // Update ME search reagion size based on hme-data
-            search_area_width = (MAX(1, (search_area_width / me_ctx->reduce_me_sr_divisor[list_index][ref_pic_index])) + 7) & ~0x07;
-            search_area_height = MAX(
-                3,
-                (search_area_height /
-                 me_ctx->reduce_me_sr_divisor[list_index][ref_pic_index]));
-            int16_t search_area_height_before_sr_reduction = search_area_height;
-            int16_t search_area_width_before_sr_reduction  = search_area_width;
-            uint64_t best_hme_sad = (uint64_t)~0;
-            if (me_ctx->me_early_exit_th) {
-                if (me_ctx->zz_sad[list_index][ref_pic_index] <
-                    (me_ctx->me_early_exit_th / 6)) {
-                    search_area_width  = 1;
-                    search_area_height = 1;
+                x_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_x;
+                y_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_y;
+                search_area_width = me_ctx->me_sa.sa_min.width;
+                search_area_height = me_ctx->me_sa.sa_min.height;
+#if OPT_HW_BOUND_PA_ME
+                int16_t x_search_area_origin_default = -(search_area_width >> 1);
+                int16_t y_search_area_origin_default = -(search_area_height >> 1);
+#endif
+#if !OPT_HW_HME_ME && !OPT_HW_LIMIT_PA_ME
+                // factor to slowdown the ME search region growth to MAX
+                if (me_ctx->me_type != ME_MCTF) {
+                    dist = svt_aom_get_scaled_picture_distance(dist);
                 }
-            } else {
-                uint8_t hme_is_accuarte = 1;
+                search_area_width = MIN((search_area_width * dist), me_ctx->me_sa.sa_max.width);
+                search_area_height = MIN((search_area_height * dist), me_ctx->me_sa.sa_max.height);
+
+                if (me_ctx->mv_based_sa_adj.enabled && (!me_ctx->mv_based_sa_adj.nearest_ref_only || ref_pic_index == 0)) {
+                    if (ABS(x_search_center) > me_ctx->mv_based_sa_adj.mv_size_th)
+                        search_area_width *= me_ctx->mv_based_sa_adj.sa_multiplier;
+                    if (ABS(y_search_center) > me_ctx->mv_based_sa_adj.mv_size_th)
+                        search_area_height *= me_ctx->mv_based_sa_adj.sa_multiplier;
+                }
+                if (me_ctx->sc_class_me_boost &&
+                    (pcs->ahd_error == (uint32_t)~0 || // Use ahd_error only when it is derived
+                        pcs->ahd_error < ((((20 * pcs->enhanced_pic->width * pcs->enhanced_pic->height) / 128)) * (uint32_t)(INPUT_SIZE_COUNT - pcs->input_resolution)))) { // Only if there are low temporal variations between frames
+                    const uint64_t hme_sad = me_ctx->search_results[list_index][ref_pic_index].hme_sad;
+                    apply_me_sa_boost(&search_area_width, &search_area_height, hme_sad, me_ctx->sc_class_me_boost);
+                }
+
+                // Constrain x_ME to be a multiple of 8 (round up)
+                // Update ME search reagion size based on hme-data
+                search_area_width = (MAX(1, (search_area_width / me_ctx->reduce_me_sr_divisor[list_index][ref_pic_index])) + 7) & ~0x07;
+                search_area_height = MAX(
+                    3,
+                    (search_area_height /
+                        me_ctx->reduce_me_sr_divisor[list_index][ref_pic_index]));
+                int16_t search_area_height_before_sr_reduction = search_area_height;
+                int16_t search_area_width_before_sr_reduction = search_area_width;
+                uint64_t best_hme_sad = (uint64_t)~0;
+                if (me_ctx->me_early_exit_th) {
+                    if (me_ctx->zz_sad[list_index][ref_pic_index] <
+                        (me_ctx->me_early_exit_th / 6)) {
+                        search_area_width = 1;
+                        search_area_height = 1;
+                    }
+                }
+                else {
+                    uint8_t hme_is_accuarte = 1;
                     if ((x_search_center != 0 || y_search_center != 0) &&
                         (me_ctx->is_ref == true)) {
 
@@ -1374,97 +1382,99 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
                         if (x_search_center == 0 && y_search_center == 0)
                             hme_is_accuarte = 0;
                     }
-                if (me_ctx->me_sr_adjustment_ctrls.enable_me_sr_adjustment == 2) {
-                    if ((hme_is_accuarte && (best_hme_sad < (24 * 24))) ||
-                        (me_ctx->is_ref && me_ctx->search_results[list_index][ref_pic_index].hme_sad < (24 * 24))) {
-                        search_area_height = search_area_height / 2;
+                    if (me_ctx->me_sr_adjustment_ctrls.enable_me_sr_adjustment == 2) {
+                        if ((hme_is_accuarte && (best_hme_sad < (24 * 24))) ||
+                            (me_ctx->is_ref && me_ctx->search_results[list_index][ref_pic_index].hme_sad < (24 * 24))) {
+                            search_area_height = search_area_height / 2;
+                        }
+                    }
+                    if (me_ctx->me_sr_adjustment_ctrls.enable_me_sr_adjustment == 2) {
+                        if (list_index || ref_pic_index) {
+                            if (me_ctx->p_sb_best_sad[0][0][0] < 5000)
+                                if (search_area_height == search_area_height_before_sr_reduction &&
+                                    search_area_width == search_area_width_before_sr_reduction) {
+                                    search_area_height = search_area_height >> 1;
+                                    search_area_width = search_area_width >> 1;
+                                }
+                        }
                     }
                 }
-                if (me_ctx->me_sr_adjustment_ctrls.enable_me_sr_adjustment == 2) {
-                    if (list_index || ref_pic_index) {
-                        if (me_ctx->p_sb_best_sad[0][0][0] < 5000)
-                            if (search_area_height == search_area_height_before_sr_reduction &&
-                                search_area_width == search_area_width_before_sr_reduction) {
-                                search_area_height = search_area_height >> 1;
-                                search_area_width  = search_area_width >> 1;
-                            }
+#endif
+                svt_initialize_buffer_32bits(
+                    me_ctx->p_sb_best_sad[list_index][ref_pic_index], 21, 1, MAX_SAD_VALUE);
+                me_ctx->p_best_sad_64x64 = &(
+                    me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
+                me_ctx->p_best_sad_32x32 = &(
+                    me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
+                me_ctx->p_best_sad_16x16 = &(
+                    me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
+                me_ctx->p_best_sad_8x8 = &(
+                    me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+
+                me_ctx->p_best_mv64x64 = &(
+                    me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
+                me_ctx->p_best_mv32x32 = &(
+                    me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
+                me_ctx->p_best_mv16x16 = &(
+                    me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
+                me_ctx->p_best_mv8x8 = &(
+                    me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !OPT_HW_HME_ME && !OPT_HW_LIMIT_PA_ME
+                /* If search area is large enough, check the ME 8x8 SAD variance, and if low, reduce search area
+                * (as the 64x64 MVs are likely good for all the 8x8 blocks that make it up).  If the search area
+                * is already low, the overhead of searching one additional point will be high (and fruitless, since
+                * the minimum search size that will be set by the 8x8 SAD variance algorithm is 8x3.
+                */
+                if (me_ctx->me_8x8_var_ctrls.enabled && (search_area_width * search_area_height > 24)) {
+
+                    x_search_area_origin = x_search_center;
+                    y_search_area_origin = y_search_center;
+                    x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) -
+                        (ME_FILTER_TAP >> 1) + x_search_area_origin;
+                    y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) -
+                        (ME_FILTER_TAP >> 1) + y_search_area_origin;
+                    search_region_index = (x_top_left_search_region)+
+                        (y_top_left_search_region)*ref_pic_ptr->stride_y;
+                    me_ctx->integer_buffer_ptr[list_index][ref_pic_index] = &(
+                        ref_pic_ptr->buffer_y[search_region_index]);
+                    me_ctx->interpolated_full_stride[list_index][ref_pic_index] =
+                        ref_pic_ptr->stride_y;
+
+                    open_loop_me_fullpel_search_sblock(me_ctx,
+                        list_index,
+                        ref_pic_index,
+                        x_search_center,
+                        y_search_center,
+                        1,
+                        1);
+
+                    // Since only one point was searched, the 64x64 SAD will be the same as the sum of the 8x8 SADs
+                    const uint32_t mean_dist_8x8 = me_ctx->p_best_sad_64x64[0] / 64;
+                    uint32_t sum_ofsq_dist_8x8 = 0;
+                    for (unsigned i = 0; i < 64; i++) {
+                        const int32_t diff = ((int32_t)me_ctx->p_best_sad_8x8[i] - (int32_t)mean_dist_8x8);
+                        sum_ofsq_dist_8x8 += diff * diff;
+                    }
+
+                    uint32_t me_8x8_cost_var = (uint32_t)(sum_ofsq_dist_8x8 / 64);
+
+                    if (me_8x8_cost_var > me_ctx->me_8x8_var_ctrls.me_sr_mult2_th) {
+                        search_area_width = (MAX(1, search_area_width * 3 / 2) + 7) & ~0x7;
+                        search_area_height = MAX(1, search_area_height * 3 / 2);
+                    }
+
+                    if (me_8x8_cost_var < me_ctx->me_8x8_var_ctrls.me_sr_div4_th) {
+                        search_area_width = (MAX(1, search_area_width >> 2) + 7) & ~0x7;
+                        search_area_height = MAX(1, search_area_height >> 2);
+                        search_area_height = MAX(3, search_area_height);
+                    }
+                    else if (me_8x8_cost_var < me_ctx->me_8x8_var_ctrls.me_sr_div2_th) {
+                        search_area_width = (MIN(search_area_width, search_area_width >> 1) + 7) & ~0x7;
+                        search_area_height = MIN(search_area_height, search_area_height >> 1);
+                        search_area_height = MAX(3, search_area_height);
                     }
                 }
-            }
-            svt_initialize_buffer_32bits(
-                me_ctx->p_sb_best_sad[list_index][ref_pic_index], 21, 1, MAX_SAD_VALUE);
-            me_ctx->p_best_sad_64x64 = &(
-                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
-            me_ctx->p_best_sad_32x32 = &(
-                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
-            me_ctx->p_best_sad_16x16 = &(
-                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
-            me_ctx->p_best_sad_8x8 = &(
-                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
-
-            me_ctx->p_best_mv64x64 = &(
-                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
-            me_ctx->p_best_mv32x32 = &(
-                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
-            me_ctx->p_best_mv16x16 = &(
-                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
-            me_ctx->p_best_mv8x8 = &(
-                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
-
-            /* If search area is large enough, check the ME 8x8 SAD variance, and if low, reduce search area
-            * (as the 64x64 MVs are likely good for all the 8x8 blocks that make it up).  If the search area
-            * is already low, the overhead of searching one additional point will be high (and fruitless, since
-            * the minimum search size that will be set by the 8x8 SAD variance algorithm is 8x3.
-            */
-            if (me_ctx->me_8x8_var_ctrls.enabled && (search_area_width * search_area_height > 24)) {
-
-                x_search_area_origin = x_search_center;
-                y_search_area_origin = y_search_center;
-                x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) -
-                    (ME_FILTER_TAP >> 1) + x_search_area_origin;
-                y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) -
-                    (ME_FILTER_TAP >> 1) + y_search_area_origin;
-                search_region_index = (x_top_left_search_region)+
-                    (y_top_left_search_region)*ref_pic_ptr->stride_y;
-                me_ctx->integer_buffer_ptr[list_index][ref_pic_index] = &(
-                    ref_pic_ptr->buffer_y[search_region_index]);
-                me_ctx->interpolated_full_stride[list_index][ref_pic_index] =
-                    ref_pic_ptr->stride_y;
-
-                open_loop_me_fullpel_search_sblock(me_ctx,
-                    list_index,
-                    ref_pic_index,
-                    x_search_center,
-                    y_search_center,
-                    1,
-                    1);
-
-                // Since only one point was searched, the 64x64 SAD will be the same as the sum of the 8x8 SADs
-                const uint32_t mean_dist_8x8 = me_ctx->p_best_sad_64x64[0] / 64;
-                uint32_t sum_ofsq_dist_8x8 = 0;
-                for (unsigned i = 0; i < 64; i++) {
-                    const int32_t diff = ((int32_t)me_ctx->p_best_sad_8x8[i] - (int32_t)mean_dist_8x8);
-                    sum_ofsq_dist_8x8 += diff * diff;
-                }
-
-                uint32_t me_8x8_cost_var = (uint32_t)(sum_ofsq_dist_8x8 / 64);
-
-                if (me_8x8_cost_var > me_ctx->me_8x8_var_ctrls.me_sr_mult2_th) {
-                    search_area_width = (MAX(1, search_area_width * 3 / 2) + 7) & ~0x7;
-                    search_area_height = MAX(1, search_area_height * 3 / 2);
-                }
-
-                if (me_8x8_cost_var < me_ctx->me_8x8_var_ctrls.me_sr_div4_th) {
-                    search_area_width = (MAX(1, search_area_width >> 2) + 7) & ~0x7;
-                    search_area_height = MAX(1, search_area_height >> 2);
-                    search_area_height = MAX(3, search_area_height);
-                }
-                else if (me_8x8_cost_var < me_ctx->me_8x8_var_ctrls.me_sr_div2_th) {
-                    search_area_width = (MIN(search_area_width, search_area_width >> 1) + 7) & ~0x7;
-                    search_area_height = MIN(search_area_height, search_area_height >> 1);
-                    search_area_height = MAX(3, search_area_height);
-                }
-            }
+#endif
             x_search_area_origin = x_search_center - (search_area_width >> 1);
             y_search_area_origin = y_search_center - (search_area_height >> 1);
 
@@ -1518,6 +1528,16 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
                         picture_height))
                 : search_area_height;
 
+
+#if OPT_HW_BOUND_PA_ME
+            if (me_ctx->me_type != ME_MCTF) {
+                if (x_search_area_origin_default < x_search_area_origin)
+                    search_area_width = search_area_width - (x_search_area_origin - x_search_area_origin_default);
+
+                if (y_search_area_origin_default < y_search_area_origin)
+                    search_area_height = search_area_height - (y_search_area_origin - y_search_area_origin_default);
+            }
+#endif
             x_top_left_search_region            = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) -
                 (ME_FILTER_TAP >> 1) + x_search_area_origin;
             y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) -
@@ -1532,6 +1552,7 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
             // Move to the top left of the search region
             x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) + x_search_area_origin;
             y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) + y_search_area_origin;
+
             open_loop_me_fullpel_search_sblock(me_ctx,
                                                list_index,
                                                ref_pic_index,
