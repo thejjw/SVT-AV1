@@ -4328,8 +4328,14 @@ static void set_ref_frame_sign_bias(SequenceControlSet* scs, PictureParentContro
 static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     FrameHeader* frm_hdr = &pcs->frm_hdr;
     pcs->allow_comp_inter_inter = pcs->slice_type != I_SLICE;
+#if FTR_HW_LIKE_ENCODER
+    if (scs->use_flat_ipp)
+        frm_hdr->reference_mode = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF : SINGLE_REFERENCE;
+    else
+        frm_hdr->reference_mode = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF : svt_aom_is_incomp_mg_frame(pcs) ? SINGLE_REFERENCE : REFERENCE_MODE_SELECT;
+#else
     frm_hdr->reference_mode = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF : svt_aom_is_incomp_mg_frame(pcs) ? SINGLE_REFERENCE : REFERENCE_MODE_SELECT;
-
+#endif
     pcs->av1_cm->mi_cols = pcs->aligned_width >> MI_SIZE_LOG2;
     pcs->av1_cm->mi_rows = pcs->aligned_height >> MI_SIZE_LOG2;
 

@@ -1358,9 +1358,12 @@ void svt_aom_cyclic_refresh_init(PictureParentControlSet *ppcs) {
 
     if (ppcs->sc_class1)
         cr->percent_refresh += 5;
-
+#if FTR_HW_LIKE_ENCODER
+    cr->apply_cyclic_refresh = 0;
+#else
     cr->apply_cyclic_refresh = (ppcs->slice_type != I_SLICE &&
                                 (ppcs->scs->use_flat_ipp || ppcs->temporal_layer_index == 0));
+#endif
     if (!cr->apply_cyclic_refresh)
         return;
 
@@ -3625,6 +3628,9 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                         new_qindex = rc_pick_q_and_bounds_no_stats_cbr(pcs);
                     else
                         new_qindex = rc_pick_q_and_bounds(pcs);
+#if OPT_HW_CBR
+                    new_qindex = 5 * scs->qualcomm_qp_array[pcs->picture_number];
+#endif
                     frm_hdr->quantization_params.base_q_idx = (uint8_t)CLIP3(
                         (int32_t)quantizer_to_qindex[scs->static_config.min_qp_allowed],
                         (int32_t)quantizer_to_qindex[scs->static_config.max_qp_allowed],
@@ -3633,7 +3639,7 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                     pcs->picture_qp = (uint8_t)CLIP3((int32_t)scs->static_config.min_qp_allowed,
                                                      (int32_t)scs->static_config.max_qp_allowed,
                                                      (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
-
+#if !OPT_HW_CBR
                     //Limiting the QP based on the QP of the Reference frame
                     if ((int32_t)pcs->temporal_layer_index != 0) {
                         int list0_ref_qp = -1;
@@ -3735,6 +3741,7 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                     }
 
                     frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs->picture_qp];
+#endif
                 }
                 if (pcs->ppcs->slice_type == I_SLICE) {
                     pcs->ppcs->rate_control_param_ptr->last_i_qp = pcs->picture_qp;
@@ -3844,6 +3851,13 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                 svt_aom_update_rc_counts(pcs->ppcs);
             }
 
+#if OPT_HW_CBR // QPM
+            pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
+            for (int sb_addr = 0; sb_addr < pcs->sb_total_count; ++sb_addr) {
+                SuperBlock *sb_ptr = pcs->sb_ptr_array[sb_addr];
+                sb_ptr->qindex     = 5 * scs->qualcomm_b64_qp_array[pcs->picture_number][sb_addr];
+            }
+#endif
             // Derive a QP per 64x64 using ME distortions (to be used for lambda modulation only; not at Q/Q-1)
             if (scs->stats_based_sb_lambda_modulation)
                 generate_b64_me_qindex_map(pcs);

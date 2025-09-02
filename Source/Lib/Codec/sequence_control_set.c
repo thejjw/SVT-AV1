@@ -87,8 +87,11 @@ EbErrorType svt_sequence_control_set_ctor(SequenceControlSet *scs, EbPtr object_
     // 0 - force off
     // 1 - force on
     // 2 - adaptive
+#if OPT_HW_BC_PALETTE
+    scs->seq_header.seq_force_screen_content_tools = 0;
+#else
     scs->seq_header.seq_force_screen_content_tools = 2;
-
+#endif
     // 0 - Not to force. MV can be in 1/4 or 1/8
     // 1 - force to integer
     // 2 - adaptive

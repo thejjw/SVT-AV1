@@ -3255,9 +3255,16 @@ static void derive_vq_params(SequenceControlSet* scs) {
  * Derive TF Params
  */
 static void derive_tf_params(SequenceControlSet *scs) {
+#if OPT_HW_TF
+    if (scs->static_config.pred_structure == LOW_DELAY)
+        tf_ld_controls(scs, 0);
+    else
+        tf_controls(scs, 0);
+#else
     const uint32_t hierarchical_levels = scs->static_config.hierarchical_levels;
     // Do not perform TF if LD or 1 Layer or 1st pass
     const bool do_tf = scs->static_config.enable_tf && hierarchical_levels >= 1 && !scs->static_config.lossless;
+
     const EncMode enc_mode = scs->static_config.enc_mode;
     uint8_t tf_level = 0;
     if (scs->static_config.pred_structure == LOW_DELAY) {
@@ -3294,6 +3301,7 @@ static void derive_tf_params(SequenceControlSet *scs) {
         tf_level = 9;
     }
     tf_controls(scs, tf_level);
+#endif
 }
 
 
@@ -3319,7 +3327,49 @@ static void set_list0_only_base(SequenceControlSet* scs, uint8_t list0_only_base
  */
 static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
     MrpCtrls* mrp_ctrl = &scs->mrp_ctrls;
+#if OPT_HW_MRP
+    switch (mrp_level)
+    {
+    case 0:
+        mrp_ctrl->referencing_scheme = 0;
+        mrp_ctrl->sc_base_ref_list0_count = 1;
+        mrp_ctrl->sc_base_ref_list1_count = 0;
+        mrp_ctrl->sc_non_base_ref_list0_count = 1;
+        mrp_ctrl->sc_non_base_ref_list1_count = 0;
+        mrp_ctrl->base_ref_list0_count = 1;
+        mrp_ctrl->base_ref_list1_count = 0;
+        mrp_ctrl->non_base_ref_list0_count = 1;
+        mrp_ctrl->non_base_ref_list1_count = 0;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 0;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 0;
+        break;
 
+    case 1:
+        mrp_ctrl->referencing_scheme = 0;
+        mrp_ctrl->sc_base_ref_list0_count = 1;
+        mrp_ctrl->sc_base_ref_list1_count = 1;
+        mrp_ctrl->sc_non_base_ref_list0_count = 1;
+        mrp_ctrl->sc_non_base_ref_list1_count = 1;
+        mrp_ctrl->base_ref_list0_count = 1;
+        mrp_ctrl->base_ref_list1_count = 1;
+        mrp_ctrl->non_base_ref_list0_count = 1;
+        mrp_ctrl->non_base_ref_list1_count = 1;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 0;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 0;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+#else
     switch (mrp_level)
     {
     case 0:
@@ -3515,6 +3565,7 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         assert(0);
         break;
     }
+#endif
     // For low delay mode, list1 references are not used
     if (scs->static_config.pred_structure == LOW_DELAY && scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR) {
         mrp_ctrl->sc_base_ref_list1_count = 0;
@@ -3528,6 +3579,7 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->pme_ref0_only               = 0;
         mrp_ctrl->use_best_references         = 0;
     }
+
     if (scs->static_config.pred_structure == LOW_DELAY) {
         // If content type (SC/NSC) is known, can allocate refs based on settings, else consider worst-case
         if (scs->static_config.screen_content_mode == 1)
@@ -3580,6 +3632,15 @@ static void set_first_pass_ctrls(
 }
 
 static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t resize_mode, uint8_t aq_mode, bool avif, bool allintra) {
+#if OPT_HW_TPL
+    (void)pred_structure;
+    (void)superres_mode;
+    (void)resize_mode;
+    (void)aq_mode;
+    (void)avif;
+    (void)allintra;
+    return 0;
+#else
     if (allintra) {
         SVT_WARN("TPL is disabled for all-intra coding\n");
         return 0;
@@ -3606,6 +3667,7 @@ static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t re
     }
     else
         return 1;
+#endif
 }
 /*
 * Set multi Pass Params
@@ -3925,6 +3987,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             // update the look ahead size
             update_look_ahead(scs);
     }
+
+#if OPT_HW_PART
+    scs->super_block_size = 64;
+#else
     // when resize mode is used, use sb 64 because of a r2r when 128 is used
     // In low delay mode, sb size is set to 64
     // in 240P resolution, sb size is set to 64
@@ -3976,6 +4042,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // When switch frame is on, all renditions must have same super block size. See spec 5.5.1, 5.9.15.
     if (scs->static_config.sframe_dist != 0)
         scs->super_block_size = 64;
+#endif
     // Set config info related to SB size
     if (scs->super_block_size == 128) {
         scs->seq_header.sb_size = BLOCK_128X128;
@@ -4160,6 +4227,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         SVT_WARN("Scene Change is not optimal and may produce suboptimal keyframe placements\n");
     // MRP level
     uint8_t mrp_level;
+#if OPT_HW_MRP
+    mrp_level = 1;
+#else
     if (scs->static_config.rtc) {
 
         if (scs->static_config.enc_mode <= ENC_M9) {
@@ -4203,6 +4273,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
                 mrp_level = scs->static_config.pred_structure == RANDOM_ACCESS ? 7 : 0;
             }
     }
+#endif
     set_mrp_ctrl(scs, mrp_level);
     scs->is_short_clip = scs->static_config.gop_constraint_rc ? 1 : 0; // set to 1 if multipass and less than 200 frames in resourcecordination
 
@@ -4263,6 +4334,16 @@ static void copy_api_from_app(
     scs->static_config.multiply_keyint = config_struct->multiply_keyint;
     scs->static_config.intra_refresh_type = ((EbSvtAv1EncConfiguration*)config_struct)->intra_refresh_type;
     scs->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+#if FTR_HW_LIKE_ENCODER
+    if (scs->static_config.enc_mode != ENC_MR) {
+        scs->static_config.enc_mode = ENC_MR;
+        SVT_WARN("Preset forced to MR: the only supported mode for the Hardware-Friendly SVT-AV1 Encoder\n");
+    }
+    EbInputResolution input_resolution;
+    svt_aom_derive_input_resolution(
+        &input_resolution,
+        scs->max_input_luma_width * scs->max_input_luma_height);
+#else
     if(scs->static_config.rtc) {
         if (scs->static_config.enc_mode > ENC_M12) {
             SVT_WARN("Preset M%d is mapped to M12.\n", scs->static_config.enc_mode);
@@ -4283,7 +4364,7 @@ static void copy_api_from_app(
         scs->static_config.enc_mode = ENC_M9;
         SVT_WARN("Setting preset to M9 as it is the highest supported preset for 4k and higher resolutions in Random Access mode\n");
     }
-
+#endif
     scs->static_config.use_qp_file = ((EbSvtAv1EncConfiguration*)config_struct)->use_qp_file;
     scs->static_config.use_fixed_qindex_offsets = ((EbSvtAv1EncConfiguration*)config_struct)->use_fixed_qindex_offsets;
     scs->static_config.key_frame_chroma_qindex_offset = ((EbSvtAv1EncConfiguration*)config_struct)->key_frame_chroma_qindex_offset;
@@ -4402,6 +4483,12 @@ static void copy_api_from_app(
             SVT_WARN("Flat structure for rtc is supported only with presets M11 or M12, use default hierarchical_levels\n");
         }
     }
+#if FTR_HW_LIKE_ENCODER
+    if (scs->static_config.hierarchical_levels == 0) {
+        scs->static_config.hierarchical_levels = HIERARCHICAL_LEVELS_AUTO;
+        scs->use_flat_ipp = 1;
+    }
+#endif
     // Set the default hierarchical levels
     if (scs->static_config.hierarchical_levels == HIERARCHICAL_LEVELS_AUTO) {
         scs->static_config.hierarchical_levels = scs->static_config.pred_structure == LOW_DELAY &&
@@ -4619,6 +4706,17 @@ static void copy_api_from_app(
     // Sharpness
     scs->static_config.sharpness = config_struct->sharpness;
 
+#if OPT_HW_CBR //---
+    memcpy(scs->static_config.qualcomm_input_qp_log_path,
+        ((EbSvtAv1EncConfiguration*)config_struct)->qualcomm_input_qp_log_path,
+        sizeof(scs->static_config.qualcomm_input_qp_log_path));
+
+
+    memcpy(scs->static_config.qualcomm_b64_qp_log_path,
+        ((EbSvtAv1EncConfiguration*)config_struct)->qualcomm_b64_qp_log_path,
+        sizeof(scs->static_config.qualcomm_b64_qp_log_path));
+
+#endif
     return;
 }
 

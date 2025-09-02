@@ -145,6 +145,10 @@
 #define QP_FILE_NEW_TOKEN "--qpfile"
 #define INPUT_DEPTH_TOKEN "--input-depth"
 #define KEYINT_TOKEN "--keyint"
+#if OPT_HW_CBR //---
+#define OPT_HW_LOG_TOKEN "--qualcomm-log"
+#define OPT_HW_B64_LOG_TOKEN "--qualcomm-b64-log"
+#endif
 #define LOOKAHEAD_NEW_TOKEN "--lookahead"
 #define SVTAV1_PARAMS "--svtav1-params"
 
@@ -1140,6 +1144,10 @@ ConfigEntry config_entry[] = {
     {AVIF_TOKEN, "Avif", set_cfg_generic_token},
     // Real-time Coding
     {RTC_TOKEN, "RealTime", set_cfg_generic_token},
+#if OPT_HW_CBR //---
+    {OPT_HW_LOG_TOKEN, "QualcommLogFile", set_cfg_generic_token},
+    {OPT_HW_B64_LOG_TOKEN, "Qualcommb64LogFile", set_cfg_generic_token},
+#endif
     // Termination
     {NULL, NULL, NULL}};
 

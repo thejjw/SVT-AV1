@@ -316,6 +316,11 @@ typedef struct SequenceControlSet {
     bool allintra;
     // If true, use a flat IPP pred structure, where each pic uses only the previous frame as ref
     bool use_flat_ipp;
+
+#if OPT_HW_CBR
+    int qualcomm_qp_array[1000];
+    int qualcomm_b64_qp_array[1000][1000];
+#endif
 } SequenceControlSet;
 typedef struct EbSequenceControlSetInstance {
     EbDctor             dctor;

@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright(c) 2020 Intel Corporation
 *
 * This source code is subject to the terms of the BSD 2 Clause License and
@@ -74,6 +74,85 @@ extern "C" {
 #define DEBUG_STARTUP_MG_SIZE   0
 #define DEBUG_SEGMENT_QP        0
 #define DEBUG_ROI               0
+
+// Hardware config
+#define FTR_HW_LIKE_ENCODER   1
+#if FTR_HW_LIKE_ENCODER
+// High level configuration; Default is a Baseline encoder
+// Enable promising AV1 tools
+#define FTR_PROMIZING_AV1_TOOLS 0   // Includes Opt_Part, Opt_TXT, INTRA_NSQ, TXS, SG, and Wiener
+
+// Hardware-oriented ME configuration
+#define OPT_HW_HME_ME           0   // Uses a simplified ME pipeline for hardware
+                                    // (1) Activates only HME Level 0 and Main ME to capture and refine motion with reduced circuitry
+                                    // (2) Employs fixed search windows across all conditions (independent of QP, temporal distance, or MV/distortion feedback)
+// Parameter-level tuning of normative tools for hardware-like constraints
+#define OPT_HW_CDEF           0 // Disable CDEF filter (set to 0 to enable)
+
+#define OPT_HW_PART           1 // Restrict block partitioning to hardware-friendly sizes (set to 0 to enable)
+#define OPT_HW_TXT            1 // Disable transform type search (set to 0 to enable)
+#define OPT_HW_OBMC           1 // Disable overlapped block motion compensation (set to 0 to enable)
+#if !FTR_PROMIZING_AV1_TOOLS
+#define OPT_HW_TXS            1 // Disable transform size search (set to 0 to enable)
+#define OPT_HW_WARP           1 // Disable warped motion compensation (set to 0 to enable)
+#define OPT_HW_INTRA_ONLY_SQ  1 // Disable INTRA for non-square blocks (set to 0 to enable)
+#endif
+#define OPT_HW_IFS            1 // Disable interpolation filter search (set to 0 to enable)
+#if !FTR_PROMIZING_AV1_TOOLS
+#define OPT_HW_WIENER         1 // Disable wiener loop filter (set to 0 to enable)
+#define OPT_HW_SG             1 // Disable self-guided restoration filter (set to 0 to enable)
+#endif
+#define OPT_HW_IND            1 // Disable independent chroma prediction modes (set to 0 to enable)
+#define OPT_HW_CFL            1 // Disable chroma-from-luma prediction mode (set to 0 to enable)
+#define OPT_HW_INTRA_ANGULAR  1 // Disable angular-intra refinement delta ±2 mode (set to 0 to enable)
+#define OPT_HW_INTRA_SMOOTH   1 // Disable smooth-h and smooth-v intra prediction mode (set to 0 to enable)
+#define OPT_HW_INTRA_PAETH    1 // Disable paeth intra prediction modes (set to 0 to enable)
+#define OPT_HW_INTRA_FILTER   1 // Disable filter-intra prediction mode (set to 0 to enable)
+#define OPT_HW_GM             1 // Disable global motion compensation (set to 0 to enable)
+#define OPT_HW_INTER_INTRA    1 // Disable inter-intra prediction (set to 0 to enable)
+#define OPT_HW_BC_PALETTE     1 // Disable block-copy and palette prediction (set to 0 to enable)
+#define OPT_HW_HP             1 // Disable high-precision motion vectors (set to 0 to enable)
+#define OPT_HW_EDGE_FILTER    1 // Disable intra-edge filter (set to 0 to enable)
+#define OPT_HW_INTER_B4       1 // Disable INTER for 4×4 blocks
+#define OPT_HW_COMPOUND       1 // Disable coumpound prediction modes (set to 0 to enable)
+#define OPT_HW_NEW_MVP        1 // Disable New/Nearest/Near prediction modes (set to 0 to enable)
+#define OPT_HW_MRP            1 // Disable MRP (set to 0 to enable)
+#if !FTR_PROMIZING_AV1_TOOLS
+#define OPT_HW_TF             1 // Disable TF (set to 0 to enable)
+#define OPT_HW_TPL            1 // Disable TPL (set to 0 to enable)
+#endif
+// Parameter-level tuning of non-normative tools for hardware-like constraints
+#define OPT_HW_RDOQ           1 // Turn OFF RDOQ as it requires sample-based operations that are not hardware-friendly
+#define OPT_HW_PME            1 // Turn OFF predictive ME as it may create dependencies that are not hardware-friendly
+
+#if !OPT_HW_HME_ME
+// These macros ensure that the MV size does not exceed 192×64
+#define OPT_HW_LIMIT_PA_ME    1 // Turn OFF pre-HME and HME; perform a 192×64 full-pel search around (0, 0) to avoid exceeding the reference encoder MV size
+#define OPT_HW_BOUND_PA_ME    1 // Crop the ME search area rather than shifting it when it exceeds picture boundaries
+#define OPT_HW_LIMIT_PA_MD    1 // Skip refinement for positions beyond the 196×64 range in PME, NSQ-MVs search, and sub-pel search to avoid exceeding the reference encoder MV size
+#endif
+
+#define OPT_HW_USE_MIN_RDO    1 // Force a classical 2-stage fast-loop → full-loop scheme, and reduce the number of RDO operations
+#if OPT_HW_USE_MIN_RDO // Pick 1 option
+#define OPT_HW_1_RDO          0 // Test all candidates at md-stage0, then select the single best candidate for testing at md-stage3
+#define OPT_HW_2_RDO          1 // Test candidates per type at md-stage0 (intra, inter), select the best from each type, and test them at md-stage3
+#define OPT_HW_3_RDO          0 // Test candidates per class at md-stage0 (intra, new, nearest/near), select the best from each class, and test them at md-stage3
+#endif
+
+// Hardware-Friendly AV1 Tools Implementation
+#if FTR_PROMIZING_AV1_TOOLS
+// Part
+#define OPT_HW_AV1_PART_V0    1  // Enable partitions: 64×64, 64×32, 32×64, 64×16, 16×64
+#define OPT_HW_AV1_PART_V1    0  // Enable partitions: 32×64, 16×64
+// TXT
+#define OPT_HW_AV1_TXT        1  // Enable transform search (8 of 16 tx-types): DCT_DCT, V_DCT, H_DCT, ADST_ADST, ADST_DCT, DCT_ADST, FLIPADST_FLIPADST, IDTX
+#endif
+// Additional tools
+#define OPT_HW_MAP_HEVC_QP    0 // Read and force the use of HEVC QP; q-index = 5 × HEVC QP
+#define OPT_HW_BOOST_UV       0 // Mimic an HEVC chroma_qp_offset of 12
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

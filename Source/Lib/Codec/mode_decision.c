@@ -3113,6 +3113,16 @@ static void inject_intra_candidates(PictureControlSet *pcs, ModeDecisionContext 
             (disable_angle_prediction || directional_mode_skip_mask[intra_mode]))
             continue;
 
+#if OPT_HW_INTRA_SMOOTH
+        if (intra_mode == SMOOTH_V_PRED || intra_mode == SMOOTH_H_PRED) {
+            continue;
+        }
+#endif
+#if OPT_HW_INTRA_PAETH
+        if (intra_mode == PAETH_PRED) {
+            continue;
+        }
+#endif
         const uint8_t angle_delta_count = av1_is_directional_mode(intra_mode) && ctx->intra_ctrls.angular_pred_level <= 2 && use_angle_delta ? 7 : 1;
 
         for (uint8_t angle_delta_counter = 0; angle_delta_counter < angle_delta_count; ++angle_delta_counter) {
@@ -3120,6 +3130,12 @@ static void inject_intra_candidates(PictureControlSet *pcs, ModeDecisionContext 
             if ((ctx->intra_ctrls.angular_pred_level >= 2 && (angle_delta == -1 || angle_delta == 1 || angle_delta == -2 || angle_delta == 2)) ||
                 (ctx->intra_ctrls.angular_pred_level >= 3 && angle_delta != 0))
                 continue;
+
+#if OPT_HW_INTRA_ANGULAR
+            if(angle_delta == -2 || angle_delta == 2){
+                continue;
+            }
+#endif
             ModeDecisionCandidate* cand = &cand_array[cand_total_cnt];
             cand->skip_mode_allowed = false;
             cand->palette_info = NULL;
@@ -3510,6 +3526,9 @@ EbErrorType generate_md_stage_0_cand(
             &dc_cand_only_flag);
     //----------------------
     // Intra
+#if OPT_HW_INTRA_ONLY_SQ
+    if (ctx->blk_geom->shape == PART_N) {
+#endif
      if (ctx->intra_ctrls.enable_intra) {
          if (ctx->blk_geom->sq_size < 128) {
              inject_intra_candidates(
@@ -3539,6 +3558,13 @@ EbErrorType generate_md_stage_0_cand(
                  &cand_total_cnt);
          }
      }
+#if OPT_HW_INTRA_ONLY_SQ
+     }
+#endif
+
+#if OPT_HW_INTER_B4
+    if(ctx->blk_geom->sq_size > 4)
+#endif
      if (slice_type != I_SLICE) {
             svt_aom_inject_inter_candidates(
                 pcs,
@@ -3561,16 +3587,29 @@ EbErrorType generate_md_stage_0_cand(
     *candidate_total_count_ptr = cand_total_cnt;
 
     memset(ctx->md_stage_0_count, 0, CAND_CLASS_TOTAL * sizeof(uint32_t));
+
+#if OPT_HW_1_RDO
+    for (uint32_t cand_i = 0; cand_i < cand_total_cnt; cand_i++) {
+        ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_i];
+        cand->cand_class = CAND_CLASS_0;
+        ctx->md_stage_0_count[CAND_CLASS_0]++;
+    }
+#else
+#if !OPT_HW_2_RDO
     bool merge_inter_cands = 0;
     if (ctx->nic_ctrls.pruning_ctrls.merge_inter_cands_mult != (uint8_t)~0) {
         uint16_t th = (ctx->nic_ctrls.pruning_ctrls.merge_inter_cands_mult * (63 - pcs->scs->static_config.qp)) >> 1;
         if ((MIN(ctx->md_me_dist, ctx->md_pme_dist) / (ctx->blk_geom->bwidth * ctx->blk_geom->bheight)) < th)
             merge_inter_cands = 1;
     }
-
+#endif
     for (uint32_t cand_i = 0; cand_i < cand_total_cnt; cand_i++) {
         ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_i];
         if (is_intra_mode(cand->block_mi.mode)) {
+#if OPT_HW_2_RDO
+            cand->cand_class = CAND_CLASS_0;
+            ctx->md_stage_0_count[CAND_CLASS_0]++;
+#else
             // Intra prediction
             if (cand->palette_info == NULL ||
                 cand->palette_size[0] == 0) {
@@ -3582,8 +3621,13 @@ EbErrorType generate_md_stage_0_cand(
                 cand->cand_class = CAND_CLASS_3;
                 ctx->md_stage_0_count[CAND_CLASS_3]++;
             }
+#endif
         }
         else { // INTER
+#if OPT_HW_2_RDO
+            cand->cand_class = CAND_CLASS_1;
+            ctx->md_stage_0_count[CAND_CLASS_1]++;
+#else
             if (cand->block_mi.mode == NEWMV || cand->block_mi.mode == NEW_NEWMV || merge_inter_cands) {
                 // MV Prediction
                 cand->cand_class = CAND_CLASS_2;
@@ -3594,9 +3638,10 @@ EbErrorType generate_md_stage_0_cand(
                 cand->cand_class = CAND_CLASS_1;
                 ctx->md_stage_0_count[CAND_CLASS_1]++;
             }
-
+#endif
         }
     }
+#endif
     return EB_ErrorNone;
 }
 

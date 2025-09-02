@@ -1248,6 +1248,14 @@ void fast_loop_core(ModeDecisionCandidateBuffer *cand_bf, PictureControlSet *pcs
 void svt_aom_set_nics(SequenceControlSet *scs, NicScalingCtrls *scaling_ctrls, uint32_t mds1_count[CAND_CLASS_TOTAL],
                       uint32_t mds2_count[CAND_CLASS_TOTAL], uint32_t mds3_count[CAND_CLASS_TOTAL], uint8_t pic_type,
                       uint32_t qp) {
+#if OPT_HW_1_RDO || OPT_HW_2_RDO || OPT_HW_3_RDO
+    (void)scs, (void)scaling_ctrls, (void)pic_type, (void)qp;
+    for (CandClass cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+        mds1_count[cidx] = 1;
+        mds2_count[cidx] = 1;
+        mds3_count[cidx] = 1;
+    }
+#else
     for (CandClass cidx = CAND_CLASS_0; cidx < CAND_CLASS_TOTAL; cidx++) {
         mds1_count[cidx] = MD_STAGE_NICS[pic_type][cidx];
         mds2_count[cidx] = MD_STAGE_NICS[pic_type][cidx] >> 1;
@@ -1279,6 +1287,7 @@ void svt_aom_set_nics(SequenceControlSet *scs, NicScalingCtrls *scaling_ctrls, u
         mds2_count[cidx] = MAX(min_mds2_nics, DIVIDE_AND_ROUND(mds2_count[cidx] * q_weight, q_weight_denom));
         mds3_count[cidx] = MAX(min_mds3_nics, DIVIDE_AND_ROUND(mds3_count[cidx] * q_weight, q_weight_denom));
     }
+#endif
 }
 
 void set_md_stage_counts(PictureControlSet *pcs, ModeDecisionContext *ctx) {
@@ -1295,11 +1304,16 @@ void set_md_stage_counts(PictureControlSet *pcs, ModeDecisionContext *ctx) {
                      pcs->ppcs->scs->static_config.qp);
 
     // Step 2: derive bypass_stage1 flags
+#if OPT_HW_1_RDO || OPT_HW_2_RDO || OPT_HW_3_RDO
+    ctx->bypass_md_stage_1 = true;
+    ctx->bypass_md_stage_2 = true;
+#else
     ctx->bypass_md_stage_1 = (ctx->nic_ctrls.md_staging_mode == MD_STAGING_MODE_1 ||
                               ctx->nic_ctrls.md_staging_mode == MD_STAGING_MODE_2)
         ? false
         : true;
     ctx->bypass_md_stage_2 = (ctx->nic_ctrls.md_staging_mode == MD_STAGING_MODE_2) ? false : true;
+#endif
 }
 static void sort_fast_cost_based_candidates(
     struct ModeDecisionContext *ctx, uint32_t input_buffer_start_idx,
@@ -1823,6 +1837,14 @@ static void md_full_pel_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
                     if (refinement_pos_x % 4 == 0 && refinement_pos_y % 4 == 0)
                         continue;
             }
+
+#if OPT_HW_LIMIT_PA_MD
+            if (((refinement_pos_x + (mvx >> 3)) < -96) || ((refinement_pos_x + (mvx >> 3)) > 96))
+                continue;
+
+            if (((refinement_pos_y + (mvy >> 3)) < -32) || ((refinement_pos_y + (mvy >> 3)) > 32))
+                continue;
+#endif
             int32_t ref_origin_index = ref_pic->org_x + (ctx->blk_org_x + (mvx >> 3) + refinement_pos_x) +
                 (ctx->blk_org_y + (mvy >> 3) + ref_pic->org_y + refinement_pos_y) * ref_pic->stride_y;
 
@@ -9643,6 +9665,11 @@ static void process_block_light_pd0(SequenceControlSet *scs, PictureControlSet *
 }
 static bool get_skip_processing_nsq_block(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     int skip_processing_block = false;
+#if OPT_HW_AV1_PART_V0
+    if (ctx->blk_geom->sq_size <= 32 && ctx->blk_geom->shape != PART_N && ctx->blk_geom->shape != PART_H &&
+        ctx->blk_geom->shape != PART_V)
+        return true;
+#endif
     if (update_skip_nsq_based_on_split_rate(pcs, ctx))
         return true;
 
@@ -9733,7 +9760,11 @@ static void process_block(PictureControlSet *pcs, ModeDecisionContext *ctx, cons
     const BlockGeom *blk_geom              = ctx->blk_geom;
     BlkStruct       *blk_ptr               = ctx->blk_ptr;
     bool             skip_processing_block = !pcs->ppcs->sb_geom[ctx->sb_index].block_is_allowed[blk_ptr->mds_idx];
-
+#if OPT_HW_AV1_PART_V1
+    if (blk_geom->sq_size >= 64 &&
+        (blk_geom->shape == PART_N || blk_geom->shape == PART_H || blk_geom->shape == PART_H4))
+        skip_processing_block = true;
+#endif
     if (skip_processing_block)
         return;
     // If performing NSQ search, take shortcuts to reduce NSQ overhead
