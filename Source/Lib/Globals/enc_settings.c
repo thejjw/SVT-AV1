@@ -908,7 +908,12 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->chroma_u_ac_qindex_offset = 0;
     config_ptr->chroma_v_dc_qindex_offset = 0;
     config_ptr->chroma_v_ac_qindex_offset = 0;
-
+#if OPT_HW_BOOST_UV
+    config_ptr->chroma_u_dc_qindex_offset = -60;
+    config_ptr->chroma_u_ac_qindex_offset = -60;
+    config_ptr->chroma_v_dc_qindex_offset = -60;
+    config_ptr->chroma_v_ac_qindex_offset = -60;
+#endif
     for (int i = 0; i < SVT_AV1_FRAME_UPDATE_TYPES; i++) config_ptr->lambda_scale_factors[i] = 128;
 
     config_ptr->scene_change_detection       = 0;
@@ -2111,5 +2116,19 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         }
     }
 
+#if OPT_HW_CBR //---
+    if (!strcmp(name, "qualcomm-log")) {
+        strncpy(
+            config_struct->qualcomm_input_qp_log_path, value, sizeof(config_struct->qualcomm_input_qp_log_path) - 1);
+        config_struct->qualcomm_input_qp_log_path[sizeof(config_struct->qualcomm_input_qp_log_path) - 1] = '\0';
+        return EB_ErrorNone;
+    }
+
+    if (!strcmp(name, "qualcomm-b64-log")) {
+        strncpy(config_struct->qualcomm_b64_qp_log_path, value, sizeof(config_struct->qualcomm_b64_qp_log_path) - 1);
+        config_struct->qualcomm_b64_qp_log_path[sizeof(config_struct->qualcomm_b64_qp_log_path) - 1] = '\0';
+        return EB_ErrorNone;
+    }
+#endif
     return return_error;
 }

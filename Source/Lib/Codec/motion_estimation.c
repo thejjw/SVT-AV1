@@ -1241,12 +1241,12 @@ uint16_t svt_aom_get_scaled_picture_distance(uint16_t dist) {
     uint8_t round_up = ((dist % 8) == 0) ? 0 : 1;
     return ((dist * 5) / 8) + round_up;
 }
+#if !OPT_HW_LIMIT_PA_ME
 static const double search_area_multipliers[3][5] = {
      { 1.0, 1.0, 3.0, 4.0, 5.0 }, /* boost=1 */
      { 1.0, 1.0, 2.5, 3.5, 4.5 }, /* boost=2 */
      { 1.0, 1.0, 2.0, 2.5, 3.5 }  /* boost=3 */
 };
-
 static void apply_me_sa_boost(int16_t *width, int16_t *height, int hme_sad, int sc_class_me_boost) {
 
     int index;
@@ -1265,6 +1265,7 @@ static void apply_me_sa_boost(int16_t *width, int16_t *height, int hme_sad, int 
     *width  = (int16_t)(*width  * mult);
     *height = (int16_t)(*height * mult);
 }
+#endif
 /*******************************************
  *   performs integer search motion estimation for
  all avaiable references frames
@@ -1273,8 +1274,10 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
     uint32_t b64_origin_x, uint32_t b64_origin_y, EbPictureBufferDesc *input_ptr) {
     int16_t             picture_width  = pcs->aligned_width;
     int16_t             picture_height = pcs->aligned_height;
+#if !OPT_HW_LIMIT_PA_ME
     uint32_t            b64_width      = me_ctx->b64_width;
     uint32_t            b64_height     = me_ctx->b64_height;
+#endif
     int16_t             pad_width      = (int16_t)BLOCK_SIZE_64 - 1;
     int16_t             pad_height     = (int16_t)BLOCK_SIZE_64 - 1;
     int16_t             org_x       = (int16_t)b64_origin_x;
@@ -1314,6 +1317,52 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
             // Get hme results
             if (me_ctx->search_results[list_index][ref_pic_index].do_ref == 0)
                 continue; //so will not get ME results for those references.
+#if OPT_HW_LIMIT_PA_ME
+            svt_initialize_buffer_32bits(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index], 21, 1, MAX_SAD_VALUE);
+            me_ctx->p_best_sad_64x64 = &(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
+            me_ctx->p_best_sad_32x32 = &(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
+            me_ctx->p_best_sad_16x16 = &(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
+            me_ctx->p_best_sad_8x8 = &(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+
+            me_ctx->p_best_mv64x64 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
+            me_ctx->p_best_mv32x32 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
+            me_ctx->p_best_mv16x16 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
+            me_ctx->p_best_mv8x8 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+
+            x_search_center = 0;
+            y_search_center = 0;
+            search_area_width = 192;
+            search_area_height = 64;
+            int16_t x_search_area_origin_default = -(search_area_width >> 1);
+            int16_t y_search_area_origin_default = -(search_area_height >> 1);
+
+            memset(me_ctx->p_sb_best_mv,
+                0,
+                sizeof(me_ctx->p_sb_best_mv[0][0][0]) * MAX_NUM_OF_REF_PIC_LIST *
+                REF_LIST_MAX_DEPTH * SQUARE_PU_COUNT);
+
+            svt_initialize_buffer_32bits(
+                me_ctx->p_sb_best_sad[list_index][ref_pic_index], 21, 1, MAX_SAD_VALUE);
+
+            me_ctx->p_best_mv64x64 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
+            me_ctx->p_best_mv32x32 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_32x32_0]);
+            me_ctx->p_best_mv16x16 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x16_0]);
+            me_ctx->p_best_mv8x8 = &(
+                me_ctx->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+
+#else
             x_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_x;
             y_search_center = me_ctx->search_results[list_index][ref_pic_index].hme_sc_y;
             search_area_width  = me_ctx->me_sa.sa_min.width;
@@ -1465,6 +1514,8 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
                     search_area_height = MAX(3, search_area_height);
                 }
             }
+#endif
+
             x_search_area_origin = x_search_center - (search_area_width >> 1);
             y_search_area_origin = y_search_center - (search_area_height >> 1);
 
@@ -1518,6 +1569,14 @@ static void integer_search_b64(PictureParentControlSet *pcs, MeContext* me_ctx,
                         picture_height))
                 : search_area_height;
 
+
+#if OPT_HW_LIMIT_PA_ME
+            if (x_search_area_origin_default < x_search_area_origin)
+                search_area_width = search_area_width - (x_search_area_origin - x_search_area_origin_default);
+
+            if (y_search_area_origin_default < y_search_area_origin)
+                search_area_height = search_area_height - (y_search_area_origin - y_search_area_origin_default);
+#endif
             x_top_left_search_region            = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) -
                 (ME_FILTER_TAP >> 1) + x_search_area_origin;
             y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) -

@@ -935,6 +935,93 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
 
         // Set the current SequenceControlSet
         scs = (SequenceControlSet *)context_ptr->scs_active_array[instance_index]->object_ptr;
+
+#if OPT_HW_CBR
+
+        if (scs->enc_ctx->initial_picture) {
+            // Read Qualcomm input-qp
+            {
+                FILE *fp;
+                char  line[256];
+                int   count = 0;
+
+                fp = fopen(scs->static_config.qualcomm_input_qp_log_path, "r");
+                if (!fp) {
+                    perror("Error opening file");
+                }
+
+                // Skip the header line
+                if (!fgets(line, sizeof(line), fp)) {
+                    fprintf(stderr, "Empty file or error reading header\n");
+                    fclose(fp);
+                }
+
+                while (fgets(line, sizeof(line), fp)) {
+                    int   frame_num;
+                    float qp_float;
+                    if (sscanf(line, "%d,%f", &frame_num, &qp_float) == 2) {
+                        if (count < 1000) { // Ensure you don't overflow the array
+                            scs->qualcomm_qp_array[count++] = (int)(qp_float + 0.5f); // Round to nearest integer
+                        } else {
+                            fprintf(stderr, "Warning: QP array full, skipping frame %d\n", frame_num);
+                        }
+                    } else {
+                        fprintf(stderr, "Warning: Failed to parse line: %s", line);
+                    }
+                }
+
+                fclose(fp);
+            }
+
+            // Read Qualcomm b64-qp
+            {
+                FILE *fp;
+                char  line[16384];
+                int   frame_count = 0;
+
+                fp = fopen(scs->static_config.qualcomm_b64_qp_log_path, "r");
+                if (!fp) {
+                    perror("Error opening file");
+                }
+
+                // Skip the header line
+                if (!fgets(line, sizeof(line), fp)) {
+                    fprintf(stderr, "Empty file or error reading header\n");
+                    fclose(fp);
+                }
+
+                while (fgets(line, sizeof(line), fp)) {
+                    char *token;
+                    int   qp_index = 0;
+
+                    // The first token is frame number
+                    token = strtok(line, ",");
+                    if (!token) {
+                        fprintf(stderr, "Warning: Empty line or invalid format\n");
+                        continue;
+                    }
+
+                    int frame_num = atoi(token);
+
+                    // Parse remaining tokens as QPs
+                    while ((token = strtok(NULL, ",\n")) != NULL) {
+                        if (frame_count < 1000 && qp_index < 1000) { // define MAX_QPS_PER_FRAME
+                            float qp_float                                      = atof(token);
+                            scs->qualcomm_b64_qp_array[frame_count][qp_index++] = (int)(qp_float + 0.5f);
+                        } else {
+                            fprintf(
+                                stderr, "Warning: QP array full, skipping additional QPs for frame %d\n", frame_num);
+                            break;
+                        }
+                    }
+
+                    frame_count++;
+                }
+
+                fclose(fp);
+            }
+        }
+#endif
         // Since at this stage we do not know the prediction structure and the location of ALT_REF
         // pictures, for every picture (except first picture), we allocate two: 1. original
         // picture, 2. potential Overlay picture. In Picture Decision Process, where the overlay
