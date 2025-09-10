@@ -51,8 +51,8 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr,
     larget_coding_unit_ptr->org_y = sb_origin_y;
 
     larget_coding_unit_ptr->index = sb_index;
-    bool disallow_sub_8x8_nsq   = true;
-    bool disallow_sub_16x16_nsq = true;
+    bool disallow_sub_8x8_nsq     = true;
+    bool disallow_sub_16x16_nsq   = true;
     for (uint8_t is_base = 0; is_base <= 1; is_base++) {
         for (uint8_t is_islice = 0; is_islice <= 1; is_islice++) {
             for (uint8_t coeff_lvl = 0; coeff_lvl <= HIGH_LVL + 1; coeff_lvl++) {
@@ -75,8 +75,12 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr,
             disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4(enc_mode, is_base));
         }
     }
-    bool disallow_8x8 = svt_aom_get_disallow_8x8(enc_mode, rtc, screen_content_mode,
-        sb_size_pix, picture_control_set->frame_width, picture_control_set->frame_height);
+    bool     disallow_8x8 = svt_aom_get_disallow_8x8(enc_mode,
+                                                 rtc,
+                                                 screen_content_mode,
+                                                 sb_size_pix,
+                                                 picture_control_set->frame_width,
+                                                 picture_control_set->frame_height);
     uint32_t tot_blk_num;
     if (sb_size_pix == 128)
         if (disallow_8x8 && disallow_sub_16x16_nsq)
