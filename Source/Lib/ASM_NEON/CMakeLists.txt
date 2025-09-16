@@ -12,7 +12,6 @@
 # ASM_NEON Directory CMakeLists.txt
 
 # Include Encoder Subdirectories
-enable_language(ASM) # needed for .S files
 add_library(ASM_NEON OBJECT)
 target_sources(
   ASM_NEON
@@ -57,6 +56,7 @@ target_sources(
   PUBLIC inter_prediction_neon.c
   PUBLIC intra_prediction_neon.c
   PUBLIC itx.S
+  PUBLIC mem_neon.c
   PUBLIC obmc_sad_neon.c
   PUBLIC obmc_variance_neon.c
   PUBLIC pack_unpack_intrin_neon.c

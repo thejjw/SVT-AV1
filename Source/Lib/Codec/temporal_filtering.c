@@ -3787,6 +3787,7 @@ int32_t svt_estimate_noise_fp16_c(const uint8_t *src, uint16_t width, uint16_t h
     return (int32_t)((sum * SQRT_PI_BY_2_FP16) / (6 * num));
 }
 
+#if CONFIG_ENABLE_HIGH_BIT_DEPTH
 // Noise estimation for highbd
 int32_t svt_estimate_noise_highbd_fp16_c(const uint16_t *src, int width, int height, int stride, int bd) {
     int64_t sum = 0;
@@ -3822,6 +3823,8 @@ int32_t svt_estimate_noise_highbd_fp16_c(const uint16_t *src, int width, int hei
     FP_ASSERT((((int64_t)sum * SQRT_PI_BY_2_FP16) / (6 * num)) < ((int64_t)1 << 31));
     return (int32_t)((sum * SQRT_PI_BY_2_FP16) / (6 * num));
 }
+#endif
+
 void pad_and_decimate_filtered_pic(PictureParentControlSet *centre_pcs) {
     // reference structures (padded pictures + downsampled versions)
     SequenceControlSet *scs = centre_pcs->scs;
@@ -3902,26 +3905,26 @@ static EbErrorType save_src_pic_buffers(PictureParentControlSet *centre_pcs,
     assert(height_uv * src_pic_ptr->stride_cb == src_pic_ptr->chroma_size);
     assert(height_uv * src_pic_ptr->stride_cr == src_pic_ptr->chroma_size);
 
-    svt_aom_pic_copy_kernel_8bit(src_pic_ptr->buffer_y,
+    svt_av1_copy_wxh_8bit(src_pic_ptr->buffer_y,
                          src_pic_ptr->stride_y,
                          centre_pcs->save_source_picture_ptr[C_Y],
                          src_pic_ptr->stride_y,
-                         src_pic_ptr->stride_y,
-                         height_y);
+                         height_y,
+                         src_pic_ptr->stride_y);
 
-    svt_aom_pic_copy_kernel_8bit(src_pic_ptr->buffer_cb,
+    svt_av1_copy_wxh_8bit(src_pic_ptr->buffer_cb,
                          src_pic_ptr->stride_cb,
                          centre_pcs->save_source_picture_ptr[C_U],
                          src_pic_ptr->stride_cb,
-                         src_pic_ptr->stride_cb,
-                         height_uv);
+                         height_uv,
+                         src_pic_ptr->stride_cb);
 
-    svt_aom_pic_copy_kernel_8bit(src_pic_ptr->buffer_cr,
+    svt_av1_copy_wxh_8bit(src_pic_ptr->buffer_cr,
                          src_pic_ptr->stride_cr,
                          centre_pcs->save_source_picture_ptr[C_V],
                          src_pic_ptr->stride_cr,
-                         src_pic_ptr->stride_cr,
-                         height_uv);
+                         height_uv,
+                         src_pic_ptr->stride_cr);
 
     if (is_highbd) {
         // if highbd, copy bit inc buffers
@@ -3974,12 +3977,12 @@ static EbErrorType save_y_src_pic_buffers(PictureParentControlSet* centre_pcs, b
 
     assert(height_y * src_pic_ptr->stride_y == src_pic_ptr->luma_size);
 
-    svt_aom_pic_copy_kernel_8bit(src_pic_ptr->buffer_y,
+    svt_av1_copy_wxh_8bit(src_pic_ptr->buffer_y,
         src_pic_ptr->stride_y,
         centre_pcs->save_source_picture_ptr[C_Y],
         src_pic_ptr->stride_y,
-        src_pic_ptr->stride_y,
-        height_y);
+        height_y,
+        src_pic_ptr->stride_y);
 
     if (is_highbd) {
         // if highbd, copy bit inc buffers

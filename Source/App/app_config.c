@@ -210,6 +210,7 @@
 #define RTC_TOKEN "--rtc"
 #define QP_SCALE_COMPRESS_STRENGTH_TOKEN "--qp-scale-compress-strength"
 #define ADAPTIVE_FILM_GRAIN_TOKEN "--adaptive-film-grain"
+#define MAX_TX_SIZE_TOKEN "--max-tx-size"
 
 static EbErrorType validate_error(EbErrorType err, const char *token, const char *value) {
     switch (err) {
@@ -872,8 +873,8 @@ ConfigDescription config_entry_specific[] = {
      "frame for the base layer picture, default is 0 [0-1]"},
     // --- end: ALTREF_FILTERING_SUPPORT
     {TUNE_TOKEN,
-     "Specifies whether to use PSNR or VQ as the tuning metric [0 = VQ, 1 = PSNR, 2 = SSIM], "
-     "default is 1 [0-2]"},
+     "Optimize the encoding process for different desired outcomes [0 = VQ, 1 = PSNR, 2 = SSIM, 3 = IQ (Image "
+     "Quality)], default is 1 [0-3]"},
     // MD Parameters
     {SCREEN_CONTENT_TOKEN, "Set screen content detection level, default is 2 [0: off, 1: on, 2: content adaptive]"},
 #if CONFIG_ENABLE_FILM_GRAIN
@@ -973,6 +974,8 @@ ConfigDescription config_entry_variance_boost[] = {
     {QP_SCALE_COMPRESS_STRENGTH_TOKEN, "QP scale compress strength, default is 1 [0-3]"},
     // Adaptive film grain
     {ADAPTIVE_FILM_GRAIN_TOKEN, "Adapts film grain blocksize based on video resolution, default is 1 [0-1]"},
+    // Max TX size
+    {MAX_TX_SIZE_TOKEN, "Limits the allowed transform sizes to the specified, default is 64 [32,64]"},
     // Termination
     {NULL, NULL}};
 
@@ -1184,6 +1187,9 @@ ConfigEntry config_entry[] = {
 
     // Adaptive film grain
     {ADAPTIVE_FILM_GRAIN_TOKEN, "AdaptiveFilmGrain", set_cfg_generic_token},
+
+    // Max TX size
+    {MAX_TX_SIZE_TOKEN, "MaxTxSize", set_cfg_generic_token},
 
     // Termination
     {NULL, NULL, NULL}};

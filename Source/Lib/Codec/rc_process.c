@@ -1619,7 +1619,7 @@ static int av1_get_deltaq_sb_variance_boost(uint8_t base_q_idx, uint16_t *varian
 
     switch (curve) {
     case 2: /* still picture boost, tuned for SSIMULACRA2 performance on CID22 */
-        boost = (int32_t)((base_q_idx + 496) * -svt_av1_compute_qdelta_fp(base_q, target_q, bit_depth) / (255 + 1024));
+        boost = (int32_t)((base_q_idx + 544) * -svt_av1_compute_qdelta_fp(base_q, target_q, bit_depth) / (255 + 1024));
         break;
     default: /* curve 0 & 1 boost (default) */
         boost = (int32_t)((base_q_idx + 40) * -svt_av1_compute_qdelta_fp(base_q, target_q, bit_depth) / (255 + 40));
@@ -1799,8 +1799,10 @@ void svt_av1_normalize_sb_delta_q(PictureControlSet *pcs) {
 
     assert(delta_q_res == 2 || delta_q_res == 4 || delta_q_res == 8);
 
-    uint8_t mask              = ~(delta_q_res - 1);
-    uint8_t delta_q_remainder = ppcs_ptr->frm_hdr.quantization_params.base_q_idx & ~mask;
+    const uint8_t mask              = ~(delta_q_res - 1);
+    const uint8_t delta_q_remainder = (ppcs_ptr->frm_hdr.quantization_params.base_q_idx) & ~mask;
+    // Adjustment to push sb qindex toward the nearest multiple of delta_q_res, relative to base_q_idx
+    const int8_t delta_q_adjustment = (delta_q_res - delta_q_remainder) - (delta_q_res / 2);
 
     // super res pictures scaled with different sb count, should use sb_total_count for each picture
     uint16_t sb_cnt = scs->sb_total_count;
@@ -1814,8 +1816,9 @@ void svt_av1_normalize_sb_delta_q(PictureControlSet *pcs) {
 #endif
     for (uint32_t sb_addr = 0; sb_addr < sb_cnt; ++sb_addr) {
         SuperBlock *sb_ptr = pcs->sb_ptr_array[sb_addr];
-
-        uint8_t normalized_q_index = (sb_ptr->qindex & mask) + delta_q_remainder;
+        // Adjust sb_qindex to minimize the difference between its pre- and post-normalization value
+        const uint8_t adjusted_q_index   = CLIP3(1, MAX_Q_INDEX, sb_ptr->qindex + delta_q_adjustment);
+        const uint8_t normalized_q_index = (adjusted_q_index & mask) + delta_q_remainder;
 
         // q_index 0 is lossless, so do not use it when encoding in lossy mode
         sb_ptr->qindex = normalized_q_index == 0 ? delta_q_res : normalized_q_index;
@@ -3722,11 +3725,21 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                         chroma_qindex += scs->static_config.chroma_qindex_offsets[pcs->temporal_layer_index];
                     }
 
+                    if (scs->static_config.tune == TUNE_IQ) {
+                        // Constant chroma boost with gradual ramp-down for very high qindex levels
+                        chroma_qindex -= CLIP3(0, 16, (frm_hdr->quantization_params.base_q_idx / 2) - 14);
+                    }
+
                     chroma_qindex = clamp_qindex(scs, chroma_qindex);
 
-                    frm_hdr->quantization_params.delta_q_dc[1]     = frm_hdr->quantization_params.delta_q_dc[2] =
-                        frm_hdr->quantization_params.delta_q_ac[1] = frm_hdr->quantization_params.delta_q_ac[2] =
-                            chroma_qindex - frm_hdr->quantization_params.base_q_idx;
+                    // Calculate chroma delta q for Cb, and clip it to a valid range
+                    frm_hdr->quantization_params.delta_q_dc[1] = frm_hdr->quantization_params.delta_q_ac[1] = CLIP3(
+                        -64, 63, chroma_qindex - frm_hdr->quantization_params.base_q_idx);
+
+                    // Calculate chroma delta q for Cr, and clip it to a valid range
+                    frm_hdr->quantization_params.delta_q_dc[2] = frm_hdr->quantization_params.delta_q_ac[2] = CLIP3(
+                        -64, 63, chroma_qindex - frm_hdr->quantization_params.base_q_idx);
+
                     if (scs->enable_qp_scaling_flag && pcs->ppcs->qp_on_the_fly == false) {
                         // max bit rate is only active for 1 pass CRF
                         if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF &&
@@ -3889,8 +3902,8 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                 cyclic_sb_qp_derivation(pcs);
             }
 
-            if (pcs->scs->static_config.tune == 2 && !pcs->ppcs->frm_hdr.delta_q_params.delta_q_present) {
-                // enable sb level qindex when tune 2
+            if (pcs->scs->static_config.tune == TUNE_SSIM && !pcs->ppcs->frm_hdr.delta_q_params.delta_q_present) {
+                // enable sb level qindex when tune SSIM
                 pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
             }
 

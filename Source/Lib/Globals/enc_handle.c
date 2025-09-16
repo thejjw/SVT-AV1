@@ -92,12 +92,15 @@
 #define EB_PacketizationProcessInitCount                1
 
 // Output Buffer Transfer Parameters
-#define TPL_INPUT_PORT_SOP                                0
-#define TPL_INPUT_PORT_TPL                                1
-#define TPL_INPUT_PORT_INVALID                           -1
-#define ENCDEC_INPUT_PORT_MDC                                0
-#define ENCDEC_INPUT_PORT_ENCDEC                             1
-#define ENCDEC_INPUT_PORT_INVALID                           -1
+#define TPL_INPUT_PORT_SOP                              0
+#define TPL_INPUT_PORT_TPL                              1
+#define TPL_INPUT_PORT_INVALID                          -1
+#define ENCDEC_INPUT_PORT_MDC                           0
+#define ENCDEC_INPUT_PORT_ENCDEC                        1
+#define ENCDEC_INPUT_PORT_INVALID                       -1
+
+#define ENCODE_FIRST_PASS                               1
+
 /**************************************
  * Globals
  **************************************/
@@ -1433,7 +1436,9 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
     svt_aom_init_intra_predictors_internal();
 #ifdef MINIMAL_BUILD
     if (svt_aom_blk_geom_mds == NULL) {
-        svt_aom_blk_geom_mds = svt_aom_malloc(MAX_NUM_BLOCKS_ALLOC * sizeof(svt_aom_blk_geom_mds[0]));
+        // NOTE: this must be re-allocated if configuration changes!
+        int max_block_count = enc_handle_ptr->scs_instance_array[0]->scs->max_block_cnt;
+        svt_aom_blk_geom_mds = svt_aom_malloc(max_block_count * sizeof(svt_aom_blk_geom_mds[0]));
         svt_aom_build_blk_geom(enc_handle_ptr->scs_instance_array[0]->scs->svt_aom_geom_idx);
     }
 #else
@@ -1527,6 +1532,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.tf_strength = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.tf_strength;
         input_data.qp_scale_compress_strength = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.qp_scale_compress_strength;
         input_data.adaptive_film_grain = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.adaptive_film_grain;
+        input_data.max_tx_size = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.max_tx_size;
         input_data.static_config = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config;
         input_data.allintra = enc_handle_ptr->scs_instance_array[instance_index]->scs->allintra;
         EB_NEW(
@@ -3225,7 +3231,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
 static void derive_vq_params(SequenceControlSet* scs) {
     VqCtrls* vq_ctrl = &scs->vq_ctrls;
 
-    if (scs->static_config.tune == 0) {
+    if (scs->static_config.tune == TUNE_VQ) {
 
         // Sharpness
         vq_ctrl->sharpness_ctrls.scene_transition = 1;
@@ -4004,6 +4010,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     if (scs->static_config.variance_boost_strength >= 4) {
         SVT_WARN("Aggressive Variance Boost strength used. This is a curve that's only useful under specific situations. Use with caution!\n");
     }
+    if (scs->static_config.max_tx_size == 32 && scs->static_config.qp >= 25 && scs->static_config.tune != 3) {
+        SVT_WARN("Restricting transform sizes to a max of 32x32 might reduce coding efficiency at low to medium fidelity settings. Use with caution!\n");
+    }
     if (scs->static_config.intra_refresh_type == SVT_AV1_FWDKF_REFRESH && scs->static_config.hierarchical_levels != 4){
         scs->static_config.hierarchical_levels = 4;
         SVT_WARN("Fwd key frame is only supported for hierarchical levels 4 at this point. Hierarchical levels are set to 4\n");
@@ -4645,12 +4654,29 @@ static void copy_api_from_app(
     // Sharpness
     scs->static_config.sharpness = config_struct->sharpness;
 
-
     // QP scaling compression
     scs->static_config.qp_scale_compress_strength = config_struct->qp_scale_compress_strength;
 
     // Adaptive film grain
     scs->static_config.adaptive_film_grain = config_struct->adaptive_film_grain;
+
+    // Max TX size
+    scs->static_config.max_tx_size = config_struct->max_tx_size;
+
+    // Override settings for Still IQ tune
+    if (scs->static_config.tune == TUNE_IQ) {
+        SVT_WARN("Tune 3: IQ overrides: sharpness, Variance Boost strength and curve, enable-qm and min/max level, and max TX size\n");
+        scs->static_config.enable_qm = 1;
+        scs->static_config.min_qm_level = 4;
+        scs->static_config.max_qm_level = 10;
+        scs->static_config.min_chroma_qm_level = 4;
+        scs->static_config.max_chroma_qm_level = 10;
+        scs->static_config.sharpness = 7;
+        scs->static_config.enable_variance_boost = 1;
+        scs->static_config.variance_boost_strength = 3;
+        scs->static_config.variance_boost_curve = 2;
+        scs->static_config.max_tx_size = scs->static_config.qp <= 45 ? 32 : 64;
+    }
 
     return;
 }
@@ -4862,100 +4888,67 @@ static EbErrorType downsample_copy_frame_buffer(
     uint8_t                       *source,
     int                            pass)
 {
-    EbSvtAv1EncConfiguration          *config = &scs->static_config;
-    EbErrorType                      return_error = EB_ErrorNone;
+    EbErrorType return_error = EB_ErrorNone;
 
-    EbPictureBufferDesc           *input_pic = (EbPictureBufferDesc*)destination;
-    EbPictureBufferDesc           *y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
-    EbSvtIOFormat                   *input_ptr = (EbSvtIOFormat*)source;
-    bool                           is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+    EbPictureBufferDesc *input_pic = (EbPictureBufferDesc*)destination;
+    EbPictureBufferDesc *y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
+    EbSvtIOFormat       *input_ptr = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
-    if (!is_16bit_input) {
-        uint32_t     luma_buffer_offset = (input_pic->stride_y*scs->top_padding + scs->left_padding) << is_16bit_input;
-        uint32_t     chroma_buffer_offset = (input_pic->stride_cr*(scs->top_padding >> 1) + (scs->left_padding >> 1)) << is_16bit_input;
-        uint16_t     luma_stride = input_pic->stride_y << is_16bit_input;
-        uint16_t     chroma_stride = input_pic->stride_cb << is_16bit_input;
-        uint16_t     luma_height = (uint16_t)(input_pic->height - scs->max_input_pad_bottom);
-        uint16_t     luma_width = (uint16_t)(input_pic->width - scs->max_input_pad_right);
+    uint32_t luma_buffer_offset = input_pic->stride_y * scs->top_padding + scs->left_padding;
+    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->top_padding >> 1) + (scs->left_padding >> 1);
+    uint32_t luma_width = (uint32_t)(input_pic->width - scs->max_input_pad_right);
+    uint32_t luma_height = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
-        uint16_t     source_luma_stride = (uint16_t)(input_ptr->y_stride);
-        uint16_t     source_cr_stride = (uint16_t)(input_ptr->cr_stride);
-        uint16_t     source_cb_stride = (uint16_t)(input_ptr->cb_stride);
-        const uint8_t  subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
-        const uint8_t  subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
-        const uint32_t chroma_width = (luma_width + subsampling_x) >> subsampling_x;
-        const uint32_t chroma_height = (luma_height + subsampling_y) >> subsampling_y;
+    const uint8_t subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
+    const uint8_t subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
+    const uint32_t chroma_width = (luma_width + subsampling_x) >> subsampling_x;
+    const uint32_t chroma_height = (luma_height + subsampling_y) >> subsampling_y;
 
-        uint8_t *src = input_ptr->luma;
-        uint8_t *dst = y8b_input_picture_ptr->buffer_y + luma_buffer_offset;
+    if (scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
         downsample_2d_c_skipall(
-            src,
-            source_luma_stride,
+            input_ptr->luma,
+            input_ptr->y_stride,
             luma_width << 1,
             luma_height << 1,
-            dst,
-            luma_stride,
+            y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
+            input_pic->stride_y,
             2);
 
-#define ENCODE_FIRST_PASS 1
         if (pass != ENCODE_FIRST_PASS) {
-            src = input_ptr->cb;
-            dst = input_pic->buffer_cb + chroma_buffer_offset;
-
             downsample_2d_c_skipall(
-                src,
-                source_cb_stride,
+                input_ptr->cb,
+                input_ptr->cb_stride,
                 chroma_width << 1,
                 chroma_height << 1,
-                dst,
-                chroma_stride,
+                input_pic->buffer_cb + chroma_buffer_offset,
+                input_pic->stride_cb,
                 2);
-
-            src = input_ptr->cr;
-            dst = input_pic->buffer_cr + chroma_buffer_offset;
             downsample_2d_c_skipall(
-                src,
-                source_cr_stride,
+                input_ptr->cr,
+                input_ptr->cr_stride,
                 chroma_width << 1,
                 chroma_height << 1,
-                dst,
-                chroma_stride,
+                input_pic->buffer_cr + chroma_buffer_offset,
+                input_pic->stride_cr,
                 2);
         }
     } else { // 10bit packed
-
-        uint32_t luma_offset = 0;
-        uint32_t luma_buffer_offset = (input_pic->stride_y*scs->top_padding + scs->left_padding);
-        uint32_t chroma_buffer_offset = (input_pic->stride_cr*(scs->top_padding >> 1) + (scs->left_padding >> 1));
-        uint16_t luma_width = (uint16_t)(input_pic->width - scs->max_input_pad_right);
-        uint16_t luma_height = (uint16_t)(input_pic->height - scs->max_input_pad_bottom);
-
-        uint16_t source_luma_stride = (uint16_t)(input_ptr->y_stride);
-        uint16_t source_cr_stride = (uint16_t)(input_ptr->cr_stride);
-        uint16_t source_cb_stride = (uint16_t)(input_ptr->cb_stride);
-        const uint8_t  subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
-        const uint8_t  subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
-        const uint32_t chroma_width = (luma_width + subsampling_x) >> subsampling_x;
-        const uint32_t chroma_height = (luma_height + subsampling_y) >> subsampling_y;
-
         downsample_2d_c_16_zero2bit_skipall(
-            (uint16_t*)(uint16_t*)(input_ptr->luma + luma_offset),
-            source_luma_stride,
+            (uint16_t*)input_ptr->luma,
+            input_ptr->y_stride,
             luma_width << 1,
             luma_height << 1,
-            (y8b_input_picture_ptr->buffer_y + luma_buffer_offset),
+            y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
             y8b_input_picture_ptr->stride_y,
             2);
 
         memset(input_pic->buffer_bit_inc_y, 0, input_pic->luma_size/4);
 
         if (pass != ENCODE_FIRST_PASS) {
-            uint32_t chroma_offset = 0;
-
             downsample_2d_c_16_zero2bit_skipall(
-                (uint16_t*)(input_ptr->cb + chroma_offset),
-                source_cb_stride,
+                (uint16_t*)input_ptr->cb,
+                input_ptr->cb_stride,
                 chroma_width << 1,
                 chroma_height << 1,
                 input_pic->buffer_cb + chroma_buffer_offset,
@@ -4965,8 +4958,8 @@ static EbErrorType downsample_copy_frame_buffer(
             memset(input_pic->buffer_bit_inc_cb, 0, input_pic->chroma_size/4);
 
             downsample_2d_c_16_zero2bit_skipall(
-                (uint16_t*)(input_ptr->cr + chroma_offset),
-                source_cr_stride,
+                (uint16_t*)input_ptr->cr,
+                input_ptr->cr_stride,
                 chroma_width << 1,
                 chroma_height << 1,
                 input_pic->buffer_cr + chroma_buffer_offset,
@@ -4990,72 +4983,44 @@ static EbErrorType copy_frame_buffer(
     uint8_t                       *source,
     int                            pass)
 {
-    EbSvtAv1EncConfiguration          *config = &scs->static_config;
-    EbErrorType                      return_error = EB_ErrorNone;
+    EbErrorType return_error = EB_ErrorNone;
 
-    EbPictureBufferDesc           *input_pic = (EbPictureBufferDesc*)destination;
-    EbPictureBufferDesc           *y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
-    EbSvtIOFormat                   *input_ptr = (EbSvtIOFormat*)source;
-    bool                           is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+    EbPictureBufferDesc *input_pic = (EbPictureBufferDesc*)destination;
+    EbPictureBufferDesc *y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
+    EbSvtIOFormat       *input_ptr = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
 
-    if (!is_16bit_input) {
-        uint32_t     luma_buffer_offset = (input_pic->stride_y*scs->top_padding + scs->left_padding) << is_16bit_input;
-        uint32_t     chroma_buffer_offset = (input_pic->stride_cr*(scs->top_padding >> 1) + (scs->left_padding >> 1)) << is_16bit_input;
-        uint16_t     luma_stride = input_pic->stride_y << is_16bit_input;
-        uint16_t     chroma_stride = input_pic->stride_cb << is_16bit_input;
-        uint16_t     luma_height = (uint16_t)(input_pic->height - scs->max_input_pad_bottom);
-        uint16_t     luma_width = (uint16_t)(input_pic->width - scs->max_input_pad_right);
-        uint16_t     source_luma_stride = (uint16_t)(input_ptr->y_stride);
-        uint16_t     source_cr_stride = (uint16_t)(input_ptr->cr_stride);
-        uint16_t     source_cb_stride = (uint16_t)(input_ptr->cb_stride);
+    uint32_t luma_buffer_offset = input_pic->stride_y * scs->top_padding + scs->left_padding;
+    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->top_padding >> 1) + (scs->left_padding >> 1);
+    uint32_t luma_width = (uint32_t)(input_pic->width - scs->max_input_pad_right);
+    uint32_t luma_height = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
-        const uint8_t subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
-        const uint8_t subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
-        const uint64_t source_chroma_width = (luma_width + subsampling_x) >> subsampling_x;
-        const uint64_t source_chroma_height = (luma_height + subsampling_y) >> subsampling_y;
+    const uint8_t subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
+    const uint8_t subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
+    const uint32_t chroma_width = (luma_width + subsampling_x) >> subsampling_x;
+    const uint32_t chroma_height = (luma_height + subsampling_y) >> subsampling_y;
 
-        uint8_t *src = input_ptr->luma;
-        uint8_t *dst = y8b_input_picture_ptr->buffer_y + luma_buffer_offset;
-        for (unsigned i = 0; i < luma_height; i++) {
-            svt_memcpy(dst, src, luma_width);
-            src += source_luma_stride;
-            dst += luma_stride;
-        }
-        {
-            src = input_ptr->cb;
-            dst = input_pic->buffer_cb + chroma_buffer_offset;
-            for (unsigned i = 0; i < source_chroma_height; i++) {
-                svt_memcpy(dst, src, source_chroma_width);
-                src += source_cb_stride;
-                dst += chroma_stride;
-            }
-
-            src = input_ptr->cr;
-            dst = input_pic->buffer_cr + chroma_buffer_offset;
-            for (unsigned i = 0; i < source_chroma_height; i++) {
-                svt_memcpy(dst, src, source_chroma_width);
-                src += source_cr_stride;
-                dst += chroma_stride;
-            }
-        }
+    if (scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
+        svt_av1_copy_wxh_8bit(input_ptr->luma,
+                              input_ptr->y_stride,
+                              y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
+                              input_pic->stride_y,
+                              luma_height,
+                              luma_width);
+        svt_av1_copy_wxh_8bit(input_ptr->cb,
+                              input_ptr->cb_stride,
+                              input_pic->buffer_cb + chroma_buffer_offset,
+                              input_pic->stride_cb,
+                              chroma_height,
+                              chroma_width);
+        svt_av1_copy_wxh_8bit(input_ptr->cr,
+                              input_ptr->cr_stride,
+                              input_pic->buffer_cr + chroma_buffer_offset,
+                              input_pic->stride_cr,
+                              chroma_height,
+                              chroma_width);
     } else { // 10bit packed
-        uint32_t luma_offset = 0;
-        uint32_t luma_buffer_offset = (input_pic->stride_y*scs->top_padding + scs->left_padding);
-        uint32_t chroma_buffer_offset = (input_pic->stride_cr*(scs->top_padding >> 1) + (scs->left_padding >> 1));
-        uint16_t luma_width = (uint16_t)(input_pic->width - scs->max_input_pad_right);
-        uint16_t luma_height = (uint16_t)(input_pic->height - scs->max_input_pad_bottom);
-
-        uint16_t source_luma_stride = (uint16_t)(input_ptr->y_stride);
-        uint16_t source_cr_stride = (uint16_t)(input_ptr->cr_stride);
-        uint16_t source_cb_stride = (uint16_t)(input_ptr->cb_stride);
-
-        const uint8_t subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
-        const uint8_t subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0 : 1);
-        const uint32_t chroma_width = (luma_width + subsampling_x) >> subsampling_x;
-        const uint32_t chroma_height = (luma_height + subsampling_y) >> subsampling_y;
-
         uint32_t comp_stride_y = input_pic->stride_y / 4;
         uint32_t comp_luma_buffer_offset = comp_stride_y * input_pic->org_y + input_pic->org_x/4;
 
@@ -5063,8 +5028,8 @@ static EbErrorType copy_frame_buffer(
         uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y/2) + input_pic->org_x /2 / 4;
 
         svt_unpack_and_2bcompress(
-            (uint16_t*)(input_ptr->luma + luma_offset),
-            source_luma_stride,
+            (uint16_t*)input_ptr->luma,
+            input_ptr->y_stride,
             y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
             y8b_input_picture_ptr->stride_y,
             input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
@@ -5072,26 +5037,25 @@ static EbErrorType copy_frame_buffer(
             luma_width,
             luma_height);
         if (pass != ENCODE_FIRST_PASS) {
-            uint32_t chroma_offset = 0;
-        svt_unpack_and_2bcompress(
-            (uint16_t*)(input_ptr->cb + chroma_offset),
-            source_cb_stride,
-            input_pic->buffer_cb + chroma_buffer_offset,
-            input_pic->stride_cb,
-            input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
-            comp_stride_uv,
-            chroma_width,
-            chroma_height);
+            svt_unpack_and_2bcompress(
+                (uint16_t*)input_ptr->cb,
+                input_ptr->cb_stride,
+                input_pic->buffer_cb + chroma_buffer_offset,
+                input_pic->stride_cb,
+                input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
+                comp_stride_uv,
+                chroma_width,
+                chroma_height);
 
-        svt_unpack_and_2bcompress(
-            (uint16_t*)(input_ptr->cr + chroma_offset),
-            source_cr_stride,
-            input_pic->buffer_cr + chroma_buffer_offset,
-            input_pic->stride_cr,
-            input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
-            comp_stride_uv,
-            chroma_width,
-            chroma_height);
+            svt_unpack_and_2bcompress(
+                (uint16_t*)input_ptr->cr,
+                input_ptr->cr_stride,
+                input_pic->buffer_cr + chroma_buffer_offset,
+                input_pic->stride_cr,
+                input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
+                comp_stride_uv,
+                chroma_width,
+                chroma_height);
         }
     }
     return return_error;
