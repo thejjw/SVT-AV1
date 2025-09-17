@@ -85,7 +85,7 @@ Static analysis (cppcheck, 2404):
     - if: $NIGHTLY != null && $WEEKEND != null
       when: never
     - !reference [.source_code_rules]
-  stage: check
+  stage: standalone
   image: registry.gitlab.com/aomediacodec/aom-testing/ubuntu2404
   allow_failure: true
   cache:
@@ -107,3 +107,5 @@ Static analysis (cppcheck, 2404):
         -ithird_party \
         --cppcheck-build-dir=.cppcheck \
         --suppress=unusedFunction > /dev/null
+  dependencies: []
+  needs: []
