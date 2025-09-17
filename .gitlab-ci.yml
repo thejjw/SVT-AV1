@@ -78,3 +78,32 @@ Static analysis (cppcheck):
         -ithird_party \
         --cppcheck-build-dir=.cppcheck \
         --suppress=unusedFunction > /dev/null
+
+# Job for future migration to using Ubuntu 24.04 for CI
+Static analysis (cppcheck, 2404):
+  rules:
+    - if: $NIGHTLY != null && $WEEKEND != null
+      when: never
+    - !reference [.source_code_rules]
+  stage: check
+  image: registry.gitlab.com/aomediacodec/aom-testing/ubuntu2404
+  allow_failure: true
+  cache:
+    key: cppcheck
+    paths:
+      - .cppcheck
+    policy: pull-push
+  script:
+    - cmake -B Build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - mkdir -p .cppcheck
+    - jq '. | map(select(.file | test(".asm") | not))' Build/compile_commands.json > compile_commands.json
+    - |
+      cppcheck \
+        --project=compile_commands.json \
+        --error-exitcode=1 \
+        --enable=all \
+        -j 2 \
+        -rp=$PWD \
+        -ithird_party \
+        --cppcheck-build-dir=.cppcheck \
+        --suppress=unusedFunction > /dev/null
