@@ -107,6 +107,8 @@ static void roi_map_apply_segmentation_based_quantization(const BlockGeom *blk_g
         }
     }
 
+    assert(segment_id < MAX_SEGMENTS);
+
     for (int i = segment_id; i >= 0; i--) {
         int32_t q_index = pcs->ppcs->frm_hdr.quantization_params.base_q_idx +
             segmentation_params->feature_data[i][SEG_LVL_ALT_Q];

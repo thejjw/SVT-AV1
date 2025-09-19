@@ -13,6 +13,7 @@
 /***************************************
 * Includes
 ***************************************/
+#include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -1588,6 +1589,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                 if (!svt_aom_is_valid_unipred_ref(
                         ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_1, ref_idx_1))
                     continue;
+            assert(list_idx_1 < 2);
 
             {
                 //NEAREST_NEWMV
