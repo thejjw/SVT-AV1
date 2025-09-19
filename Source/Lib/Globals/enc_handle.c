@@ -4023,7 +4023,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             for (uint8_t coeff_lvl = 0; coeff_lvl <= HIGH_LVL + 1; coeff_lvl++)
             {
                 nsq_geom_level = svt_aom_get_nsq_geom_level(scs->static_config.enc_mode, is_base, coeff_lvl, scs->static_config.rtc);
-                disallow_nsq = MIN(disallow_nsq, (nsq_geom_level == 0 ? 1 : 0));
+                disallow_nsq = MIN(disallow_nsq, nsq_geom_level == 0);
                 uint8_t temp_allow_HVA_HVB = 0, temp_allow_HV4 = 0;
                 svt_aom_set_nsq_geom_ctrls(NULL, nsq_geom_level, &temp_allow_HVA_HVB, &temp_allow_HV4, &min_nsq_bsize);
                 allow_HVA_HVB |= temp_allow_HVA_HVB;
