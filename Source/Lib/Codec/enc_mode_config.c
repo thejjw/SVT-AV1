@@ -6697,7 +6697,12 @@ bool svt_aom_get_disallow_4x4(EncMode enc_mode, uint8_t is_base) {
 * return the 8x8 level
 Used by svt_aom_sig_deriv_enc_dec and memory allocation
 */
-bool svt_aom_get_disallow_8x8(EncMode enc_mode, bool rtc_tune, uint32_t screen_content_mode) {
+bool svt_aom_get_disallow_8x8(EncMode enc_mode, bool rtc_tune, uint32_t screen_content_mode, const uint16_t sb_size,
+                              const uint16_t aligned_width, const uint16_t aligned_height) {
+    // If aligned picture dimensions extend beyond the SB boundary by 8, then must allow
+    // 8x8 because larger block sizes would not be allowed in those sections.
+    if (((aligned_width % sb_size) == 8) || ((aligned_height % sb_size) == 8))
+        return false;
     if (rtc_tune) {
         if (screen_content_mode == 1) {
             if (enc_mode <= ENC_M10)
@@ -7595,16 +7600,21 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
             pcs->mds0_level = is_islice ? 0 : 2;
     }
     /*
-disallow_4x4
-*/
+    disallow_4x4
+    */
     pcs->pic_disallow_4x4 = svt_aom_get_disallow_4x4(enc_mode, is_base);
     /*
     * pic_disallow_8x8
     */
-    pcs->pic_disallow_8x8 = svt_aom_get_disallow_8x8(enc_mode, rtc_tune, scs->static_config.screen_content_mode);
+    pcs->pic_disallow_8x8 = svt_aom_get_disallow_8x8(enc_mode,
+                                                     rtc_tune,
+                                                     scs->static_config.screen_content_mode,
+                                                     scs->super_block_size,
+                                                     ppcs->aligned_width,
+                                                     ppcs->aligned_height);
     /*
-Bypassing EncDec
-*/
+    Bypassing EncDec
+    */
     // This signal can only be modified per picture right now, not per SB.  Per SB requires
     // neighbour array updates at EncDec for all SBs, that are currently skipped if EncDec is bypassed.
     if (!ppcs->frm_hdr.segmentation_params.segmentation_enabled) {
@@ -7613,8 +7623,8 @@ Bypassing EncDec
         pcs->pic_bypass_encdec = 0;
 
     /*
-set lpd0_level
-*/
+    set lpd0_level
+    */
     // for the low delay enhance base layer frames, lower the enc_mode to improve the quality
     set_pic_lpd0_lvl(pcs, enc_mode);
     // Depth-removal not supported for I_SLICE
