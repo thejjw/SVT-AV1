@@ -77,7 +77,8 @@ Static analysis (cppcheck):
         -rp=$PWD \
         -ithird_party \
         --cppcheck-build-dir=.cppcheck \
-        --suppress=unusedFunction > /dev/null
+        --suppress=unusedFunction \
+        --suppress=missingIncludeSystem > /dev/null
 
 # Job for future migration to using Ubuntu 24.04 for CI
 Static analysis (cppcheck, 2404):
