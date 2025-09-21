@@ -106,7 +106,10 @@ Static analysis (cppcheck, 2404):
         -j 2 \
         -rp=$PWD \
         -ithird_party \
+        --inline-suppr \
         --cppcheck-build-dir=.cppcheck \
-        --suppress=unusedFunction > /dev/null
+        --suppress=unusedFunction \
+        --suppress="*:third_party/" \
+        --suppress="missingIncludeSystem:" > /dev/null
   dependencies: []
   needs: []
