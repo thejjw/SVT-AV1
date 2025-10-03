@@ -3629,6 +3629,12 @@ static void set_first_pass_ctrls(
 
 static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t resize_mode, uint8_t aq_mode, bool avif, bool allintra) {
 #if OPT_HW_TPL
+    (void)pred_structure;
+    (void)superres_mode;
+    (void)resize_mode;
+    (void)aq_mode;
+    (void)avif;
+    (void)allintra;
     return 0;
 #else
     if (allintra) {

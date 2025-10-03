@@ -255,9 +255,15 @@ static void set_hme_search_params(PictureParentControlSet *pcs, MeContext *me_ct
 static void set_me_search_params(SequenceControlSet *scs, PictureParentControlSet *pcs, MeContext *me_ctx,
                                  EbInputResolution input_resolution) {
 #if OPT_HW_LIMIT_PA_ME
+	(void)scs;
+	(void)pcs;
+	(void)input_resolution;
     me_ctx->me_sa.sa_min = (SearchArea){192, 64};
     me_ctx->me_sa.sa_max = (SearchArea){192, 64};
 #elif OPT_HW_HME_ME // Set ME Level0 Params
+    (void)scs;
+    (void)pcs;
+    (void)input_resolution;
     me_ctx->me_sa.sa_min = (SearchArea){24, 24};
     me_ctx->me_sa.sa_max = (SearchArea){24, 24};
 #else
