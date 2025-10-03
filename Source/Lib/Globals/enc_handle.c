@@ -3255,10 +3255,10 @@ static void derive_vq_params(SequenceControlSet* scs) {
  * Derive TF Params
  */
 static void derive_tf_params(SequenceControlSet *scs) {
-    const uint32_t hierarchical_levels = scs->static_config.hierarchical_levels;
 #if OPT_HW_TF
     const bool do_tf = 0;
 #else
+    const uint32_t hierarchical_levels = scs->static_config.hierarchical_levels;
     // Do not perform TF if LD or 1 Layer or 1st pass
     const bool do_tf = scs->static_config.enable_tf && hierarchical_levels >= 1 && !scs->static_config.lossless;
 #endif
