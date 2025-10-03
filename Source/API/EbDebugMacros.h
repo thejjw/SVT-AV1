@@ -115,6 +115,7 @@ extern "C" {
 #define OPT_HW_EDGE_FILTER    1 // Disable intra-edge filter (set to 0 to enable)
 #define OPT_HW_INTER_B4       1 // Disable INTER for 4×4 blocks
 #define OPT_HW_COMPOUND       1 // Disable coumpound prediction modes (set to 0 to enable)
+#define OPT_HW_NEW_MVP        1 // Disable New/Nearest/Near prediction modes (set to 0 to enable)
 #define OPT_HW_MRP            1 // Disable MRP (set to 0 to enable)
 #if !FTR_PROMIZING_AV1_TOOLS
 #define OPT_HW_TF             1 // Disable TF (set to 0 to enable)

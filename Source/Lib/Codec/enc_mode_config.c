@@ -7628,13 +7628,16 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
 #endif
 
     // Set the level for new/nearest/near injection
+#if OPT_HW_NEW_MVP
+    pcs->new_nearest_near_comb_injection = 0;
+#else
     if (enc_mode <= ENC_MR)
         pcs->new_nearest_near_comb_injection = 1;
     else if ((!rtc_tune && enc_mode <= ENC_M5) || (rtc_tune && enc_mode <= ENC_M7))
         pcs->new_nearest_near_comb_injection = is_base ? 2 : 0;
     else
         pcs->new_nearest_near_comb_injection = 0;
-
+#endif
     // Set the level for unipred3x3 injection
     if (enc_mode <= ENC_MR)
         pcs->unipred3x3_injection = 1;
