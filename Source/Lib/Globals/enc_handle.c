@@ -3256,12 +3256,15 @@ static void derive_vq_params(SequenceControlSet* scs) {
  */
 static void derive_tf_params(SequenceControlSet *scs) {
 #if OPT_HW_TF
-    const bool do_tf = 0;
+    if (scs->static_config.pred_structure == LOW_DELAY)
+        tf_ld_controls(scs, 0);
+    else
+        tf_controls(scs, 0);
 #else
     const uint32_t hierarchical_levels = scs->static_config.hierarchical_levels;
     // Do not perform TF if LD or 1 Layer or 1st pass
     const bool do_tf = scs->static_config.enable_tf && hierarchical_levels >= 1 && !scs->static_config.lossless;
-#endif
+
     const EncMode enc_mode = scs->static_config.enc_mode;
     uint8_t tf_level = 0;
     if (scs->static_config.pred_structure == LOW_DELAY) {
@@ -3298,6 +3301,7 @@ static void derive_tf_params(SequenceControlSet *scs) {
         tf_level = 9;
     }
     tf_controls(scs, tf_level);
+#endif
 }
 
 
