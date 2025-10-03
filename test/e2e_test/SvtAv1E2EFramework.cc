@@ -271,7 +271,7 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
     // create IvfFile if required.
     if (enable_save_bitstream) {
         std::string fn = std::get<0>(test_vector) + ".ivf";
-        output_file_ = new IvfFile(fn.c_str());
+        output_file_ = new IvfFile(fn);
     }
 
     ASSERT_NE(psnr_src_, nullptr) << "PSNR source create failed!";
@@ -366,14 +366,14 @@ void SvtAv1E2ETestFramework::output_stat() {
     }
 }
 
-void SvtAv1E2ETestFramework::gen_frame_event(EncTestSetting &setting,
+void SvtAv1E2ETestFramework::gen_frame_event(const EncTestSetting &setting,
                                              uint32_t frame_count,
                                              void **head) {
     EbPrivDataNode *node = nullptr;
-    for (TestFrameEvent event : setting.event_vector) {
+    for (const TestFrameEvent &event : setting.event_vector) {
         if (std::get<1>(event) == frame_count) {
             printf("%s param list:\t", std::get<0>(event).c_str());
-            for (std::string str : std::get<3>(event))
+            for (const std::string &str : std::get<3>(event))
                 printf("%s\t", str.c_str());
             printf("\n");
             EbPrivDataNode *new_node =
@@ -742,8 +742,7 @@ void SvtAv1E2ETestFramework::get_recon_frame(const SvtAv1Context &ctxt,
         ASSERT_NE(new_frame->buffer, nullptr)
             << "can not get new buffer of recon frame!!";
 
-        EbBufferHeaderType recon_frame;
-        memset(&recon_frame, 0, sizeof(recon_frame));
+        EbBufferHeaderType recon_frame{};
         recon_frame.size = sizeof(EbBufferHeaderType);
         recon_frame.p_buffer = new_frame->buffer;
         recon_frame.n_alloc_len = new_frame->buf_size;
@@ -794,7 +793,7 @@ void SvtAv1E2ETestFramework::get_recon_frame(const SvtAv1Context &ctxt,
     } while (true);
 }
 
-SvtAv1E2ETestFramework::IvfFile::IvfFile(std::string path) {
+SvtAv1E2ETestFramework::IvfFile::IvfFile(const std::string &path) {
     FOPEN(file, path.c_str(), "wb");
     byte_count_since_ivf = 0;
     ivf_count = 0;

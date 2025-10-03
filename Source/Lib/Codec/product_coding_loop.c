@@ -1424,7 +1424,7 @@ static void md_stage_0_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ct
 // Function will only be applicate to classes which use multiple iterations
 static bool process_cand_itr(ModeDecisionContext *ctx, ModeDecisionCandidate *cand, uint8_t itr,
                              PredictionMode best_reg_intra_mode, uint64_t best_reg_intra_cost,
-                             uint64_t regular_intra_cost[PAETH_PRED + 1]) {
+                             const uint64_t regular_intra_cost[PAETH_PRED + 1]) {
     if (itr == 0) {
         if (ctx->cand_reduction_ctrls.reduce_filter_intra &&
             (ctx->intra_ctrls.skip_angular_delta1_th != -1 || ctx->intra_ctrls.skip_angular_delta2_th != -1 ||
@@ -2840,8 +2840,12 @@ static void build_single_ref_mvp_array(PictureControlSet *pcs, ModeDecisionConte
 
             for (int drli = 0; drli < max_drl_index; drli++) {
                 Mv nearmv = ctx->ref_mv_stack[frame_type][1 + drli].this_mv;
-                nearmv.x  = (nearmv.x + 4) & ~0x07;
-                nearmv.y  = (nearmv.y + 4) & ~0x07;
+                // cppcheck doesn't work well when the rhs and lhs have the same union
+                // store temp values before reassigning
+                const int16_t x = (nearmv.x + 4) & ~0x07;
+                const int16_t y = (nearmv.y + 4) & ~0x07;
+                nearmv.x        = x;
+                nearmv.y        = y;
                 clip_mv_on_pic_boundary(
                     ctx->blk_org_x, ctx->blk_org_y, blk_geom->bwidth, blk_geom->bheight, ref_pic, &nearmv.x, &nearmv.y);
 
@@ -8190,8 +8194,8 @@ static void lpd1_tx_shortcut_detector(PictureControlSet *pcs, ModeDecisionContex
                 int              num_ref_frame_pair_match = match_ref_frame_pair(left_mi, rf);
                 num_ref_frame_pair_match += match_ref_frame_pair(above_mi, rf);
 
-                uint16_t use_tx_shortcuts_mds3_mult  = 2 * ctx->lpd1_tx_ctrls.use_neighbour_info; // is halved below
-                uint16_t lpd1_allow_skipping_tx_mult = 2 * ctx->lpd1_tx_ctrls.use_neighbour_info; // is halved below
+                uint16_t use_tx_shortcuts_mds3_mult  = 2 * ctx->lpd1_tx_ctrls.use_neighbour_info,
+                         lpd1_allow_skipping_tx_mult = use_tx_shortcuts_mds3_mult; // is halved below
 
                 if (num_ref_frame_pair_match == 2) {
                     if (left_mi->mode == cand->block_mi.mode && above_mi->mode == cand->block_mi.mode) {

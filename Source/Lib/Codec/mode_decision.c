@@ -13,6 +13,7 @@
 /***************************************
 * Includes
 ***************************************/
+#include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -1588,6 +1589,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                 if (!svt_aom_is_valid_unipred_ref(
                         ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_1, ref_idx_1))
                     continue;
+            assert(list_idx_1 < 2);
 
             {
                 //NEAREST_NEWMV
@@ -1791,10 +1793,10 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
         {{0, 0}}, {{-1, 0}}, {{0, 1}}, {{1, 0}}, {{0, -1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
 
     // Set info used to get MV cost
-    int     *mvjcost       = ctx->md_rate_est_ctx->nmv_vec_cost;
-    int    **mvcost        = ctx->md_rate_est_ctx->nmvcoststack;
-    uint32_t full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
-    int      error_per_bit = full_lambda >> RD_EPB_SHIFT;
+    int        *mvjcost       = ctx->md_rate_est_ctx->nmv_vec_cost;
+    const int **mvcost        = ctx->md_rate_est_ctx->nmvcoststack;
+    uint32_t    full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
+    int         error_per_bit = full_lambda >> RD_EPB_SHIFT;
     error_per_bit += (error_per_bit == 0);
     uint32_t             blk_origin_index   = ctx->blk_geom->org_x + ctx->blk_geom->org_y * ctx->sb_size;
     EbPictureBufferDesc *input_pic          = ppcs->enhanced_pic; // 10BIT not supported
