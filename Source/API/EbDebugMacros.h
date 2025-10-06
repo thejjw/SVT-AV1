@@ -80,10 +80,10 @@ extern "C" {
 #if FTR_HW_LIKE_ENCODER
 // High level configuration; Default is a Baseline encoder
 // Enable promising AV1 tools
-#define FTR_PROMIZING_AV1_TOOLS 0   // Includes Opt_Part, Opt_TXT, INTRA_NSQ, TXS, SG, and Wiener
+#define FTR_PROMIZING_AV1_TOOLS 0   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
 
 // Hardware-oriented ME configuration
-#define OPT_HW_HME_ME           0   // Uses a simplified ME pipeline for hardware
+#define OPT_HW_HME_ME           1   // Uses a simplified ME pipeline for hardware
                                     // (1) Activates only HME Level 0 and Main ME to capture and refine motion with reduced circuitry
                                     // (2) Employs fixed search windows across all conditions (independent of QP, temporal distance, or MV/distortion feedback)
 // Parameter-level tuning of normative tools for hardware-like constraints

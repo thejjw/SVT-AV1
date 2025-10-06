@@ -170,6 +170,8 @@ uint8_t svt_aom_derive_gm_level(PictureParentControlSet *pcs, bool super_res_off
  ************************************************/
 static void set_hme_search_params(PictureParentControlSet *pcs, MeContext *me_ctx, EbInputResolution input_resolution) {
 #if OPT_HW_HME_ME // Set HME Level0 Params
+    (void)pcs;
+    (void)input_resolution;
     me_ctx->num_hme_sa_w     = 1;
     me_ctx->num_hme_sa_h     = 1;
     me_ctx->hme_l0_sa.sa_min = (SearchArea){200, 200};
