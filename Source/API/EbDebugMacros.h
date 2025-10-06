@@ -80,7 +80,7 @@ extern "C" {
 #if FTR_HW_LIKE_ENCODER
 // High level configuration; Default is a Baseline encoder
 // Enable promising AV1 tools
-#define FTR_PROMIZING_AV1_TOOLS 0   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
+#define FTR_PROMIZING_AV1_TOOLS 1   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
 
 // Hardware-oriented ME configuration
 #define OPT_HW_HME_ME           1   // Uses a simplified ME pipeline for hardware
