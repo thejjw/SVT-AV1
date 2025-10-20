@@ -4380,11 +4380,16 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
     for (int tx_type_group_idx = 0; tx_type_group_idx < tx_type_tot_group; ++tx_type_group_idx) {
         uint32_t best_tx_non_coeff = 64 * 64;
         for (int tx_type_idx = 0; tx_type_idx < TX_TYPES; ++tx_type_idx) {
+#if OPT_HW_AV1_TXT_V1
+            tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
+            if (tx_type != DCT_DCT && tx_type != H_DCT && tx_type != V_DCT && tx_type != IDTX)
+                continue;
+#else
             if (pcs->ppcs->sc_class1)
                 tx_type = tx_type_group_sc[tx_type_group_idx][tx_type_idx];
             else
                 tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
-
+#endif
             if (tx_type == INVALID_TX_TYPE)
                 break;
 
@@ -6335,6 +6340,24 @@ static void full_loop_core(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                 ctx->hbd_md,
                                 ctx->blk_geom->bwidth,
                                 ctx->blk_geom->bheight >> ctx->mds_subres_step);
+
+#if OPT_HW_AV1_TXS
+    if (ctx->blk_geom->sq_size >= 64) {
+        start_tx_depth = 1;
+        end_tx_depth   = MAX(end_tx_depth, 1);
+    }
+
+    if (ctx->blk_geom->sq_size == 16) {
+        end_tx_depth = MIN(end_tx_depth, 1);
+    }
+
+    if (ctx->blk_geom->sq_size == 8) {
+        end_tx_depth = 0;
+    }
+
+    perform_tx_partitioning(
+        cand_bf, ctx, pcs, start_tx_depth, end_tx_depth, ctx->blk_ptr->qindex, &y_coeff_bits, y_full_distortion);
+#else
     // Check if should perform TX type search
     if (ctx->blk_geom->sq_size <= 64 && start_tx_depth == 0 && end_tx_depth == 0 && // TXS off
         !pcs->ppcs->sc_class1 && // Can't be SC b/c SC tries DCT_DCT and IDTX when only_dct_dct is 1
@@ -6355,6 +6378,7 @@ static void full_loop_core(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
     } else
         perform_tx_partitioning(
             cand_bf, ctx, pcs, start_tx_depth, end_tx_depth, ctx->blk_ptr->qindex, &y_coeff_bits, y_full_distortion);
+#endif
     // Update coeff info based on luma TX so that chroma can take advantage of most accurate info
     cand_bf->block_has_coeff = (cand_bf->y_has_coeff) ? 1 : 0;
 
@@ -6503,10 +6527,13 @@ static void md_stage_2(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
         // will be inaccurate. If IFS is performed in MDS2, we much test all inter candidates.
         if (is_inter_mode(cand->block_mi.mode) && !ctx->mds_do_ifs && !first_ssse_mds)
             continue;
+#if OPT_HW_AV1_TXT_V1
+        ctx->mds_do_txt = false;
+#else
         ctx->mds_do_txt = svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id) ? 0
             : is_intra_mode(cand->block_mi.mode)                                     ? ctx->txt_ctrls.enabled
                                                                                      : 0;
-
+#endif
         full_loop_core(pcs, ctx, cand_bf, input_pic, loc);
     }
 }
@@ -6603,8 +6630,14 @@ static void md_stage_3(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
                     // Scale  palette colors to 10bit
                     for (uint8_t col = 0; col < cand->palette_size[0]; col++)
                         cand->palette_info->pmi.palette_colors[col] *= 4;
+#if OPT_HW_AV1_TXT_V1
+        ctx->mds_do_txt = svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id) ||
+                is_intra_mode(cand->block_mi.mode)
+            ? false
+            : ctx->txt_ctrls.enabled;
+#else
         ctx->mds_do_txt = svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id) ? 0 : ctx->txt_ctrls.enabled;
-
+#endif
         // If independent chroma search was performed before the last MD stage, update the chroma data
         if (ctx->ind_uv_avail && ctx->uv_ctrls.ind_uv_last_mds)
             update_intra_chroma_mode(pcs, ctx, cand_bf);

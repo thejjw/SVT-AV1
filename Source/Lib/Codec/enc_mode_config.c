@@ -1185,6 +1185,35 @@ static void set_cdef_search_controls(PictureParentControlSet *pcs, uint8_t cdef_
             cdef_ctrls->default_second_pass_fs_uv[fs_idx] = -1;
         }
     }
+#if OPT_HW_CDEF_LUMA_4S
+#if 1
+    cdef_ctrls->first_pass_fs_num          = 4;
+    second_pass_fs_num                     = 0;
+    cdef_ctrls->default_second_pass_fs_num = cdef_ctrls->first_pass_fs_num * second_pass_fs_num;
+    cdef_ctrls->default_first_pass_fs[0]   = pf_gi[0];
+    cdef_ctrls->default_first_pass_fs[1]   = pf_gi[2];
+    cdef_ctrls->default_first_pass_fs[2]   = pf_gi[4];
+    cdef_ctrls->default_first_pass_fs[3]   = pf_gi[9];
+#else
+    cdef_ctrls->first_pass_fs_num          = 2;
+    second_pass_fs_num                     = 1;
+    cdef_ctrls->default_second_pass_fs_num = cdef_ctrls->first_pass_fs_num * second_pass_fs_num;
+    cdef_ctrls->default_first_pass_fs[0]   = pf_gi[0];
+    cdef_ctrls->default_first_pass_fs[1]   = pf_gi[15];
+
+    cdef_ctrls->default_second_pass_fs[0] = pf_gi[0] + 2;
+    cdef_ctrls->default_second_pass_fs[1] = pf_gi[15] + 2;
+#endif
+#endif
+#if OPT_HW_NO_CDEF_CHROMA
+    int fs_idx;
+    for (fs_idx = 0; fs_idx < cdef_ctrls->first_pass_fs_num; fs_idx++) {
+        cdef_ctrls->default_first_pass_fs_uv[fs_idx] = -1;
+    }
+    for (fs_idx = 0; fs_idx < cdef_ctrls->default_second_pass_fs_num; fs_idx++) {
+        cdef_ctrls->default_second_pass_fs_uv[fs_idx] = -1;
+    }
+#endif
 }
 
 static void set_cdef_recon_controls(PictureParentControlSet *pcs, uint8_t cdef_recon_level) {
@@ -3349,7 +3378,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
         txt_ctrls->txt_rate_cost_th            = 0;
         break;
     case 1: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3368,7 +3397,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
         txt_ctrls->txt_rate_cost_th            = 0;
         break;
     case 2: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3387,7 +3416,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
         txt_ctrls->txt_rate_cost_th            = 250;
         break;
     case 3: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3407,7 +3436,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
         txt_ctrls->txt_rate_cost_th            = 250;
         break;
     case 4: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3427,7 +3456,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
         txt_ctrls->txt_rate_cost_th            = 250;
         break;
     case 5: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3448,7 +3477,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
 
         break;
     case 6: txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -3470,7 +3499,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
     case 7:
         // ref lvl_5
         txt_ctrls->enabled = 1;
-#if OPT_HW_AV1_TXT
+#if OPT_HW_AV1_TXT_V0
         txt_ctrls->txt_group_inter_lt_16x16    = 5;
         txt_ctrls->txt_group_inter_gt_eq_16x16 = 5;
         txt_ctrls->txt_group_intra_lt_16x16    = 5;
@@ -4331,8 +4360,12 @@ void svt_aom_set_nsq_geom_ctrls(ModeDecisionContext *ctx, uint8_t nsq_geom_level
 #if OPT_HW_AV1_PART_V0
         nsq_geom_ctrls->enabled            = 1;
         nsq_geom_ctrls->min_nsq_block_size = 8;
-        nsq_geom_ctrls->allow_HV4          = 1;
-        nsq_geom_ctrls->allow_HVA_HVB      = 0;
+#if FTR_PROMIZING_AV1_TOOLS_V1
+        nsq_geom_ctrls->allow_HV4 = 0;
+#else
+        nsq_geom_ctrls->allow_HV4 = 1;
+#endif
+        nsq_geom_ctrls->allow_HVA_HVB = 0;
 #else
         nsq_geom_ctrls->enabled            = 1;
         nsq_geom_ctrls->min_nsq_block_size = 0;
@@ -6805,10 +6838,15 @@ Used by svt_aom_sig_deriv_enc_dec and memory allocation
 */
 bool svt_aom_get_disallow_4x4(EncMode enc_mode, uint8_t is_base) {
     UNUSED(is_base);
+#if FTR_PROMIZING_AV1_TOOLS_V1 // Disable 4x4 partitions
+    UNUSED(enc_mode);
+    return true;
+#else
     if (enc_mode <= ENC_M2)
         return false;
     else
         return true;
+#endif
 }
 /*
 * return the 8x8 level
@@ -7537,7 +7575,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         pcs->cand_reduction_level = 6;
 
     // Set the level for the txt search
-#if OPT_HW_TXT && !OPT_HW_AV1_TXT
+#if OPT_HW_TXT && !OPT_HW_AV1_TXT_V0
     pcs->txt_level = 0;
 #else
     pcs->txt_level = 0;

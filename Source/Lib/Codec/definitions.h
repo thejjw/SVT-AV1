@@ -999,20 +999,21 @@ typedef enum ATTRIBUTE_PACKED {
 #endif
 
 #define MAX_TX_TYPE_GROUP 6
-static const TxType tx_type_group[MAX_TX_TYPE_GROUP][TX_TYPES]    = {{DCT_DCT, INVALID_TX_TYPE},
-                                                                     {V_DCT, H_DCT, INVALID_TX_TYPE},
-                                                                     {ADST_ADST, INVALID_TX_TYPE},
-                                                                     {ADST_DCT, DCT_ADST, INVALID_TX_TYPE},
-                                                                     {FLIPADST_FLIPADST, IDTX, INVALID_TX_TYPE},
-                                                                     {FLIPADST_DCT,
-                                                                      DCT_FLIPADST,
-                                                                      ADST_FLIPADST,
-                                                                      FLIPADST_ADST,
-                                                                      V_ADST,
-                                                                      H_ADST,
-                                                                      V_FLIPADST,
-                                                                      H_FLIPADST,
-                                                                      INVALID_TX_TYPE}};
+static const TxType tx_type_group[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, INVALID_TX_TYPE},
+                                                                  {V_DCT, H_DCT, INVALID_TX_TYPE},
+                                                                  {ADST_ADST, INVALID_TX_TYPE},
+                                                                  {ADST_DCT, DCT_ADST, INVALID_TX_TYPE},
+                                                                  {FLIPADST_FLIPADST, IDTX, INVALID_TX_TYPE},
+                                                                  {FLIPADST_DCT,
+                                                                   DCT_FLIPADST,
+                                                                   ADST_FLIPADST,
+                                                                   FLIPADST_ADST,
+                                                                   V_ADST,
+                                                                   H_ADST,
+                                                                   V_FLIPADST,
+                                                                   H_FLIPADST,
+                                                                   INVALID_TX_TYPE}};
+#if !OPT_HW_AV1_TXT_V1
 static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, IDTX, INVALID_TX_TYPE},
                                                                      {V_DCT, H_DCT, INVALID_TX_TYPE},
                                                                      {ADST_ADST, INVALID_TX_TYPE},
@@ -1027,6 +1028,7 @@ static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, I
                                                                       V_FLIPADST,
                                                                       H_FLIPADST,
                                                                       INVALID_TX_TYPE}};
+#endif
 typedef enum ATTRIBUTE_PACKED {
     // DCT only
     EXT_TX_SET_DCTONLY,

@@ -79,30 +79,40 @@ extern "C" {
 #define FTR_HW_LIKE_ENCODER   1
 #if FTR_HW_LIKE_ENCODER
 // High level configuration; Default is a Baseline encoder
-// Enable promising AV1 tools
-#define FTR_PROMIZING_AV1_TOOLS 1   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
-
 // Hardware-oriented ME configuration
 #define OPT_HW_HME_ME           1   // Uses a simplified ME pipeline for hardware
                                     // (1) Activates only HME Level 0 and Main ME to capture and refine motion with reduced circuitry
                                     // (2) Employs fixed search windows across all conditions (independent of QP, temporal distance, or MV/distortion feedback)
+
+// Enable promising AV1 tools Set1
+#define FTR_PROMIZING_AV1_TOOLS_V0 1   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
+
+// Enable promising AV1 tools Set2
+#define FTR_PROMIZING_AV1_TOOLS_V1 1   // Reduces Angular modes (41 to 25), disables H4/V4 @ 64x64 and 4x4 partitions, limits CDEF to {0,2,4,9} w/o chroma, removes SG filter, and enables IFS(Regular / Smooth), Independent Chroma, and MRP
+
 // Parameter-level tuning of normative tools for hardware-like constraints
 #define OPT_HW_CDEF           0 // Disable CDEF filter (set to 0 to enable)
 
 #define OPT_HW_PART           1 // Restrict block partitioning to hardware-friendly sizes (set to 0 to enable)
 #define OPT_HW_TXT            1 // Disable transform type search (set to 0 to enable)
 #define OPT_HW_OBMC           1 // Disable overlapped block motion compensation (set to 0 to enable)
-#if !FTR_PROMIZING_AV1_TOOLS
+#if !FTR_PROMIZING_AV1_TOOLS_V0
 #define OPT_HW_TXS            1 // Disable transform size search (set to 0 to enable)
 #define OPT_HW_WARP           1 // Disable warped motion compensation (set to 0 to enable)
 #define OPT_HW_INTRA_ONLY_SQ  1 // Disable INTRA for non-square blocks (set to 0 to enable)
 #endif
+#if !FTR_PROMIZING_AV1_TOOLS_V1
 #define OPT_HW_IFS            1 // Disable interpolation filter search (set to 0 to enable)
-#if !FTR_PROMIZING_AV1_TOOLS
+#endif
+#if !FTR_PROMIZING_AV1_TOOLS_V0
 #define OPT_HW_WIENER         1 // Disable wiener loop filter (set to 0 to enable)
+#endif
+#if !FTR_PROMIZING_AV1_TOOLS_V0 || FTR_PROMIZING_AV1_TOOLS_V1
 #define OPT_HW_SG             1 // Disable self-guided restoration filter (set to 0 to enable)
 #endif
+#if !FTR_PROMIZING_AV1_TOOLS_V1
 #define OPT_HW_IND            1 // Disable independent chroma prediction modes (set to 0 to enable)
+#endif
 #define OPT_HW_CFL            1 // Disable chroma-from-luma prediction mode (set to 0 to enable)
 #define OPT_HW_INTRA_ANGULAR  1 // Disable angular-intra refinement delta ±2 mode (set to 0 to enable)
 #define OPT_HW_INTRA_SMOOTH   1 // Disable smooth-h and smooth-v intra prediction mode (set to 0 to enable)
@@ -116,8 +126,10 @@ extern "C" {
 #define OPT_HW_INTER_B4       1 // Disable INTER for 4×4 blocks
 #define OPT_HW_COMPOUND       1 // Disable coumpound prediction modes (set to 0 to enable)
 #define OPT_HW_NEW_MVP        1 // Disable New/Nearest/Near prediction modes (set to 0 to enable)
+#if !FTR_PROMIZING_AV1_TOOLS_V1
 #define OPT_HW_MRP            1 // Disable MRP (set to 0 to enable)
-#if !FTR_PROMIZING_AV1_TOOLS
+#endif
+#if !FTR_PROMIZING_AV1_TOOLS_V0
 #define OPT_HW_TF             1 // Disable TF (set to 0 to enable)
 #define OPT_HW_TPL            1 // Disable TPL (set to 0 to enable)
 #endif
@@ -140,12 +152,25 @@ extern "C" {
 #endif
 
 // Hardware-Friendly AV1 Tools Implementation
-#if FTR_PROMIZING_AV1_TOOLS
+#if FTR_PROMIZING_AV1_TOOLS_V0
 // Part
 #define OPT_HW_AV1_PART_V0    1  // Enable partitions: 64×64, 64×32, 32×64, 64×16, 16×64
 #define OPT_HW_AV1_PART_V1    0  // Enable partitions: 32×64, 16×64
 // TXT
-#define OPT_HW_AV1_TXT        1  // Enable transform search (8 of 16 tx-types): DCT_DCT, V_DCT, H_DCT, ADST_ADST, ADST_DCT, DCT_ADST, FLIPADST_FLIPADST, IDTX
+#define OPT_HW_AV1_TXT_V0     1  // Enable transform search (8 of 16 tx-types): DCT_DCT, V_DCT, H_DCT, ADST_ADST, ADST_DCT, DCT_ADST, FLIPADST_FLIPADST, IDTX
+#if FTR_PROMIZING_AV1_TOOLS_V1
+#define OPT_HW_AV1_TXT_V1     0  // Enable transform search (4 of 16 tx-types): DCT_DCT, V_DCT, H_DCT, IDTX for INTER only
+#endif
+// TXS
+#if FTR_PROMIZING_AV1_TOOLS_V1
+#define OPT_HW_AV1_TXS        0  // Enforce transform size: min 8×8 (unless 4×4 partition is used), max 32×32
+#endif
+// CDEF
+#if FTR_PROMIZING_AV1_TOOLS_V1
+#define OPT_HW_NO_CDEF_CHROMA   1  // Disable chroma CDEF filtering
+#define OPT_HW_CDEF_LUMA_4S     1  // Use 4 strength sets for luma
+#endif
+
 #endif
 // Additional tools
 #define OPT_HW_MAP_HEVC_QP    0 // Read and force the use of HEVC QP; q-index = 5 × HEVC QP

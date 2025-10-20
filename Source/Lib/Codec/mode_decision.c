@@ -3132,7 +3132,11 @@ static void inject_intra_candidates(PictureControlSet *pcs, ModeDecisionContext 
                 continue;
 
 #if OPT_HW_INTRA_ANGULAR
+#if FTR_PROMIZING_AV1_TOOLS_V1 // 25 Angular Intra Modes (instead of 41)
+            if (angle_delta == -1 || angle_delta == 1 || angle_delta == -3 || angle_delta == 3) {
+#else
             if(angle_delta == -2 || angle_delta == 2){
+#endif
                 continue;
             }
 #endif
