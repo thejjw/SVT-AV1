@@ -119,10 +119,11 @@ static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1_8tap_beta0(const uint
     return vreinterpretq_s16_u16(res);
 }
 
-static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1_beta0(const uint8x16_t in, int16x8_t f_s16) {
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1(const uint8x16_t in, int sx) {
     const int32x4_t add_const = vdupq_n_s32(1 << (8 + FILTER_BITS - 1));
 
-    int8x16_t f_s8 = vcombine_s8(vmovn_s16(f_s16), vmovn_s16(f_s16));
+    int16x8_t f_s16 = vld1q_s16((int16_t *)(svt_aom_warped_filter + (sx >> WARPEDDIFF_PREC_BITS)));
+    int8x16_t f_s8  = vcombine_s8(vmovn_s16(f_s16), vmovn_s16(f_s16));
 
     uint8x16_t perm0 = vld1q_u8(&svt_kDotProdPermuteTbl[0]);
     uint8x16_t perm1 = vld1q_u8(&svt_kDotProdPermuteTbl[16]);
@@ -138,11 +139,6 @@ static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1_beta0(const uint8x16_
 
     uint16x8_t res = vcombine_u16(vqrshrun_n_s32(m0123, ROUND0_BITS), vdup_n_u16(0));
     return vreinterpretq_s16_u16(res);
-}
-
-static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1(const uint8x16_t in, int sx) {
-    int16x8_t f_s16 = vld1q_s16((int16_t *)(svt_aom_warped_filter + (sx >> WARPEDDIFF_PREC_BITS)));
-    return horizontal_filter_4x1_f1_beta0(in, f_s16);
 }
 
 static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1_6tap_beta0(const uint8x16_t in, const int8x16_t filter,
@@ -187,10 +183,11 @@ static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1_8tap_beta0(const uint
     return vreinterpretq_s16_u16(res);
 }
 
-static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1_beta0(const uint8x16_t in, int16x8_t f_s16) {
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1(const uint8x16_t in, int sx) {
     const int32x4_t add_const = vdupq_n_s32(1 << (8 + FILTER_BITS - 1));
 
-    int8x16_t f_s8 = vcombine_s8(vmovn_s16(f_s16), vmovn_s16(f_s16));
+    int16x8_t f_s16 = vld1q_s16((int16_t *)(svt_aom_warped_filter + (sx >> WARPEDDIFF_PREC_BITS)));
+    int8x16_t f_s8  = vcombine_s8(vmovn_s16(f_s16), vmovn_s16(f_s16));
 
     uint8x16_t perm0 = vld1q_u8(&svt_kDotProdPermuteTbl[0]);
     uint8x16_t perm1 = vld1q_u8(&svt_kDotProdPermuteTbl[16]);
@@ -212,11 +209,6 @@ static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1_beta0(const uint8x16_
 
     uint16x8_t res = vcombine_u16(vqrshrun_n_s32(m0123, ROUND0_BITS), vqrshrun_n_s32(m4567, ROUND0_BITS));
     return vreinterpretq_s16_u16(res);
-}
-
-static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1(const uint8x16_t in, int sx) {
-    int16x8_t f_s16 = vld1q_s16((int16_t *)(svt_aom_warped_filter + (sx >> WARPEDDIFF_PREC_BITS)));
-    return horizontal_filter_8x1_f1_beta0(in, f_s16);
 }
 
 static AOM_FORCE_INLINE void vertical_filter_4x1_f1(const int16x8_t *src, int32x4_t *res, int sy) {
@@ -353,9 +345,7 @@ static AOM_FORCE_INLINE void warp_affine_horizontal_neon_i8mm(const uint8_t *ref
                                                               int p_width, int p_height, int16_t alpha, int16_t beta,
                                                               const int64_t x4, const int64_t y4, const int i,
                                                               int16x8_t tmp[]) {
-    const int bd                = 8;
-    const int reduce_bits_horiz = ROUND0_BITS;
-    const int height_limit      = AOMMIN(8, p_height - i) + 7;
+    const int height_limit = AOMMIN(8, p_height - i) + 7;
 
     int32_t ix4 = (int32_t)(x4 >> WARPEDMODEL_PREC_BITS);
     int32_t iy4 = (int32_t)(y4 >> WARPEDMODEL_PREC_BITS);
@@ -365,21 +355,7 @@ static AOM_FORCE_INLINE void warp_affine_horizontal_neon_i8mm(const uint8_t *ref
         (WARPEDPIXEL_PREC_SHIFTS << WARPEDDIFF_PREC_BITS);
     sx4 &= ~((1 << WARP_PARAM_REDUCE_BITS) - 1);
 
-    if (ix4 <= -7) {
-        for (int k = 0; k < height_limit; ++k) {
-            int     iy      = clamp_iy(iy4 + k - 7, height);
-            int16_t dup_val = (1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
-                ref[iy * stride] * (1 << (FILTER_BITS - reduce_bits_horiz));
-            tmp[k] = vdupq_n_s16(dup_val);
-        }
-        return;
-    } else if (ix4 >= width + 6) {
-        for (int k = 0; k < height_limit; ++k) {
-            int     iy      = clamp_iy(iy4 + k - 7, height);
-            int16_t dup_val = (1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
-                ref[iy * stride + (width - 1)] * (1 << (FILTER_BITS - reduce_bits_horiz));
-            tmp[k] = vdupq_n_s16(dup_val);
-        }
+    if (warp_affine_special_case(ref, ix4, iy4, width, height, stride, height_limit, tmp)) {
         return;
     }
 
