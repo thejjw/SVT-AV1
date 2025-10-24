@@ -3621,10 +3621,17 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = 0;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#elif FTR_PROMIZING_AV1_TOOLS_V2
+        cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
+        cand_reduction_ctrls->near_count_ctrls.near_count      = 2;
+        cand_reduction_ctrls->near_count_ctrls.near_near_count = 2;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 3;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 3;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
@@ -3646,10 +3653,17 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = 0;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#elif FTR_PROMIZING_AV1_TOOLS_V2
+        cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
+        cand_reduction_ctrls->near_count_ctrls.near_count      = 2;
+        cand_reduction_ctrls->near_count_ctrls.near_near_count = 2;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 3;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 3;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
@@ -3670,10 +3684,17 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = rtc_tune ? 0 : 1;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#elif FTR_PROMIZING_AV1_TOOLS_V2
+        cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
+        cand_reduction_ctrls->near_count_ctrls.near_count      = 2;
+        cand_reduction_ctrls->near_count_ctrls.near_near_count = 2;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 3;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 3;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
@@ -3696,10 +3717,17 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = rtc_tune ? 0 : 1;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#elif FTR_PROMIZING_AV1_TOOLS_V2
+        cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
+        cand_reduction_ctrls->near_count_ctrls.near_count      = 1;
+        cand_reduction_ctrls->near_count_ctrls.near_near_count = 2;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 1;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 3;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
@@ -3723,10 +3751,13 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = rtc_tune ? 0 : 1;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 1;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 1;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 
@@ -3750,10 +3781,13 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = rtc_tune ? 0 : 1;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 1;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 1;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 1;
 
@@ -3781,10 +3815,13 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
         cand_reduction_ctrls->use_neighbouring_mode_ctrls.enabled = rtc_tune ? 0 : 1;
 
         // near_count_ctrls
+#if FTR_PROMIZING_AV1_TOOLS_V3
+        cand_reduction_ctrls->near_count_ctrls.enabled = 0;
+#else
         cand_reduction_ctrls->near_count_ctrls.enabled         = 1;
         cand_reduction_ctrls->near_count_ctrls.near_count      = 0;
         cand_reduction_ctrls->near_count_ctrls.near_near_count = 1;
-
+#endif
         // lpd1_mvp_best_me_list (LPD1 only signal)
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 1;
 
@@ -7031,15 +7068,19 @@ static void set_cdf_controls(PictureControlSet *pcs, uint8_t update_cdf_level) {
         ctrl->update_se   = 0;
         ctrl->update_coef = 0;
         break;
-    case 1:
-        ctrl->update_mv   = 1;
-        ctrl->update_se   = 1;
+    case 1: ctrl->update_mv = 1; ctrl->update_se = 1;
+#if FTR_PROMIZING_AV1_TOOLS_V2
+        ctrl->update_coef = 0;
+#else
         ctrl->update_coef = 1;
+#endif
         break;
-    case 2:
-        ctrl->update_mv   = 0;
-        ctrl->update_se   = 1;
+    case 2: ctrl->update_mv = 0; ctrl->update_se = 1;
+#if FTR_PROMIZING_AV1_TOOLS_V2
+        ctrl->update_coef = 0;
+#else
         ctrl->update_coef = 1;
+#endif
         break;
     case 3:
         ctrl->update_mv   = 0;
@@ -7485,6 +7526,8 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     // Set Warped Motion level and enabled flag
 #if OPT_HW_WARP
     pcs->wm_level = 0;
+#elif FTR_PROMIZING_AV1_TOOLS_V3
+    pcs->wm_level = 3;
 #else
     pcs->wm_level = 0;
     if (frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME || frm_hdr->error_resilient_mode ||
@@ -7679,13 +7722,18 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         pcs->new_nearest_near_comb_injection = 0;
 #endif
     // Set the level for unipred3x3 injection
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    pcs->unipred3x3_injection = 0;
+#else
     if (enc_mode <= ENC_MR)
         pcs->unipred3x3_injection = 1;
     else
         pcs->unipred3x3_injection = 0;
-
+#endif
     // Set the level for bipred3x3 injection
-
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    pcs->bipred3x3_injection = 0;
+#else
     if (enc_mode <= ENC_M0)
         pcs->bipred3x3_injection = 1;
     else if (enc_mode <= ENC_M1)
@@ -7695,6 +7743,8 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
         pcs->bipred3x3_injection = 4;
     else
         pcs->bipred3x3_injection = 0;
+
+#endif
 
     // Set the level for inter-inter compound
     pcs->inter_compound_mode = get_inter_compound_level(enc_mode);
@@ -8126,6 +8176,9 @@ set lpd0_level
 * svt_aom_set_mfmv_config: enable/disable mfmv based on the enc_mode, input_res and pred_structure at sequence level
 ****************************************************/
 void svt_aom_set_mfmv_config(SequenceControlSet *scs) {
+#if OPT_HW_MFMV
+    scs->mfmv_enabled = 0;
+#else
     if (scs->static_config.enable_mfmv == DEFAULT) {
         const bool rtc_tune = scs->static_config.rtc;
         if (rtc_tune) {
@@ -8141,4 +8194,5 @@ void svt_aom_set_mfmv_config(SequenceControlSet *scs) {
         }
     } else
         scs->mfmv_enabled = scs->static_config.enable_mfmv;
+#endif
 }

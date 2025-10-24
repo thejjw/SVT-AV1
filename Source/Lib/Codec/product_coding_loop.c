@@ -1530,6 +1530,10 @@ static void md_stage_0(PictureControlSet *pcs, ModeDecisionContext *ctx,
     const uint8_t apply_unipred_bias = pcs->scs->vq_ctrls.sharpness_ctrls.unipred_bias && pcs->ppcs->is_noise_level;
     // Set MD Staging fast_loop_core settings
     ctx->mds_do_ifs = (ctx->ifs_ctrls.level == IFS_MDS0);
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    if (ctx->blk_geom->sq_size >= 64)
+        ctx->mds_do_ifs = 0;
+#endif
     /* If the interpolation filter type is known, assign it, OW will be assigned in IFS search.
      * NB intra_bc always uses BILINEAR, but the IBC filters are updated automatically during prediction, so
      * no need for a special check here. */
@@ -4395,6 +4399,20 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
 
             if (only_dct_dct && tx_type != DCT_DCT)
                 continue;
+
+#if FTR_PROMIZING_AV1_TOOLS_V3
+            if (is_inter) {
+                // Inter : DCT_DCT, H_DCT, V_DCT, and IDTX
+                if ((tx_type != DCT_DCT) && (tx_type != IDTX) && (tx_type != V_DCT) && (tx_type != H_DCT))
+                    continue;
+            } else {
+                // Intra: DCT_DCT,DCT_ADST,ADST_DCT,ADST_ADST,IDTX
+                if ((tx_type != DCT_DCT) && (tx_type != IDTX) && (tx_type != ADST_ADST) && (tx_type != DCT_ADST) &&
+                    (tx_type != ADST_DCT))
+                    continue;
+            }
+#endif
+
             if (tx_type != DCT_DCT) {
                 if (av1_ext_tx_used[tx_set_type][tx_type] == 0)
                     continue;
@@ -6494,7 +6512,11 @@ static void md_stage_1(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
     ctx->mds_subres_step          = ctx->subres_ctrls.step;
     ctx->mds_do_chroma            = false;
     ctx->mds_do_ifs               = (ctx->ifs_ctrls.level == IFS_MDS1);
-    ctx->mds_do_rdoq              = false;
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    if (ctx->blk_geom->sq_size >= 64)
+        ctx->mds_do_ifs = 0;
+#endif
+    ctx->mds_do_rdoq = false;
     for (uint32_t cand_cnt = 0; cand_cnt < ctx->md_stage_1_count[ctx->target_class]; cand_cnt++) {
         const uint32_t               cand_bf_index = ctx->cand_buff_indices[ctx->target_class][cand_cnt];
         ModeDecisionCandidateBuffer *cand_bf       = cand_bf_ptr_array[cand_bf_index];
@@ -6506,8 +6528,12 @@ static void md_stage_2(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
     ModeDecisionCandidateBuffer **cand_bf_ptr_array = &(ctx->cand_bf_ptr_array[0]);
 
     // If IFS is set to MDS1, but MDS1 is bypassed, perform IFS in MDS2 instead. Note if ctx->perform_mds1 is false, MDS2 is also skipped
-    ctx->mds_do_ifs         = (ctx->ifs_ctrls.level == IFS_MDS2 ||
+    ctx->mds_do_ifs = (ctx->ifs_ctrls.level == IFS_MDS2 ||
                        (ctx->ifs_ctrls.level == IFS_MDS1 && (!ctx->perform_mds1 || ctx->bypass_md_stage_1)));
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    if (ctx->blk_geom->sq_size >= 64)
+        ctx->mds_do_ifs = 0;
+#endif
     ctx->mds_do_txs         = false;
     ctx->mds_do_rdoq        = false;
     ctx->mds_do_spatial_sse = ctx->spatial_sse_ctrls.level <= SSSE_MDS2;
@@ -6609,10 +6635,15 @@ static void md_stage_3(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
     }
 
     // If IFS is set to a previous MD stage, but that MD stage is bypassed, perform IFS in MDS3 instead
-    ctx->mds_do_ifs               = (ctx->ifs_ctrls.level == IFS_MDS3 ||
+    ctx->mds_do_ifs = (ctx->ifs_ctrls.level == IFS_MDS3 ||
                        (ctx->ifs_ctrls.level == IFS_MDS1 &&
                         (!ctx->perform_mds1 || (ctx->bypass_md_stage_1 && ctx->bypass_md_stage_2))) ||
                        (ctx->ifs_ctrls.level == IFS_MDS2 && (!ctx->perform_mds1 || ctx->bypass_md_stage_2)));
+
+#if FTR_PROMIZING_AV1_TOOLS_V2
+    if (ctx->blk_geom->sq_size >= 64)
+        ctx->mds_do_ifs = 0;
+#endif
     ctx->mds_do_txs               = ctx->txs_ctrls.enabled;
     ctx->mds_do_rdoq              = true;
     ctx->mds_do_spatial_sse       = ctx->spatial_sse_ctrls.level <= SSSE_MDS3;
@@ -7061,6 +7092,9 @@ static void search_best_independent_uv_mode(PictureControlSet *pcs, EbPictureBuf
                                                   ctx->intra_ctrls.angular_pred_level <= 2)
                 ? 7
                 : 1;
+#if FTR_PROMIZING_AV1_TOOLS_V2
+            uv_angle_delta_candidate_count = 1;
+#endif
 
             for (int uv_angle_delta_counter = 0; uv_angle_delta_counter < uv_angle_delta_candidate_count;
                  ++uv_angle_delta_counter) {

@@ -84,11 +84,18 @@ extern "C" {
                                     // (1) Activates only HME Level 0 and Main ME to capture and refine motion with reduced circuitry
                                     // (2) Employs fixed search windows across all conditions (independent of QP, temporal distance, or MV/distortion feedback)
 
-// Enable promising AV1 tools Set1
+// Hardware-Friendly Encoder V0
 #define FTR_PROMIZING_AV1_TOOLS_V0 1   // Enable normative tools (Opt-Part, Opt-TXT, intra-prediction for non-square blocks, Warp, TXS, Wiener, and Self-Guided restoration) and non-normative tools (MCTF, TPL)
 
-// Enable promising AV1 tools Set2
-#define FTR_PROMIZING_AV1_TOOLS_V1 1   // Reduces Angular modes (41 to 25), disables H4/V4 @ 64x64 and 4x4 partitions, limits CDEF to {0,2,4,9} w/o chroma, removes SG filter, and enables IFS(Regular / Smooth), Independent Chroma, and MRP
+// Hardware-Friendly Encoder V1
+#define FTR_PROMIZING_AV1_TOOLS_V1 1   // V0 + Reduces Angular modes (41 to 25), disables H4/V4 @ 64x64 and 4x4 partitions, limits CDEF to {0,2,4,9} w/o chroma, removes SG filter, and enables IFS(Regular / Smooth), Independent Chroma, and MRP
+
+// Hardware-Friendly Encoder V2
+#define FTR_PROMIZING_AV1_TOOLS_V2 1   // V1 + Disable MFMV + Disable MRP + Disable Unipred-3×3 + Disable Bipred-3×3 + Disable IFS for 64×64 partitions + Disable angular refinement for independent chroma + Disable Near drl-index 2 + Disable CDF update for coefficients
+
+// Hardware-Friendly Encoder V3
+#define FTR_PROMIZING_AV1_TOOLS_V3 0   // V2 + Disable TXS + Disable Near + Opt-TXT (5 + 4) + Opt-Warp
+
 
 // Parameter-level tuning of normative tools for hardware-like constraints
 #define OPT_HW_CDEF           0 // Disable CDEF filter (set to 0 to enable)
@@ -96,8 +103,10 @@ extern "C" {
 #define OPT_HW_PART           1 // Restrict block partitioning to hardware-friendly sizes (set to 0 to enable)
 #define OPT_HW_TXT            1 // Disable transform type search (set to 0 to enable)
 #define OPT_HW_OBMC           1 // Disable overlapped block motion compensation (set to 0 to enable)
-#if !FTR_PROMIZING_AV1_TOOLS_V0
+#if FTR_PROMIZING_AV1_TOOLS_V3
 #define OPT_HW_TXS            1 // Disable transform size search (set to 0 to enable)
+#endif
+#if !FTR_PROMIZING_AV1_TOOLS_V0
 #define OPT_HW_WARP           1 // Disable warped motion compensation (set to 0 to enable)
 #define OPT_HW_INTRA_ONLY_SQ  1 // Disable INTRA for non-square blocks (set to 0 to enable)
 #endif
@@ -126,12 +135,15 @@ extern "C" {
 #define OPT_HW_INTER_B4       1 // Disable INTER for 4×4 blocks
 #define OPT_HW_COMPOUND       1 // Disable coumpound prediction modes (set to 0 to enable)
 #define OPT_HW_NEW_MVP        1 // Disable New/Nearest/Near prediction modes (set to 0 to enable)
-#if !FTR_PROMIZING_AV1_TOOLS_V1
+#if !FTR_PROMIZING_AV1_TOOLS_V1 || FTR_PROMIZING_AV1_TOOLS_V2
 #define OPT_HW_MRP            1 // Disable MRP (set to 0 to enable)
 #endif
 #if !FTR_PROMIZING_AV1_TOOLS_V0
 #define OPT_HW_TF             1 // Disable TF (set to 0 to enable)
 #define OPT_HW_TPL            1 // Disable TPL (set to 0 to enable)
+#endif
+#if FTR_PROMIZING_AV1_TOOLS_V2
+#define OPT_HW_MFMV            1 // Disable MFMV (set to 0 to enable)
 #endif
 // Parameter-level tuning of non-normative tools for hardware-like constraints
 #define OPT_HW_RDOQ           1 // Turn OFF RDOQ as it requires sample-based operations that are not hardware-friendly
