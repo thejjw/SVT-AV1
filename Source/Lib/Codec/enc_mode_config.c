@@ -8126,6 +8126,9 @@ set lpd0_level
 * svt_aom_set_mfmv_config: enable/disable mfmv based on the enc_mode, input_res and pred_structure at sequence level
 ****************************************************/
 void svt_aom_set_mfmv_config(SequenceControlSet *scs) {
+#if OPT_HW_MFMV
+    scs->mfmv_enabled = 0;
+#else
     if (scs->static_config.enable_mfmv == DEFAULT) {
         const bool rtc_tune = scs->static_config.rtc;
         if (rtc_tune) {
@@ -8141,4 +8144,5 @@ void svt_aom_set_mfmv_config(SequenceControlSet *scs) {
         }
     } else
         scs->mfmv_enabled = scs->static_config.enable_mfmv;
+#endif
 }
