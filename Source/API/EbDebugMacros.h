@@ -137,7 +137,7 @@ extern "C" {
 #define OPT_HW_TF             1 // Disable TF (set to 0 to enable)
 #define OPT_HW_TPL            1 // Disable TPL (set to 0 to enable)
 #endif
-#if FTR_PROMIZING_AV1_TOOLS_V2
+#if 0//FTR_PROMIZING_AV1_TOOLS_V2
 #define OPT_HW_MFMV            1 // Disable MFMV (set to 0 to enable)
 #endif
 // Parameter-level tuning of non-normative tools for hardware-like constraints
