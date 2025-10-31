@@ -173,7 +173,7 @@ extern "C" {
 #define OPT_HW_AV1_TXS        0  // Enforce transform size: min 8×8 (unless 4×4 partition is used), max 32×32
 #endif
 // CDEF
-#if FTR_PROMIZING_AV1_TOOLS_V1
+#if 0//FTR_PROMIZING_AV1_TOOLS_V1
 #define OPT_HW_NO_CDEF_CHROMA   1  // Disable chroma CDEF filtering
 #define OPT_HW_CDEF_LUMA_4S     1  // Use 4 strength sets for luma
 #endif
