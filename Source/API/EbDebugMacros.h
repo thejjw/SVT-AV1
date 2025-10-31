@@ -91,7 +91,7 @@ extern "C" {
 #define FTR_PROMIZING_AV1_TOOLS_V1 1   // Reduces Angular modes (41 to 25), disables H4/V4 @ 64x64 and 4x4 partitions, limits CDEF to {0,2,4,9} w/o chroma, removes SG filter, and enables IFS(Regular / Smooth), Independent Chroma, and MRP
 
 // Enable promising AV1 tools V2
-#define FTR_PROMIZING_AV1_TOOLS_V2 1   // Disable MFMV and MRP
+#define FTR_PROMIZING_AV1_TOOLS_V2 0   // Disable MFMV and MRP
 
 
 // Parameter-level tuning of normative tools for hardware-like constraints
@@ -137,7 +137,7 @@ extern "C" {
 #define OPT_HW_TF             1 // Disable TF (set to 0 to enable)
 #define OPT_HW_TPL            1 // Disable TPL (set to 0 to enable)
 #endif
-#if 0//FTR_PROMIZING_AV1_TOOLS_V2
+#if FTR_PROMIZING_AV1_TOOLS_V2
 #define OPT_HW_MFMV            1 // Disable MFMV (set to 0 to enable)
 #endif
 // Parameter-level tuning of non-normative tools for hardware-like constraints
