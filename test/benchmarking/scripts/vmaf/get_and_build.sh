@@ -12,6 +12,8 @@
 git clone https://github.com/Netflix/vmaf.git src
 
 cd src || exit
+git apply ../fix_ssim.patch
+
 cd libvmaf || exit
 
 meson setup build --buildtype release
