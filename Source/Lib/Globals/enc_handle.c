@@ -1490,7 +1490,9 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.non_m8_pad_w = enc_handle_ptr->scs_instance_array[instance_index]->scs->max_input_pad_right;
         input_data.non_m8_pad_h = enc_handle_ptr->scs_instance_array[instance_index]->scs->max_input_pad_bottom;
         input_data.enable_tpl_la = enc_handle_ptr->scs_instance_array[instance_index]->scs->tpl;
+#if !CLN_REMOVE_OIS_FLAG
         input_data.in_loop_ois = enc_handle_ptr->scs_instance_array[instance_index]->scs->in_loop_ois;
+#endif
         input_data.enc_dec_segment_col = (uint16_t)enc_handle_ptr->scs_instance_array[instance_index]->scs->tpl_segment_col_count_array;
         input_data.enc_dec_segment_row = (uint16_t)enc_handle_ptr->scs_instance_array[instance_index]->scs->tpl_segment_row_count_array;
         input_data.final_pass_preset = enc_handle_ptr->scs_instance_array[instance_index]->scs->final_pass_preset;
@@ -3722,8 +3724,45 @@ static void validate_scaling_params(SequenceControlSet *scs) {
     }
 }
 void set_qp_based_th_scaling_ctrls(SequenceControlSet *scs) {
-
+#if TUNE_STILL_IMAGE_0
+    const bool still_image = scs->static_config.avif;
+    const bool all_intra = scs->allintra;
+    if (still_image || all_intra) {
+#else
     if (scs->static_config.avif || scs->allintra) {
+#endif
+#if TUNE_STILL_IMAGE_0
+#if TUNE_STILL_IMAGE_1
+        if (scs->static_config.enc_mode <= ENC_M2) {
+#else
+        if (scs->static_config.enc_mode <= ENC_M0) {
+#endif
+            scs->qp_based_th_scaling_ctrls.tf_me_qp_based_th_scaling       = 0;
+            scs->qp_based_th_scaling_ctrls.tf_ref_qp_based_th_scaling      = 0;
+            scs->qp_based_th_scaling_ctrls.depths_qp_based_th_scaling      = 0;
+            scs->qp_based_th_scaling_ctrls.hme_qp_based_th_scaling         = 0;
+            scs->qp_based_th_scaling_ctrls.me_qp_based_th_scaling          = 0;
+            scs->qp_based_th_scaling_ctrls.nsq_qp_based_th_scaling         = 0;
+            scs->qp_based_th_scaling_ctrls.nic_max_qp_based_th_scaling     = 1;
+            scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling = 1;
+            scs->qp_based_th_scaling_ctrls.pme_qp_based_th_scaling         = 0;
+            scs->qp_based_th_scaling_ctrls.txt_qp_based_th_scaling         = 1;
+#if TUNE_STILL_IMAGE_1
+        } else if (scs->static_config.enc_mode <= ENC_M5) {
+#else
+        } else if (scs->static_config.enc_mode <= ENC_M3) {
+#endif
+            scs->qp_based_th_scaling_ctrls.tf_me_qp_based_th_scaling       = 0;
+            scs->qp_based_th_scaling_ctrls.tf_ref_qp_based_th_scaling      = 0;
+            scs->qp_based_th_scaling_ctrls.depths_qp_based_th_scaling      = 0;
+            scs->qp_based_th_scaling_ctrls.hme_qp_based_th_scaling         = 0;
+            scs->qp_based_th_scaling_ctrls.me_qp_based_th_scaling          = 0;
+            scs->qp_based_th_scaling_ctrls.nsq_qp_based_th_scaling         = 1;
+            scs->qp_based_th_scaling_ctrls.nic_max_qp_based_th_scaling     = 1;
+            scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling = 1;
+            scs->qp_based_th_scaling_ctrls.pme_qp_based_th_scaling         = 0;
+            scs->qp_based_th_scaling_ctrls.txt_qp_based_th_scaling         = 1;
+#else
         if (scs->static_config.enc_mode <= ENC_M3) {
             scs->qp_based_th_scaling_ctrls.tf_me_qp_based_th_scaling       = 0;
             scs->qp_based_th_scaling_ctrls.tf_ref_qp_based_th_scaling      = 0;
@@ -3735,6 +3774,7 @@ void set_qp_based_th_scaling_ctrls(SequenceControlSet *scs) {
             scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling = 1;
             scs->qp_based_th_scaling_ctrls.pme_qp_based_th_scaling         = 0;
             scs->qp_based_th_scaling_ctrls.txt_qp_based_th_scaling         = 1;
+#endif
         } else {
             scs->qp_based_th_scaling_ctrls.tf_me_qp_based_th_scaling       = 1;
             scs->qp_based_th_scaling_ctrls.tf_ref_qp_based_th_scaling      = 1;
@@ -3776,6 +3816,11 @@ void set_qp_based_th_scaling_ctrls(SequenceControlSet *scs) {
 }
 static void set_param_based_on_input(SequenceControlSet *scs)
 {
+#if TUNE_STILL_IMAGE_0
+    const bool still_image = scs->static_config.avif;
+    const bool all_intra = scs->allintra;
+#endif
+
     set_multi_pass_params(
         scs);
 
@@ -3786,8 +3831,13 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.superres_mode,
         scs->static_config.resize_mode,
         scs->static_config.enable_adaptive_quantization,
+#if TUNE_STILL_IMAGE_0
+        still_image,
+        all_intra);
+#else
         scs->static_config.avif,
         scs->allintra);
+#endif
     uint16_t subsampling_x = scs->subsampling_x;
     uint16_t subsampling_y = scs->subsampling_y;
     // Update picture width, and picture height
@@ -3905,7 +3955,11 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->scd_delay = MAX(scs->scd_delay, 2);
 
     // no future minigop is used for lowdelay prediction structure
+#if TUNE_STILL_IMAGE_0
+    if (still_image || all_intra || scs->static_config.pred_structure == LOW_DELAY) {
+#else
     if (scs->static_config.avif ||scs->allintra ||  scs->static_config.pred_structure == LOW_DELAY) {
+#endif
         scs->lad_mg = scs->tpl_lad_mg = 0;
     }
     else
@@ -3942,8 +3996,33 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         (scs->input_resolution == INPUT_SIZE_240p_RANGE) ||
         scs->static_config.enable_variance_boost)
         scs->super_block_size = 64;
+#if TUNE_STILL_IMAGE_0
+    else if (still_image || all_intra) {
+#else
     else if (scs->static_config.avif || scs->allintra) {
+#endif
         if (scs->input_resolution <= INPUT_SIZE_1080p_RANGE) {
+#if TUNE_STILL_IMAGE_0
+#if TUNE_STILL_IMAGE_1
+            if (scs->static_config.enc_mode <= ENC_M3) {
+#else
+            if (scs->static_config.enc_mode <= ENC_M8) {
+#endif
+                scs->super_block_size = 128;
+            }
+            else {
+                scs->super_block_size = 64;
+            }
+        }
+        else {
+            if (scs->static_config.enc_mode <= ENC_M5) {
+                scs->super_block_size = 128;
+            }
+            else {
+                scs->super_block_size = 64;
+            }
+        }
+#else
             if (scs->static_config.enc_mode <= ENC_M5) {
                 scs->super_block_size = 128;
             }
@@ -3954,6 +4033,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else {
             scs->super_block_size = 128;
         }
+#endif
     }
     else
         if (scs->static_config.enc_mode <= ENC_MR)
@@ -4031,7 +4111,11 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     for (uint8_t is_base = 0; is_base <= 1; is_base++) {
             for (uint8_t coeff_lvl = 0; coeff_lvl <= HIGH_LVL + 1; coeff_lvl++)
             {
+#if TUNE_STILL_IMAGE_0
+                nsq_geom_level = svt_aom_get_nsq_geom_level(still_image, all_intra, scs->input_resolution, scs->static_config.enc_mode, is_base, coeff_lvl, scs->static_config.rtc);
+#else
                 nsq_geom_level = svt_aom_get_nsq_geom_level(scs->static_config.enc_mode, is_base, coeff_lvl, scs->static_config.rtc);
+#endif
                 disallow_nsq = MIN(disallow_nsq, (nsq_geom_level == 0 ? 1 : 0));
                 uint8_t temp_allow_HVA_HVB = 0, temp_allow_HV4 = 0;
                 svt_aom_set_nsq_geom_ctrls(NULL, nsq_geom_level, &temp_allow_HVA_HVB, &temp_allow_HV4, &min_nsq_bsize);
@@ -4046,13 +4130,27 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     bool disallow_4x4 = true;
     for (uint8_t is_islice = 0; is_islice <= 1; is_islice++)
         for (uint8_t is_base = 0; is_base <= 1; is_base++)
+#if TUNE_STILL_IMAGE_1
+            disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4(scs->static_config.enc_mode, is_base, still_image, all_intra));
+#else
             disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4(scs->static_config.enc_mode, is_base));
+#endif
+#if TUNE_STILL_IMAGE_0
+    bool disallow_8x8 = svt_aom_get_disallow_8x8(scs->static_config.enc_mode,
+        still_image, all_intra,
+        scs->static_config.rtc,
+        scs->static_config.screen_content_mode,
+        scs->super_block_size,
+        scs->max_input_luma_width,
+        scs->max_input_luma_height);
+#else
     bool disallow_8x8 = svt_aom_get_disallow_8x8(scs->static_config.enc_mode,
         scs->static_config.rtc,
         scs->static_config.screen_content_mode,
         scs->super_block_size,
         scs->max_input_luma_width,
         scs->max_input_luma_height);
+#endif
         if (scs->super_block_size == 128) {
     if(!allow_HVA_HVB && disallow_4x4) {
         scs->svt_aom_geom_idx = GEOM_10;
@@ -4139,9 +4237,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     else
         scs->enable_dec_order = 0;
 #endif
+#if !CLN_REMOVE_OIS_FLAG
    // Open loop intra done with TPL, data is not stored
     scs->in_loop_ois = 1;
-
+#endif
     // 1: Use boundary pixels in restoration filter search.
     // 0: Do not use boundary pixels in the restoration filter search.
     scs->use_boundaries_in_rest_search = 0;
@@ -4221,9 +4320,14 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
     set_mrp_ctrl(scs, mrp_level);
     scs->is_short_clip = scs->static_config.gop_constraint_rc ? 1 : 0; // set to 1 if multipass and less than 200 frames in resourcecordination
-
+#if FTR_DEPTH_REMOVAL_INTRA
+    if (still_image                                          ||
+        all_intra                                            ||
+        scs->static_config.enable_adaptive_quantization == 1 ||
+#else
     // Variance is required for scene change detection and segmentation-based quantization and subjective mode tf control
     if (scs->static_config.enable_adaptive_quantization == 1 ||
+#endif
         scs->static_config.scene_change_detection == 1       ||
         scs->vq_ctrls.sharpness_ctrls.tf == 1                ||
         scs->static_config.enable_variance_boost)
@@ -4277,7 +4381,11 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
     scs->static_config.multiply_keyint = config_struct->multiply_keyint;
     scs->static_config.intra_refresh_type = config_struct->intra_refresh_type;
     scs->static_config.enc_mode = config_struct->enc_mode;
+#if FTR_STILL_IMAGE_UP_TO_M12
+    if (scs->static_config.rtc || scs->static_config.avif || scs->allintra) {
+#else
     if(scs->static_config.rtc) {
+#endif
         if (scs->static_config.enc_mode > ENC_M12) {
             SVT_WARN("Preset M%d is mapped to M12.\n", scs->static_config.enc_mode);
             scs->static_config.enc_mode = ENC_M12;
@@ -4293,7 +4401,11 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
     svt_aom_derive_input_resolution(
         &input_resolution,
         scs->max_input_luma_width * scs->max_input_luma_height);
+#if FTR_STILL_IMAGE_UP_TO_M12
+    if (!scs->static_config.avif && !scs->allintra && scs->static_config.pred_structure == RANDOM_ACCESS && scs->static_config.enc_mode > ENC_M9 && input_resolution >= INPUT_SIZE_4K_RANGE) {
+#else
     if (scs->static_config.pred_structure == RANDOM_ACCESS && scs->static_config.enc_mode > ENC_M9 && input_resolution >= INPUT_SIZE_4K_RANGE) {
+#endif
         scs->static_config.enc_mode = ENC_M9;
         SVT_WARN("Setting preset to M9 as it is the highest supported preset for 4k and higher resolutions in Random Access mode\n");
     }
@@ -4525,9 +4637,11 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
     scs->static_config.qp = config_struct->qp;
     scs->static_config.recon_enabled = config_struct->recon_enabled;
     scs->static_config.enable_tpl_la = config_struct->enable_tpl_la;
+#if !FIX_TUNE_SSIM_LAMBDA
     if (scs->static_config.enable_tpl_la != 1){
         scs->static_config.enable_tpl_la = 1;
     }
+#endif
     // Extract frame rate from Numerator and Denominator if not 0
     if (scs->static_config.frame_rate_numerator != 0 && scs->static_config.frame_rate_denominator != 0)
 #if FIX_FPS_CALC
