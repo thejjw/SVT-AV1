@@ -1208,18 +1208,18 @@ static void obmc_trans_face_off(ModeDecisionCandidateBuffer *cand_bf, PictureCon
     }
 }
 #if FTR_USE_HADAMARD_MDS0
-uint32_t hadamard_path(ModeDecisionCandidateBuffer* cand_bf, ModeDecisionContext* ctx, EbPictureBufferDesc* input_pic, BlockLocation* loc) {
-
-    EbPictureBufferDesc* pred = cand_bf->pred;
+uint32_t hadamard_path(ModeDecisionCandidateBuffer *cand_bf, ModeDecisionContext *ctx, EbPictureBufferDesc *input_pic,
+                       BlockLocation *loc) {
+    EbPictureBufferDesc *pred = cand_bf->pred;
 
     const uint32_t input_origin_index = loc->input_origin_index;
-    const uint32_t cu_origin_index = loc->blk_origin_index;
+    const uint32_t cu_origin_index    = loc->blk_origin_index;
 
     BlockSize bsize = ctx->blk_geom->bsize;
-    uint32_t input_idx, pred_idx, res_idx;
+    uint32_t  input_idx, pred_idx, res_idx;
 
-    int16_t* res_ptr = (int16_t *) cand_bf->residual->buffer_y + cu_origin_index;
-    int32_t* coeff_ptr = (int32_t *)ctx->tx_coeffs->buffer_y;
+    int16_t *res_ptr   = (int16_t *)cand_bf->residual->buffer_y + cu_origin_index;
+    int32_t *coeff_ptr = (int32_t *)ctx->tx_coeffs->buffer_y;
 
     uint32_t satd_cost = 0;
 
@@ -1227,8 +1227,8 @@ uint32_t hadamard_path(ModeDecisionCandidateBuffer* cand_bf, ModeDecisionContext
 
     const int stepr = eb_tx_size_high_unit[tx_size];
     const int stepc = eb_tx_size_wide_unit[tx_size];
-    const int txbw = tx_size_wide[tx_size];
-    const int txbh = tx_size_high[tx_size];
+    const int txbw  = tx_size_wide[tx_size];
+    const int txbh  = tx_size_high[tx_size];
 
     const int max_blocks_wide = block_size_wide[bsize] >> MI_SIZE_LOG2;
     const int max_blocks_high = block_size_high[bsize] >> MI_SIZE_LOG2;
@@ -1238,39 +1238,30 @@ uint32_t hadamard_path(ModeDecisionCandidateBuffer* cand_bf, ModeDecisionContext
     for (row = 0; row < max_blocks_high; row += stepr) {
         for (col = 0; col < max_blocks_wide; col += stepc) {
             input_idx = ((row * input_pic->stride_y) + col) << 2;
-            pred_idx = ((row * pred->stride_y) + col) << 2;
-            res_idx = 0;
+            pred_idx  = ((row * pred->stride_y) + col) << 2;
+            res_idx   = 0;
 
-            svt_aom_residual_kernel(
-                input_pic->buffer_y,
-                input_idx + input_origin_index,
-                input_pic->stride_y,
-                pred->buffer_y,
-                pred_idx + cu_origin_index,
-                pred->stride_y,
-                (int16_t*)res_ptr,
-                res_idx,
-                cand_bf->residual->stride_y,
-                ctx->hbd_md,
-                txbw,
-                txbh);
+            svt_aom_residual_kernel(input_pic->buffer_y,
+                                    input_idx + input_origin_index,
+                                    input_pic->stride_y,
+                                    pred->buffer_y,
+                                    pred_idx + cu_origin_index,
+                                    pred->stride_y,
+                                    (int16_t *)res_ptr,
+                                    res_idx,
+                                    cand_bf->residual->stride_y,
+                                    ctx->hbd_md,
+                                    txbw,
+                                    txbh);
 
             switch (tx_size) {
-            case TX_4X4:
-                svt_aom_hadamard_4x4(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0]));
-                break;
+            case TX_4X4: svt_aom_hadamard_4x4(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0])); break;
 
-            case TX_8X8:
-                svt_aom_hadamard_8x8(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0]));
-                break;
+            case TX_8X8: svt_aom_hadamard_8x8(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0])); break;
 
-            case TX_16X16:
-                svt_aom_hadamard_16x16(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0]));
-                break;
+            case TX_16X16: svt_aom_hadamard_16x16(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0])); break;
 
-            case TX_32X32:
-                svt_aom_hadamard_32x32(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0]));
-                break;
+            case TX_32X32: svt_aom_hadamard_32x32(res_ptr, cand_bf->residual->stride_y, &(coeff_ptr[0])); break;
 
             default: assert(0);
             }
@@ -1305,8 +1296,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *cand_bf, PictureControlSet *pcs
 
 #if FTR_USE_HADAMARD_MDS0
     if (ctx->mds0_use_hadamard) {
-
-        uint32_t satd = hadamard_path(cand_bf, ctx, input_pic, loc);
+        uint32_t satd           = hadamard_path(cand_bf, ctx, input_pic, loc);
         cand_bf->luma_fast_dist = satd;
 
         luma_fast_dist = cand_bf->luma_fast_dist << 4;
