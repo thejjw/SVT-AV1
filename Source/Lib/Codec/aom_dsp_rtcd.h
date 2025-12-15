@@ -1138,6 +1138,33 @@ unsigned int svt_aom_sub_pixel_variance64x128_neon(const uint8_t *src,int src_st
 unsigned int svt_aom_sub_pixel_variance128x64_neon(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
 unsigned int svt_aom_sub_pixel_variance128x128_neon(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
 
+unsigned int svt_aom_sub_pixel_variance4x8_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance4x16_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
+unsigned int svt_aom_sub_pixel_variance8x4_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance8x8_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance8x16_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance8x32_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
+unsigned int svt_aom_sub_pixel_variance16x4_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance16x8_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance16x16_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance16x32_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance16x64_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
+unsigned int svt_aom_sub_pixel_variance32x8_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance32x16_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance32x32_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance32x64_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
+unsigned int svt_aom_sub_pixel_variance64x16_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance64x32_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance64x64_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance64x128_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
+unsigned int svt_aom_sub_pixel_variance128x64_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+unsigned int svt_aom_sub_pixel_variance128x128_neon_dotprod(const uint8_t *src,int src_stride,int xoffset, int yoffset,const uint8_t *ref, int ref_stride, unsigned int  *sse);
+
 #if CONFIG_ENABLE_OBMC
 unsigned int svt_aom_obmc_sad4x4_neon(const uint8_t *ref, int ref_stride, const int32_t *wsrc, const int32_t *mask);
 unsigned int svt_aom_obmc_sad4x8_neon(const uint8_t *ref, int ref_stride, const int32_t *wsrc, const int32_t *mask);
