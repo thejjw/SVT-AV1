@@ -175,159 +175,43 @@ static inline void variance_128xh_neon(const uint8_t* src, int src_stride, const
     variance_large_neon(src, src_stride, ref, ref_stride, 128, h, 16, sse, sum);
 }
 
-unsigned int svt_aom_variance4x4_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                      unsigned int* sse) {
-    int sum;
-    variance_4xh_neon(src, src_stride, ref, ref_stride, 4, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 4);
-}
+#define VARIANCE_WXH_NEON(w, h, shift)                                                               \
+    unsigned int svt_aom_variance##w##x##h##_neon(                                                   \
+        const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride, unsigned int* sse) { \
+        int sum;                                                                                     \
+        variance_##w##xh_neon(src, src_stride, ref, ref_stride, h, sse, &sum);                       \
+        return *sse - (uint32_t)(((int64_t)sum * sum) >> shift);                                     \
+    }
 
-unsigned int svt_aom_variance4x8_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                      unsigned int* sse) {
-    int sum;
-    variance_4xh_neon(src, src_stride, ref, ref_stride, 8, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 5);
-}
+VARIANCE_WXH_NEON(4, 4, 4)
+VARIANCE_WXH_NEON(4, 8, 5)
+VARIANCE_WXH_NEON(4, 16, 6)
 
-unsigned int svt_aom_variance4x16_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_4xh_neon(src, src_stride, ref, ref_stride, 16, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 6);
-}
+VARIANCE_WXH_NEON(8, 4, 5)
+VARIANCE_WXH_NEON(8, 8, 6)
+VARIANCE_WXH_NEON(8, 16, 7)
+VARIANCE_WXH_NEON(8, 32, 8)
 
-unsigned int svt_aom_variance8x4_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                      unsigned int* sse) {
-    int sum;
-    variance_8xh_neon(src, src_stride, ref, ref_stride, 4, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 5);
-}
+VARIANCE_WXH_NEON(16, 4, 6)
+VARIANCE_WXH_NEON(16, 8, 7)
+VARIANCE_WXH_NEON(16, 16, 8)
+VARIANCE_WXH_NEON(16, 32, 9)
+VARIANCE_WXH_NEON(16, 64, 10)
 
-unsigned int svt_aom_variance8x8_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                      unsigned int* sse) {
-    int sum;
-    variance_8xh_neon(src, src_stride, ref, ref_stride, 8, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 6);
-}
+VARIANCE_WXH_NEON(32, 8, 8)
+VARIANCE_WXH_NEON(32, 16, 9)
+VARIANCE_WXH_NEON(32, 32, 10)
+VARIANCE_WXH_NEON(32, 64, 11)
 
-unsigned int svt_aom_variance8x16_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_8xh_neon(src, src_stride, ref, ref_stride, 16, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 7);
-}
+VARIANCE_WXH_NEON(64, 16, 10)
+VARIANCE_WXH_NEON(64, 32, 11)
+VARIANCE_WXH_NEON(64, 64, 12)
+VARIANCE_WXH_NEON(64, 128, 13)
 
-unsigned int svt_aom_variance8x32_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_8xh_neon(src, src_stride, ref, ref_stride, 32, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 8);
-}
+VARIANCE_WXH_NEON(128, 64, 13)
+VARIANCE_WXH_NEON(128, 128, 14)
 
-unsigned int svt_aom_variance16x4_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_16xh_neon(src, src_stride, ref, ref_stride, 4, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 6);
-}
-
-unsigned int svt_aom_variance16x8_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_16xh_neon(src, src_stride, ref, ref_stride, 8, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 7);
-}
-
-unsigned int svt_aom_variance16x16_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_16xh_neon(src, src_stride, ref, ref_stride, 16, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 8);
-}
-
-unsigned int svt_aom_variance16x32_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_16xh_neon(src, src_stride, ref, ref_stride, 32, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 9);
-}
-
-unsigned int svt_aom_variance16x64_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_16xh_neon(src, src_stride, ref, ref_stride, 64, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 10);
-}
-
-unsigned int svt_aom_variance32x8_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                       unsigned int* sse) {
-    int sum;
-    variance_32xh_neon(src, src_stride, ref, ref_stride, 8, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 8);
-}
-
-unsigned int svt_aom_variance32x16_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_32xh_neon(src, src_stride, ref, ref_stride, 16, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 9);
-}
-
-unsigned int svt_aom_variance32x32_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_32xh_neon(src, src_stride, ref, ref_stride, 32, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 10);
-}
-
-unsigned int svt_aom_variance32x64_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_32xh_neon(src, src_stride, ref, ref_stride, 64, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 11);
-}
-
-unsigned int svt_aom_variance64x16_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_64xh_neon(src, src_stride, ref, ref_stride, 16, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 10);
-}
-
-unsigned int svt_aom_variance64x32_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_64xh_neon(src, src_stride, ref, ref_stride, 32, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 11);
-}
-
-unsigned int svt_aom_variance64x64_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                        unsigned int* sse) {
-    int sum;
-    variance_64xh_neon(src, src_stride, ref, ref_stride, 64, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 12);
-}
-
-unsigned int svt_aom_variance64x128_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                         unsigned int* sse) {
-    int sum;
-    variance_64xh_neon(src, src_stride, ref, ref_stride, 128, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 13);
-}
-
-unsigned int svt_aom_variance128x64_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                         unsigned int* sse) {
-    int sum;
-    variance_128xh_neon(src, src_stride, ref, ref_stride, 64, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 13);
-}
-
-unsigned int svt_aom_variance128x128_neon(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
-                                          unsigned int* sse) {
-    int sum;
-    variance_128xh_neon(src, src_stride, ref, ref_stride, 128, sse, &sum);
-    return *sse - (uint32_t)(((int64_t)sum * sum) >> 14);
-}
+#undef VARIANCE_WXH_NEON
 
 unsigned int svt_aom_sub_pixel_variance4x4_neon(const uint8_t* src, int src_stride, int xoffset, int yoffset,
                                                 const uint8_t* ref, int ref_stride, uint32_t* sse) {
