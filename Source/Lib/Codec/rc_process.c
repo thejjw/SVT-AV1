@@ -4056,12 +4056,19 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
             if (pcs->ppcs->cyclic_refresh.apply_cyclic_refresh) {
                 cyclic_sb_qp_derivation(pcs);
             }
-
+#if !OPT_TUNE_SSIM_DELTA_QP
+#if FTR_TUNE_4
+            if ((pcs->scs->static_config.tune == TUNE_SSIM || pcs->scs->static_config.tune == TUNE_IQ ||
+                 pcs->scs->static_config.tune == TUNE_MS_SSIM) &&
+                !pcs->ppcs->frm_hdr.delta_q_params.delta_q_present) {
+#else
             if ((pcs->scs->static_config.tune == TUNE_SSIM || pcs->scs->static_config.tune == TUNE_IQ) &&
                 !pcs->ppcs->frm_hdr.delta_q_params.delta_q_present) {
+#endif
                 // enable sb level qindex when tune SSIM or IQ
                 pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
             }
+#endif
 
             if (pcs->ppcs->frm_hdr.delta_q_params.delta_q_present &&
                 pcs->ppcs->frm_hdr.delta_q_params.delta_q_res != 1) {
