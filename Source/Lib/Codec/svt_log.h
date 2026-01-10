@@ -18,6 +18,15 @@
 #define LOG_TAG "Svt"
 #endif
 
+typedef enum {
+    SVT_LOG_ALL   = -1,
+    SVT_LOG_FATAL = 0,
+    SVT_LOG_ERROR = 1,
+    SVT_LOG_WARN  = 2,
+    SVT_LOG_INFO  = 3,
+    SVT_LOG_DEBUG = 4,
+} SvtLogLevel;
+
 #if !CONFIG_LOG_QUIET
 
 //SVT_LOG will not output the prefix. you can contorl the output style.
