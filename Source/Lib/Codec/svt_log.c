@@ -20,6 +20,29 @@
 
 #if !CONFIG_LOG_QUIET
 
+static SvtLogLevel g_log_level;
+static FILE*       g_log_file;
+
+static void svt_log_set_level(SvtLogLevel level) { g_log_level = level; }
+
+static void svt_log_set_log_file(const char* file) {
+    if (file)
+        g_log_file = fopen(file, "w+");
+}
+
+void svt_log_init() {
+    const char* log   = getenv("SVT_LOG");
+    SvtLogLevel level = SVT_LOG_INFO;
+    if (log)
+        level = (SvtLogLevel)atoi(log);
+    svt_log_set_level(level);
+
+    if (!g_log_file) {
+        const char* file = getenv("SVT_LOG_FILE");
+        svt_log_set_log_file(file);
+    }
+}
+
 static const char* log_level_str(SvtAv1LogLevel level) {
     switch (level) {
     case SVT_AV1_LOG_FATAL: return "fatal";
