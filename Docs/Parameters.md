@@ -532,13 +532,6 @@ ffmpeg -y -i in.mp4 \
 `--max-tx-size` allows the encoder to restrict selection of blocks transform sizes up to a maximum size. Valid values are 32 and 64.
 In the AV1 standard, 64-pt transforms have the last 32 highest-frequency coefficients zeroed out during encoding, which means coded blocks can look visually blurry, especially when encoding fine noise-like textures.
 PSNR and SSIM-based RDO metrics don't seem to detect this blurriness, so this setting combats this issue by not allowing 64-pt transforms to be considered in the first place. The result is an overall increase in output quality consistency, especially for still images in the medium to high quality range.
-Example:
-
-| --max-tx-size 64                         | --max-tx-size 32                  |
-|------------------------------------------|-----------------------------------|
-| ![mts64](./img/maxtxsize64.png)          | ![mts32](./img/maxtxsize32.png)   |
-
-Notice how the background camera noise for `--max-tx-size 32` is consistently better well preserved compared to `--max-tx-size 64`.
 
 ### `--qp-scale-compress-strength [0-3]`
 `--qp-scale-compress-strength` is meant to improve spatio-temporal quality and by design, overall quality consistency. Of course, you trade off mean (average quality) to stddev (consistency).
@@ -548,11 +541,11 @@ This parameter allows advanced users to switch between four levels of quantizer 
 
 - **0** disables the feature, the default value.
 
-- **1** is `--qp-scale-compress-strength` level 1, conservatively reducing the QP range used by the encoder. Useful for increasing visual consistency at almost all quality levels with next to no cost.
+- **1** is `--qp-scale-compress-strength`, conservatively reducing the QP range used by the encoder. Useful for increasing visual consistency at almost all quality levels with next to no cost.
 
-- **2** is `--qp-scale-compress-strength` level 2, reducing the QP range used by the encoder further. This is useful at higher quality levels where restricting the QP range across layers is more important, or in darker video regions where image features want to be retained more faithfully.
+- **2** is `--qp-scale-compress-strength`, reducing the QP range used by the encoder further. This is useful at higher quality levels where restricting the QP range across layers is more important.
 
-- **3** is `--qp-scale-compress-strength` level 3, minimizing the QP range to the maximum. This is useful at maximum fidelity expectations or when the set CRF/QP is very low. In the latter scenario, the feature can actually improve fidelity and coding efficiency simultaneously.
+- **3** is `--qp-scale-compress-strength`, is the upper limit that was found useful for general-purpose (not Target Quality) encoding. This is useful at maximum fidelity expectations or when the set CRF/QP is very low. In the latter scenario, the feature can actually improve fidelity.
 
 ### `--adaptive-film-grain [0,1]`
 When enabled, the `--adaptive-film-grain` parameter adaptively varies the film grain blocksize based on the resolution of the input video. This often greatly improves the consistency of film grain in the output video, reducing grain patterns.
@@ -575,5 +568,5 @@ Adaptive film grain is enabled by default.
 When enabled, the `--luminance-qp-bias` parameter enables frame-level luma bias to improve quality in dark scenes by adjusting frame-level QP based on average luminance across each frame.
 
 ### `--sharpness [-7-7]`
-The `--sharpness` parameter allows users to manually configure deblocking loop filter sharpness, and it also affects rate control. It is used in Tune 4 (MS_SSIM), which is designed for still image compression; that being said, it still may be useful for perceptual fidelity in video.
+The `--sharpness` parameter allows users to manually configure deblocking loop filter sharpness, and it also affects rate control. It is used in Tune 3 (IQ) and Tune 4 (MS_SSIM), which is designed for still image compression; that being said, it still may be useful for perceptual fidelity in video.
 By default, sharpness is set to 0.
