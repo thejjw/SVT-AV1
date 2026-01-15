@@ -74,9 +74,6 @@ For this changelog, the merge requests are only listed here if they included per
 - [Optimize Armv8.0 Neon impl of filter_intra_predictor_neon](https://gitlab.com/AOMediaCodec/SVT-AV1/-/merge_requests/2555)
 - [Optimize Neon (Armv8.0), Neon I8MM, SVE implementations of av1_warp_affine](https://gitlab.com/AOMediaCodec/SVT-AV1/-/merge_requests/2553)
 
-Special thanks to the teams at Arm and Intel for their contributions for improving the encoder!
-Also, special thanks to @juliobbv for porting and contributing several quality improvements from SVT-AV1-PSY!
-
 ## [3.1.2] - 2025-8-24
 
 Fix missing version bump
