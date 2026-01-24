@@ -11,18 +11,12 @@
 
 # Encoder Library directory CMakeLists.txt
 
-# Shared Encoder Version
-set(ENC_VERSION_MAJOR 3)
-set(ENC_VERSION_MINOR 1)
-set(ENC_VERSION_PATCH 2)
-set(ENC_VERSION ${ENC_VERSION_MAJOR}.${ENC_VERSION_MINOR}.${ENC_VERSION_PATCH})
-
 add_library(common_lib INTERFACE)
 
 if(COVERAGE)
     if(CMAKE_C_COMPILER_ID MATCHES "GNU")
         list(APPEND PC_LIBS_PRIVATE -lgcov)
-    else(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         list(APPEND PC_LIBS_PRIVATE --coverage)
     endif()
 endif()
@@ -122,8 +116,8 @@ else()
     set(SVT_AV1_TARGET SVT-AV1-static)
 endif()
 
-set_target_properties(SvtAv1Enc PROPERTIES VERSION ${ENC_VERSION})
-set_target_properties(SvtAv1Enc PROPERTIES SOVERSION ${ENC_VERSION_MAJOR})
+set_target_properties(SvtAv1Enc PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(SvtAv1Enc PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 set_target_properties(SvtAv1Enc PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(SvtAv1Enc PROPERTIES EXPORT_NAME ${SVT_AV1_TARGET})
 
