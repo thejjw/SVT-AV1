@@ -859,6 +859,93 @@ typedef struct MdcSbData {
     // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
     uint8_t *consider_block;
 } MdcSbData;
+#if OPT_REFACTOR_MD
+typedef struct RD_STATS {
+    int rate;
+    int64_t dist;
+    int64_t rd_cost;
+    bool valid;
+} RD_STATS;
+// TODO: replace BlkStrut with PICK_MODE_CONTEXT
+typedef struct PC_TREE {
+    PartitionType partitioning;
+    BlockSize block_size;
+
+    RD_STATS rdc;
+    int64_t best_depth_cost;
+    BlkStruct* block_data[PART_S][4/*max blocks per shape*/]; // does include split
+    BlkStruct* none;
+    BlkStruct* horizontal[2];
+    BlkStruct* vertical[2];
+//#if !CONFIG_REALTIME_ONLY
+    BlkStruct* horizontala[3];
+    BlkStruct* horizontalb[3];
+    BlkStruct* verticala[3];
+    BlkStruct* verticalb[3];
+    BlkStruct* horizontal4[4];
+    BlkStruct* vertical4[4];
+//#endif
+    struct PC_TREE* split[4];
+    int index;
+} PC_TREE;
+
+// TODO: can later move the allocation functions somewhere else
+static inline PC_TREE* av1_alloc_pc_tree_node(BlockSize bsize) {
+    PC_TREE* pc_tree;
+    EB_CALLOC_NO_CHECK(pc_tree, 1, sizeof(*pc_tree));
+    if (pc_tree == NULL) return NULL;
+
+    pc_tree->partitioning = PARTITION_NONE;
+    pc_tree->block_size = bsize;
+
+    return pc_tree;
+}
+
+// TODO: later will need to dealloc all partitions under pc_tree, not just the pc_tree struct
+static inline void av1_free_pc_tree_recursive(PC_TREE* pc_tree) {
+    if (pc_tree == NULL) return;
+
+//    const PartitionType partition = pc_tree->partitioning;
+//
+//    if (!keep_none && (!keep_best || (partition != PARTITION_NONE)))
+//        FREE_PMC_NODE(pc_tree->none);
+//
+//    for (int i = 0; i < 2; ++i) {
+//        if (!keep_best || (partition != PARTITION_HORZ))
+//            FREE_PMC_NODE(pc_tree->horizontal[i]);
+//        if (!keep_best || (partition != PARTITION_VERT))
+//            FREE_PMC_NODE(pc_tree->vertical[i]);
+//    }
+////#if !CONFIG_REALTIME_ONLY
+//    for (int i = 0; i < 3; ++i) {
+//        if (!keep_best || (partition != PARTITION_HORZ_A))
+//            FREE_PMC_NODE(pc_tree->horizontala[i]);
+//        if (!keep_best || (partition != PARTITION_HORZ_B))
+//            FREE_PMC_NODE(pc_tree->horizontalb[i]);
+//        if (!keep_best || (partition != PARTITION_VERT_A))
+//            FREE_PMC_NODE(pc_tree->verticala[i]);
+//        if (!keep_best || (partition != PARTITION_VERT_B))
+//            FREE_PMC_NODE(pc_tree->verticalb[i]);
+//    }
+//    for (int i = 0; i < 4; ++i) {
+//        if (!keep_best || (partition != PARTITION_HORZ_4))
+//            FREE_PMC_NODE(pc_tree->horizontal4[i]);
+//        if (!keep_best || (partition != PARTITION_VERT_4))
+//            FREE_PMC_NODE(pc_tree->vertical4[i]);
+//    }
+////#endif
+    //if (!keep_best || (partition != PARTITION_SPLIT)) {
+        for (int i = 0; i < 4; ++i) {
+            if (pc_tree->split[i] != NULL) {
+                av1_free_pc_tree_recursive(pc_tree->split[i]);
+                pc_tree->split[i] = NULL;
+            }
+        }
+    //}
+
+    /*if (!keep_best && !keep_none)*/ EB_FREE(pc_tree);
+}
+#endif
 typedef struct ModeDecisionContext {
     EbDctor dctor;
 

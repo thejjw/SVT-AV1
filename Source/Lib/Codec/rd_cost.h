@@ -38,6 +38,12 @@ void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, M
     (ROUND_POWER_OF_TWO(((int64_t)(R)) * ((int64_t)(RM)), AV1_PROB_COST_SHIFT) + \
      ((int64_t)(D) * ((int64_t)1 << RDDIV_BITS)))
 
+#if OPT_REFACTOR_MD
+int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet* pcs, const BlockSize bsize,
+    const int mi_row, const int mi_col, MdRateEstimationContext* md_rate_est_ctx,
+    PartitionType p, bool use_accurate_part_ctx,
+    const PartitionContextType left_ctx, const PartitionContextType above_ctx);
+#endif
 extern uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionContext *ctx,
                                             uint32_t blk_mds_idx, PartitionType p, uint64_t lambda,
                                             bool use_accurate_part_ctx, MdRateEstimationContext *md_rate_est_ctx);

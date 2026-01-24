@@ -2368,6 +2368,56 @@ uint8_t svt_aom_do_md_recon(PictureParentControlSet *pcs, ModeDecisionContext *c
 
     return do_recon;
 }
+#if OPT_REFACTOR_MD // svt_aom_d1_non_square_block_decision
+uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t d1_block_itr, PC_TREE* pc_tree) {
+    //compute total cost for the whole block partition
+    uint64_t tot_cost      = 0;
+    uint32_t first_blk_idx = ctx->blk_ptr->mds_idx -
+        (ctx->blk_geom->totns - 1); //index of first block in this partition
+    uint32_t blk_it;
+    // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
+    const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
+                                     ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
+    const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
+                                                                          : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+    uint8_t        nsq_cost_avail     = 1;
+    for (blk_it = 0; blk_it < ctx->blk_geom->totns; blk_it++) {
+        // Don't apply check to first block because nsq_cost_avail must be set to 0 for disallowed blocks
+        if (!pcs->ppcs->sb_geom[ctx->sb_index].block_is_allowed[first_blk_idx + blk_it] && blk_it)
+            continue;
+        tot_cost += pc_tree->block_data[ctx->blk_geom->shape][blk_it]->cost;// ctx->md_blk_arr_nsq[first_blk_idx + blk_it].cost;
+        assert(IMPLIES(ctx->avail_blk_flag[first_blk_idx + blk_it], ctx->cost_avail[first_blk_idx + blk_it]));
+        nsq_cost_avail &= ctx->cost_avail[first_blk_idx + blk_it];
+    }
+    uint64_t split_cost = svt_aom_partition_rate_cost(ctx->sb_ptr->pcs->ppcs,
+                                                      ctx,
+                                                      ctx->blk_geom->sqi_mds,
+                                                      from_shape_to_part[ctx->blk_geom->shape],
+                                                      full_lambda,
+                                                      ctx->sb_ptr->pcs->ppcs->use_accurate_part_ctx,
+                                                      ctx->md_rate_est_ctx);
+
+    tot_cost += split_cost;
+    if (nsq_cost_avail &&
+        (d1_block_itr == 0 || !ctx->cost_avail[ctx->blk_geom->sqi_mds] ||
+         (tot_cost < pc_tree->block_data[PART_N][0]->cost/*ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost*/))) {
+        ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
+        //store best partition cost in parent square
+        //ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost        = tot_cost;
+        //ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].part        = from_shape_to_part[ctx->blk_geom->shape];
+        //ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].best_d1_blk = first_blk_idx;
+
+        pc_tree->block_data[PART_N][0]->cost        = tot_cost;
+        pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->block_data[PART_N][0]->best_d1_blk = first_blk_idx;
+
+        pc_tree->partitioning       = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->best_depth_cost    = tot_cost;
+        pc_tree->rdc.rd_cost    = tot_cost;
+    }
+    return tot_cost;
+}
+#else
 uint64_t svt_aom_d1_non_square_block_decision(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t d1_block_itr) {
     //compute total cost for the whole block partition
     uint64_t tot_cost      = 0;
@@ -2408,6 +2458,7 @@ uint64_t svt_aom_d1_non_square_block_decision(PictureControlSet *pcs, ModeDecisi
     }
     return tot_cost;
 }
+#endif
 
 /// compute the cost of curr depth, and the depth above
 static void compute_depth_costs(ModeDecisionContext *ctx, PictureParentControlSet *pcs, uint32_t curr_depth_mds,

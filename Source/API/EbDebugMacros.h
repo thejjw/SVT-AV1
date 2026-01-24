@@ -34,6 +34,8 @@
 extern "C" {
 #endif // __cplusplus
 
+#define OPT_REFACTOR_MD             1 // Change svt_aom_mode_decision_sb to be recursive, with same tracking methods (for data and tested blocks)
+
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
 #define DEBUG_TPL               0 // Prints to debug TPL

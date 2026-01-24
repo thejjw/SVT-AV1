@@ -2989,7 +2989,19 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 build_cand_block_array(scs, pcs, md_ctx, true);
                                 // PD0 MD Tool(s) : ME_MV(s) as INTER candidate(s), DC as INTRA candidate, luma only, Frequency domain SSE,
                                 // no fast rate (no MVP table generation), MDS0 then MDS3, reduced NIC(s), 1 ref per list,..
+#if OPT_REFACTOR_MD
+                                uint32_t leaf_idx = 0;
+                                uint32_t curr_mds_idx = 0;
+                                bool md_early_exit_sq = 0;
+                                uint32_t next_non_skip_blk_idx_mds = 0;
+                                init_sb_data(scs, pcs, md_ctx);
+                                PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                                svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
+                                    md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                                av1_free_pc_tree_recursive(pc_tree_root);
+#else
                                 svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
+#endif
                                 // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
                                 // Reset neighnor information to current SB @ position (0,0)
                                 svt_aom_copy_neighbour_arrays(pcs,
@@ -3039,10 +3051,26 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         // Output: md_blk_arr_nsq reduced set of block(s)
 
                         // PD1 MD Tool(s): default MD Tool(s)
+#if OPT_REFACTOR_MD
+                        if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
+                            svt_aom_mode_decision_sb_light_pd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
+                        else {
+                            uint32_t leaf_idx = 0;
+                            uint32_t curr_mds_idx = 0;
+                            bool md_early_exit_sq = 0;
+                            uint32_t next_non_skip_blk_idx_mds = 0;
+                            init_sb_data(scs, pcs, md_ctx);
+                            PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                            svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
+                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                            av1_free_pc_tree_recursive(pc_tree_root);
+                        }
+#else
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_mode_decision_sb_light_pd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
                         else
                             svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
+#endif
                         // if (/*ppcs->is_ref &&*/ md_ctx->hbd_md == 0 &&
                         // scs->static_config.encoder_bit_depth > EB_EIGHT_BIT)
                         //     md_ctx->bypass_encdec = 0;

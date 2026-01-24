@@ -847,6 +847,78 @@ static const uint8_t mi_size_wide[BlockSizeS_ALL] = {1,  1,  2,  2,  2,  4, 4, 4
 static const uint8_t mi_size_high[BlockSizeS_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
                                                      8, 16, 32, 16, 32, 4, 1, 8, 2, 16, 4};
 
+#if OPT_REFACTOR_MD
+// 4X4, 8X8, 16X16, 32X32, 64X64, 128X128
+#define SQR_BLOCK_SIZES 6
+
+// A compressed version of the Partition_Subsize table in the spec (9.3.
+// Conversion tables), for square block sizes only.
+/* clang-format off */
+static const BlockSize subsize_lookup[EXT_PARTITION_TYPES][SQR_BLOCK_SIZES] = {
+  {     // PARTITION_NONE
+    BLOCK_4X4, BLOCK_8X8, BLOCK_16X16,
+    BLOCK_32X32, BLOCK_64X64, BLOCK_128X128
+  }, {  // PARTITION_HORZ
+    BLOCK_INVALID, BLOCK_8X4, BLOCK_16X8,
+    BLOCK_32X16, BLOCK_64X32, BLOCK_128X64
+  }, {  // PARTITION_VERT
+    BLOCK_INVALID, BLOCK_4X8, BLOCK_8X16,
+    BLOCK_16X32, BLOCK_32X64, BLOCK_64X128
+  }, {  // PARTITION_SPLIT
+    BLOCK_INVALID, BLOCK_4X4, BLOCK_8X8,
+    BLOCK_16X16, BLOCK_32X32, BLOCK_64X64
+  }, {  // PARTITION_HORZ_A
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_16X8,
+    BLOCK_32X16, BLOCK_64X32, BLOCK_128X64
+  }, {  // PARTITION_HORZ_B
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_16X8,
+    BLOCK_32X16, BLOCK_64X32, BLOCK_128X64
+  }, {  // PARTITION_VERT_A
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_8X16,
+    BLOCK_16X32, BLOCK_32X64, BLOCK_64X128
+  }, {  // PARTITION_VERT_B
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_8X16,
+    BLOCK_16X32, BLOCK_32X64, BLOCK_64X128
+  }, {  // PARTITION_HORZ_4
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_16X4,
+    BLOCK_32X8, BLOCK_64X16, BLOCK_INVALID
+  }, {  // PARTITION_VERT_4
+    BLOCK_INVALID, BLOCK_INVALID, BLOCK_4X16,
+    BLOCK_8X32, BLOCK_16X64, BLOCK_INVALID
+  }
+};
+
+static inline int get_sqr_bsize_idx(BlockSize bsize) {
+    switch (bsize) {
+    case BLOCK_4X4: return 0;
+    case BLOCK_8X8: return 1;
+    case BLOCK_16X16: return 2;
+    case BLOCK_32X32: return 3;
+    case BLOCK_64X64: return 4;
+    case BLOCK_128X128: return 5;
+    default: return SQR_BLOCK_SIZES;
+    }
+}
+// For a square block size 'bsize', returns the size of the sub-blocks used by
+// the given partition type. If the partition produces sub-blocks of different
+// sizes, then the function returns the largest sub-block size.
+// Implements the Partition_Subsize lookup table in the spec (Section 9.3.
+// Conversion tables).
+// Note: the input block size should be square.
+// Otherwise it's considered invalid.
+static inline BlockSize get_partition_subsize(BlockSize bsize,
+    PartitionType partition) {
+    if (partition == PARTITION_INVALID) {
+        return BLOCK_INVALID;
+    }
+    else {
+        const int sqr_bsize_idx = get_sqr_bsize_idx(bsize);
+        return sqr_bsize_idx >= SQR_BLOCK_SIZES
+            ? BLOCK_INVALID
+            : subsize_lookup[partition][sqr_bsize_idx];
+    }
+}
+#endif
 typedef char PartitionContextType;
 #define PARTITION_PLOFFSET 4 // number of probability models per block size
 #define PARTITION_BlockSizeS 5
