@@ -275,6 +275,9 @@ typedef struct SuperBlock {
     //for memory free only
     MacroBlockD   *av1xd;
     PartitionType *cu_partition_array;
+#if OPT_REFACTOR_ED_EC
+    struct PARTITION_TREE* ptree;
+#endif
     unsigned       index : 32;
     unsigned       org_x : 32;
     unsigned       org_y : 32;

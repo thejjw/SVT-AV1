@@ -859,6 +859,85 @@ typedef struct MdcSbData {
     // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
     uint8_t *consider_block;
 } MdcSbData;
+#if OPT_REFACTOR_ED_EC
+// TODO: Align field names between PC_TREE and PARTITION_TREE (e.g. partition vs. partitioning, split vs. sub_tree)
+/*! \brief Stores partition structure of the current block. */
+typedef struct PARTITION_TREE {
+    /*! \brief Pointer to the parent node. */
+    //struct PARTITION_TREE* parent;
+    /*! \brief Pointers to the children if the current block is further split. */
+    struct PARTITION_TREE* sub_tree[4];
+    // Pointers to the EcBlkStruct holding the block's data for entropy coding
+    EcBlkStruct* blk_data[4];
+    /*! \brief The partition type used to split the current block. */
+    PartitionType partition;
+    /*! \brief Block size of the current block. */
+    BlockSize bsize;
+    /*! \brief The row coordinate of the current block in units of mi. */
+    //int mi_row;
+    /*! \brief The col coordinate of the current block in units of mi. */
+    //int mi_col;
+    /*! \brief The index of current node among its siblings. i.e. current ==
+     * current->parent->sub_tree[current->index]. */
+    int index;
+} PARTITION_TREE;
+// TODO: can later move the allocation functions somewhere else
+static inline PARTITION_TREE* av1_alloc_partition_tree_node(BlockSize bsize) {
+    PARTITION_TREE* ptree;
+    EB_CALLOC_NO_CHECK(ptree, 1, sizeof(*ptree));
+    if (ptree == NULL) return NULL;
+
+    ptree->partition = PARTITION_NONE;
+    ptree->bsize = bsize;
+
+    return ptree;
+}
+
+// TODO: later will need to dealloc all partitions under pc_tree, not just the pc_tree struct
+static inline void av1_free_partition_tree_recursive(PARTITION_TREE* ptree) {
+    if (ptree == NULL) return;
+
+    //    const PartitionType partition = ptree->partitioning;
+    //
+    //    if (!keep_none && (!keep_best || (partition != PARTITION_NONE)))
+    //        FREE_PMC_NODE(ptree->none);
+    //
+    //    for (int i = 0; i < 2; ++i) {
+    //        if (!keep_best || (partition != PARTITION_HORZ))
+    //            FREE_PMC_NODE(ptree->horizontal[i]);
+    //        if (!keep_best || (partition != PARTITION_VERT))
+    //            FREE_PMC_NODE(ptree->vertical[i]);
+    //    }
+    ////#if !CONFIG_REALTIME_ONLY
+    //    for (int i = 0; i < 3; ++i) {
+    //        if (!keep_best || (partition != PARTITION_HORZ_A))
+    //            FREE_PMC_NODE(ptree->horizontala[i]);
+    //        if (!keep_best || (partition != PARTITION_HORZ_B))
+    //            FREE_PMC_NODE(ptree->horizontalb[i]);
+    //        if (!keep_best || (partition != PARTITION_VERT_A))
+    //            FREE_PMC_NODE(ptree->verticala[i]);
+    //        if (!keep_best || (partition != PARTITION_VERT_B))
+    //            FREE_PMC_NODE(ptree->verticalb[i]);
+    //    }
+    //    for (int i = 0; i < 4; ++i) {
+    //        if (!keep_best || (partition != PARTITION_HORZ_4))
+    //            FREE_PMC_NODE(ptree->horizontal4[i]);
+    //        if (!keep_best || (partition != PARTITION_VERT_4))
+    //            FREE_PMC_NODE(ptree->vertical4[i]);
+    //    }
+    ////#endif
+        //if (!keep_best || (partition != PARTITION_SPLIT)) {
+    for (int i = 0; i < 4; ++i) {
+        if (ptree->sub_tree[i] != NULL) {
+            av1_free_partition_tree_recursive(ptree->sub_tree[i]);
+            ptree->sub_tree[i] = NULL;
+        }
+    }
+    //}
+
+    /*if (!keep_best && !keep_none)*/ EB_FREE(ptree);
+}
+#endif
 #if OPT_REFACTOR_MD
 typedef struct RD_STATS {
     int rate;

@@ -10389,6 +10389,7 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
     else {
         pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
         pc_tree->rdc.valid = 1;
+        pc_tree->partitioning = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->split_flag = true;
         ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx] = 1; // TODO: should be unneeded eventually

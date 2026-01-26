@@ -1348,6 +1348,134 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
     ref_object->slice_type = pcs->ppcs->slice_type;
     ref_object->r0         = pcs->ppcs->r0;
 }
+#if OPT_REFACTOR_ED_EC
+/*
+ * Prepare the input picture for EncDec processing, including any necessary
+ * padding, compressing, packing, or bit depth conversion.
+ */
+static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx,
+    EbPictureBufferDesc* input_pic, uint32_t sb_org_x, uint32_t sb_org_y) {
+    bool     is_16bit = ctx->is_16bit;
+    uint32_t sb_width = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_org_x);
+    uint32_t sb_height = MIN(scs->sb_size, pcs->ppcs->aligned_height - sb_org_y);
+
+    if (is_16bit && scs->static_config.encoder_bit_depth > EB_EIGHT_BIT) {
+        //SB128_TODO change 10bit SB creation
+
+        const uint32_t input_luma_offset = ((sb_org_y + input_pic->org_y) * input_pic->stride_y) +
+            (sb_org_x + input_pic->org_x);
+        const uint32_t input_cb_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cb) +
+            ((sb_org_x + input_pic->org_x) >> 1);
+        const uint32_t input_cr_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cr) +
+            ((sb_org_x + input_pic->org_x) >> 1);
+
+        //sb_width is n*8 so the 2bit-decompression kernel works properly
+        uint32_t comp_stride_y = input_pic->stride_y / 4;
+        uint32_t comp_luma_buffer_offset = comp_stride_y * input_pic->org_y + input_pic->org_x / 4;
+        comp_luma_buffer_offset += sb_org_x / 4 + sb_org_y * comp_stride_y;
+
+        svt_aom_compressed_pack_sb(input_pic->buffer_y + input_luma_offset,
+            input_pic->stride_y,
+            input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
+            comp_stride_y,
+            (uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
+            ctx->input_sample16bit_buffer->stride_y,
+            sb_width,
+            sb_height);
+
+        uint32_t comp_stride_uv = input_pic->stride_cb / 4;
+        uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
+        comp_chroma_buffer_offset += sb_org_x / 4 / 2 + sb_org_y / 2 * comp_stride_uv;
+
+        svt_aom_compressed_pack_sb(input_pic->buffer_cb + input_cb_offset,
+            input_pic->stride_cb,
+            input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
+            comp_stride_uv,
+            (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
+            ctx->input_sample16bit_buffer->stride_cb,
+            sb_width / 2,
+            sb_height / 2);
+        svt_aom_compressed_pack_sb(input_pic->buffer_cr + input_cr_offset,
+            input_pic->stride_cr,
+            input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
+            comp_stride_uv,
+            (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
+            ctx->input_sample16bit_buffer->stride_cr,
+            sb_width / 2,
+            sb_height / 2);
+
+        // PAD the packed source in incomplete sb up to max SB size
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
+            ctx->input_sample16bit_buffer->stride_y,
+            sb_width,
+            sb_height,
+            scs->sb_size - sb_width,
+            scs->sb_size - sb_height);
+
+        // Safe to divide by 2 (scs->sb_size - sb_width) >> 1), with no risk of off-of-one issues
+        // from chroma subsampling as picture is already 8px aligned
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
+            ctx->input_sample16bit_buffer->stride_cb,
+            sb_width >> 1,
+            sb_height >> 1,
+            (scs->sb_size - sb_width) >> 1,
+            (scs->sb_size - sb_height) >> 1);
+
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
+            ctx->input_sample16bit_buffer->stride_cr,
+            sb_width >> 1,
+            sb_height >> 1,
+            (scs->sb_size - sb_width) >> 1,
+            (scs->sb_size - sb_height) >> 1);
+
+        if (ctx->md_ctx->hbd_md == 0)
+            svt_aom_store16bit_input_src(
+                ctx->input_sample16bit_buffer, pcs, sb_org_x, sb_org_y, scs->sb_size, scs->sb_size);
+    }
+
+    if (is_16bit && scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
+        const uint32_t input_luma_offset = ((sb_org_y + input_pic->org_y) * input_pic->stride_y) +
+            (sb_org_x + input_pic->org_x);
+        const uint32_t input_cb_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cb) +
+            ((sb_org_x + input_pic->org_x) >> 1);
+        const uint32_t input_cr_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cr) +
+            ((sb_org_x + input_pic->org_x) >> 1);
+
+        sb_width = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
+            ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->right_padding) - sb_org_x)
+            : sb_width;
+        sb_height = ((sb_height < MIN_SB_SIZE) || ((sb_height > MIN_SB_SIZE) && (sb_height < MAX_SB_SIZE)))
+            ? MIN(scs->sb_size, (pcs->ppcs->aligned_height + scs->bot_padding) - sb_org_y)
+            : sb_height;
+
+        // PACK Y
+        uint16_t* buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_y;
+        uint8_t* buf_8bit = input_pic->buffer_y + input_luma_offset;
+        svt_convert_8bit_to_16bit(
+            buf_8bit, input_pic->stride_y, buf_16bit, ctx->input_sample16bit_buffer->stride_y, sb_width, sb_height);
+
+        // PACK CB
+        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb;
+        buf_8bit = input_pic->buffer_cb + input_cb_offset;
+        svt_convert_8bit_to_16bit(buf_8bit,
+            input_pic->stride_cb,
+            buf_16bit,
+            ctx->input_sample16bit_buffer->stride_cb,
+            sb_width >> 1,
+            sb_height >> 1);
+
+        // PACK CR
+        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr;
+        buf_8bit = input_pic->buffer_cr + input_cr_offset;
+        svt_convert_8bit_to_16bit(buf_8bit,
+            input_pic->stride_cr,
+            buf_16bit,
+            ctx->input_sample16bit_buffer->stride_cr,
+            sb_width >> 1,
+            sb_height >> 1);
+    }
+}
+#endif
 /*
  * Generate depth removal settings
  */
@@ -3052,6 +3180,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 
                         // PD1 MD Tool(s): default MD Tool(s)
 #if OPT_REFACTOR_MD
+#if OPT_REFACTOR_ED_EC
+                        PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+#endif
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_mode_decision_sb_light_pd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
                         else {
@@ -3060,10 +3191,14 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             bool md_early_exit_sq = 0;
                             uint32_t next_non_skip_blk_idx_mds = 0;
                             init_sb_data(scs, pcs, md_ctx);
+#if !OPT_REFACTOR_ED_EC
                             PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+#endif
                             svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
                                 md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+#if !OPT_REFACTOR_ED_EC
                             av1_free_pc_tree_recursive(pc_tree_root);
+#endif
                         }
 #else
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
@@ -3071,6 +3206,30 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         else
                             svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
 #endif
+#if CLN_ED_PARAMS
+                        //  Encode Pass
+                        if (!ed_ctx->md_ctx->bypass_encdec) {
+#if OPT_REFACTOR_ED_EC
+                            if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
+                                svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
+                            else {
+                                ed_ctx->coded_area_sb = 0;
+                                ed_ctx->coded_area_sb_uv = 0;
+                                ed_ctx->input_samples = pcs->ppcs->enhanced_pic;
+                                prepare_input_picture(scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
+                                sb_ptr->ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+                                svt_aom_encode_sb(scs, pcs, ed_ctx, sb_ptr,
+                                    pc_tree_root, sb_ptr->ptree, md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+
+                                // TODO: temporarily free here, until data is passed here to entropy coding
+                                av1_free_partition_tree_recursive(sb_ptr->ptree);
+                                sb_ptr->ptree = NULL;
+                            }
+#else
+                            svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
+#endif
+                        }
+#else
                         // if (/*ppcs->is_ref &&*/ md_ctx->hbd_md == 0 &&
                         // scs->static_config.encoder_bit_depth > EB_EIGHT_BIT)
                         //     md_ctx->bypass_encdec = 0;
@@ -3078,6 +3237,10 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         if (!ed_ctx->md_ctx->bypass_encdec) {
                             svt_aom_encode_decode(scs, pcs, sb_ptr, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
                         }
+#endif
+#if OPT_REFACTOR_ED_EC
+                        av1_free_pc_tree_recursive(pc_tree_root);
+#endif
 
                         svt_aom_encdec_update(scs, pcs, sb_ptr, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
 

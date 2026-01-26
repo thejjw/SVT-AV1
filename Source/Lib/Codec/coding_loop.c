@@ -303,7 +303,11 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc *pred_samples
 *   Inverse quantized coeff - quantization indices (position sensitive)
 *
 **********************************************************/
+#if CLN_ED_PARAMS
+static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint32_t org_x,
+#else
 static void av1_encode_loop(PictureControlSet *pcs, EncDecContext *ed_ctx, SuperBlock *sb_ptr, uint32_t org_x,
+#endif
                             uint32_t             org_y,
                             EbPictureBufferDesc *pred_samples, // no basis/offset
                             EbPictureBufferDesc *coeff_samples_sb, // sb based
@@ -417,7 +421,11 @@ static void av1_encode_loop(PictureControlSet *pcs, EncDecContext *ed_ctx, Super
                                        DEFAULT_SHAPE);
 
             blk_ptr->quant_dc.y[ed_ctx->txb_itr] = svt_aom_quantize_inv_quantize(
+#if CLN_ED_PARAMS
+                pcs,
+#else
                 sb_ptr->pcs,
+#endif
                 md_ctx,
                 ((int32_t *)transform16bit->buffer_y) + ed_ctx->coded_area_sb,
                 ((int32_t *)coeff_samples_sb->buffer_y) + ed_ctx->coded_area_sb,
@@ -495,7 +503,11 @@ static void av1_encode_loop(PictureControlSet *pcs, EncDecContext *ed_ctx, Super
                                        DEFAULT_SHAPE);
 
             blk_ptr->quant_dc.u[ed_ctx->txb_itr] = svt_aom_quantize_inv_quantize(
+#if CLN_ED_PARAMS
+                pcs,
+#else
                 sb_ptr->pcs,
+#endif
                 md_ctx,
                 ((int32_t *)transform16bit->buffer_cb) + ed_ctx->coded_area_sb_uv,
                 ((int32_t *)coeff_samples_sb->buffer_cb) + ed_ctx->coded_area_sb_uv,
@@ -542,7 +554,11 @@ static void av1_encode_loop(PictureControlSet *pcs, EncDecContext *ed_ctx, Super
                                        DEFAULT_SHAPE);
 
             blk_ptr->quant_dc.v[ed_ctx->txb_itr] = svt_aom_quantize_inv_quantize(
+#if CLN_ED_PARAMS
+                pcs,
+#else
                 sb_ptr->pcs,
+#endif
                 md_ctx,
                 ((int32_t *)transform16bit->buffer_cr) + ed_ctx->coded_area_sb_uv,
                 ((int32_t *)coeff_samples_sb->buffer_cr) + ed_ctx->coded_area_sb_uv,
@@ -716,12 +732,21 @@ void svt_aom_store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer,
                    sb_w * 2);
 }
 void        svt_aom_update_mi_map_enc_dec(BlkStruct *blk_ptr, ModeDecisionContext *ctx, PictureControlSet *pcs);
+#if CLN_ED_PARAMS
+static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_ctx) {
+    BlkStruct* blk_ptr = ed_ctx->blk_ptr;
+#else
 static void perform_intra_coding_loop(PictureControlSet *pcs, SuperBlock *sb_ptr, uint32_t sb_addr, BlkStruct *blk_ptr,
                                       EncDecContext *ed_ctx) {
+#endif
     bool                 is_16bit = ed_ctx->is_16bit;
     uint8_t              is_inter = 0; // set to 0 b/c this is the intra path
     EbPictureBufferDesc *recon_buffer;
+#if CLN_ED_PARAMS
+    EbPictureBufferDesc* coeff_buffer_sb = pcs->ppcs->enc_dec_ptr->quantized_coeff[ed_ctx->sb_index];
+#else
     EbPictureBufferDesc *coeff_buffer_sb  = pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr];
+#endif
     uint16_t             tile_idx         = ed_ctx->tile_index;
     NeighborArrayUnit   *ep_luma_recon_na = is_16bit ? pcs->ep_luma_recon_na_16bit[tile_idx]
                                                      : pcs->ep_luma_recon_na[tile_idx];
@@ -874,7 +899,9 @@ static void perform_intra_coding_loop(PictureControlSet *pcs, SuperBlock *sb_ptr
         // Encode Transform Unit -INTRA-
         av1_encode_loop(pcs,
                         ed_ctx,
+#if !CLN_ED_PARAMS
                         sb_ptr,
+#endif
                         txb_origin_x,
                         txb_origin_y,
                         recon_buffer,
@@ -1129,7 +1156,9 @@ static void perform_intra_coding_loop(PictureControlSet *pcs, SuperBlock *sb_ptr
         // Encode Transform Unit -INTRA-
         av1_encode_loop(pcs,
                         ed_ctx,
+#if !CLN_ED_PARAMS
                         sb_ptr,
+#endif
                         txb_origin_x,
                         txb_origin_y,
                         recon_buffer,
@@ -1288,8 +1317,13 @@ void svt_aom_convert_recon_16bit_to_8bit(PictureControlSet *pcs, EncDecContext *
  * For the given mode info, perform inter prediction, transform and recon.
  * Update relevant neighbour arrays.
  */
+#if CLN_ED_PARAMS
+static void perform_inter_coding_loop(PictureControlSet *pcs, EncDecContext *ctx) {
+    SequenceControlSet* scs = pcs->scs;
+#else
 static void perform_inter_coding_loop(SequenceControlSet *scs, PictureControlSet *pcs, EncDecContext *ctx,
                                       SuperBlock *sb_ptr, uint32_t sb_addr) {
+#endif
     const BlockGeom *blk_geom = ctx->blk_geom;
     BlkStruct       *blk_ptr  = ctx->blk_ptr;
 
@@ -1300,7 +1334,11 @@ static void perform_inter_coding_loop(SequenceControlSet *scs, PictureControlSet
 
     bool                 is_16bit = ctx->is_16bit;
     EbPictureBufferDesc *recon_buffer;
+#if CLN_ED_PARAMS
+    EbPictureBufferDesc* coeff_buffer_sb = pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index];
+#else
     EbPictureBufferDesc *coeff_buffer_sb = pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr];
+#endif
     ModeDecisionContext *md_ctx          = ctx->md_ctx;
     const int            is_inter        = is_inter_block(&blk_ptr->block_mi);
     assert(is_inter);
@@ -1417,7 +1455,9 @@ static void perform_inter_coding_loop(SequenceControlSet *scs, PictureControlSet
             //inter mode  2
             av1_encode_loop(pcs,
                             ctx,
+#if !CLN_ED_PARAMS
                             sb_ptr,
+#endif
                             txb_origin_x, //pic offset
                             txb_origin_y,
                             recon_buffer,
@@ -1483,8 +1523,26 @@ static void perform_inter_coding_loop(SequenceControlSet *scs, PictureControlSet
 
     assert(IMPLIES(!blk_geom->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
     blk_ptr->block_has_coeff = (blk_ptr->y_has_coeff || blk_ptr->u_has_coeff || blk_ptr->v_has_coeff);
+
+#if CLN_ED_PARAMS
+    // Update Recon Samples Neighbor Arrays -INTER-
+    encode_pass_update_recon_sample_neighbour_arrays(
+        ep_luma_recon_na,
+        ep_cb_recon_na,
+        ep_cr_recon_na,
+        recon_buffer,
+        ctx->blk_org_x,
+        ctx->blk_org_y,
+        ctx->blk_geom->bwidth,
+        ctx->blk_geom->bheight,
+        ctx->blk_geom->bwidth_uv,
+        ctx->blk_geom->bheight_uv,
+        ctx->blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
+        is_16bit);
+#endif
 }
 
+#if 1//!OPT_REFACTOR_ED_EC
 /*
  * Prepare the input picture for EncDec processing, including any necessary
  * padding, compressing, packing, or bit depth conversion.
@@ -1611,7 +1669,164 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
                                   sb_height >> 1);
     }
 }
+#endif
+#if OPT_REFACTOR_ED_EC
+/*******************************************
+* Encode Pass
+*
+* Summary: Performs an AV1 conformant encode/reconstruction
+*   for a block based on the pre-determined mode info.
+*
+* Inputs:
+*   SourcePic
+*   Coding Results
+*   SB Location
+*   Sequence Control Set
+*   Picture Control Set
+*
+* Outputs:
+*   Reconstructed Samples
+*   Coefficient Samples
+*
+*******************************************/
+static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr) {
 
+    const bool is_16bit = ctx->is_16bit;
+
+    // Set input pic and recon pic
+    EbPictureBufferDesc* input_picture = ctx->input_samples = (EbPictureBufferDesc*)pcs->ppcs->enhanced_pic;
+    EbPictureBufferDesc* recon_buffer;
+    svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
+
+    ModeDecisionContext* md_ctx = ctx->md_ctx;
+    const BlockGeom* blk_geom = ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
+
+    ctx->blk_org_x = (uint16_t)(md_ctx->sb_origin_x + blk_geom->org_x);
+    ctx->blk_org_y = (uint16_t)(md_ctx->sb_origin_y + blk_geom->org_y);
+    /* ED should use the skip decision from MD. If MD signals 0 coeffs, the TX will
+    be bypassed unless MD did not perform chroma (blk_skip_decision) or the block is an
+    INTRA block (since the prediction at MD may not be conformant). */
+    ctx->md_skip_blk = md_ctx->blk_skip_decision
+        ? ((is_intra_mode(blk_ptr->block_mi.mode) || blk_ptr->block_has_coeff) ? 0 : 1)
+        : 0;
+    blk_ptr->block_has_coeff = 0;
+
+    if (is_inter_block(&blk_ptr->block_mi)) {
+        perform_inter_coding_loop(pcs, ctx);
+    }
+    else if (is_intra_mode(blk_ptr->block_mi.mode)) {
+        if (pcs->scs->static_config.encoder_bit_depth > EB_EIGHT_BIT && pcs->hbd_md == 0 &&
+            blk_ptr->palette_size[0] > 0) {
+            //MD was done on 8bit, scale  palette colors to 10bit
+            for (uint8_t col = 0; col < blk_ptr->palette_size[0]; col++)
+                blk_ptr->palette_info->pmi.palette_colors[col] *= 4;
+        }
+        perform_intra_coding_loop(pcs, ctx);
+    }
+    else {
+        EncodeContext* enc_ctx = pcs->scs->enc_ctx;
+        CHECK_REPORT_ERROR_NC(enc_ctx->app_callback_ptr, EB_ENC_CL_ERROR2);
+    }
+
+    if (pcs->ppcs->frm_hdr.allow_intrabc && is_16bit && (ctx->bit_depth == EB_EIGHT_BIT)) {
+        svt_aom_convert_recon_16bit_to_8bit(pcs, ctx);
+    }
+}
+
+//// Update encode-related data for the passed block
+//static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree) {
+//}
+
+void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx, SuperBlock* sb_ptr,
+    PC_TREE* pc_tree, PARTITION_TREE* ptree, uint32_t mi_row, uint32_t mi_col) {
+
+    if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols) return;
+
+    //ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+
+    BlockSize bsize = pc_tree->block_size;
+    assert(bsize < BLOCK_SIZES_ALL);
+    const int hbs = mi_size_wide[bsize] / 2;
+    const int is_partition_root = bsize >= BLOCK_8X8;
+    //const int ctx = is_partition_root
+    //    ? partition_plane_context(xd, mi_row, mi_col, bsize)
+    //    : -1;
+    const PartitionType partition = pc_tree->partitioning;
+    const BlockSize subsize = get_partition_subsize(bsize, partition);
+    int quarter_step = mi_size_wide[bsize] / 4;
+    int i;
+    BlockSize bsize2 = get_partition_subsize(bsize, PARTITION_SPLIT);
+
+    switch (partition) {
+    case PARTITION_NONE:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0]);
+        break;
+    case PARTITION_VERT:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_V][0]);
+        if (mi_col + hbs < pcs->ppcs->av1_cm->mi_cols) {
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V][1]);
+        }
+        break;
+    case PARTITION_HORZ:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_H][0]);
+        if (mi_row + hbs < pcs->ppcs->av1_cm->mi_rows) {
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H][1]);
+        }
+        break;
+    case PARTITION_SPLIT:
+        for (i = 0; i < 4; ++i) {
+            const int x_idx = (i & 1) * hbs;
+            const int y_idx = (i >> 1) * hbs;
+            if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) continue;
+            ptree->sub_tree[i] = av1_alloc_partition_tree_node(subsize);
+            svt_aom_encode_sb(scs, pcs, ctx, sb_ptr, pc_tree->split[i], ptree->sub_tree[i], mi_row + y_idx, mi_col + x_idx);
+        }
+        break;
+    case PARTITION_HORZ_A:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][0]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][1]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][2]);
+        break;
+    case PARTITION_HORZ_B:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][0]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][1]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][2]);
+        break;
+    case PARTITION_VERT_A:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][0]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][1]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][2]);
+        break;
+    case PARTITION_VERT_B:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][0]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][1]);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2]);
+        break;
+    case PARTITION_HORZ_4:
+        for (i = 0; i < /*SUB_PARTITIONS_PART4*/4; ++i) {
+            int this_mi_row = mi_row + i * quarter_step;
+            if (i > 0 && this_mi_row >= pcs->ppcs->av1_cm->mi_rows) {
+                assert(i == 3);
+                break;
+            }
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H4][i]);
+        }
+        break;
+    case PARTITION_VERT_4:
+        for (i = 0; i < /*SUB_PARTITIONS_PART4*/4; ++i) {
+            int this_mi_col = mi_col + i * quarter_step;
+            if (i > 0 && this_mi_col >= pcs->ppcs->av1_cm->mi_cols) {
+                assert(i == 3);
+                break;
+            }
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i]);
+        }
+        break;
+    default: assert(0 && "Invalid partition type."); break;
+    }
+}
+#endif
 /*******************************************
 * Encode Pass
 *
@@ -1631,7 +1846,11 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
 *   Coefficient Samples
 *
 *******************************************/
+#if CLN_ED_PARAMS
+void svt_aom_encode_decode(SequenceControlSet* scs, PictureControlSet* pcs,
+#else
 EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet *pcs, SuperBlock *sb_ptr,
+#endif
                                      uint32_t sb_addr, uint32_t sb_org_x, uint32_t sb_org_y, EncDecContext *ctx) {
     bool                 is_16bit = ctx->is_16bit;
     EbPictureBufferDesc *recon_buffer;
@@ -1640,6 +1859,7 @@ EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet 
     md_ctx        = ctx->md_ctx;
     input_picture = ctx->input_samples = (EbPictureBufferDesc *)pcs->ppcs->enhanced_pic;
 
+#if !CLN_ED_PARAMS
     EncodeContext *enc_ctx = pcs->scs->enc_ctx;
     // Dereferencing early
     uint16_t           tile_idx         = ctx->tile_index;
@@ -1647,6 +1867,7 @@ EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet 
                                                    : pcs->ep_luma_recon_na[tile_idx];
     NeighborArrayUnit *ep_cb_recon_na = is_16bit ? pcs->ep_cb_recon_na_16bit[tile_idx] : pcs->ep_cb_recon_na[tile_idx];
     NeighborArrayUnit *ep_cr_recon_na = is_16bit ? pcs->ep_cr_recon_na_16bit[tile_idx] : pcs->ep_cr_recon_na[tile_idx];
+#endif
 
     svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
     // Pad/Pack/compress the input picture
@@ -1698,6 +1919,24 @@ EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet 
                         : 0;
             blk_ptr->block_has_coeff = 0;
 
+#if CLN_ED_PARAMS
+            if (is_inter_block(&blk_ptr->block_mi)) {
+                perform_inter_coding_loop(pcs, ctx);
+            }
+            else if (is_intra_mode(blk_ptr->block_mi.mode)) {
+                if (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT && pcs->hbd_md == 0 &&
+                    blk_ptr->palette_size[0] > 0) {
+                    //MD was done on 8bit, scale  palette colors to 10bit
+                    for (uint8_t col = 0; col < blk_ptr->palette_size[0]; col++)
+                        blk_ptr->palette_info->pmi.palette_colors[col] *= 4;
+                }
+                perform_intra_coding_loop(pcs, ctx);
+            }
+            else {
+                EncodeContext* enc_ctx = pcs->scs->enc_ctx;
+                CHECK_REPORT_ERROR_NC(enc_ctx->app_callback_ptr, EB_ENC_CL_ERROR2);
+            }
+#else
             if (is_intra_mode(blk_ptr->block_mi.mode)) {
                 if (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT && pcs->hbd_md == 0 &&
                     blk_ptr->palette_size[0] > 0) {
@@ -1746,6 +1985,7 @@ EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet 
             } else {
                 CHECK_REPORT_ERROR_NC(enc_ctx->app_callback_ptr, EB_ENC_CL_ERROR2);
             }
+#endif
 
             if (pcs->ppcs->frm_hdr.allow_intrabc && is_16bit && (ctx->bit_depth == EB_EIGHT_BIT)) {
                 svt_aom_convert_recon_16bit_to_8bit(pcs, ctx);
