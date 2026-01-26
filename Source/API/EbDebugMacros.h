@@ -35,6 +35,8 @@ extern "C" {
 #endif // __cplusplus
 
 #define OPT_REFACTOR_MD             1 // Change svt_aom_mode_decision_sb to be recursive, with same tracking methods (for data and tested blocks)
+#define CLN_ED_PARAMS               1 // Remove unnecessary params from encdec functions
+#define OPT_REFACTOR_ED_EC          1 // Change encdec and entropy coding functions to loop over partition recursively
 
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
