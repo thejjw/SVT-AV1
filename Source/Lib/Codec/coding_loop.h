@@ -26,13 +26,22 @@ extern "C" {
      *******************************************/
 void svt_aom_mode_decision_sb_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
                                         const MdcSbData *const mdcResultTbPtr);
+#if !OPT_LPD1_RECURSIVE
 void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
                                         const MdcSbData *const mdcResultTbPtr);
+#endif
+#if !OPT_REFACTOR_MD
 void svt_aom_mode_decision_sb(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
                               const MdcSbData *const mdcResultTbPtr);
+#endif
 #if OPT_REFACTOR_MD
 void init_sb_data(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx);
 bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
+    const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx, bool* md_early_exit_sq,
+    uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree, int mi_row, int mi_col);
+#endif
+#if OPT_LPD1_RECURSIVE
+void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
     const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx, bool* md_early_exit_sq,
     uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree, int mi_row, int mi_col);
 #endif
@@ -40,12 +49,14 @@ bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, Mod
 void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx, SuperBlock* sb_ptr,
     PC_TREE* pc_tree, PARTITION_TREE* ptree, uint32_t mi_row, uint32_t mi_col);
 #endif
+#if !OPT_LPD1_RECURSIVE
 #if CLN_ED_PARAMS
 void svt_aom_encode_decode(SequenceControlSet* scs, PictureControlSet* pcs, uint32_t sb_addr,
     uint32_t sb_origin_x, uint32_t sb_origin_y, EncDecContext* ed_ctx);
 #else
 extern void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet *pcs, SuperBlock *sb_ptr, uint32_t sb_addr,
                                   uint32_t sb_origin_x, uint32_t sb_origin_y, EncDecContext *ed_ctx);
+#endif
 #endif
 extern EbErrorType svt_aom_encdec_update(SequenceControlSet *scs, PictureControlSet *pcs, SuperBlock *sb_ptr,
                                          uint32_t sb_addr, uint32_t sb_origin_x, uint32_t sb_origin_y,
