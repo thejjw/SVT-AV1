@@ -3179,6 +3179,23 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         // Output: md_blk_arr_nsq reduced set of block(s)
 
                         // PD1 MD Tool(s): default MD Tool(s)
+#if OPT_LPD1_RECURSIVE
+                        PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                        uint32_t leaf_idx = 0;
+                        uint32_t curr_mds_idx = 0;
+                        bool md_early_exit_sq = 0;
+                        uint32_t next_non_skip_blk_idx_mds = 0;
+                        init_sb_data(scs, pcs, md_ctx);
+                        if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
+                            svt_aom_pick_partition_lpd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
+                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                        else
+                            svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
+                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+#if !OPT_REFACTOR_ED_EC
+                        av1_free_pc_tree_recursive(pc_tree_root);
+#endif
+#else
 #if OPT_REFACTOR_MD
 #if OPT_REFACTOR_ED_EC
                         PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
@@ -3206,13 +3223,16 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         else
                             svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
 #endif
+#endif
 #if CLN_ED_PARAMS
                         //  Encode Pass
                         if (!ed_ctx->md_ctx->bypass_encdec) {
 #if OPT_REFACTOR_ED_EC
+#if !OPT_LPD1_RECURSIVE
                             if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                                 svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
                             else {
+#endif
                                 ed_ctx->coded_area_sb = 0;
                                 ed_ctx->coded_area_sb_uv = 0;
                                 ed_ctx->input_samples = pcs->ppcs->enhanced_pic;
@@ -3224,7 +3244,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 // TODO: temporarily free here, until data is passed here to entropy coding
                                 av1_free_partition_tree_recursive(sb_ptr->ptree);
                                 sb_ptr->ptree = NULL;
+#if !OPT_LPD1_RECURSIVE
                             }
+#endif
 #else
                             svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
 #endif
