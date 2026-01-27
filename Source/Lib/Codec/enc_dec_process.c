@@ -31,6 +31,9 @@
 #include "rc_process.h"
 
 #include "pack_unpack_c.h"
+#if OPT_REFACTOR_ED_UPDATE
+#include "deblocking_filter.h"
+#endif
 
 static void copy_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *dst_rate) {
     FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
@@ -3226,6 +3229,33 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #endif
 #if CLN_ED_PARAMS
                         //  Encode Pass
+#if OPT_REFACTOR_ED_UPDATE
+                        if (!ed_ctx->md_ctx->bypass_encdec) {
+                            ed_ctx->coded_area_sb = 0;
+                            ed_ctx->coded_area_sb_uv = 0;
+                            ed_ctx->input_samples = pcs->ppcs->enhanced_pic;
+                            prepare_input_picture(scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
+                        }
+                        if (sb_index == 0)
+                            pcs->ppcs->pcs_total_rate = 0;
+                        ed_ctx->coded_area_sb_update = 0;
+                        ed_ctx->coded_area_sb_uv_update = 0;
+                        if (!scs->allintra) {
+                            pcs->sb_intra[sb_index] = 0;
+                            pcs->sb_skip[sb_index] = 1;
+                            pcs->sb_64x64_mvp[sb_index] = 0;
+                            pcs->sb_min_sq_size[sb_index] = 128;
+                            pcs->sb_max_sq_size[sb_index] = 0;
+                        }
+                        sb_ptr->final_blk_cnt = 0;
+                        sb_ptr->ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+                        svt_aom_encode_sb(scs, pcs, ed_ctx, sb_ptr,
+                            pc_tree_root, sb_ptr->ptree, md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+
+                        // TODO: temporarily free here, until data is passed here to entropy coding
+                        av1_free_partition_tree_recursive(sb_ptr->ptree);
+                        sb_ptr->ptree = NULL;
+#else
                         if (!ed_ctx->md_ctx->bypass_encdec) {
 #if OPT_REFACTOR_ED_EC
 #if !OPT_LPD1_RECURSIVE
@@ -3251,6 +3281,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
 #endif
                         }
+#endif
 #else
                         // if (/*ppcs->is_ref &&*/ md_ctx->hbd_md == 0 &&
                         // scs->static_config.encoder_bit_depth > EB_EIGHT_BIT)
@@ -3263,8 +3294,49 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #if OPT_REFACTOR_ED_EC
                         av1_free_pc_tree_recursive(pc_tree_root);
 #endif
+#if OPT_REFACTOR_ED_UPDATE
+                        // free MD palette info buffer
+                        if (pcs->ppcs->palette_level) {
+                            const uint16_t max_block_cnt = scs->max_block_cnt;
+                            uint32_t       blk_index = 0;
+                            while (blk_index < max_block_cnt) {
+                                if (md_ctx->md_blk_arr_nsq[blk_index].palette_mem) {
+                                    EB_FREE_ARRAY(md_ctx->md_blk_arr_nsq[blk_index].palette_info->color_idx_map);
+                                    EB_FREE_ARRAY(md_ctx->md_blk_arr_nsq[blk_index].palette_info);
+                                    md_ctx->md_blk_arr_nsq[blk_index].palette_mem = 0;
+                                }
+                                blk_index++;
+                            }
+                        }
 
+                        // When DLF filters are derived without a frame-level search, we can apply the filters here
+                        // to take advantage of the MD multi-threading.
+                        // TODO: Add segments to DLF so this can be moved to that process (where is belongs) without
+                        // losing the multi-threaded performance.
+                        const uint16_t tg_count = pcs->ppcs->tile_group_cols * pcs->ppcs->tile_group_rows;
+                        const bool enable_dlf = pcs->ppcs->dlf_ctrls.enabled && pcs->ppcs->dlf_ctrls.sb_based_dlf;
+                        if (enable_dlf && tg_count == 1) {
+                            //Generate the loop filter parameters
+                            if (sb_index == 0) {
+                                svt_av1_loop_filter_init(pcs);
+                                svt_av1_pick_filter_level((EbPictureBufferDesc*)pcs->ppcs->enhanced_pic, pcs, LPF_PICK_FROM_Q);
+                                svt_av1_loop_filter_frame_init(&pcs->ppcs->frm_hdr, &pcs->ppcs->lf_info, 0, 3);
+                            }
+
+                            // Apply the loop filter
+                            //Jing: Don't work for tile_parallel since the SB of bottom tile comes early than the bottom SB of top tile
+                            if (pcs->ppcs->frm_hdr.loop_filter_params.filter_level[0] ||
+                                pcs->ppcs->frm_hdr.loop_filter_params.filter_level[1]) {
+                                EbPictureBufferDesc* recon_buffer;
+                                svt_aom_get_recon_pic(pcs, &recon_buffer, ed_ctx->is_16bit);
+                                uint32_t sb_width = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_origin_x);
+                                uint8_t  last_col = ((sb_origin_x + sb_width) == pcs->ppcs->aligned_width) ? 1 : 0;
+                                svt_aom_loop_filter_sb(recon_buffer, pcs, sb_origin_y >> 2, sb_origin_x >> 2, 0, 3, last_col);
+                            }
+                        }
+#else
                         svt_aom_encdec_update(scs, pcs, sb_ptr, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
+#endif
 
                         ed_ctx->coded_sb_count++;
                     }
