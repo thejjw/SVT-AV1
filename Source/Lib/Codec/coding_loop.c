@@ -1827,6 +1827,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
     }
 }
 #endif
+#if !OPT_LPD1_RECURSIVE
 /*******************************************
 * Encode Pass
 *
@@ -1995,6 +1996,7 @@ EB_EXTERN void svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet 
     } // CU Loop
     return;
 }
+#endif
 /*
  * Update data structures needed for future frames.  Apply DLF for certain modes.
 */
