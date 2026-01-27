@@ -63,6 +63,10 @@ typedef struct EncDecContext {
 
     uint16_t coded_area_sb;
     uint16_t coded_area_sb_uv;
+#if OPT_REFACTOR_ED_UPDATE
+    uint16_t coded_area_sb_update;
+    uint16_t coded_area_sb_uv_update;
+#endif
 
     uint8_t md_skip_blk;
 
