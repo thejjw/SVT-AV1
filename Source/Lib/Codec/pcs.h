@@ -1164,9 +1164,11 @@ typedef struct PictureControlSetInitData {
     uint8_t    tpl_synth_size;
     uint32_t   rate_control_mode;
     Av1Common *av1_cm;
-    uint16_t   init_max_block_cnt;
-    uint8_t    ref_count_used_list0;
-    uint8_t    ref_count_used_list1;
+#if !OPT_REFACTOR_EC
+    uint16_t init_max_block_cnt;
+#endif
+    uint8_t ref_count_used_list0;
+    uint8_t ref_count_used_list1;
 
     uint8_t aq_mode;
     uint8_t calc_hist;

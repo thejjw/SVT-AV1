@@ -1771,8 +1771,8 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
         return 0;
     }
 
-    const int blk_org_x = mi_col << 2;// ctx->sb_origin_x + blk_geom->org_x;
-    const int blk_org_y = mi_row << 2;// ctx->sb_origin_y + blk_geom->org_y;
+    const int blk_org_x = mi_col << 2; // ctx->sb_origin_x + blk_geom->org_x;
+    const int blk_org_y = mi_row << 2; // ctx->sb_origin_y + blk_geom->org_y;
     const int hbs       = (mi_size_wide[bsize] << 2) >> 1;
     const int has_rows  = (blk_org_y + hbs) < pcs->aligned_height;
     const int has_cols  = (blk_org_x + hbs) < pcs->aligned_width;
@@ -1791,7 +1791,7 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
     //        (char)(INVALID_NEIGHBOR_DATA)
     //    ? 0
     //    : ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition;
-    const int                  bsl       = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
+    const int bsl = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
     assert(bsl >= 0);
 
     const int      above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
@@ -1824,7 +1824,7 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
         split_rate *= 2;
     }
 
-    return split_rate;// (RDCOST(lambda, split_rate, 0));
+    return split_rate; // (RDCOST(lambda, split_rate, 0));
 }
 #endif
 /*

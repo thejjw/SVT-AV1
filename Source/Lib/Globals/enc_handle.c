@@ -1423,7 +1423,9 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             input_data.enc_dec_segment_col = (uint16_t)scs->enc_dec_segment_col_count_array;
             input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
 
+#if !OPT_REFACTOR_EC
             input_data.init_max_block_cnt = scs->max_block_cnt;
+#endif
             input_data.picture_width = scs->max_input_luma_width;
             input_data.picture_height = scs->max_input_luma_height;
             input_data.left_padding = scs->left_padding;

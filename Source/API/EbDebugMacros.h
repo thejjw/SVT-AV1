@@ -36,9 +36,10 @@ extern "C" {
 
 #define OPT_REFACTOR_MD             1 // Change svt_aom_mode_decision_sb to be recursive, with same tracking methods (for data and tested blocks)
 #define CLN_ED_PARAMS               1 // Remove unnecessary params from encdec functions
-#define OPT_REFACTOR_ED_EC          1 // Change encdec and entropy coding functions to loop over partition recursively
+#define OPT_REFACTOR_ED_EC          1 // Change encdec functions to loop over partition recursively
 #define OPT_LPD1_RECURSIVE          1 // Update LPD1 to use the new recursive structure so its output can match regular PD1
 #define OPT_REFACTOR_ED_UPDATE      1 // Change encdec update functions to loop over partition recursively
+#define OPT_REFACTOR_EC             1 // Update entropy coding to use recursive looping and use ptree data structure
 
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one

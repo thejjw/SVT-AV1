@@ -273,10 +273,12 @@ typedef struct SuperBlock {
     struct PictureControlSet *pcs;
     EcBlkStruct              *final_blk_arr;
     //for memory free only
-    MacroBlockD   *av1xd;
+    MacroBlockD *av1xd;
+#if !OPT_REFACTOR_EC
     PartitionType *cu_partition_array;
+#endif
 #if OPT_REFACTOR_ED_EC
-    struct PARTITION_TREE* ptree;
+    struct PARTITION_TREE *ptree;
 #endif
     unsigned       index : 32;
     unsigned       org_x : 32;
@@ -287,7 +289,11 @@ typedef struct SuperBlock {
 } SuperBlock;
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,
+#if OPT_REFACTOR_EC
+                                             bool allintra, ResolutionRange input_resolution,
+#else
                                              uint16_t max_block_cnt, bool allintra, ResolutionRange input_resolution,
+#endif
                                              struct PictureControlSet *picture_control_set);
 
 #ifdef __cplusplus

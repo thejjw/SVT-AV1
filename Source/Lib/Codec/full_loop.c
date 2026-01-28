@@ -2369,7 +2369,8 @@ uint8_t svt_aom_do_md_recon(PictureParentControlSet *pcs, ModeDecisionContext *c
     return do_recon;
 }
 #if OPT_REFACTOR_MD // svt_aom_d1_non_square_block_decision
-uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t d1_block_itr, PC_TREE* pc_tree) {
+uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                                  uint32_t d1_block_itr, PC_TREE *pc_tree) {
     //compute total cost for the whole block partition
     uint64_t tot_cost      = 0;
     uint32_t first_blk_idx = ctx->blk_ptr->mds_idx -
@@ -2385,7 +2386,8 @@ uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDe
         // Don't apply check to first block because nsq_cost_avail must be set to 0 for disallowed blocks
         if (!pcs->ppcs->sb_geom[ctx->sb_index].block_is_allowed[first_blk_idx + blk_it] && blk_it)
             continue;
-        tot_cost += pc_tree->block_data[ctx->blk_geom->shape][blk_it]->cost;// ctx->md_blk_arr_nsq[first_blk_idx + blk_it].cost;
+        tot_cost += pc_tree->block_data[ctx->blk_geom->shape][blk_it]
+                        ->cost; // ctx->md_blk_arr_nsq[first_blk_idx + blk_it].cost;
         assert(IMPLIES(ctx->avail_blk_flag[first_blk_idx + blk_it], ctx->cost_avail[first_blk_idx + blk_it]));
         nsq_cost_avail &= ctx->cost_avail[first_blk_idx + blk_it];
     }
@@ -2400,7 +2402,7 @@ uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDe
     tot_cost += split_cost;
     if (nsq_cost_avail &&
         (d1_block_itr == 0 || !ctx->cost_avail[ctx->blk_geom->sqi_mds] ||
-         (tot_cost < pc_tree->block_data[PART_N][0]->cost/*ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost*/))) {
+         (tot_cost < pc_tree->block_data[PART_N][0]->cost /*ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost*/))) {
         ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
         //store best partition cost in parent square
         //ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost        = tot_cost;
@@ -2411,9 +2413,9 @@ uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDe
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->block_data[PART_N][0]->best_d1_blk = first_blk_idx;
 
-        pc_tree->partitioning       = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->best_depth_cost    = tot_cost;
-        pc_tree->rdc.rd_cost    = tot_cost;
+        pc_tree->partitioning    = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->best_depth_cost = tot_cost;
+        pc_tree->rdc.rd_cost     = tot_cost;
     }
     return tot_cost;
 }

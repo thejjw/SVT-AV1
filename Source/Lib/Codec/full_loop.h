@@ -50,7 +50,8 @@ void        svt_aom_compute_depth_costs_md_skip_light_pd0(PictureParentControlSe
                                                           uint32_t above_depth_mds, uint32_t step, uint64_t *above_depth_cost,
                                                           uint64_t *curr_depth_cost);
 #if OPT_REFACTOR_MD
-uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t d1_block_itr, PC_TREE* pc_tree);
+uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                                  uint32_t d1_block_itr, PC_TREE *pc_tree);
 #else
 uint64_t svt_aom_d1_non_square_block_decision(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t d1_block_itr);
 #endif

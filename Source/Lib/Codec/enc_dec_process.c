@@ -1356,10 +1356,10 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
  * Prepare the input picture for EncDec processing, including any necessary
  * padding, compressing, packing, or bit depth conversion.
  */
-static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx,
-    EbPictureBufferDesc* input_pic, uint32_t sb_org_x, uint32_t sb_org_y) {
-    bool     is_16bit = ctx->is_16bit;
-    uint32_t sb_width = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_org_x);
+static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pcs, EncDecContext *ctx,
+                                  EbPictureBufferDesc *input_pic, uint32_t sb_org_x, uint32_t sb_org_y) {
+    bool     is_16bit  = ctx->is_16bit;
+    uint32_t sb_width  = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_org_x);
     uint32_t sb_height = MIN(scs->sb_size, pcs->ppcs->aligned_height - sb_org_y);
 
     if (is_16bit && scs->static_config.encoder_bit_depth > EB_EIGHT_BIT) {
@@ -1373,63 +1373,63 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
             ((sb_org_x + input_pic->org_x) >> 1);
 
         //sb_width is n*8 so the 2bit-decompression kernel works properly
-        uint32_t comp_stride_y = input_pic->stride_y / 4;
+        uint32_t comp_stride_y           = input_pic->stride_y / 4;
         uint32_t comp_luma_buffer_offset = comp_stride_y * input_pic->org_y + input_pic->org_x / 4;
         comp_luma_buffer_offset += sb_org_x / 4 + sb_org_y * comp_stride_y;
 
         svt_aom_compressed_pack_sb(input_pic->buffer_y + input_luma_offset,
-            input_pic->stride_y,
-            input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
-            comp_stride_y,
-            (uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
-            ctx->input_sample16bit_buffer->stride_y,
-            sb_width,
-            sb_height);
+                                   input_pic->stride_y,
+                                   input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
+                                   comp_stride_y,
+                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_y,
+                                   ctx->input_sample16bit_buffer->stride_y,
+                                   sb_width,
+                                   sb_height);
 
-        uint32_t comp_stride_uv = input_pic->stride_cb / 4;
+        uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
         uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
         comp_chroma_buffer_offset += sb_org_x / 4 / 2 + sb_org_y / 2 * comp_stride_uv;
 
         svt_aom_compressed_pack_sb(input_pic->buffer_cb + input_cb_offset,
-            input_pic->stride_cb,
-            input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
-            comp_stride_uv,
-            (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
-            ctx->input_sample16bit_buffer->stride_cb,
-            sb_width / 2,
-            sb_height / 2);
+                                   input_pic->stride_cb,
+                                   input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
+                                   comp_stride_uv,
+                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_cb,
+                                   ctx->input_sample16bit_buffer->stride_cb,
+                                   sb_width / 2,
+                                   sb_height / 2);
         svt_aom_compressed_pack_sb(input_pic->buffer_cr + input_cr_offset,
-            input_pic->stride_cr,
-            input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
-            comp_stride_uv,
-            (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
-            ctx->input_sample16bit_buffer->stride_cr,
-            sb_width / 2,
-            sb_height / 2);
+                                   input_pic->stride_cr,
+                                   input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
+                                   comp_stride_uv,
+                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_cr,
+                                   ctx->input_sample16bit_buffer->stride_cr,
+                                   sb_width / 2,
+                                   sb_height / 2);
 
         // PAD the packed source in incomplete sb up to max SB size
-        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
-            ctx->input_sample16bit_buffer->stride_y,
-            sb_width,
-            sb_height,
-            scs->sb_size - sb_width,
-            scs->sb_size - sb_height);
+        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_y,
+                                        ctx->input_sample16bit_buffer->stride_y,
+                                        sb_width,
+                                        sb_height,
+                                        scs->sb_size - sb_width,
+                                        scs->sb_size - sb_height);
 
         // Safe to divide by 2 (scs->sb_size - sb_width) >> 1), with no risk of off-of-one issues
         // from chroma subsampling as picture is already 8px aligned
-        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
-            ctx->input_sample16bit_buffer->stride_cb,
-            sb_width >> 1,
-            sb_height >> 1,
-            (scs->sb_size - sb_width) >> 1,
-            (scs->sb_size - sb_height) >> 1);
+        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_cb,
+                                        ctx->input_sample16bit_buffer->stride_cb,
+                                        sb_width >> 1,
+                                        sb_height >> 1,
+                                        (scs->sb_size - sb_width) >> 1,
+                                        (scs->sb_size - sb_height) >> 1);
 
-        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
-            ctx->input_sample16bit_buffer->stride_cr,
-            sb_width >> 1,
-            sb_height >> 1,
-            (scs->sb_size - sb_width) >> 1,
-            (scs->sb_size - sb_height) >> 1);
+        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_cr,
+                                        ctx->input_sample16bit_buffer->stride_cr,
+                                        sb_width >> 1,
+                                        sb_height >> 1,
+                                        (scs->sb_size - sb_width) >> 1,
+                                        (scs->sb_size - sb_height) >> 1);
 
         if (ctx->md_ctx->hbd_md == 0)
             svt_aom_store16bit_input_src(
@@ -1444,38 +1444,38 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
         const uint32_t input_cr_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cr) +
             ((sb_org_x + input_pic->org_x) >> 1);
 
-        sb_width = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
-            ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->right_padding) - sb_org_x)
-            : sb_width;
+        sb_width  = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
+             ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->right_padding) - sb_org_x)
+             : sb_width;
         sb_height = ((sb_height < MIN_SB_SIZE) || ((sb_height > MIN_SB_SIZE) && (sb_height < MAX_SB_SIZE)))
             ? MIN(scs->sb_size, (pcs->ppcs->aligned_height + scs->bot_padding) - sb_org_y)
             : sb_height;
 
         // PACK Y
-        uint16_t* buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_y;
-        uint8_t* buf_8bit = input_pic->buffer_y + input_luma_offset;
+        uint16_t *buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_y;
+        uint8_t  *buf_8bit  = input_pic->buffer_y + input_luma_offset;
         svt_convert_8bit_to_16bit(
             buf_8bit, input_pic->stride_y, buf_16bit, ctx->input_sample16bit_buffer->stride_y, sb_width, sb_height);
 
         // PACK CB
-        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb;
-        buf_8bit = input_pic->buffer_cb + input_cb_offset;
+        buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_cb;
+        buf_8bit  = input_pic->buffer_cb + input_cb_offset;
         svt_convert_8bit_to_16bit(buf_8bit,
-            input_pic->stride_cb,
-            buf_16bit,
-            ctx->input_sample16bit_buffer->stride_cb,
-            sb_width >> 1,
-            sb_height >> 1);
+                                  input_pic->stride_cb,
+                                  buf_16bit,
+                                  ctx->input_sample16bit_buffer->stride_cb,
+                                  sb_width >> 1,
+                                  sb_height >> 1);
 
         // PACK CR
-        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr;
-        buf_8bit = input_pic->buffer_cr + input_cr_offset;
+        buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_cr;
+        buf_8bit  = input_pic->buffer_cr + input_cr_offset;
         svt_convert_8bit_to_16bit(buf_8bit,
-            input_pic->stride_cr,
-            buf_16bit,
-            ctx->input_sample16bit_buffer->stride_cr,
-            sb_width >> 1,
-            sb_height >> 1);
+                                  input_pic->stride_cr,
+                                  buf_16bit,
+                                  ctx->input_sample16bit_buffer->stride_cr,
+                                  sb_width >> 1,
+                                  sb_height >> 1);
     }
 }
 #endif
@@ -3121,14 +3121,23 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 // PD0 MD Tool(s) : ME_MV(s) as INTER candidate(s), DC as INTRA candidate, luma only, Frequency domain SSE,
                                 // no fast rate (no MVP table generation), MDS0 then MDS3, reduced NIC(s), 1 ref per list,..
 #if OPT_REFACTOR_MD
-                                uint32_t leaf_idx = 0;
-                                uint32_t curr_mds_idx = 0;
-                                bool md_early_exit_sq = 0;
+                                uint32_t leaf_idx                  = 0;
+                                uint32_t curr_mds_idx              = 0;
+                                bool     md_early_exit_sq          = 0;
                                 uint32_t next_non_skip_blk_idx_mds = 0;
                                 init_sb_data(scs, pcs, md_ctx);
-                                PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
-                                svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
-                                    md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                                PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                                svt_aom_pick_partition(scs,
+                                                       pcs,
+                                                       ed_ctx->md_ctx,
+                                                       mdc_ptr,
+                                                       &leaf_idx,
+                                                       &curr_mds_idx,
+                                                       &md_early_exit_sq,
+                                                       &next_non_skip_blk_idx_mds,
+                                                       pc_tree_root,
+                                                       md_ctx->sb_origin_y >> 2,
+                                                       md_ctx->sb_origin_x >> 2);
                                 av1_free_pc_tree_recursive(pc_tree_root);
 #else
                                 svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
@@ -3183,39 +3192,66 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 
                         // PD1 MD Tool(s): default MD Tool(s)
 #if OPT_LPD1_RECURSIVE
-                        PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
-                        uint32_t leaf_idx = 0;
-                        uint32_t curr_mds_idx = 0;
-                        bool md_early_exit_sq = 0;
+                        PC_TREE *pc_tree_root              = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                        uint32_t leaf_idx                  = 0;
+                        uint32_t curr_mds_idx              = 0;
+                        bool     md_early_exit_sq          = 0;
                         uint32_t next_non_skip_blk_idx_mds = 0;
                         init_sb_data(scs, pcs, md_ctx);
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
-                            svt_aom_pick_partition_lpd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
-                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                            svt_aom_pick_partition_lpd1(scs,
+                                                        pcs,
+                                                        ed_ctx->md_ctx,
+                                                        mdc_ptr,
+                                                        &leaf_idx,
+                                                        &curr_mds_idx,
+                                                        &md_early_exit_sq,
+                                                        &next_non_skip_blk_idx_mds,
+                                                        pc_tree_root,
+                                                        md_ctx->sb_origin_y >> 2,
+                                                        md_ctx->sb_origin_x >> 2);
                         else
-                            svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
-                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                            svt_aom_pick_partition(scs,
+                                                   pcs,
+                                                   ed_ctx->md_ctx,
+                                                   mdc_ptr,
+                                                   &leaf_idx,
+                                                   &curr_mds_idx,
+                                                   &md_early_exit_sq,
+                                                   &next_non_skip_blk_idx_mds,
+                                                   pc_tree_root,
+                                                   md_ctx->sb_origin_y >> 2,
+                                                   md_ctx->sb_origin_x >> 2);
 #if !OPT_REFACTOR_ED_EC
                         av1_free_pc_tree_recursive(pc_tree_root);
 #endif
 #else
 #if OPT_REFACTOR_MD
 #if OPT_REFACTOR_ED_EC
-                        PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                        PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
 #endif
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_mode_decision_sb_light_pd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
                         else {
-                            uint32_t leaf_idx = 0;
-                            uint32_t curr_mds_idx = 0;
-                            bool md_early_exit_sq = 0;
+                            uint32_t leaf_idx                  = 0;
+                            uint32_t curr_mds_idx              = 0;
+                            bool     md_early_exit_sq          = 0;
                             uint32_t next_non_skip_blk_idx_mds = 0;
                             init_sb_data(scs, pcs, md_ctx);
 #if !OPT_REFACTOR_ED_EC
-                            PC_TREE* pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                            PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
 #endif
-                            svt_aom_pick_partition(scs, pcs, ed_ctx->md_ctx, mdc_ptr, &leaf_idx, &curr_mds_idx, &md_early_exit_sq, &next_non_skip_blk_idx_mds, pc_tree_root,
-                                md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                            svt_aom_pick_partition(scs,
+                                                   pcs,
+                                                   ed_ctx->md_ctx,
+                                                   mdc_ptr,
+                                                   &leaf_idx,
+                                                   &curr_mds_idx,
+                                                   &md_early_exit_sq,
+                                                   &next_non_skip_blk_idx_mds,
+                                                   pc_tree_root,
+                                                   md_ctx->sb_origin_y >> 2,
+                                                   md_ctx->sb_origin_x >> 2);
 #if !OPT_REFACTOR_ED_EC
                             av1_free_pc_tree_recursive(pc_tree_root);
 #endif
@@ -3231,30 +3267,38 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         //  Encode Pass
 #if OPT_REFACTOR_ED_UPDATE
                         if (!ed_ctx->md_ctx->bypass_encdec) {
-                            ed_ctx->coded_area_sb = 0;
+                            ed_ctx->coded_area_sb    = 0;
                             ed_ctx->coded_area_sb_uv = 0;
-                            ed_ctx->input_samples = pcs->ppcs->enhanced_pic;
+                            ed_ctx->input_samples    = pcs->ppcs->enhanced_pic;
                             prepare_input_picture(scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
                         }
                         if (sb_index == 0)
                             pcs->ppcs->pcs_total_rate = 0;
-                        ed_ctx->coded_area_sb_update = 0;
+                        ed_ctx->coded_area_sb_update    = 0;
                         ed_ctx->coded_area_sb_uv_update = 0;
                         if (!scs->allintra) {
-                            pcs->sb_intra[sb_index] = 0;
-                            pcs->sb_skip[sb_index] = 1;
-                            pcs->sb_64x64_mvp[sb_index] = 0;
+                            pcs->sb_intra[sb_index]       = 0;
+                            pcs->sb_skip[sb_index]        = 1;
+                            pcs->sb_64x64_mvp[sb_index]   = 0;
                             pcs->sb_min_sq_size[sb_index] = 128;
                             pcs->sb_max_sq_size[sb_index] = 0;
                         }
                         sb_ptr->final_blk_cnt = 0;
-                        sb_ptr->ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
-                        svt_aom_encode_sb(scs, pcs, ed_ctx, sb_ptr,
-                            pc_tree_root, sb_ptr->ptree, md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                        sb_ptr->ptree         = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+                        svt_aom_encode_sb(scs,
+                                          pcs,
+                                          ed_ctx,
+                                          sb_ptr,
+                                          pc_tree_root,
+                                          sb_ptr->ptree,
+                                          md_ctx->sb_origin_y >> 2,
+                                          md_ctx->sb_origin_x >> 2);
 
+#if !OPT_REFACTOR_EC
                         // TODO: temporarily free here, until data is passed here to entropy coding
                         av1_free_partition_tree_recursive(sb_ptr->ptree);
                         sb_ptr->ptree = NULL;
+#endif
 #else
                         if (!ed_ctx->md_ctx->bypass_encdec) {
 #if OPT_REFACTOR_ED_EC
@@ -3263,13 +3307,20 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 svt_aom_encode_decode(scs, pcs, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
                             else {
 #endif
-                                ed_ctx->coded_area_sb = 0;
+                                ed_ctx->coded_area_sb    = 0;
                                 ed_ctx->coded_area_sb_uv = 0;
-                                ed_ctx->input_samples = pcs->ppcs->enhanced_pic;
-                                prepare_input_picture(scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
+                                ed_ctx->input_samples    = pcs->ppcs->enhanced_pic;
+                                prepare_input_picture(
+                                    scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
                                 sb_ptr->ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
-                                svt_aom_encode_sb(scs, pcs, ed_ctx, sb_ptr,
-                                    pc_tree_root, sb_ptr->ptree, md_ctx->sb_origin_y >> 2, md_ctx->sb_origin_x >> 2);
+                                svt_aom_encode_sb(scs,
+                                                  pcs,
+                                                  ed_ctx,
+                                                  sb_ptr,
+                                                  pc_tree_root,
+                                                  sb_ptr->ptree,
+                                                  md_ctx->sb_origin_y >> 2,
+                                                  md_ctx->sb_origin_x >> 2);
 
                                 // TODO: temporarily free here, until data is passed here to entropy coding
                                 av1_free_partition_tree_recursive(sb_ptr->ptree);
@@ -3298,7 +3349,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         // free MD palette info buffer
                         if (pcs->ppcs->palette_level) {
                             const uint16_t max_block_cnt = scs->max_block_cnt;
-                            uint32_t       blk_index = 0;
+                            uint32_t       blk_index     = 0;
                             while (blk_index < max_block_cnt) {
                                 if (md_ctx->md_blk_arr_nsq[blk_index].palette_mem) {
                                     EB_FREE_ARRAY(md_ctx->md_blk_arr_nsq[blk_index].palette_info->color_idx_map);
@@ -3313,13 +3364,14 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         // to take advantage of the MD multi-threading.
                         // TODO: Add segments to DLF so this can be moved to that process (where is belongs) without
                         // losing the multi-threaded performance.
-                        const uint16_t tg_count = pcs->ppcs->tile_group_cols * pcs->ppcs->tile_group_rows;
-                        const bool enable_dlf = pcs->ppcs->dlf_ctrls.enabled && pcs->ppcs->dlf_ctrls.sb_based_dlf;
+                        const uint16_t tg_count   = pcs->ppcs->tile_group_cols * pcs->ppcs->tile_group_rows;
+                        const bool     enable_dlf = pcs->ppcs->dlf_ctrls.enabled && pcs->ppcs->dlf_ctrls.sb_based_dlf;
                         if (enable_dlf && tg_count == 1) {
                             //Generate the loop filter parameters
                             if (sb_index == 0) {
                                 svt_av1_loop_filter_init(pcs);
-                                svt_av1_pick_filter_level((EbPictureBufferDesc*)pcs->ppcs->enhanced_pic, pcs, LPF_PICK_FROM_Q);
+                                svt_av1_pick_filter_level(
+                                    (EbPictureBufferDesc *)pcs->ppcs->enhanced_pic, pcs, LPF_PICK_FROM_Q);
                                 svt_av1_loop_filter_frame_init(&pcs->ppcs->frm_hdr, &pcs->ppcs->lf_info, 0, 3);
                             }
 
@@ -3327,11 +3379,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             //Jing: Don't work for tile_parallel since the SB of bottom tile comes early than the bottom SB of top tile
                             if (pcs->ppcs->frm_hdr.loop_filter_params.filter_level[0] ||
                                 pcs->ppcs->frm_hdr.loop_filter_params.filter_level[1]) {
-                                EbPictureBufferDesc* recon_buffer;
+                                EbPictureBufferDesc *recon_buffer;
                                 svt_aom_get_recon_pic(pcs, &recon_buffer, ed_ctx->is_16bit);
                                 uint32_t sb_width = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_origin_x);
                                 uint8_t  last_col = ((sb_origin_x + sb_width) == pcs->ppcs->aligned_width) ? 1 : 0;
-                                svt_aom_loop_filter_sb(recon_buffer, pcs, sb_origin_y >> 2, sb_origin_x >> 2, 0, 3, last_col);
+                                svt_aom_loop_filter_sb(
+                                    recon_buffer, pcs, sb_origin_y >> 2, sb_origin_x >> 2, 0, 3, last_col);
                             }
                         }
 #else

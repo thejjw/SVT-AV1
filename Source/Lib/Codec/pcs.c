@@ -551,6 +551,19 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
     object_ptr->sb_total_count_unscaled = all_sb;
     EB_ALLOC_PTR_ARRAY(object_ptr->sb_ptr_array, object_ptr->sb_total_count_unscaled);
     for (sb_index = 0; sb_index < all_sb; ++sb_index) {
+#if OPT_REFACTOR_EC
+        EB_NEW(object_ptr->sb_ptr_array[sb_index],
+               svt_aom_largest_coding_unit_ctor,
+               (uint8_t)init_data_ptr->sb_size,
+               (uint16_t)(sb_origin_x * max_blk_size),
+               (uint16_t)(sb_origin_y * max_blk_size),
+               (uint16_t)sb_index,
+               init_data_ptr->enc_mode,
+               init_data_ptr->static_config.rtc,
+               allintra,
+               init_data_ptr->input_resolution,
+               object_ptr);
+#else
         EB_NEW(object_ptr->sb_ptr_array[sb_index],
                svt_aom_largest_coding_unit_ctor,
                (uint8_t)init_data_ptr->sb_size,
@@ -563,6 +576,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
                allintra,
                init_data_ptr->input_resolution,
                object_ptr);
+#endif
         // Increment the Order in coding order (Raster Scan Order)
         sb_origin_y = (sb_origin_x == picture_sb_w - 1) ? sb_origin_y + 1 : sb_origin_y;
         sb_origin_x = (sb_origin_x == picture_sb_w - 1) ? 0 : sb_origin_x + 1;

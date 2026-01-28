@@ -32,6 +32,58 @@ const uint8_t uni_psy_bias[64] = {
     95, 95, 95, 95, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
 };
 
+#if OPT_REFACTOR_MD
+PC_TREE *av1_alloc_pc_tree_node(BlockSize bsize) {
+    PC_TREE *pc_tree;
+    EB_CALLOC_NO_CHECK(pc_tree, 1, sizeof(*pc_tree));
+    if (pc_tree == NULL)
+        return NULL;
+
+    pc_tree->partitioning = PARTITION_NONE;
+    pc_tree->block_size   = bsize;
+
+    return pc_tree;
+}
+
+// TODO: later may need to dealloc data structs here
+void av1_free_pc_tree_recursive(PC_TREE *pc_tree) {
+    if (pc_tree == NULL)
+        return;
+    for (int i = 0; i < 4; ++i) {
+        if (pc_tree->split[i] != NULL) {
+            av1_free_pc_tree_recursive(pc_tree->split[i]);
+            pc_tree->split[i] = NULL;
+        }
+    }
+    EB_FREE(pc_tree);
+}
+#endif
+#if OPT_REFACTOR_ED_EC
+PARTITION_TREE *av1_alloc_partition_tree_node(BlockSize bsize) {
+    PARTITION_TREE *ptree;
+    EB_CALLOC_NO_CHECK(ptree, 1, sizeof(*ptree));
+    if (ptree == NULL)
+        return NULL;
+
+    ptree->partition = PARTITION_NONE;
+    ptree->bsize     = bsize;
+
+    return ptree;
+}
+
+// TODO: later may need to dealloc data structs here
+void av1_free_partition_tree_recursive(PARTITION_TREE *ptree) {
+    if (ptree == NULL)
+        return;
+    for (int i = 0; i < 4; ++i) {
+        if (ptree->sub_tree[i] != NULL) {
+            av1_free_partition_tree_recursive(ptree->sub_tree[i]);
+            ptree->sub_tree[i] = NULL;
+        }
+    }
+    EB_FREE(ptree);
+}
+#endif
 static void mode_decision_context_dctor(EbPtr p) {
     ModeDecisionContext *obj = (ModeDecisionContext *)p;
 
