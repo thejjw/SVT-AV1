@@ -2177,12 +2177,12 @@ void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecCo
         }
         break;
     case PARTITION_SPLIT:
-        for (int i = 0; i < /*SUB_PARTITIONS_SPLIT*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             const int x_idx = (i & 1) * hbs;
             const int y_idx = (i >> 1) * hbs;
             if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
                 continue;
-            ptree->sub_tree[i]        = av1_alloc_partition_tree_node(subsize);
+            ptree->sub_tree[i]        = svt_aom_alloc_partition_tree_node(subsize);
             ptree->sub_tree[i]->index = i;
             svt_aom_encode_sb(
                 scs, pcs, ctx, sb_ptr, pc_tree->split[i], ptree->sub_tree[i], mi_row + y_idx, mi_col + x_idx);

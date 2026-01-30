@@ -1757,10 +1757,14 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, 
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
  */
-int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize,
-                                     const int mi_row, const int mi_col, MdRateEstimationContext* md_rate_est_ctx,
-                                     PartitionType p, bool use_accurate_part_ctx,
-                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
+int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
+                                        const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
+#if OPT_BLK_LOOPING
+                                        const PartitionContextType left_ctx,
+#else
+                                        bool use_accurate_part_ctx, const PartitionContextType left_ctx,
+#endif
+                                        const PartitionContextType above_ctx) {
     //const BlockGeom *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_mds_idx);
     //const BlockSize  bsize    = blk_geom->bsize;
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
@@ -1819,10 +1823,12 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
             : (uint64_t)md_rate_est_ctx->partition_horz_alike_fac_bits[context_index][p == PARTITION_SPLIT];
     }
 
+#if !OPT_BLK_LOOPING
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
     if (!use_accurate_part_ctx && p == PARTITION_SPLIT) {
         split_rate *= 2;
     }
+#endif
 
     return split_rate; // (RDCOST(lambda, split_rate, 0));
 }

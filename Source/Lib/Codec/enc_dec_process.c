@@ -2783,6 +2783,76 @@ static NOINLINE void avg_cdf_symbols(FRAME_CONTEXT *ctx_left, FRAME_CONTEXT *ctx
     AVERAGE_CDF(ctx_left->cfl_sign_cdf, ctx_tr->cfl_sign_cdf, CFL_JOINT_SIGNS);
     AVERAGE_CDF(ctx_left->cfl_alpha_cdf, ctx_tr->cfl_alpha_cdf, CFL_ALPHABET_SIZE);
 }
+#if OPT_BLK_LOOPING
+void        convert_to_md_scan(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                               const MdcSbData *const mdc_sb_data, uint32_t *leaf_idx, uint32_t *curr_mds_idx, MdScan *mds,
+                               int mi_row, int mi_col);
+static void add_split_part(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                           const MdcSbData *const mdc_sb_data, uint32_t *leaf_idx, uint32_t *curr_mds_idx, MdScan *mds,
+                           int mi_row, int mi_col) {
+    const int mi_step = mi_size_wide[mds->bsize] / 2;
+    for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+        // TODO: If block not allowed, don't enter the subdepth (cost would be 0)
+        const int x_idx = (i & 1) * mi_step;
+        const int y_idx = (i >> 1) * mi_step;
+        // if block fully outside pic, don't process
+        //if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows ||
+        //    mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
+        //    continue;
+        const BlockSize subsize = get_partition_subsize(mds->bsize, PARTITION_SPLIT);
+        mds->split[i]           = svt_aom_alloc_md_scan_node(subsize);
+        mds->split[i]->index    = i;
+        convert_to_md_scan(
+            scs, pcs, ctx, mdc_sb_data, leaf_idx, curr_mds_idx, mds->split[i], mi_row + y_idx, mi_col + x_idx);
+    }
+}
+void convert_to_md_scan(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                        const MdcSbData *const mdc_sb_data, uint32_t *leaf_idx, uint32_t *curr_mds_idx, MdScan *mds,
+                        int mi_row, int mi_col) {
+    // Initialize variables used to track blocks
+    uint32_t                   leaf_count      = mdc_sb_data->leaf_count;
+    const EbMdcLeafData *const leaf_data_array = mdc_sb_data->leaf_data_array;
+
+    // Iterate over all blocks which are flagged to be considered
+    uint32_t         blk_idx          = *leaf_idx;
+    uint32_t         base_blk_idx_mds = leaf_data_array[blk_idx].mds_idx;
+    const BlockGeom *blk_geom         = get_blk_geom_mds(scs->blk_geom_mds, *curr_mds_idx);
+
+    // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
+    //pc_tree->block_data[PART_N][0] = &ctx->md_blk_arr_nsq[*curr_mds_idx];
+    //pc_tree->block_data[PART_N][0]->mds_idx = *curr_mds_idx;
+    //pc_tree->block_data[PART_N][0]->split_flag = false;
+    mds->tot_shapes = 0;
+    mds->mds_idx    = *curr_mds_idx;
+    // Test current depth if flagged to be tested
+    if (*curr_mds_idx >= base_blk_idx_mds && blk_idx < leaf_count) {
+        // set to be tested
+        // add shapes
+        // Loop over all shapes set to be tested at the current depth
+        mds->is_child   = leaf_data_array[blk_idx].is_child;
+        mds->tot_shapes = leaf_data_array[blk_idx].tot_shapes;
+        for (uint32_t shape_idx = 0; shape_idx < leaf_data_array[blk_idx].tot_shapes; shape_idx++) {
+            mds->shapes[shape_idx] = leaf_data_array[blk_idx].shapes[shape_idx];
+        }
+    }
+
+    if (*curr_mds_idx >= base_blk_idx_mds && blk_idx < leaf_count)
+        (*leaf_idx)++; // update leaf idx if the current tested depth was one set to be tested
+    // ready for next depth
+    if (*curr_mds_idx < base_blk_idx_mds || mdc_sb_data->split_flag[blk_idx]) {
+        assert(blk_idx < leaf_count);
+        mds->split_flag = 1; // mdc_sb_data->split_flag[blk_idx];
+        *curr_mds_idx += blk_geom->d1_depth_offset;
+        ctx->blk_geom = blk_geom;
+        add_split_part(scs, pcs, ctx, mdc_sb_data, leaf_idx, curr_mds_idx, mds, mi_row, mi_col);
+    } else {
+        mds->split_flag = 0;
+        *curr_mds_idx += blk_geom->ns_depth_offset;
+    }
+
+    return;
+}
+#endif
 
 /* EncDec (Encode Decode) Kernel */
 /*********************************************************************************
@@ -3121,12 +3191,42 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 // PD0 MD Tool(s) : ME_MV(s) as INTER candidate(s), DC as INTRA candidate, luma only, Frequency domain SSE,
                                 // no fast rate (no MVP table generation), MDS0 then MDS3, reduced NIC(s), 1 ref per list,..
 #if OPT_REFACTOR_MD
+#if OPT_BLK_LOOPING
+                                // Convert current structure of flagging blocks to the new method.
+                                // This is temporary, since the new structure would be used from the beginning
+                                // once fully implemented.
+                                MdScan *mds = svt_aom_alloc_md_scan_node(scs->seq_header.sb_size);
+                                {
+                                    uint32_t leaf_idx     = 0;
+                                    uint32_t curr_mds_idx = 0;
+                                    convert_to_md_scan(scs,
+                                                       pcs,
+                                                       ed_ctx->md_ctx,
+                                                       mdc_ptr,
+                                                       &leaf_idx,
+                                                       &curr_mds_idx,
+                                                       mds,
+                                                       md_ctx->sb_origin_y >> 2,
+                                                       md_ctx->sb_origin_x >> 2);
+                                }
+                                svt_aom_init_sb_data(scs, pcs, md_ctx);
+                                PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
+                                svt_aom_pick_partition(scs,
+                                                       pcs,
+                                                       ed_ctx->md_ctx,
+                                                       mds,
+                                                       pc_tree_root,
+                                                       md_ctx->sb_origin_y >> 2,
+                                                       md_ctx->sb_origin_x >> 2);
+                                svt_aom_free_pc_tree_recursive(pc_tree_root);
+                                svt_aom_free_md_scan_recursive(mds);
+#else
                                 uint32_t leaf_idx                  = 0;
                                 uint32_t curr_mds_idx              = 0;
                                 bool     md_early_exit_sq          = 0;
                                 uint32_t next_non_skip_blk_idx_mds = 0;
-                                init_sb_data(scs, pcs, md_ctx);
-                                PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                                svt_aom_init_sb_data(scs, pcs, md_ctx);
+                                PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
                                 svt_aom_pick_partition(scs,
                                                        pcs,
                                                        ed_ctx->md_ctx,
@@ -3138,7 +3238,8 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                        pc_tree_root,
                                                        md_ctx->sb_origin_y >> 2,
                                                        md_ctx->sb_origin_x >> 2);
-                                av1_free_pc_tree_recursive(pc_tree_root);
+                                svt_aom_free_pc_tree_recursive(pc_tree_root);
+#endif
 #else
                                 svt_aom_mode_decision_sb(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
 #endif
@@ -3192,12 +3293,51 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 
                         // PD1 MD Tool(s): default MD Tool(s)
 #if OPT_LPD1_RECURSIVE
-                        PC_TREE *pc_tree_root              = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+#if OPT_BLK_LOOPING
+                        // Convert current structure of flagging blocks to the new method.
+                        // This is temporary, since the new structure would be used from the beginning
+                        // once fully implemented.
+                        MdScan *mds = svt_aom_alloc_md_scan_node(scs->seq_header.sb_size);
+                        {
+                            uint32_t leaf_idx     = 0;
+                            uint32_t curr_mds_idx = 0;
+                            convert_to_md_scan(scs,
+                                               pcs,
+                                               ed_ctx->md_ctx,
+                                               mdc_ptr,
+                                               &leaf_idx,
+                                               &curr_mds_idx,
+                                               mds,
+                                               md_ctx->sb_origin_y >> 2,
+                                               md_ctx->sb_origin_x >> 2);
+                        }
+                        PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
+                        svt_aom_init_sb_data(scs, pcs, md_ctx);
+                        if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
+                            svt_aom_pick_partition_lpd1(scs,
+                                                        pcs,
+                                                        ed_ctx->md_ctx,
+                                                        mds,
+                                                        pc_tree_root,
+                                                        md_ctx->sb_origin_y >> 2,
+                                                        md_ctx->sb_origin_x >> 2);
+                        else
+                            svt_aom_pick_partition(scs,
+                                                   pcs,
+                                                   ed_ctx->md_ctx,
+                                                   mds,
+                                                   pc_tree_root,
+                                                   md_ctx->sb_origin_y >> 2,
+                                                   md_ctx->sb_origin_x >> 2);
+
+                        svt_aom_free_md_scan_recursive(mds);
+#else
+                        PC_TREE *pc_tree_root              = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
                         uint32_t leaf_idx                  = 0;
                         uint32_t curr_mds_idx              = 0;
                         bool     md_early_exit_sq          = 0;
                         uint32_t next_non_skip_blk_idx_mds = 0;
-                        init_sb_data(scs, pcs, md_ctx);
+                        svt_aom_init_sb_data(scs, pcs, md_ctx);
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_pick_partition_lpd1(scs,
                                                         pcs,
@@ -3222,13 +3362,14 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                    pc_tree_root,
                                                    md_ctx->sb_origin_y >> 2,
                                                    md_ctx->sb_origin_x >> 2);
+#endif
 #if !OPT_REFACTOR_ED_EC
-                        av1_free_pc_tree_recursive(pc_tree_root);
+                        svt_aom_free_pc_tree_recursive(pc_tree_root);
 #endif
 #else
 #if OPT_REFACTOR_MD
 #if OPT_REFACTOR_ED_EC
-                        PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                        PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
 #endif
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_mode_decision_sb_light_pd1(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
@@ -3237,9 +3378,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             uint32_t curr_mds_idx              = 0;
                             bool     md_early_exit_sq          = 0;
                             uint32_t next_non_skip_blk_idx_mds = 0;
-                            init_sb_data(scs, pcs, md_ctx);
+                            svt_aom_init_sb_data(scs, pcs, md_ctx);
 #if !OPT_REFACTOR_ED_EC
-                            PC_TREE *pc_tree_root = av1_alloc_pc_tree_node(scs->seq_header.sb_size);
+                            PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
 #endif
                             svt_aom_pick_partition(scs,
                                                    pcs,
@@ -3253,7 +3394,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                    md_ctx->sb_origin_y >> 2,
                                                    md_ctx->sb_origin_x >> 2);
 #if !OPT_REFACTOR_ED_EC
-                            av1_free_pc_tree_recursive(pc_tree_root);
+                            svt_aom_free_pc_tree_recursive(pc_tree_root);
 #endif
                         }
 #else
@@ -3284,7 +3425,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             pcs->sb_max_sq_size[sb_index] = 0;
                         }
                         sb_ptr->final_blk_cnt = 0;
-                        sb_ptr->ptree         = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+                        sb_ptr->ptree         = svt_aom_alloc_partition_tree_node(scs->seq_header.sb_size);
                         svt_aom_encode_sb(scs,
                                           pcs,
                                           ed_ctx,
@@ -3296,7 +3437,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 
 #if !OPT_REFACTOR_EC
                         // TODO: temporarily free here, until data is passed here to entropy coding
-                        av1_free_partition_tree_recursive(sb_ptr->ptree);
+                        svt_aom_free_partition_tree_recursive(sb_ptr->ptree);
                         sb_ptr->ptree = NULL;
 #endif
 #else
@@ -3312,7 +3453,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 ed_ctx->input_samples    = pcs->ppcs->enhanced_pic;
                                 prepare_input_picture(
                                     scs, pcs, ed_ctx, pcs->ppcs->enhanced_pic, sb_origin_x, sb_origin_y);
-                                sb_ptr->ptree = av1_alloc_partition_tree_node(scs->seq_header.sb_size);
+                                sb_ptr->ptree = svt_aom_alloc_partition_tree_node(scs->seq_header.sb_size);
                                 svt_aom_encode_sb(scs,
                                                   pcs,
                                                   ed_ctx,
@@ -3323,7 +3464,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                   md_ctx->sb_origin_x >> 2);
 
                                 // TODO: temporarily free here, until data is passed here to entropy coding
-                                av1_free_partition_tree_recursive(sb_ptr->ptree);
+                                svt_aom_free_partition_tree_recursive(sb_ptr->ptree);
                                 sb_ptr->ptree = NULL;
 #if !OPT_LPD1_RECURSIVE
                             }
@@ -3343,7 +3484,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         }
 #endif
 #if OPT_REFACTOR_ED_EC
-                        av1_free_pc_tree_recursive(pc_tree_root);
+                        svt_aom_free_pc_tree_recursive(pc_tree_root);
 #endif
 #if OPT_REFACTOR_ED_UPDATE
                         // free MD palette info buffer

@@ -5241,7 +5241,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
             write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
         break;
     case PARTITION_SPLIT:
-        for (int i = 0; i < /*SUB_PARTITIONS_SPLIT*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             const int x_idx = (i & 1) * hbs;
             const int y_idx = (i >> 1) * hbs;
             if (mi_row + y_idx >= cm->mi_rows || mi_col + x_idx >= cm->mi_cols)
@@ -5259,7 +5259,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
         write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr);
         break;
     case PARTITION_HORZ_4:
-        for (int i = 0; i < /*SUB_PARTITIONS_PART4*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
             int this_mi_row = mi_row + i * quarter_step;
             if (i > 0 && this_mi_row >= cm->mi_rows) {
                 // Only the last block is able to be outside the picture boundary. If one of the first
@@ -5271,7 +5271,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
         }
         break;
     case PARTITION_VERT_4:
-        for (int i = 0; i < /*SUB_PARTITIONS_PART4*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
             int this_mi_col = mi_col + i * quarter_step;
             if (i > 0 && this_mi_col >= cm->mi_cols) {
                 // Only the last block is able to be outside the picture boundary. If one of the first

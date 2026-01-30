@@ -32,8 +32,32 @@ const uint8_t uni_psy_bias[64] = {
     95, 95, 95, 95, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
 };
 
+#if OPT_BLK_LOOPING
+MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize) {
+    MdScan *mds_node;
+    EB_CALLOC_NO_CHECK(mds_node, 1, sizeof(*mds_node));
+    if (mds_node == NULL)
+        return NULL;
+
+    mds_node->bsize = bsize;
+
+    return mds_node;
+}
+
+void svt_aom_free_md_scan_recursive(MdScan *mds_node) {
+    if (mds_node == NULL)
+        return;
+    for (int i = 0; i < 4; ++i) {
+        if (mds_node->split[i] != NULL) {
+            svt_aom_free_md_scan_recursive(mds_node->split[i]);
+            mds_node->split[i] = NULL;
+        }
+    }
+    EB_FREE(mds_node);
+}
+#endif
 #if OPT_REFACTOR_MD
-PC_TREE *av1_alloc_pc_tree_node(BlockSize bsize) {
+PC_TREE *svt_aom_alloc_pc_tree_node(BlockSize bsize) {
     PC_TREE *pc_tree;
     EB_CALLOC_NO_CHECK(pc_tree, 1, sizeof(*pc_tree));
     if (pc_tree == NULL)
@@ -46,12 +70,12 @@ PC_TREE *av1_alloc_pc_tree_node(BlockSize bsize) {
 }
 
 // TODO: later may need to dealloc data structs here
-void av1_free_pc_tree_recursive(PC_TREE *pc_tree) {
+void svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree) {
     if (pc_tree == NULL)
         return;
     for (int i = 0; i < 4; ++i) {
         if (pc_tree->split[i] != NULL) {
-            av1_free_pc_tree_recursive(pc_tree->split[i]);
+            svt_aom_free_pc_tree_recursive(pc_tree->split[i]);
             pc_tree->split[i] = NULL;
         }
     }
@@ -59,7 +83,7 @@ void av1_free_pc_tree_recursive(PC_TREE *pc_tree) {
 }
 #endif
 #if OPT_REFACTOR_ED_EC
-PARTITION_TREE *av1_alloc_partition_tree_node(BlockSize bsize) {
+PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize) {
     PARTITION_TREE *ptree;
     EB_CALLOC_NO_CHECK(ptree, 1, sizeof(*ptree));
     if (ptree == NULL)
@@ -72,12 +96,12 @@ PARTITION_TREE *av1_alloc_partition_tree_node(BlockSize bsize) {
 }
 
 // TODO: later may need to dealloc data structs here
-void av1_free_partition_tree_recursive(PARTITION_TREE *ptree) {
+void svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree) {
     if (ptree == NULL)
         return;
     for (int i = 0; i < 4; ++i) {
         if (ptree->sub_tree[i] != NULL) {
-            av1_free_partition_tree_recursive(ptree->sub_tree[i]);
+            svt_aom_free_partition_tree_recursive(ptree->sub_tree[i]);
             ptree->sub_tree[i] = NULL;
         }
     }

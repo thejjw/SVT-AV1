@@ -35,17 +35,27 @@ void svt_aom_mode_decision_sb(SequenceControlSet* scs, PictureControlSet* pcs, M
                               const MdcSbData* const mdcResultTbPtr);
 #endif
 #if OPT_REFACTOR_MD
-void init_sb_data(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx);
+void svt_aom_init_sb_data(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx);
+#if OPT_BLK_LOOPING
+bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
+                            PC_TREE* pc_tree, int mi_row, int mi_col);
+#else
 bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                             const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx,
                             bool* md_early_exit_sq, uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree, int mi_row,
                             int mi_col);
 #endif
+#endif
 #if OPT_LPD1_RECURSIVE
+#if OPT_BLK_LOOPING
+void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
+                                 PC_TREE* pc_tree, int mi_row, int mi_col);
+#else
 void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                  const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx,
                                  bool* md_early_exit_sq, uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree,
                                  int mi_row, int mi_col);
+#endif
 #endif
 #if OPT_REFACTOR_ED_EC
 void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx, SuperBlock* sb_ptr,
