@@ -859,6 +859,24 @@ typedef struct MdcSbData {
     // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
     uint8_t *consider_block;
 } MdcSbData;
+#if OPT_BLK_LOOPING
+// struct that specifies which blocks should be tested during MD
+typedef struct MdScan {
+    // array containing all shapes to be tested for the current SQ block
+    Part shapes[PART_S];
+    // total number of shapes to test for the current SQ block
+    uint8_t        tot_shapes;
+    struct MdScan *split[4];
+    int            index;
+    BlockSize      bsize;
+    uint32_t       mds_idx; // for indexing blk_geom and assigning blk_ptr
+    bool           split_flag;
+    bool           is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
+} MdScan;
+
+MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize);
+void    svt_aom_free_md_scan_recursive(MdScan *mds_node);
+#endif
 #if OPT_REFACTOR_ED_EC
 // TODO: Align field names between PC_TREE and PARTITION_TREE (e.g. partition vs. partitioning, split vs. sub_tree)
 /*! \brief Stores partition structure of the current block. */
@@ -882,8 +900,8 @@ typedef struct PARTITION_TREE {
     int index;
 } PARTITION_TREE;
 
-PARTITION_TREE *av1_alloc_partition_tree_node(BlockSize bsize);
-void            av1_free_partition_tree_recursive(PARTITION_TREE *ptree);
+PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize);
+void            svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree);
 #endif
 #if OPT_REFACTOR_MD
 typedef struct RD_STATS {
@@ -915,8 +933,8 @@ typedef struct PC_TREE {
     int             index;
 } PC_TREE;
 
-PC_TREE *av1_alloc_pc_tree_node(BlockSize bsize);
-void     av1_free_pc_tree_recursive(PC_TREE *pc_tree);
+PC_TREE *svt_aom_alloc_pc_tree_node(BlockSize bsize);
+void     svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree);
 #endif
 typedef struct ModeDecisionContext {
     EbDctor dctor;

@@ -851,6 +851,18 @@ static const uint8_t mi_size_high[BlockSizeS_ALL] = {1, 2,  1,  2,  4,  2, 4, 8,
 // 4X4, 8X8, 16X16, 32X32, 64X64, 128X128
 #define SQR_BLOCK_SIZES 6
 
+// Number of sub-partitions in rectangular partition types.
+#define SUB_PARTITIONS_RECT 2
+
+// Number of sub-partitions in split partition type.
+#define SUB_PARTITIONS_SPLIT 4
+
+// Number of sub-partitions in AB partition types.
+#define SUB_PARTITIONS_AB 3
+
+// Number of sub-partitions in 4-way partition types.
+#define SUB_PARTITIONS_PART4 4
+
 // A compressed version of the Partition_Subsize table in the spec (9.3.
 // Conversion tables), for square block sizes only.
 /* clang-format off */

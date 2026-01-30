@@ -2622,6 +2622,7 @@ void svt_aom_compute_depth_costs_md_skip_light_pd0(PictureParentControlSet *pcs,
 
     *above_depth_cost = ctx->md_blk_arr_nsq[above_depth_mds].cost;
 }
+#if !OPT_BLK_LOOPING
 void svt_aom_compute_depth_costs_md_skip(ModeDecisionContext *ctx, PictureParentControlSet *pcs,
                                          uint32_t above_depth_mds, uint32_t step, uint64_t *above_depth_cost,
                                          uint64_t *curr_depth_cost) {
@@ -2673,3 +2674,4 @@ void svt_aom_compute_depth_costs_md_skip(ModeDecisionContext *ctx, PictureParent
     *curr_depth_cost += above_split_rate;
     *above_depth_cost = ctx->md_blk_arr_nsq[above_depth_mds].cost;
 }
+#endif
