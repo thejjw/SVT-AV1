@@ -1681,7 +1681,15 @@ static void build_cand_block_array(SequenceControlSet *scs, PictureControlSet *p
             ? 0
             : 1;
         // Only 8x8 and 16x16 block(s) are supported if lossless
+#if OPT_BLK_LOOPING
+        is_block_tagged = pcs->mimic_only_tx_4x4 && blk_geom->sq_size > 8 &&
+                (ctx->sb_origin_x + blk_geom->org_x < pcs->ppcs->aligned_width &&
+                 ctx->sb_origin_y + blk_geom->org_y < pcs->ppcs->aligned_height)
+            ? 0
+            : is_block_tagged;
+#else
         is_block_tagged = pcs->mimic_only_tx_4x4 && blk_geom->sq_size > 8 ? 0 : is_block_tagged;
+#endif
         // SQ/NSQ block(s) filter based on the block validity
         if (is_block_tagged) {
             if (first_stage || results_ptr->consider_block[blk_index]) {
@@ -3165,7 +3173,38 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 
                                 // Build the t=0 cand_block_array
                                 build_cand_block_array(scs, pcs, md_ctx, true);
+#if OPT_RECURSIVE_LPD0
+                                // Convert current structure of flagging blocks to the new method.
+                                // This is temporary, since the new structure would be used from the beginning
+                                // once fully implemented.
+                                MdScan *mds = svt_aom_alloc_md_scan_node(scs->seq_header.sb_size);
+                                {
+                                    uint32_t leaf_idx     = 0;
+                                    uint32_t curr_mds_idx = 0;
+                                    convert_to_md_scan(scs,
+                                                       pcs,
+                                                       ed_ctx->md_ctx,
+                                                       mdc_ptr,
+                                                       &leaf_idx,
+                                                       &curr_mds_idx,
+                                                       mds,
+                                                       md_ctx->sb_origin_y >> 2,
+                                                       md_ctx->sb_origin_x >> 2);
+                                }
+                                svt_aom_init_sb_data(scs, pcs, md_ctx);
+                                PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
+                                svt_aom_pick_partition_lpd0(scs,
+                                                            pcs,
+                                                            ed_ctx->md_ctx,
+                                                            mds,
+                                                            pc_tree_root,
+                                                            md_ctx->sb_origin_y >> 2,
+                                                            md_ctx->sb_origin_x >> 2);
+                                svt_aom_free_pc_tree_recursive(pc_tree_root);
+                                svt_aom_free_md_scan_recursive(mds);
+#else
                                 svt_aom_mode_decision_sb_light_pd0(scs, pcs, ed_ctx->md_ctx, mdc_ptr);
+#endif
                                 // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
                                 // Reset neighnor information to current SB @ position (0,0)
                                 if (!ed_ctx->md_ctx->skip_intra)
