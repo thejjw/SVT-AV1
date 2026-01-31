@@ -24,8 +24,13 @@ extern "C" {
      * ModeDecisionSb
      *   performs CL (SB)
      *******************************************/
+#if OPT_RECURSIVE_LPD0
+bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
+                                 PC_TREE* pc_tree, int mi_row, int mi_col);
+#else
 void svt_aom_mode_decision_sb_light_pd0(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                         const MdcSbData* const mdcResultTbPtr);
+#endif
 #if !OPT_LPD1_RECURSIVE
 void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                         const MdcSbData* const mdcResultTbPtr);

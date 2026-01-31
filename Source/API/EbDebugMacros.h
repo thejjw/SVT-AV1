@@ -41,6 +41,7 @@ extern "C" {
 #define OPT_REFACTOR_ED_UPDATE      1 // Change encdec update functions to loop over partition recursively
 #define OPT_REFACTOR_EC             1 // Update entropy coding to use recursive looping and use ptree data structure
 #define OPT_BLK_LOOPING             1 // Update how blocks are signaled to be tested/looped over in MD
+#define OPT_RECURSIVE_LPD0          1 // Update LPD0 path to use recursive infrastructure
 
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
