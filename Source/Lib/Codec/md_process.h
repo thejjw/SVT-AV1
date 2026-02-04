@@ -842,6 +842,7 @@ typedef struct CompoundPredictionStore {
     Mv       pred1_mv[4];
 } CompoundPredictionStore;
 
+#if !OPT_BLOCK_TRACKING
 typedef struct EbMdcLeafData {
     uint32_t mds_idx;
     // array containing all shapes to be tested for the current SQ block
@@ -859,6 +860,7 @@ typedef struct MdcSbData {
     // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
     uint8_t *consider_block;
 } MdcSbData;
+#endif
 #if OPT_BLK_LOOPING
 // struct that specifies which blocks should be tested during MD
 typedef struct MdScan {
@@ -867,11 +869,12 @@ typedef struct MdScan {
     // total number of shapes to test for the current SQ block
     uint8_t        tot_shapes;
     struct MdScan *split[4];
-    int            index;
-    BlockSize      bsize;
-    uint32_t       mds_idx; // for indexing blk_geom and assigning blk_ptr
-    bool           split_flag;
-    bool           is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
+    int            index; // should be written once when struct is initialized, then never overwritten
+    BlockSize      bsize; // should be written once when struct is initialized, then never overwritten
+    uint32_t
+        mds_idx; // for indexing blk_geom and assigning blk_ptr, should be written once when struct is initialized, then never overwritten
+    bool split_flag;
+    bool is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
 } MdScan;
 
 MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize);
@@ -950,10 +953,17 @@ typedef struct ModeDecisionContext {
     BlkStruct                    *md_blk_arr_nsq;
     uint8_t                      *avail_blk_flag;
     uint8_t                      *cost_avail;
-    MdcSbData                     mdc_sb_array;
-    bool                          copied_neigh_arrays;
-    MvReferenceFrame              ref_frame_type_arr[MODE_CTX_REF_FRAMES];
-    uint8_t                       tot_ref_frame_types;
+#if OPT_BLOCK_TRACKING
+    // Used to track which blocks should be tested in MD in each PD stage
+    MdScan *mds;
+    // Used to store results of MD
+    PC_TREE *pc_tree;
+#else
+    MdcSbData mdc_sb_array;
+#endif
+    bool             copied_neigh_arrays;
+    MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
+    uint8_t          tot_ref_frame_types;
 
     NeighborArrayUnit *recon_neigh_y;
     NeighborArrayUnit *recon_neigh_cb;

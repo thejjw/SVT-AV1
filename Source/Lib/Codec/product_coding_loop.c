@@ -10115,19 +10115,19 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
     assert(pc_tree->block_data[PART_N][0]->mds_idx == mds->mds_idx);
 
     const uint32_t full_lambda      = ctx->full_sb_lambda_md[EB_8_BIT_MD];
-    const int64_t  above_split_rate = svt_aom_partition_rate_cost_new(pcs->ppcs,
-                                                                     pc_tree->block_size,
-                                                                     mi_row,
-                                                                     mi_col,
-                                                                     ctx->md_rate_est_ctx,
-                                                                     PARTITION_SPLIT,
-                                                                     0, //left_neighbor_partition,
-                                                                     0); // above_neighbor_partition);
-    int64_t        split_cost       = RDCOST(full_lambda, above_split_rate, 0);
-    const int64_t  split_rate_cost  = split_cost;
+    int64_t        above_split_rate = svt_aom_partition_rate_cost_new(pcs->ppcs,
+                                                               pc_tree->block_size,
+                                                               mi_row,
+                                                               mi_col,
+                                                               ctx->md_rate_est_ctx,
+                                                               PARTITION_SPLIT,
+                                                               0, //left_neighbor_partition,
+                                                               0); // above_neighbor_partition);
+    const int64_t  split_rate_cost  = RDCOST(full_lambda, above_split_rate, 0);
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
     if (!pcs->ppcs->use_accurate_part_ctx)
-        split_cost *= 2;
+        above_split_rate *= 2;
+    int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
@@ -10850,19 +10850,20 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
                                      ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
     const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                                           : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-    const int64_t  above_split_rate   = svt_aom_partition_rate_cost_new(pcs->ppcs,
-                                                                     pc_tree->block_size,
-                                                                     mi_row,
-                                                                     mi_col,
-                                                                     ctx->md_rate_est_ctx,
-                                                                     PARTITION_SPLIT,
-                                                                     left_neighbor_partition,
-                                                                     above_neighbor_partition);
-    int64_t        split_cost         = RDCOST(full_lambda, above_split_rate, 0);
-    const int64_t  split_rate_cost    = split_cost;
+    int64_t        above_split_rate   = svt_aom_partition_rate_cost_new(pcs->ppcs,
+                                                               pc_tree->block_size,
+                                                               mi_row,
+                                                               mi_col,
+                                                               ctx->md_rate_est_ctx,
+                                                               PARTITION_SPLIT,
+                                                               left_neighbor_partition,
+                                                               above_neighbor_partition);
+
+    const int64_t split_rate_cost = RDCOST(full_lambda, above_split_rate, 0);
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
     if (!pcs->ppcs->use_accurate_part_ctx)
-        split_cost *= 2;
+        above_split_rate *= 2;
+    int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
@@ -10885,7 +10886,11 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
         }
 
         // Check current depth cost; if larger than parent, exit early
-        if (ctx->cost_avail[mds->mds_idx]) {
+        // TODO: The (mds->split[i]->tot_shapes || !blk_has_valid_shape) check is put there only to maintain identical
+        // bitstreams to before the refactoring changes. The check should be removed in the future as it is arbitrary.
+        const bool blk_has_valid_shape =
+            mi_row + y_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_cols;
+        if (ctx->cost_avail[mds->mds_idx] && (mds->split[i]->tot_shapes || !blk_has_valid_shape)) {
             assert(!(ctx->pd_pass == PD_PASS_1 && ctx->pred_depth_only) &&
                    "If PD1 and pred depth only, parent depth cost should be unavailable");
             const uint32_t th = (i == 0)
