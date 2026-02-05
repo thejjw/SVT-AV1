@@ -47,6 +47,7 @@ extern "C" {
 #define CLN_REMOVE_COMP_SB          1 // Remove is_complete_sb from sb_geom
 #define CLN_REMOVE_BLK_ALLOWED      1 // Remove block_is_allowed from sb_geom
 #define OPT_REDUCE_COPIES           1 // Move copy actions for neighbour arrays to avoid unnecessary copies
+#define OPT_ALLOC_PC_TREE_CTX       1 // Alloc pc_tree once under the ctx at init time
 
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one

@@ -10247,10 +10247,11 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
 
+#if !OPT_ALLOC_PC_TREE_CTX
         const BlockSize subsize  = get_partition_subsize(pc_tree->block_size, PARTITION_SPLIT);
         pc_tree->split[i]        = svt_aom_alloc_pc_tree_node(subsize);
         pc_tree->split[i]->index = i;
-
+#endif
         // if block fully outside pic, don't process
         // TODO: move before allocation after updating depth refinement. Encdec/EC should not try accessing out of bounds blocks
         if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) {
@@ -10381,6 +10382,9 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
     pc_tree->block_data[PART_N][0]->split_flag = false;
+#if OPT_ALLOC_PC_TREE_CTX
+    pc_tree->rdc.valid = 0;
+#endif
 
     // Iterate over all blocks which are flagged to be considered
     if (mds->tot_shapes) {
@@ -10556,9 +10560,11 @@ static void test_split_partition_lpd1(SequenceControlSet *scs, PictureControlSet
         // if block fully outside pic, don't process
         if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
             continue;
+#if !OPT_ALLOC_PC_TREE_CTX
         const BlockSize subsize  = get_partition_subsize(pc_tree->block_size, PARTITION_SPLIT);
         pc_tree->split[i]        = svt_aom_alloc_pc_tree_node(subsize);
         pc_tree->split[i]->index = i;
+#endif
         svt_aom_pick_partition_lpd1(scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
     }
     pc_tree->block_data[PART_N][0]->split_flag = true;
@@ -10584,6 +10590,9 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
     pc_tree->block_data[PART_N][0]->split_flag = false;
+#if OPT_ALLOC_PC_TREE_CTX
+    pc_tree->rdc.valid = 0;
+#endif
 
     // Test current depth if flagged to be tested
     if (mds->tot_shapes) {
@@ -11104,9 +11113,11 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
 
+#if !OPT_ALLOC_PC_TREE_CTX
         const BlockSize subsize  = get_partition_subsize(pc_tree->block_size, PARTITION_SPLIT);
         pc_tree->split[i]        = svt_aom_alloc_pc_tree_node(subsize);
         pc_tree->split[i]->index = i;
+#endif
 
         // if block fully outside pic, don't process
         // TODO: move before allocation after updating depth refinement. Encdec/EC should not try accessing out of bounds blocks
@@ -11401,6 +11412,9 @@ bool svt_aom_pick_partition(SequenceControlSet *scs, PictureControlSet *pcs, Mod
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
     pc_tree->block_data[PART_N][0]->split_flag = false;
+#if OPT_ALLOC_PC_TREE_CTX
+    pc_tree->rdc.valid = 0;
+#endif
 #if CLN_MD_PATHS
     // Update the left and above partition neighbours for the square block, which are used to derive
     // the partition rate

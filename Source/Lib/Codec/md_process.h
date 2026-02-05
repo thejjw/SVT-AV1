@@ -877,8 +877,10 @@ typedef struct MdScan {
     bool is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
 } MdScan;
 
+#if !OPT_BLOCK_TRACKING
 MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize);
 void    svt_aom_free_md_scan_recursive(MdScan *mds_node);
+#endif
 #endif
 #if OPT_REFACTOR_ED_EC
 // TODO: Align field names between PC_TREE and PARTITION_TREE (e.g. partition vs. partitioning, split vs. sub_tree)
@@ -908,8 +910,6 @@ void            svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree);
 #endif
 #if OPT_REFACTOR_MD
 typedef struct RD_STATS {
-    int     rate;
-    int64_t dist;
     int64_t rd_cost;
     bool    valid;
 } RD_STATS;
@@ -924,8 +924,10 @@ typedef struct PC_TREE {
     int             index;
 } PC_TREE;
 
+#if !OPT_ALLOC_PC_TREE_CTX
 PC_TREE *svt_aom_alloc_pc_tree_node(BlockSize bsize);
 void     svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree);
+#endif
 #endif
 typedef struct ModeDecisionContext {
     EbDctor dctor;
@@ -944,10 +946,12 @@ typedef struct ModeDecisionContext {
 #if OPT_BLOCK_TRACKING
     // Used to track which blocks should be tested in MD in each PD stage
     MdScan *mds;
-    // Used to store results of MD
-    PC_TREE *pc_tree;
 #else
     MdcSbData mdc_sb_array;
+#endif
+#if OPT_ALLOC_PC_TREE_CTX
+    // Used to store results of MD
+    PC_TREE* pc_tree;
 #endif
     bool             copied_neigh_arrays;
     MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
