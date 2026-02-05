@@ -212,8 +212,14 @@ typedef struct BlkStruct {
     PartitionType part;
     uint16_t      best_d1_blk;
 
+#if CLN_MD_PATHS
+    // Partition contexts for the current block, derived from the neighbouring blocks' partitions
+    PartitionContextType left_part_ctx;
+    PartitionContextType above_part_ctx;
+#else
     PartitionContextType left_neighbor_partition;
     PartitionContextType above_neighbor_partition;
+#endif
 
     // wm
     WarpedMotionParams wm_params_l0;
