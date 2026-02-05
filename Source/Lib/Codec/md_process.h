@@ -918,8 +918,8 @@ typedef struct PC_TREE {
     PartitionType partitioning;
     BlockSize     block_size;
 
-    RD_STATS   rdc;
-    BlkStruct *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
+    RD_STATS        rdc;
+    BlkStruct      *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
     struct PC_TREE *split[4];
     int             index;
 } PC_TREE;

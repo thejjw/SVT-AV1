@@ -2414,8 +2414,8 @@ uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDe
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->block_data[PART_N][0]->best_d1_blk = first_blk_idx;
 
-        pc_tree->partitioning    = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->rdc.rd_cost     = tot_cost;
+        pc_tree->partitioning = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->rdc.rd_cost  = tot_cost;
     }
     return tot_cost;
 }

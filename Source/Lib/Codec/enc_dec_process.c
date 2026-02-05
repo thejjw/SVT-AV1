@@ -1691,7 +1691,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
                                                                     ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].above_part_ctx);
             const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
 #else
-            const uint64_t split_cost  = svt_aom_partition_rate_cost(pcs->ppcs,
+            const uint64_t split_cost = svt_aom_partition_rate_cost(pcs->ppcs,
                                                                     ctx,
                                                                     parent_depth_idx_mds,
                                                                     PARTITION_SPLIT,
@@ -1714,7 +1714,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
 
 #if CLN_MD_PATHS
             // partition contexts should be set if LPD0 was used, because they may not be set in the LPD0 path
-            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].left_part_ctx = 0;
+            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].left_part_ctx  = 0;
             ctx->md_blk_arr_nsq[blk_geom->sqi_mds].above_part_ctx = 0;
 #else
             // Parent neighbour arrays should be set in case parent depth was not allowed
@@ -1725,7 +1725,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
 #if CLN_MD_PATHS
-        const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+        const uint64_t split_rate = svt_aom_partition_rate_cost(pcs->ppcs,
                                                                 blk_geom->bsize,
                                                                 (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
                                                                 (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
@@ -1735,7 +1735,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
                                                                 ctx->blk_ptr->above_part_ctx);
         const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
 #else
-        const uint64_t split_cost  = svt_aom_partition_rate_cost(pcs->ppcs,
+        const uint64_t split_cost = svt_aom_partition_rate_cost(pcs->ppcs,
                                                                 ctx,
                                                                 blk_geom->sqi_mds,
                                                                 PARTITION_SPLIT,
@@ -1895,14 +1895,15 @@ static void is_child_to_current_deviation_small(PictureControlSet *pcs, ModeDeci
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
 #if CLN_MD_PATHS
-        const uint64_t child_split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                blk_geom->bsize,
-                                                                (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
-                                                                (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
-                                                                ctx->md_rate_est_ctx,
-                                                                PARTITION_SPLIT,
-                                                                ctx->blk_ptr->left_part_ctx,
-                                                                ctx->blk_ptr->above_part_ctx);
+        const uint64_t child_split_rate = svt_aom_partition_rate_cost(
+            pcs->ppcs,
+            blk_geom->bsize,
+            (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
+            (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
+            ctx->md_rate_est_ctx,
+            PARTITION_SPLIT,
+            ctx->blk_ptr->left_part_ctx,
+            ctx->blk_ptr->above_part_ctx);
         child_cost += RDCOST(full_lambda, child_split_rate, 0);
 #else
         child_cost += svt_aom_partition_rate_cost(
