@@ -395,10 +395,10 @@ typedef struct SbGeom {
     uint8_t  width;
     uint8_t  height;
 #if !CLN_REMOVE_COMP_SB
-    uint8_t  is_complete_sb;
+    uint8_t is_complete_sb;
 #endif
 #if !CLN_REMOVE_BLK_ALLOWED
-    bool    *block_is_allowed;
+    bool *block_is_allowed;
 #endif
 } SbGeom;
 
@@ -1149,9 +1149,9 @@ typedef struct PictureControlSetInitData {
     uint8_t                  speed_control;
     int8_t                   hbd_md;
 #if !CLN_REMOVE_BLK_ALLOWED
-    uint8_t                  over_boundary_block_mode;
+    uint8_t over_boundary_block_mode;
 #endif
-    uint8_t                  mfmv;
+    uint8_t mfmv;
     // init value for child pcs
     uint8_t tile_row_count;
     uint8_t tile_column_count;
@@ -1217,15 +1217,15 @@ void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool *gm_need_full, bool 
 EbErrorType b64_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, B64Geom **b64_geoms);
 EbErrorType sb_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms);
 #if CLN_REMOVE_BLK_ALLOWED
-EbErrorType alloc_sb_geoms(SbGeom** geom, int width, int height);
+EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height);
 #else
 EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks);
 #endif
-void        free_sb_geoms(SbGeom *geom);
+void free_sb_geoms(SbGeom *geom);
 #if CLN_REMOVE_BLK_ALLOWED
-void        copy_sb_geoms(SbGeom* dst_geom, SbGeom* src_geom, uint16_t width, uint16_t height);
+void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height);
 #else
-void        copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height, int num_blocks);
+void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height, int num_blocks);
 #endif
 
 #ifdef __cplusplus
