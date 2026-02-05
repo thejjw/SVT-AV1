@@ -32,6 +32,7 @@ const uint8_t uni_psy_bias[64] = {
     95, 95, 95, 95, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
 };
 
+#if !OPT_BLOCK_TRACKING
 #if OPT_BLK_LOOPING
 MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize) {
     MdScan *mds_node;
@@ -56,6 +57,8 @@ void svt_aom_free_md_scan_recursive(MdScan *mds_node) {
     EB_FREE(mds_node);
 }
 #endif
+#endif
+#if !OPT_ALLOC_PC_TREE_CTX
 #if OPT_REFACTOR_MD
 PC_TREE *svt_aom_alloc_pc_tree_node(BlockSize bsize) {
     PC_TREE *pc_tree;
@@ -81,6 +84,7 @@ void svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree) {
     }
     EB_FREE(pc_tree);
 }
+#endif
 #endif
 #if OPT_REFACTOR_ED_EC
 PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize) {
@@ -166,6 +170,9 @@ static void mode_decision_context_dctor(EbPtr p) {
 #if OPT_BLOCK_TRACKING
     EB_FREE_ARRAY(obj->mds);
 #endif
+#if OPT_ALLOC_PC_TREE_CTX
+    EB_FREE_ARRAY(obj->pc_tree);
+#endif
     EB_FREE_ARRAY(obj->avail_blk_flag);
     EB_FREE_ARRAY(obj->cost_avail);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
@@ -240,6 +247,29 @@ static void setup_mds(SequenceControlSet* scs, MdScan *mds, uint32_t *mds_idx, i
         }
     } else {
         *mds_idx += blk_geom->ns_depth_offset;
+    }
+}
+#endif
+#if OPT_ALLOC_PC_TREE_CTX
+static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+    pc_tree->block_size = bsize;
+    pc_tree->index = index;
+
+    // If applicable, add split depths
+    const int        sq_size = block_size_wide[bsize];
+    if (sq_size > min_sq_size) {
+        const BlockSize subsize = get_partition_subsize(bsize, PARTITION_SPLIT);
+        const int       sq_subsize = block_size_wide[subsize];
+        int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
+        int             blocks_to_skip = 0;
+
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+            blocks_to_skip += blocks_per_subdepth;
+
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+            pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
+            setup_pc_tree(pc_tree->split[i], i, subsize, min_sq_size);
+        }
     }
 }
 #endif
@@ -490,6 +520,10 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     EB_CALLOC_ARRAY(ctx->mds, blocks_to_alloc);
     uint32_t mds_idx = 0;
     setup_mds(scs, ctx->mds, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);
+#if OPT_ALLOC_PC_TREE_CTX
+    EB_CALLOC_ARRAY(ctx->pc_tree, blocks_to_alloc);
+    setup_pc_tree(ctx->pc_tree, 0, scs->seq_header.sb_size, min_bsize);
+#endif
 #else
     EB_MALLOC_ARRAY(ctx->mdc_sb_array.leaf_data_array, block_max_count_sb);
     EB_MALLOC_ARRAY(ctx->mdc_sb_array.split_flag, block_max_count_sb);
