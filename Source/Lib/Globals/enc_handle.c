@@ -3897,10 +3897,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // 0: Do not use boundary pixels in the restoration filter search.
     scs->use_boundaries_in_rest_search = 0;
 
+#if !CLN_REMOVE_BLK_ALLOWED
     // Set over_boundary_block_mode     Settings
     // 0                            0: not allowed
     // 1                            1: allowed
     scs->over_boundary_block_mode = 1;
+#endif
     svt_aom_set_mfmv_config(scs);
 
     uint8_t list0_only_base_lvl = 0;

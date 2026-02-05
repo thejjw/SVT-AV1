@@ -43,6 +43,9 @@ extern "C" {
 #define OPT_BLK_LOOPING             1 // Update how blocks are signaled to be tested/looped over in MD
 #define OPT_RECURSIVE_LPD0          1 // Update LPD0 path to use recursive infrastructure
 #define OPT_BLOCK_TRACKING          1 // Update build_cand_block_array and perform_pred_depth_refinement
+#define CLN_MD_PATHS                1 // General cleanup
+#define CLN_REMOVE_COMP_SB          1 // Remove is_complete_sb from sb_geom
+#define CLN_REMOVE_BLK_ALLOWED      1 // Remove block_is_allowed from sb_geom
 
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
