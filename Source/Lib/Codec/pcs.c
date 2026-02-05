@@ -1540,7 +1540,7 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
 #define NUM_BLOCK_IS_ALLOWED(w, h) ((w) + (h) - 1 + 1)
 #endif
 #if CLN_REMOVE_BLK_ALLOWED
-EbErrorType alloc_sb_geoms(SbGeom** geom, int width, int height) {
+EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height) {
 #else
 EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks) {
 #endif
@@ -1585,7 +1585,7 @@ void free_sb_geoms(SbGeom *geom) {
 }
 
 #if CLN_REMOVE_BLK_ALLOWED
-void copy_sb_geoms(SbGeom* dst_geom, SbGeom* src_geom, uint16_t width, uint16_t height) {
+void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height) {
 #else
 void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height, int num_blocks) {
     memcpy(dst_geom[0].block_is_allowed,
@@ -1595,9 +1595,9 @@ void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t 
     for (int i = 0; i < width * height; i++) {
 #if !CLN_REMOVE_BLK_ALLOWED
         // preserve dynamic pointer
-        bool *block_is_allowed       = dst_geom[i].block_is_allowed;
+        bool *block_is_allowed = dst_geom[i].block_is_allowed;
 #endif
-        dst_geom[i]                  = src_geom[i];
+        dst_geom[i] = src_geom[i];
 #if !CLN_REMOVE_BLK_ALLOWED
         dst_geom[i].block_is_allowed = block_is_allowed;
 #endif
@@ -1611,7 +1611,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
     free_sb_geoms(*sb_geoms);
     EbErrorType ret = alloc_sb_geoms(sb_geoms, picture_sb_width, picture_sb_height);
 #else
-    uint16_t max_block_count   = scs->max_block_cnt;
+    uint16_t max_block_count = scs->max_block_cnt;
 
     free_sb_geoms(*sb_geoms);
     EbErrorType ret = alloc_sb_geoms(sb_geoms, picture_sb_width, picture_sb_height, max_block_count);

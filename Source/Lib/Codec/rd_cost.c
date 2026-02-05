@@ -1758,17 +1758,18 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, 
  * partition type for a given block.
  */
 #if CLN_MD_PATHS
-int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSize bsize, const int mi_row,
+int64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
 #else
 int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
 #endif
-                                        const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
+                                    const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
 #if OPT_BLK_LOOPING
-                                        const PartitionContextType left_ctx,
+                                    const PartitionContextType left_ctx,
 #else
                                         bool use_accurate_part_ctx, const PartitionContextType left_ctx,
 #endif
-                                        const PartitionContextType above_ctx) {
+                                    const PartitionContextType above_ctx) {
+
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
     assert(bsize < BlockSizeS_ALL);
     const bool is_partition_point = (bsize >= BLOCK_8X8);
@@ -1876,7 +1877,7 @@ uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionC
         ? 0
         : ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition;
 #endif
-    const int                  bsl       = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
+    const int bsl = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
     assert(bsl >= 0);
 
     const int      above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;

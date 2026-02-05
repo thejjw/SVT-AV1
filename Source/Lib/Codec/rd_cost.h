@@ -40,13 +40,13 @@ void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, M
 
 #if OPT_REFACTOR_MD
 #if CLN_MD_PATHS
-int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSize bsize, const int mi_row,
+int64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
 #else
 int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
 #endif
-                                        const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
+                                    const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
 #if OPT_BLK_LOOPING
-                                        const PartitionContextType left_ctx, const PartitionContextType above_ctx);
+                                    const PartitionContextType left_ctx, const PartitionContextType above_ctx);
 #else
                                         bool use_accurate_part_ctx, const PartitionContextType left_ctx,
                                         const PartitionContextType above_ctx);
