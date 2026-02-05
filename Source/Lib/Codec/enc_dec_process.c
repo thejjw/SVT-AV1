@@ -3808,8 +3808,10 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             // PD0 doesn't have a fixed partition structure, as the main purpose of PD0
                             // is to determine a prediction for the final prediction structure
                             md_ctx->fixed_partition = false;
+#if !OPT_ALLOC_PC_TREE_CTX
 #if OPT_BLOCK_TRACKING
                             PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
+#endif
 #endif
                             // skip_intra much be true for non-I_SLICE pictures to use light_pd0 path
                             if (md_ctx->lpd0_ctrls.pd0_level > REGULAR_PD0) {
@@ -3862,7 +3864,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #else
                                                             mds,
 #endif
+#if OPT_ALLOC_PC_TREE_CTX
+                                                            md_ctx->pc_tree,
+#else
                                                             pc_tree_root,
+#endif
                                                             md_ctx->sb_origin_y >> 2,
                                                             md_ctx->sb_origin_x >> 2);
 #if !OPT_BLOCK_TRACKING
@@ -3933,7 +3939,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #else
                                                        mds,
 #endif
+#if OPT_ALLOC_PC_TREE_CTX
+                                                       md_ctx->pc_tree,
+#else
                                                        pc_tree_root,
+#endif
                                                        md_ctx->sb_origin_y >> 2,
                                                        md_ctx->sb_origin_x >> 2);
 #if !OPT_BLOCK_TRACKING
@@ -3984,15 +3994,21 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #if OPT_BLOCK_TRACKING
                             perform_pred_depth_refinement(pcs,
                                                           ed_ctx->md_ctx,
+#if OPT_ALLOC_PC_TREE_CTX
+                                                          md_ctx->pc_tree,
+#else
                                                           pc_tree_root,
+#endif
                                                           md_ctx->mds,
                                                           md_ctx->sb_origin_y >> 2,
                                                           md_ctx->sb_origin_x >> 2);
 #else
                             perform_pred_depth_refinement(scs, pcs, ed_ctx->md_ctx, sb_index);
 #endif
+#if !OPT_ALLOC_PC_TREE_CTX
 #if OPT_BLOCK_TRACKING
                             svt_aom_free_pc_tree_recursive(pc_tree_root);
+#endif
 #endif
                         }
                         // [PD_PASS_1] Signal(s) derivation
@@ -4054,7 +4070,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                md_ctx->sb_origin_x >> 2);
                         }
 #endif
+#if !OPT_ALLOC_PC_TREE_CTX
                         PC_TREE *pc_tree_root = svt_aom_alloc_pc_tree_node(scs->seq_header.sb_size);
+#endif
                         svt_aom_init_sb_data(scs, pcs, md_ctx);
                         if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
                             svt_aom_pick_partition_lpd1(scs,
@@ -4065,7 +4083,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #else
                                                         mds,
 #endif
+#if OPT_ALLOC_PC_TREE_CTX
+                                                        md_ctx->pc_tree,
+#else
                                                         pc_tree_root,
+#endif
                                                         md_ctx->sb_origin_y >> 2,
                                                         md_ctx->sb_origin_x >> 2);
                         else
@@ -4077,7 +4099,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
 #else
                                                    mds,
 #endif
+#if OPT_ALLOC_PC_TREE_CTX
+                                                   md_ctx->pc_tree,
+#else
                                                    pc_tree_root,
+#endif
                                                    md_ctx->sb_origin_y >> 2,
                                                    md_ctx->sb_origin_x >> 2);
 
@@ -4183,7 +4209,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                           pcs,
                                           ed_ctx,
                                           sb_ptr,
+#if OPT_ALLOC_PC_TREE_CTX
+                                          md_ctx->pc_tree,
+#else
                                           pc_tree_root,
+#endif
                                           sb_ptr->ptree,
                                           md_ctx->sb_origin_y >> 2,
                                           md_ctx->sb_origin_x >> 2);
@@ -4236,8 +4266,10 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             svt_aom_encode_decode(scs, pcs, sb_ptr, sb_index, sb_origin_x, sb_origin_y, ed_ctx);
                         }
 #endif
+#if !OPT_ALLOC_PC_TREE_CTX
 #if OPT_REFACTOR_ED_EC
                         svt_aom_free_pc_tree_recursive(pc_tree_root);
+#endif
 #endif
 #if OPT_REFACTOR_ED_UPDATE
                         // free MD palette info buffer
