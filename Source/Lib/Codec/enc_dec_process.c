@@ -1679,6 +1679,18 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
         if (lower_depth_split_cost_th && ctx->avail_blk_flag[parent_depth_idx_mds]) {
             const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                      : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+#if CLN_MD_PATHS
+            const BlockGeom* parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
+            const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                                    parent_blk_geom->bsize,
+                                                                    (ctx->sb_origin_y + parent_blk_geom->org_y) >> MI_SIZE_LOG2,
+                                                                    (ctx->sb_origin_x + parent_blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                                    ctx->md_rate_est_ctx,
+                                                                    PARTITION_SPLIT,
+                                                                    ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].left_part_ctx,
+                                                                    ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].above_part_ctx);
+            const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
+#else
             const uint64_t split_cost  = svt_aom_partition_rate_cost(pcs->ppcs,
                                                                     ctx,
                                                                     parent_depth_idx_mds,
@@ -1686,6 +1698,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
                                                                     full_lambda,
                                                                     true, // Use accurate split cost for early exit
                                                                     ctx->md_rate_est_ctx);
+#endif
 
             if (split_cost * 10000 < ctx->md_blk_arr_nsq[parent_depth_idx_mds].default_cost * lower_depth_split_cost_th)
                 *s_depth = 0;
@@ -1699,12 +1712,29 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
             // If LPD0 was used, use a safer threshold
             split_cost_th += 20;
 
+#if CLN_MD_PATHS
+            // partition contexts should be set if LPD0 was used, because they may not be set in the LPD0 path
+            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].left_part_ctx = 0;
+            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].above_part_ctx = 0;
+#else
             // Parent neighbour arrays should be set in case parent depth was not allowed
             ctx->md_blk_arr_nsq[blk_geom->sqi_mds].left_neighbor_partition  = INVALID_NEIGHBOR_DATA;
             ctx->md_blk_arr_nsq[blk_geom->sqi_mds].above_neighbor_partition = INVALID_NEIGHBOR_DATA;
+#endif
         }
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+#if CLN_MD_PATHS
+        const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                                blk_geom->bsize,
+                                                                (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
+                                                                (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                                ctx->md_rate_est_ctx,
+                                                                PARTITION_SPLIT,
+                                                                ctx->blk_ptr->left_part_ctx,
+                                                                ctx->blk_ptr->above_part_ctx);
+        const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
+#else
         const uint64_t split_cost  = svt_aom_partition_rate_cost(pcs->ppcs,
                                                                 ctx,
                                                                 blk_geom->sqi_mds,
@@ -1712,6 +1742,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
                                                                 full_lambda,
                                                                 true, // Use accurate split cost for early exit
                                                                 ctx->md_rate_est_ctx);
+#endif
 
         if (split_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * split_cost_th)
             *e_depth = 0;
@@ -1863,8 +1894,20 @@ static void is_child_to_current_deviation_small(PictureControlSet *pcs, ModeDeci
         child_cost                 = (child_cost / child_cnt) * 4;
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+#if CLN_MD_PATHS
+        const uint64_t child_split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                                blk_geom->bsize,
+                                                                (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
+                                                                (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                                ctx->md_rate_est_ctx,
+                                                                PARTITION_SPLIT,
+                                                                ctx->blk_ptr->left_part_ctx,
+                                                                ctx->blk_ptr->above_part_ctx);
+        child_cost += RDCOST(full_lambda, child_split_rate, 0);
+#else
         child_cost += svt_aom_partition_rate_cost(
             pcs->ppcs, ctx, blk_index, PARTITION_SPLIT, full_lambda, true, ctx->md_rate_est_ctx);
+#endif
         child_to_current_deviation = (int64_t)(((int64_t)MAX(child_cost, 1) -
                                                 (int64_t)MAX(ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost, 1)) *
                                                100) /

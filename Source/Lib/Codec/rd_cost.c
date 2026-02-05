@@ -1757,7 +1757,11 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, 
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
  */
+#if CLN_MD_PATHS
+int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSize bsize, const int mi_row,
+#else
 int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
+#endif
                                         const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
 #if OPT_BLK_LOOPING
                                         const PartitionContextType left_ctx,
@@ -1765,8 +1769,6 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
                                         bool use_accurate_part_ctx, const PartitionContextType left_ctx,
 #endif
                                         const PartitionContextType above_ctx) {
-    //const BlockGeom *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_mds_idx);
-    //const BlockSize  bsize    = blk_geom->bsize;
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
     assert(bsize < BlockSizeS_ALL);
     const bool is_partition_point = (bsize >= BLOCK_8X8);
@@ -1787,14 +1789,6 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
         return 0;
     }
 
-    //const PartitionContextType left_ctx  = ctx->md_blk_arr_nsq[blk_mds_idx].left_neighbor_partition ==
-    //        (char)(INVALID_NEIGHBOR_DATA)
-    //     ? 0
-    //     : ctx->md_blk_arr_nsq[blk_mds_idx].left_neighbor_partition;
-    //const PartitionContextType above_ctx = ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition ==
-    //        (char)(INVALID_NEIGHBOR_DATA)
-    //    ? 0
-    //    : ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition;
     const int bsl = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
     assert(bsl >= 0);
 
@@ -1833,6 +1827,7 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
     return split_rate; // (RDCOST(lambda, split_rate, 0));
 }
 #endif
+#if !CLN_MD_PATHS
 /*
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
@@ -1862,6 +1857,16 @@ uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionC
         return 0;
     }
 
+#if CLN_MD_PATHS
+    const PartitionContextType left_ctx  = ctx->md_blk_arr_nsq[blk_mds_idx].left_part_ctx ==
+            (char)(INVALID_NEIGHBOR_DATA)
+         ? 0
+         : ctx->md_blk_arr_nsq[blk_mds_idx].left_part_ctx;
+    const PartitionContextType above_ctx = ctx->md_blk_arr_nsq[blk_mds_idx].above_part_ctx ==
+            (char)(INVALID_NEIGHBOR_DATA)
+        ? 0
+        : ctx->md_blk_arr_nsq[blk_mds_idx].above_part_ctx;
+#else
     const PartitionContextType left_ctx  = ctx->md_blk_arr_nsq[blk_mds_idx].left_neighbor_partition ==
             (char)(INVALID_NEIGHBOR_DATA)
          ? 0
@@ -1870,6 +1875,7 @@ uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionC
             (char)(INVALID_NEIGHBOR_DATA)
         ? 0
         : ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition;
+#endif
     const int                  bsl       = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
     assert(bsl >= 0);
 
@@ -1905,3 +1911,4 @@ uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionC
 
     return (RDCOST(lambda, split_rate, 0));
 }
+#endif

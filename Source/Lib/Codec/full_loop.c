@@ -2368,6 +2368,7 @@ uint8_t svt_aom_do_md_recon(PictureParentControlSet *pcs, ModeDecisionContext *c
 
     return do_recon;
 }
+#if !CLN_MD_PATHS
 #if OPT_REFACTOR_MD // svt_aom_d1_non_square_block_decision
 uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                   uint32_t d1_block_itr, PC_TREE *pc_tree) {
@@ -2414,7 +2415,6 @@ uint64_t svt_aom_d1_non_square_block_decision_new(PictureControlSet *pcs, ModeDe
         pc_tree->block_data[PART_N][0]->best_d1_blk = first_blk_idx;
 
         pc_tree->partitioning    = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->best_depth_cost = tot_cost;
         pc_tree->rdc.rd_cost     = tot_cost;
     }
     return tot_cost;
@@ -2461,7 +2461,7 @@ uint64_t svt_aom_d1_non_square_block_decision(PictureControlSet *pcs, ModeDecisi
     return tot_cost;
 }
 #endif
-
+#endif
 #if !OPT_RECURSIVE_LPD0
 /// compute the cost of curr depth, and the depth above
 static void compute_depth_costs(ModeDecisionContext *ctx, PictureParentControlSet *pcs, uint32_t curr_depth_mds,

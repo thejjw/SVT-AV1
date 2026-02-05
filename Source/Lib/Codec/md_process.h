@@ -919,19 +919,7 @@ typedef struct PC_TREE {
     BlockSize     block_size;
 
     RD_STATS   rdc;
-    int64_t    best_depth_cost;
     BlkStruct *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
-    BlkStruct *none;
-    BlkStruct *horizontal[2];
-    BlkStruct *vertical[2];
-    //#if !CONFIG_REALTIME_ONLY
-    BlkStruct *horizontala[3];
-    BlkStruct *horizontalb[3];
-    BlkStruct *verticala[3];
-    BlkStruct *verticalb[3];
-    BlkStruct *horizontal4[4];
-    BlkStruct *vertical4[4];
-    //#endif
     struct PC_TREE *split[4];
     int             index;
 } PC_TREE;

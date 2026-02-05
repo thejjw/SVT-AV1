@@ -1536,11 +1536,17 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
     return return_error;
 }
 
+#if !CLN_REMOVE_BLK_ALLOWED
 #define NUM_BLOCK_IS_ALLOWED(w, h) ((w) + (h) - 1 + 1)
-
+#endif
+#if CLN_REMOVE_BLK_ALLOWED
+EbErrorType alloc_sb_geoms(SbGeom** geom, int width, int height) {
+#else
 EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks) {
+#endif
     SbGeom *tmp;
     EB_MALLOC_ARRAY(tmp, width * height);
+#if !CLN_REMOVE_BLK_ALLOWED
     // allocate 1 for complete blocks and (width + height - 1) for edges
     EB_MALLOC_ARRAY(tmp[0].block_is_allowed, NUM_BLOCK_IS_ALLOWED(width, height) * num_blocks);
 
@@ -1562,6 +1568,7 @@ EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks)
             }
         }
     }
+#endif
 
     *geom = tmp;
 
@@ -1570,30 +1577,45 @@ EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks)
 
 void free_sb_geoms(SbGeom *geom) {
     if (geom) {
+#if !CLN_REMOVE_BLK_ALLOWED
         EB_FREE_ARRAY(geom[0].block_is_allowed);
+#endif
         EB_FREE_ARRAY(geom);
     }
 }
 
+#if CLN_REMOVE_BLK_ALLOWED
+void copy_sb_geoms(SbGeom* dst_geom, SbGeom* src_geom, uint16_t width, uint16_t height) {
+#else
 void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height, int num_blocks) {
     memcpy(dst_geom[0].block_is_allowed,
            src_geom[0].block_is_allowed,
            sizeof(dst_geom[0].block_is_allowed[0]) * NUM_BLOCK_IS_ALLOWED(width, height) * num_blocks);
+#endif
     for (int i = 0; i < width * height; i++) {
+#if !CLN_REMOVE_BLK_ALLOWED
         // preserve dynamic pointer
         bool *block_is_allowed       = dst_geom[i].block_is_allowed;
+#endif
         dst_geom[i]                  = src_geom[i];
+#if !CLN_REMOVE_BLK_ALLOWED
         dst_geom[i].block_is_allowed = block_is_allowed;
+#endif
     }
 }
 
 EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms) {
     uint16_t picture_sb_width  = DIVIDE_AND_CEIL(width, scs->sb_size);
     uint16_t picture_sb_height = DIVIDE_AND_CEIL(height, scs->sb_size);
+#if CLN_REMOVE_BLK_ALLOWED
+    free_sb_geoms(*sb_geoms);
+    EbErrorType ret = alloc_sb_geoms(sb_geoms, picture_sb_width, picture_sb_height);
+#else
     uint16_t max_block_count   = scs->max_block_cnt;
 
     free_sb_geoms(*sb_geoms);
     EbErrorType ret = alloc_sb_geoms(sb_geoms, picture_sb_width, picture_sb_height, max_block_count);
+#endif
     if (ret != EB_ErrorNone) {
         return ret;
     }
@@ -1606,6 +1628,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
         sb_geom->org_y          = ver_index * scs->sb_size;
         sb_geom->width          = (uint8_t)MIN(width - sb_geom->org_x, scs->sb_size);
         sb_geom->height         = (uint8_t)MIN(height - sb_geom->org_y, scs->sb_size);
+#if !CLN_REMOVE_COMP_SB
         sb_geom->is_complete_sb = (sb_geom->width == scs->sb_size && sb_geom->height == scs->sb_size) ? 1 : 0;
 
         if (sb_index == 0 || hor_index == picture_sb_width - 1 || ver_index == picture_sb_height - 1) {
@@ -1614,7 +1637,9 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
             // rest of blocks must be complete and hence have same availability as (0,0) block
             assert(sb_geom->is_complete_sb);
         }
+#endif
 
+#if !CLN_REMOVE_BLK_ALLOWED
         for (int md_scan_block_index = 0; md_scan_block_index < max_block_count; md_scan_block_index++) {
             const BlockGeom *blk_geom    = get_blk_geom_mds(scs->blk_geom_mds, md_scan_block_index);
             const BlockGeom *sq_blk_geom = get_blk_geom_mds(scs->blk_geom_mds, blk_geom->sqi_mds);
@@ -1640,6 +1665,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
                     : true;
             }
         }
+#endif
     }
 
     return EB_ErrorNone;
