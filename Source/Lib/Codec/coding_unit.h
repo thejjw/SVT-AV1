@@ -279,9 +279,9 @@ typedef struct SuperBlock {
     unsigned               index : 32;
     unsigned               org_x : 32;
     unsigned               org_y : 32;
-    uint8_t        qindex;
-    TileInfo       tile_info;
-    uint16_t       final_blk_cnt; // number of block(s) posted from EncDec to EC
+    uint8_t                qindex;
+    TileInfo               tile_info;
+    uint16_t               final_blk_cnt; // number of block(s) posted from EncDec to EC
 } SuperBlock;
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,

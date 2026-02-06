@@ -1963,10 +1963,10 @@ void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecCo
     if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols)
         return;
 
-    const BlockSize bsize = pc_tree->block_size;
+    const BlockSize bsize = pc_tree->bsize;
     assert(bsize < BlockSizeS_ALL);
     const int           hbs          = mi_size_wide[bsize] >> 1;
-    const PartitionType partition    = pc_tree->partitioning;
+    const PartitionType partition    = pc_tree->partition;
     const int           quarter_step = mi_size_wide[bsize] >> 2;
 
     ptree->partition = partition;
