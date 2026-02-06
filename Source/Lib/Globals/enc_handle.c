@@ -1422,10 +1422,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             PictureControlSetInitData input_data;
             input_data.enc_dec_segment_col = (uint16_t)scs->enc_dec_segment_col_count_array;
             input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
-
-#if !OPT_REFACTOR_EC
-            input_data.init_max_block_cnt = scs->max_block_cnt;
-#endif
             input_data.picture_width = scs->max_input_luma_width;
             input_data.picture_height = scs->max_input_luma_height;
             input_data.left_padding = scs->left_padding;
@@ -3897,12 +3893,6 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     // 0: Do not use boundary pixels in the restoration filter search.
     scs->use_boundaries_in_rest_search = 0;
 
-#if !CLN_REMOVE_BLK_ALLOWED
-    // Set over_boundary_block_mode     Settings
-    // 0                            0: not allowed
-    // 1                            1: allowed
-    scs->over_boundary_block_mode = 1;
-#endif
     svt_aom_set_mfmv_config(scs);
 
     uint8_t list0_only_base_lvl = 0;

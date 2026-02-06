@@ -39,15 +39,9 @@ struct ModeDecisionCandidate;
  * Extern Function Declarations
  **************************************/
 struct EntropyCodingContext;
-#if OPT_REFACTOR_EC
 void svt_aom_write_modes_sb(struct EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs,
                             uint16_t tile_idx, EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr,
                             struct PARTITION_TREE *ptree, int mi_row, int mi_col);
-#else
-extern EbErrorType svt_aom_write_sb(struct EntropyCodingContext *context_ptr, SuperBlock *tb_ptr,
-                                    PictureControlSet *pcs, uint16_t tile_idx, EntropyCoder *ec,
-                                    EbPictureBufferDesc *coeff_ptr);
-#endif
 
 extern int svt_aom_get_wedge_params_bits(BlockSize bsize);
 

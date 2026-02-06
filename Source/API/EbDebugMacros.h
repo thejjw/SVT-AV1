@@ -34,22 +34,6 @@
 extern "C" {
 #endif // __cplusplus
 
-#define OPT_REFACTOR_MD             1 // Change svt_aom_mode_decision_sb to be recursive, with same tracking methods (for data and tested blocks)
-#define CLN_ED_PARAMS               1 // Remove unnecessary params from encdec functions
-#define OPT_REFACTOR_ED_EC          1 // Change encdec functions to loop over partition recursively
-#define OPT_LPD1_RECURSIVE          1 // Update LPD1 to use the new recursive structure so its output can match regular PD1
-#define OPT_REFACTOR_ED_UPDATE      1 // Change encdec update functions to loop over partition recursively
-#define OPT_REFACTOR_EC             1 // Update entropy coding to use recursive looping and use ptree data structure
-#define OPT_BLK_LOOPING             1 // Update how blocks are signaled to be tested/looped over in MD
-#define OPT_RECURSIVE_LPD0          1 // Update LPD0 path to use recursive infrastructure
-#define OPT_BLOCK_TRACKING          1 // Update build_cand_block_array and perform_pred_depth_refinement
-#define CLN_MD_PATHS                1 // General cleanup
-#define CLN_REMOVE_COMP_SB          1 // Remove is_complete_sb from sb_geom
-#define CLN_REMOVE_BLK_ALLOWED      1 // Remove block_is_allowed from sb_geom
-#define OPT_REDUCE_COPIES           1 // Move copy actions for neighbour arrays to avoid unnecessary copies
-#define OPT_ALLOC_PC_TREE_CTX       1 // Alloc pc_tree once under the ctx at init time
-#define OPT_ALLOC_PTREE_SB_PTR      1 // Alloc ptree once under the sb_ptr at init time
-
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
 #define DEBUG_TPL               0 // Prints to debug TPL

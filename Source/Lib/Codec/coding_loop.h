@@ -24,62 +24,15 @@ extern "C" {
      * ModeDecisionSb
      *   performs CL (SB)
      *******************************************/
-#if OPT_RECURSIVE_LPD0
 bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
                                  PC_TREE* pc_tree, int mi_row, int mi_col);
-#else
-void svt_aom_mode_decision_sb_light_pd0(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
-                                        const MdcSbData* const mdcResultTbPtr);
-#endif
-#if !OPT_LPD1_RECURSIVE
-void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
-                                        const MdcSbData* const mdcResultTbPtr);
-#endif
-#if !OPT_REFACTOR_MD
-void svt_aom_mode_decision_sb(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
-                              const MdcSbData* const mdcResultTbPtr);
-#endif
-#if OPT_REFACTOR_MD
 void svt_aom_init_sb_data(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx);
-#if OPT_BLK_LOOPING
 bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
                             PC_TREE* pc_tree, int mi_row, int mi_col);
-#else
-bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
-                            const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx,
-                            bool* md_early_exit_sq, uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree, int mi_row,
-                            int mi_col);
-#endif
-#endif
-#if OPT_LPD1_RECURSIVE
-#if OPT_BLK_LOOPING
 void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds,
                                  PC_TREE* pc_tree, int mi_row, int mi_col);
-#else
-void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
-                                 const MdcSbData* const mdc_sb_data, uint32_t* leaf_idx, uint32_t* curr_mds_idx,
-                                 bool* md_early_exit_sq, uint32_t* next_non_skip_blk_idx_mds, PC_TREE* pc_tree,
-                                 int mi_row, int mi_col);
-#endif
-#endif
-#if OPT_REFACTOR_ED_EC
 void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx, SuperBlock* sb_ptr,
                        PC_TREE* pc_tree, PARTITION_TREE* ptree, int mi_row, int mi_col);
-#endif
-#if !OPT_LPD1_RECURSIVE
-#if CLN_ED_PARAMS
-void svt_aom_encode_decode(SequenceControlSet* scs, PictureControlSet* pcs, uint32_t sb_addr, uint32_t sb_origin_x,
-                           uint32_t sb_origin_y, EncDecContext* ed_ctx);
-#else
-extern void svt_aom_encode_decode(SequenceControlSet* scs, PictureControlSet* pcs, SuperBlock* sb_ptr, uint32_t sb_addr,
-                                  uint32_t sb_origin_x, uint32_t sb_origin_y, EncDecContext* ed_ctx);
-#endif
-#endif
-#if !OPT_REFACTOR_ED_UPDATE
-extern EbErrorType svt_aom_encdec_update(SequenceControlSet* scs, PictureControlSet* pcs, SuperBlock* sb_ptr,
-                                         uint32_t sb_addr, uint32_t sb_origin_x, uint32_t sb_origin_y,
-                                         EncDecContext* ed_ctx);
-#endif
 
 void svt_aom_store16bit_input_src(EbPictureBufferDesc* input_sample16bit_buffer, PictureControlSet* pcs, uint32_t sb_x,
                                   uint32_t sb_y, uint32_t sb_w, uint32_t sb_h);

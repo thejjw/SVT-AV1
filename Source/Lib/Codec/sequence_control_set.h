@@ -118,12 +118,6 @@ typedef struct SequenceControlSet {
     uint8_t enable_dg;
     /*!< Film grain seed */
     uint16_t film_grain_random_seed;
-#if !CLN_REMOVE_BLK_ALLOWED
-    /*!< over_boundary_block: pad resolution to a multiple of SB for smaller overhead
-        (The signal changes per preset; 0: No over boundary blk allowed, 1: over boundary blk allowed) Default is 1.
-        to enable when md_skip_blk is on */
-    uint8_t over_boundary_block_mode;
-#endif
 
     /*!< Sequence resolution parameters */
     uint32_t          chroma_format_idc;

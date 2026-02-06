@@ -847,7 +847,6 @@ static const uint8_t mi_size_wide[BlockSizeS_ALL] = {1,  1,  2,  2,  2,  4, 4, 4
 static const uint8_t mi_size_high[BlockSizeS_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
                                                      8, 16, 32, 16, 32, 4, 1, 8, 2, 16, 4};
 
-#if OPT_REFACTOR_MD
 // 4X4, 8X8, 16X16, 32X32, 64X64, 128X128
 #define SQR_BLOCK_SIZES 6
 
@@ -930,7 +929,7 @@ static inline BlockSize get_partition_subsize(BlockSize bsize,
             : subsize_lookup[partition][sqr_bsize_idx];
     }
 }
-#endif
+
 typedef char PartitionContextType;
 #define PARTITION_PLOFFSET 4 // number of probability models per block size
 #define PARTITION_BlockSizeS 5
