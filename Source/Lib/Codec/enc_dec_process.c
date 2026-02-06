@@ -1499,32 +1499,29 @@ characteristics and settings.
 */
 static void set_blocks_to_test(PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds, const int mi_row,
                                const int mi_col, Part shapes[9], uint8_t *tot_shapes) {
-    const int sq_size  = block_size_wide[mds->bsize];
-    const int hbs      = mi_size_wide[mds->bsize] >> 1;
-    const int has_rows = mi_row + hbs < pcs->ppcs->av1_cm->mi_rows;
-    const int has_cols = mi_col + hbs < pcs->ppcs->av1_cm->mi_cols;
+    const int      sq_size  = block_size_wide[mds->bsize];
+    const int      hbs      = mi_size_wide[mds->bsize] >> 1;
+    const int      has_rows = mi_row + hbs < pcs->ppcs->av1_cm->mi_rows;
+    const int      has_cols = mi_col + hbs < pcs->ppcs->av1_cm->mi_cols;
+    const uint16_t min_nsq  = ctx->pd_pass == PD_PASS_1 && ctx->lpd1_ctrls.pd1_level != REGULAR_PD1 ? 8 : 4;
 
-    // if block has no valid partitions (i.e. must be SPLIT) exit immediately
-    if (!has_cols && !has_rows) {
+    // If block has no valid partitions (i.e. must be SPLIT) exit immediately.
+    // For an incomplete block if SQ shape is not allowed, H or V may still be allowed, but only
+    // if the NSQ geom allows for it.
+    if ((!has_cols && !has_rows) ||
+        ((!has_cols || !has_rows) &&
+         (!ctx->nsq_geom_ctrls.enabled || sq_size <= MAX(min_nsq, ctx->nsq_geom_ctrls.min_nsq_block_size)))) {
         *tot_shapes = 0;
         return;
     }
 
-    bool           inj_hv_incomp = false;
-    const uint16_t min_nsq       = ctx->pd_pass == PD_PASS_1 && ctx->lpd1_ctrls.pd1_level != REGULAR_PD1 ? 8 : 4;
-    if (ctx->nsq_geom_ctrls.enabled && sq_size > MAX(min_nsq, ctx->nsq_geom_ctrls.min_nsq_block_size)) {
-        // For an incomplete block if SQ shape is not allowed, H or V may still be allowed.  Therefore,
-        // check if H or V is allowed, and if so, set to be tested
-        if (!has_cols || !has_rows)
-            inj_hv_incomp = true;
-    }
-
-    uint8_t    shapes_idx = 0;
-    const Part max_part   = (!ctx->nsq_geom_ctrls.enabled || (sq_size <= ctx->nsq_geom_ctrls.min_nsq_block_size) ||
+    const bool inj_hv_incomp = (!has_cols || !has_rows);
+    uint8_t    shapes_idx    = 0;
+    const Part max_part      = (!ctx->nsq_geom_ctrls.enabled || (sq_size <= ctx->nsq_geom_ctrls.min_nsq_block_size) ||
                            sq_size == 4 || (ctx->md_disallow_nsq_search && !inj_hv_incomp))
-          ? PART_N
-          : (sq_size == 8 || inj_hv_incomp) ? PART_V
-                                            : PART_S - 1;
+             ? PART_N
+             : (sq_size == 8 || inj_hv_incomp) ? PART_V
+                                               : PART_S - 1;
     for (Part part = PART_N; part <= max_part; part++) {
         if (inj_hv_incomp) {
             if ((has_cols && part != PART_H) || (has_rows && part != PART_V))
