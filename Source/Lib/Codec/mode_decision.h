@@ -80,17 +80,6 @@ typedef EbErrorType (*EbAv1FullCostFunc)(PictureControlSet *pcs, struct ModeDeci
 /**************************************
     * Mode Decision Candidate Buffer
     **************************************/
-typedef struct IntraChromacand_bf {
-    uint32_t             mode;
-    uint64_t             cost;
-    uint64_t             distortion;
-    EbPictureBufferDesc *prediction_ptr;
-    EbPictureBufferDesc *residual_ptr;
-} IntraChromacand_bf;
-
-/**************************************
-    * Mode Decision Candidate Buffer
-    **************************************/
 typedef struct ModeDecisionCandidateBuffer {
     EbDctor dctor;
     // Candidate Ptr

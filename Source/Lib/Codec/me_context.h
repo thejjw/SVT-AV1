@@ -266,17 +266,6 @@ typedef enum EbMeTierZeroPu {
     ME_TIER_ZERO_PU_16x64_3 = 208
 } EbMeTierZeroPu;
 
-typedef struct IntraReferenceSamplesOpenLoop {
-    EbDctor  dctor;
-    uint8_t *y_intra_reference_array_reverse;
-
-    // Scratch buffers used in the interpolaiton process
-    uint8_t reference_above_line_y[MAX_INTRA_REFERENCE_SAMPLES];
-    uint8_t reference_left_line_y[MAX_INTRA_REFERENCE_SAMPLES];
-    bool    above_ready_flag_y;
-    bool    left_ready_flag_y;
-} IntraReferenceSamplesOpenLoop;
-
 typedef struct MeHmeRefPruneCtrls {
     bool enable_me_hme_ref_pruning;
     // TH used to prune references based on hme sad deviation
@@ -339,12 +328,6 @@ typedef struct PreHmeCtrls {
     uint8_t          skip_search_line; //if 1 skips every other search region line
     uint8_t          l1_early_exit;
 } PreHmeCtrls;
-typedef struct MeHmeSearchAreaCtrls {
-    SearchAreaMinMax hme_l0_sa[SEARCH_REGION_COUNT];
-    SearchArea       hme_l1_sa[SEARCH_REGION_COUNT];
-    SearchArea       hme_l2_sa[SEARCH_REGION_COUNT];
-    SearchAreaMinMax me_sa[SEARCH_REGION_COUNT];
-} MeHmeSearchAreaCtrls;
 typedef struct SearchResults {
     uint8_t  list_i; // list index of this ref
     uint8_t  ref_i; // ref list index of this ref

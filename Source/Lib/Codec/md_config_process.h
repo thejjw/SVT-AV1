@@ -25,18 +25,6 @@
 extern "C" {
 #endif
 
-/**************************************
-     * Defines
-     **************************************/
-
-typedef struct MdcpLocalBlkStruct {
-    uint64_t early_cost;
-    bool     early_split_flag;
-    uint32_t split_context;
-    bool     selected_cu;
-    bool     stop_split;
-} MdcpLocalBlkStruct;
-
 typedef struct ModeDecisionConfigurationContext {
     EbFifo *rate_control_input_fifo_ptr;
     EbFifo *mode_decision_configuration_output_fifo_ptr;
