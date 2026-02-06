@@ -901,15 +901,10 @@ typedef struct PictureParentControlSet {
     // Resolution of delta quant
     // int32_t delta_q_res;
     int32_t            allow_comp_inter_inter;
-    int16_t            pan_mvx;
-    int16_t            pan_mvy;
-    int16_t            tilt_mvx;
-    int16_t            tilt_mvy;
     WarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
     PictureControlSet *child_pcs;
     EncDecSet         *enc_dec_ptr;
     Macroblock        *av1x;
-    int32_t            film_grain_params_present; // todo (AN): Do we need this flag at picture level?
     int8_t             cdef_level;
     bool               enable_restoration; // true if restoration filtering is enabled for the current frame
 
@@ -943,7 +938,6 @@ typedef struct PictureParentControlSet {
     uint16_t                        save_source_picture_height;
     EbHandle                        temp_filt_done_semaphore;
     EbHandle                        temp_filt_mutex;
-    EbHandle                        debug_mutex;
 
     uint8_t  temp_filt_prep_done;
     uint16_t temp_filt_seg_acc;
@@ -958,7 +952,6 @@ typedef struct PictureParentControlSet {
     uint8_t     past_altref_nframes;
     uint8_t     future_altref_nframes;
     bool        do_tf;
-    uint64_t    filtered_sse_uv;
     FrameHeader frm_hdr;
     uint16_t   *altref_buffer_highbd[3];
     uint8_t     pic_obmc_level;

@@ -1173,7 +1173,6 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     EB_DESTROY_MUTEX(obj->me_processed_b64_mutex);
     EB_DESTROY_SEMAPHORE(obj->temp_filt_done_semaphore);
     EB_DESTROY_MUTEX(obj->temp_filt_mutex);
-    EB_DESTROY_MUTEX(obj->debug_mutex);
     EB_FREE_ARRAY(obj->tile_group_info);
     EB_DESTROY_MUTEX(obj->pa_me_done.mutex);
     if (obj->is_pcs_sb_params)
@@ -1317,7 +1316,6 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
     EB_CREATE_MUTEX(object_ptr->me_processed_b64_mutex);
     EB_CREATE_SEMAPHORE(object_ptr->temp_filt_done_semaphore, 0, 1);
     EB_CREATE_MUTEX(object_ptr->temp_filt_mutex);
-    EB_CREATE_MUTEX(object_ptr->debug_mutex);
     EB_MALLOC_ARRAY(object_ptr->av1_cm, 1);
 
     EB_CREATE_MUTEX(object_ptr->pa_me_done.mutex);

@@ -392,7 +392,6 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet *pcs) {
     frm_hdr->error_resilient_mode            = 0;
     cm->tiles_info.uniform_tile_spacing_flag = 1;
     pcs->large_scale_tile                    = 0;
-    pcs->film_grain_params_present           = 0;
 
     //cdef_pri_damping & cdef_sec_damping are consolidated to cdef_damping
     frm_hdr->cdef_params.cdef_damping = 0;
