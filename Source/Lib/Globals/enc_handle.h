@@ -31,8 +31,6 @@ struct _EbEncHandle {
     EbDctor dctor;
     // Full Results Count
     uint32_t scs_pool_total_count;
-    // Picture Buffer Count
-    uint32_t ref_pic_pool_total_count;
 
     // Config Set Pool & Active Array
     EbSystemResource             *scs_pool_ptr;

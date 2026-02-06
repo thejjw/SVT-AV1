@@ -896,9 +896,9 @@ EbErrorType svt_output_buffer_header_creator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr);
 
-void svt_input_buffer_header_destroyer(    EbPtr p);
-void svt_output_recon_buffer_header_destroyer(    EbPtr p);
-void svt_output_buffer_header_destroyer(    EbPtr p);
+void svt_input_buffer_header_destroyer(EbPtr p);
+void svt_output_recon_buffer_header_destroyer(EbPtr p);
+void svt_output_buffer_header_destroyer(EbPtr p);
 
 EbErrorType svt_input_y8b_creator(EbPtr *object_dbl_ptr, EbPtr  object_init_data_ptr);
 void svt_input_y8b_destroyer(EbPtr p);
@@ -3015,24 +3015,6 @@ static void derive_tf_params(SequenceControlSet *scs) {
     tf_controls(scs, tf_level);
 }
 
-
-/*
- * Derive List0-only @ BASE Params
- */
-static void set_list0_only_base(SequenceControlSet* scs, uint8_t list0_only_base) {
-    List0OnlyBase* ctrls = &scs->list0_only_base_ctrls;
-
-    switch (list0_only_base) {
-    case 0:
-        ctrls->enabled = 0;
-        break;
-    case 1:
-        ctrls->enabled = 1;
-        break;
-    default:
-        break;
-    }
-}
 /*
  * Set the MRP control
  */
@@ -3304,26 +3286,6 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->ld_reduce_ref_buffs = 0;
     }
 }
-static void set_first_pass_ctrls(
-    SequenceControlSet* scs,
-    uint8_t first_pass_level) {
-
-    FirstPassControls* first_pass_ctrls = &scs->first_pass_ctrls;
-    switch (first_pass_level) {
-
-    case 0:
-        first_pass_ctrls->ds = 0;
-        break;
-
-    case 1:
-        first_pass_ctrls->ds = 1;
-        break;
-
-    default:
-        assert(0);
-        break;
-    }
-}
 
 static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t resize_mode, uint8_t aq_mode, bool allintra) {
     if (allintra) {
@@ -3366,15 +3328,15 @@ void set_multi_pass_params(SequenceControlSet *scs)
     switch (config->pass) {
 
         case ENC_SINGLE_PASS: {
-            set_first_pass_ctrls(scs, 0);
+            scs->first_pass_ctrls.ds = 0;
             scs->final_pass_preset = config->enc_mode;
             break;
         }
         case ENC_FIRST_PASS: {
             if (config->enc_mode <= ENC_M8)
-                set_first_pass_ctrls(scs, 0);
+                scs->first_pass_ctrls.ds = 0;
             else
-                set_first_pass_ctrls(scs, 1);
+                scs->first_pass_ctrls.ds = 1;
             scs->final_pass_preset = config->enc_mode;
             if (scs->final_pass_preset <= ENC_M6)
                 scs->static_config.enc_mode = ENC_M9;
@@ -3884,13 +3846,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     svt_aom_set_mfmv_config(scs);
 
-    uint8_t list0_only_base_lvl = 0;
     if (scs->static_config.enc_mode <= ENC_M2)
-        list0_only_base_lvl = 0;
+        scs->list0_only_base_ctrls.enabled = 0;
     else
-        list0_only_base_lvl = 1;
-
-    set_list0_only_base(scs, list0_only_base_lvl);
+        scs->list0_only_base_ctrls.enabled = 1;
 
     if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ||
         scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
@@ -5646,7 +5605,7 @@ EbErrorType svt_input_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_input_buffer_header_destroyer(    EbPtr p)
+void svt_input_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
@@ -5708,7 +5667,7 @@ EbErrorType svt_output_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_output_buffer_header_destroyer(    EbPtr p)
+void svt_output_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType* obj = (EbBufferHeaderType*)p;
     EB_FREE(obj);
@@ -5747,7 +5706,7 @@ EbErrorType svt_output_recon_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_output_recon_buffer_header_destroyer(    EbPtr p)
+void svt_output_recon_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
     EB_FREE(obj->p_buffer);
