@@ -60,7 +60,7 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc *pictureBuffe
         picture_buffer_desc_init_data_ptr->left_padding + picture_buffer_desc_init_data_ptr->right_padding;
 
     svt_aom_assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
-                       "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
+                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr = (pictureBufferDescPtr->stride_y +
                                                                          subsampling_x) >>
@@ -144,7 +144,7 @@ EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc *pictureBuf
         picture_buffer_desc_init_data_ptr->left_padding + picture_buffer_desc_init_data_ptr->right_padding;
 
     svt_aom_assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
-                       "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
+                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr = (pictureBufferDescPtr->stride_y +
                                                                          subsampling_x) >>

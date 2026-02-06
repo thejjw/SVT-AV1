@@ -2112,7 +2112,7 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
     const uint8_t       enable_dual_filter = scs->seq_header.enable_dual_filter;
     const uint32_t      encoder_bit_depth  = scs->static_config.encoder_bit_depth;
 
-    /* Save the orignal interp filter because the compensation is likely available
+    /* Save the original interp filter because the compensation is likely available
      * for that filter, and can be skipped in IFS. Also, we shouldn't overwrite
      * the pred buffer with a filter that is different from the input, because
      * the luma compensation may be skipped after the search if the best selected

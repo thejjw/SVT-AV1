@@ -608,7 +608,7 @@ typedef struct PaletteCtrls {
 } PaletteCtrls;
 
 /*!
- * \brief The stucture of Cyclic_Refresh.
+ * \brief The structure of Cyclic_Refresh.
  * \ingroup cyclic_refresh
  */
 typedef struct CyclicRefresh {

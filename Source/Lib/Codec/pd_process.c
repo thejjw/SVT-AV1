@@ -265,9 +265,9 @@ static bool scene_transition_detector(
     PictureParentControlSet* future_pcs_ptr = parent_pcs_window[2];
 
     // calculating the frame threshold based on the number of 64x64 blocks in the frame
-    uint32_t  region_threshhold;
+    uint32_t  region_threshold;
 
-    bool is_abrupt_change; // this variable signals an abrubt change (scene change or flash)
+    bool is_abrupt_change; // this variable signals an abrupt change (scene change or flash)
     bool is_scene_change; // this variable signals a frame representing a scene change
 
     uint32_t** ahd_running_avg = pd_ctx->ahd_running_avg;
@@ -309,7 +309,7 @@ static bool scene_transition_detector(
             region_width += region_width_offset;
             region_height += region_height_offset;
 
-            region_threshhold = SCENE_TH * NUM64x64INPIC(region_width, region_height);
+            region_threshold = SCENE_TH * NUM64x64INPIC(region_width, region_height);
 
             for (int bin = 0; bin < HISTOGRAM_NUMBER_OF_BINS; ++bin) {
                 ahd += ABS((int32_t)current_pcs_ptr->picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin] - (int32_t)pd_ctx->prev_picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin]);
@@ -324,7 +324,7 @@ static bool scene_transition_detector(
                 ahd_running_avg[region_in_picture_width_index][region_in_picture_height_index] -
                 (int32_t)ahd);
 
-            if (ahd_error > region_threshhold && ahd >= ahd_error) {
+            if (ahd_error > region_threshold && ahd >= ahd_error) {
                 is_abrupt_change = true;
             }
             if (is_abrupt_change)
@@ -4153,7 +4153,7 @@ static void update_sframe_ref_order_hint(PictureParentControlSet *ppcs, PictureD
     assert(sizeof(ppcs->dpb_order_hint) == sizeof(pd_ctx->ref_order_hint));
     if (ppcs->pred_structure == LOW_DELAY) {
         for (int32_t i = 0; i < REF_FRAMES; i++) {
-            // dpd_order_hint should be updated with relative postion of key frame
+            // dpd_order_hint should be updated with relative position of key frame
             ppcs->dpb_order_hint[i] = (uint32_t)(pd_ctx->ref_order_hint[i] - pd_ctx->key_poc);
         }
     }
@@ -4276,7 +4276,7 @@ static void check_window_availability(SequenceControlSet* scs, EncodeContext* en
     else {
 
         //TODO: risk of a race condition accessing prev(pcs0 is released, and pcs1 still doing sc).
-        //Actually we dont need to keep prev, just keep previous copy of histograms.
+        //Actually we don't need to keep prev, just keep previous copy of histograms.
         pcs->pd_window[0] =
             queue_entry->picture_number > 0 ? (PictureParentControlSet *)enc_ctx->picture_decision_reorder_queue[previous_entry_index]->ppcs_wrapper->object_ptr : NULL;
         pcs->pd_window[1] =

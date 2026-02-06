@@ -1128,8 +1128,8 @@ static void av1_rc_update_framerate(SequenceControlSet *scs /*, int width, int h
     // The baseline for this aligns with HW implementations that
     // can support decode of 1080P content up to a bitrate of MAX_MB_RATE bits
     // per 16x16 MB (averaged over a frame). However this limit is extended if
-    // a very high rate is given on the command line or the the rate cannnot
-    // be acheived because of a user specificed max q (e.g. when the user
+    // a very high rate is given on the command line or the rate cannot
+    // be achieved because of a user specified max q (e.g. when the user
     // specifies lossless encode.
     vbr_max_bits            = (int)(((int64_t)rc->avg_frame_bandwidth * enc_ctx->two_pass_cfg.vbrmax_section) / 100);
     vbr_max_bits            = AOMMIN(vbr_max_bits, INT_MAX);

@@ -3637,7 +3637,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         uint8_t tpl_lad_mg = 1; // Specify the number of mini-gops to be used as LAD. 0: 1 mini-gop, 1: 2 mini-gops and 3: 3 mini-gops
         uint32_t mg_size = 1 << scs->static_config.hierarchical_levels;
         // If the lookahead is specified to be less than one mini-gop, then use only the current mini-gop for TPL (the current MG is always required to encode).
-        // Otherwise, set tpl_lad_mg to 1 when TPL is used, regardless of teh specified lookahead, because TPL has been optimized to use 1 MG lookahead. Using
+        // Otherwise, set tpl_lad_mg to 1 when TPL is used, regardless of the specified lookahead, because TPL has been optimized to use 1 MG lookahead. Using
         // more lookahead MGs may result in disadvantageous trade-offs (speed/BDR/memory).
         if (scs->static_config.look_ahead_distance < mg_size)
             tpl_lad_mg = 0;
@@ -5043,10 +5043,10 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
             }
             else {
                 svt_aom_assert_err(node->size == sizeof(SvtAv1InputPicDef),
-                    "invalide private data of type RES_CHANGE_EVENT");
+                    "invalid private data of type RES_CHANGE_EVENT");
                 SvtAv1InputPicDef  *input_pic_def = (SvtAv1InputPicDef *)node->data;
                 svt_block_on_mutex(config_mutex);
-                // Check if a resolution change occured
+                // Check if a resolution change occurred
                 scs->max_input_luma_width = input_pic_def->input_luma_width;
                 scs->max_input_luma_height = input_pic_def->input_luma_height;
                 scs->max_input_pad_right = input_pic_def->input_pad_right;

@@ -1460,7 +1460,7 @@ void svt_aom_cyclic_refresh_init(PictureParentControlSet *ppcs) {
     // Use larger delta-qp (increase rate_ratio_qdelta) for first few
     // refresh cycles after a key frame (svc) or scene change (non svc).
     // For non svc screen content, after a scene change gradually reduce
-    // this boost and supress it further if either of the previous two
+    // this boost and suppress it further if either of the previous two
     // frames overshot.
     if (cr->percent_refresh > 0) {
         if (!ppcs->sc_class1) {
@@ -2571,7 +2571,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs) {
         }
         // For alt_ref and GF frames (including internal arf frames) adjust the
         // worst allowed quality as well. This insures that even on hard
-        // sections we dont clamp the Q at the same value for arf frames and
+        // sections we don't clamp the Q at the same value for arf frames and
         // leaf (non arf) frames. This is important to the TPL model which assumes
         // Q drops with each arf level.
         if (!(pcs->ppcs->is_overlay) &&

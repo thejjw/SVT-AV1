@@ -3024,7 +3024,7 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
             if (me_data_present) {
                 // Early MVP vs. ME_MV check; do not perform PME search for blocks that have a valid ME_MV unless the ME_MV has a different direction than all MVP(s) and the ME_MV mag is higher than MV_TH (not around(0,0))
                 if (ctx->md_pme_ctrls.early_check_mv_th_multiplier != MIN_SIGNED_VALUE) {
-                    uint8_t is_me_mv_diffrent_than_mvp = 0;
+                    uint8_t is_me_mv_different_than_mvp = 0;
                     for (int8_t mvp_index = 0; mvp_index < ctx->mvp_count[list_idx][ref_idx]; mvp_index++) {
                         Mv mvp = {.as_int = ctx->mvp_array[list_idx][ref_idx][mvp_index].as_int};
 
@@ -3035,7 +3035,7 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
                         // Check x direction
                         if (ABS(mvp.x) > mv_th) {
                             if (ctx->fp_me_mv[list_idx][ref_idx].x * mvp.x < 0) {
-                                is_me_mv_diffrent_than_mvp = 1;
+                                is_me_mv_different_than_mvp = 1;
                                 break;
                             }
                         }
@@ -3043,13 +3043,13 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
                         // Check y direction
                         if (ABS(mvp.y) > mv_th) {
                             if (ctx->fp_me_mv[list_idx][ref_idx].y * mvp.y < 0) {
-                                is_me_mv_diffrent_than_mvp = 1;
+                                is_me_mv_different_than_mvp = 1;
                                 break;
                             }
                         }
                     }
 
-                    if (is_me_mv_diffrent_than_mvp == 0) {
+                    if (is_me_mv_different_than_mvp == 0) {
                         ctx->valid_pme_mv[list_idx][ref_idx]       = 1;
                         ctx->pme_res[list_idx][ref_idx].dist       = ctx->post_subpel_me_mv_cost[list_idx][ref_idx];
                         ctx->best_pme_mv[list_idx][ref_idx].as_int = ctx->sub_me_mv[list_idx][ref_idx].as_int;
@@ -3675,7 +3675,7 @@ static void check_best_indepedant_cfl(PictureControlSet *pcs, EbPictureBufferDes
                 (int64_t)RDCOST(full_lambda, ctx->md_rate_est_ctx->palette_uv_mode_fac_bits[0][use_palette_uv], 0);
         }
     }
-    // cfl vs. best independant
+    // cfl vs. best independent
     if (ctx->ind_uv_avail &&
         ((uint64_t)(ctx->best_uv_cost[cand_bf->cand->block_mi.mode] + ind_palette_cost_diff) < cfl_uv_cost)) {
         // Update the current candidate
@@ -4445,7 +4445,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                             (txbwidth * txbheight))
                         << ctx->mds_subres_step;
 
-                    // If SATD of current type is better than the prevous best, update best, and continue evaluating tx_type
+                    // If SATD of current type is better than the previous best, update best, and continue evaluating tx_type
                     if (satd < best_satd_tx_search) {
                         best_satd_tx_search = satd;
                     } else {
@@ -6431,7 +6431,7 @@ static void full_loop_core(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                              &cb_coeff_bits,
                              &cr_coeff_bits,
                              1);
-        // If CFL is performed, check independant chroma vs. cfl.
+        // If CFL is performed, check independent chroma vs. cfl.
         // If independent chroma data is unavailable, update the chroma fast rate, since the rate computed
         // at MDS0 assumes UV_DC_PRED is used.
         if (cfl_performed) {

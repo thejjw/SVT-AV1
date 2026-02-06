@@ -743,7 +743,7 @@ typedef std::tuple<TestPattern, SADPattern,
  *
  *
  * Expect result:
- *  Results come from reference function and SIMD funtion are equal.
+ *  Results come from reference function and SIMD function are equal.
  *
  **/
 
@@ -1015,7 +1015,7 @@ INSTANTIATE_TEST_SUITE_P(
  *
  *
  * Expect result:
- *  Results come from reference function and SIMD funtion are equal.
+ *  Results come from reference function and SIMD function are equal.
  *
  * Test coverage:
  *
@@ -1167,7 +1167,7 @@ INSTANTIATE_TEST_SUITE_P(
  *
  *
  * Expect result:
- *  Results come from reference function and SIMD funtion are equal.
+ *  Results come from reference function and SIMD function are equal.
  **/
 
 typedef void (*svt_ext_sad_calculation_32x32_64x64_fn)(
@@ -1451,7 +1451,7 @@ class SADTestBase16bit : public ::testing::Test {
  *
  *
  * Expect result:
- *  Results from reference function SIMD funtion are equal.
+ *  Results from reference function SIMD function are equal.
  *
  * Test cases:
  *  Width {4, 8, 16, 24, 32, 48, 64, 128} x height{ 4, 8, 16, 24, 32, 48, 64,

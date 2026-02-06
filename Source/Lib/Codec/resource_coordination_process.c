@@ -705,9 +705,9 @@ static void update_input_pic_def(ResourceCoordinationContext *ctx, EbBufferHeade
         if (node->node_type == RES_CHANGE_EVENT) {
             if (input_ptr->pic_type == EB_AV1_KEY_PICTURE) {
                 svt_aom_assert_err(node->size == sizeof(SvtAv1InputPicDef) && node->data,
-                                   "invalide private data of type RES_CHANGE_EVENT");
+                                   "invalid private data of type RES_CHANGE_EVENT");
                 SvtAv1InputPicDef *input_pic_def = (SvtAv1InputPicDef *)node->data;
-                // Check if a resolution change occured
+                // Check if a resolution change occurred
                 scs->max_input_luma_width  = input_pic_def->input_luma_width;
                 scs->max_input_luma_height = input_pic_def->input_luma_height;
                 scs->max_input_pad_right   = input_pic_def->input_pad_right;
@@ -726,7 +726,7 @@ static void update_rate_info(ResourceCoordinationContext *ctx, EbBufferHeaderTyp
     while (node) {
         if (node->node_type == RATE_CHANGE_EVENT) {
             svt_aom_assert_err(node->size == sizeof(SvtAv1RateInfo) && node->data,
-                               "invalide private data of type RATE_CHANGE_EVENT");
+                               "invalid private data of type RATE_CHANGE_EVENT");
             SvtAv1RateInfo *input_pic_def = (SvtAv1RateInfo *)node->data;
             if (input_pic_def->seq_qp != 0)
                 scs->static_config.qp = input_pic_def->seq_qp;
@@ -769,7 +769,7 @@ static void update_frame_event(PictureParentControlSet *pcs, uint64_t pic_num) {
             pcs->rc_reset_flag = true;
         } else if (node->node_type == ROI_MAP_EVENT) {
             svt_aom_assert_err(node->size == sizeof(SvtAv1RoiMapEvt *) && node->data,
-                               "invalide private data of type ROI_MAP_EVENT");
+                               "invalid private data of type ROI_MAP_EVENT");
             scs->enc_ctx->roi_map_evt = (SvtAv1RoiMapEvt *)node->data;
         } else if (node->node_type == COMPUTE_QUALITY_EVENT) {
             svt_aom_assert_err(node->size == sizeof(SvtAv1ComputeQualityInfo) && node->data,
@@ -788,9 +788,9 @@ static void update_frame_event(PictureParentControlSet *pcs, uint64_t pic_num) {
     }
 }
 
-// When the end of sequence recieved, there is no need to inject a new PCS.
+// When the end of sequence received, there is no need to inject a new PCS.
 // terminating_picture_number and terminating_sequence_flag_received are set. When all
-// the pictures in the packetiztion queue are processed, EOS is signalled to the application.
+// the pictures in the packetization queue are processed, EOS is signalled to the application.
 static void set_eos_terminating_signals(PictureParentControlSet *pcs) {
     SequenceControlSet *scs     = pcs->scs;
     EncodeContext      *enc_ctx = scs->enc_ctx;
@@ -900,7 +900,7 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
         update_rate_info(context_ptr, eb_input_ptr, scs);
         // Update the frame rate
         update_frame_rate_info(context_ptr, eb_input_ptr, scs);
-        // If config changes occured since the last picture began encoding, then
+        // If config changes occurred since the last picture began encoding, then
         //   prepare a new scs containing the new changes and update the state
         //   of the previous Active scs
         svt_block_on_mutex(context_ptr->scs_instance->config_mutex);
@@ -1205,9 +1205,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
                     // Post the finished Results Object
                     svt_post_full_object(output_wrapper_ptr);
                 } else {
-                    // When the end of sequence recieved, there is no need to inject a new PCS.
+                    // When the end of sequence received, there is no need to inject a new PCS.
                     // terminating_picture_number and terminating_sequence_flag_received are set. When all
-                    // the pictures in the packetiztion queue are processed, EOS is signalled to the application.
+                    // the pictures in the packetization queue are processed, EOS is signalled to the application.
                     set_eos_terminating_signals(ppcs_out);
                 }
             } else {
@@ -1238,9 +1238,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
                     svt_post_full_object(output_wrapper_ptr);
                 }
                 if (end_of_sequence_flag) {
-                    // When the end of sequence recieved, there is no need to inject a new PCS.
+                    // When the end of sequence received, there is no need to inject a new PCS.
                     // terminating_picture_number and terminating_sequence_flag_received are set. When all
-                    // the pictures in the packetiztion queue are processed, EOS is signalled to the application.
+                    // the pictures in the packetization queue are processed, EOS is signalled to the application.
                     set_eos_terminating_signals(pcs);
                 }
             }

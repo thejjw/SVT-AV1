@@ -75,7 +75,7 @@ static void check_set_prio(void) {
     /* We can only use realtime priority if we are running as root, so
      * check if geteuid() == 0 (meaning either root or sudo).
      * If we don't do this check, we will eventually run into memory
-     * issues if the encoder is uninitalized and re-initalized multiple
+     * issues if the encoder is uninitialized and re-initialized multiple
      * times in one executable due to a bug in glibc.
      * https://sourceware.org/bugzilla/show_bug.cgi?id=19511
      *
@@ -89,7 +89,7 @@ static void check_set_prio(void) {
     pthread_attr_t attr;
     int            ret;
     if ((ret = pthread_attr_init(&attr))) {
-        SVT_WARN("Failed to initalize thread attributes: %s\n", strerror(ret));
+        SVT_WARN("Failed to initialize thread attributes: %s\n", strerror(ret));
         return;
     }
     struct sched_param param;
@@ -140,7 +140,7 @@ EbHandle svt_create_thread(void *thread_function(void *), void *thread_context) 
 
     pthread_attr_t attr;
     if (pthread_attr_init(&attr)) {
-        SVT_ERROR("Failed to initalize thread attributes\n");
+        SVT_ERROR("Failed to initialize thread attributes\n");
         return NULL;
     }
 

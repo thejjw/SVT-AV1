@@ -581,7 +581,7 @@ static void av1_encode_loop(PictureControlSet *pcs, EncDecContext *ed_ctx, uint3
 *   org_y
 *   txb_size
 *   sb_sz
-*   input - Inverse Qunatized Coeff (position sensitive)
+*   input - Inverse Quantized Coeff (position sensitive)
 *   pred - prediction samples (position independent)
 *
 * Outputs:

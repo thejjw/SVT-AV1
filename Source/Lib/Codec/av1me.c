@@ -199,9 +199,9 @@ int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv 
             (use_mvcost ? svt_aom_mv_err_cost(&mv, center_mv, x->nmv_vec_cost, x->mv_cost_stack, x->errorperbit) : 0);
 }
 
-// Exhuastive motion search around a given centre position with a given
+// Exhaustive motion search around a given centre position with a given
 // step size.
-static int exhuastive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
+static int exhaustive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
                                   const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
     const struct Buf2D *const what       = &x->plane[0].src;
     const struct Buf2D *const in_what    = &x->xdplane[0].pre[0];
@@ -569,14 +569,14 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
     interval = AOMMAX(interval, range / baseline_interval_divisor);
 
     // initial search
-    bestsme = exhuastive_mesh_search(x, &f_ref_mv, &temp_mv, range, interval, sadpb, fn_ptr, &temp_mv);
+    bestsme = exhaustive_mesh_search(x, &f_ref_mv, &temp_mv, range, interval, sadpb, fn_ptr, &temp_mv);
 
     if ((interval > MIN_INTERVAL) && (range > MIN_RANGE)) {
         // Progressive searches with range and step size decreasing each time
         // till we reach a step size of 1. Then break out.
         for (int i = 1; i < MAX_MESH_STEP; ++i) {
             // First pass with coarser step and longer range
-            bestsme = exhuastive_mesh_search(x,
+            bestsme = exhaustive_mesh_search(x,
                                              &f_ref_mv,
                                              &temp_mv,
                                              sf->mesh_patterns[i].range,
@@ -1046,12 +1046,12 @@ int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSi
         pcs, x, mvp_full, step_param, error_per_bit, MAX_MVSEARCH_STEPS - 1 - step_param, 1, cost_list, fn_ptr, ref_mv);
 
     if (x->is_exhaustive_allowed) {
-        int exhuastive_thr = sf->exhaustive_searches_thresh;
-        exhuastive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
+        int exhaustive_thr = sf->exhaustive_searches_thresh;
+        exhaustive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
 
-        exhuastive_thr = exhuastive_thr << ibc_shift;
+        exhaustive_thr = exhaustive_thr << ibc_shift;
 
-        if (var > exhuastive_thr) {
+        if (var > exhaustive_thr) {
             int var_ex;
             Mv  tmp_mv_ex;
             var_ex = full_pixel_exhaustive(pcs, x, &x->best_mv, error_per_bit, cost_list, fn_ptr, ref_mv, &tmp_mv_ex);

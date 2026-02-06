@@ -2810,7 +2810,7 @@ TxType svt_aom_get_intra_uv_tx_type(UvPredictionMode pred_mode_uv, TxSize tx_siz
     }
 
     // In intra mode, uv planes don't share the same prediction mode as y
-    // plane, so the tx_type should not be shared. Pass DC_PRED as luma mode because the arguement
+    // plane, so the tx_type should not be shared. Pass DC_PRED as luma mode because the argument
     // will not be used.
     TxType tx_type = intra_mode_to_tx_type(DC_PRED, pred_mode_uv, PLANE_TYPE_UV);
     assert(tx_type < TX_TYPES);

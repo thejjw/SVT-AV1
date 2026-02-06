@@ -190,7 +190,7 @@ extern "C" {
         uint8_t allow_intrabc,
         FRAME_CONTEXT                  *fc);
     /**************************************************************************
-    * Estimate the rate of the quantised coefficient
+    * Estimate the rate of the quantized coefficient
     * based on the frame CDF
     ***************************************************************************/
     extern void svt_aom_estimate_coefficients_rate(

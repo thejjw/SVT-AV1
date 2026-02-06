@@ -896,7 +896,7 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t *src, uint16_t width, uint16_
     // v   = 4*E - 2*(D+F+B+H) + (A+C+G+I)
 
     const __m256i zero            = _mm256_setzero_si256();
-    const __m256i edge_treshold   = _mm256_set1_epi16(EDGE_THRESHOLD);
+    const __m256i edge_threshold  = _mm256_set1_epi16(EDGE_THRESHOLD);
     __m256i       num_accumulator = _mm256_setzero_si256();
     __m256i       sum_accumulator = _mm256_setzero_si256();
 
@@ -930,7 +930,7 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t *src, uint16_t width, uint16_
                 _mm256_add_epi16(_mm256_sub_epi16(_mm256_slli_epi16(E, 2), D_F_B_Hx2), A_C_G_I));
 
             //if (ga < EDGE_THRESHOLD)
-            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_treshold, ga_avx), 15);
+            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_threshold, ga_avx), 15);
             v_avx2      = _mm256_mullo_epi16(v_avx2, cmp);
 
             //num_accumulator and sum_accumulator have 32bit values
@@ -988,7 +988,7 @@ int32_t svt_estimate_noise_highbd_fp16_avx2(const uint16_t *src, int width, int 
     // v   = 4*E - 2*(D+F+B+H) + (A+C+G+I)
 
     const __m256i zero            = _mm256_setzero_si256();
-    const __m256i edge_treshold   = _mm256_set1_epi16(EDGE_THRESHOLD);
+    const __m256i edge_threshold  = _mm256_set1_epi16(EDGE_THRESHOLD);
     __m256i       num_accumulator = _mm256_setzero_si256();
     __m256i       sum_accumulator = _mm256_setzero_si256();
     const __m256i rounding        = _mm256_set1_epi16(1 << ((bd - 8) - 1));
@@ -1023,7 +1023,7 @@ int32_t svt_estimate_noise_highbd_fp16_avx2(const uint16_t *src, int width, int 
                 _mm256_add_epi16(_mm256_sub_epi16(_mm256_slli_epi16(E, 2), D_F_B_Hx2), A_C_G_I));
 
             //if (ga < EDGE_THRESHOLD)
-            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_treshold, ga_avx), 15);
+            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_threshold, ga_avx), 15);
             v_avx2      = _mm256_srai_epi16(_mm256_add_epi16(_mm256_mullo_epi16(v_avx2, cmp), rounding), (bd - 8));
 
             //num_accumulator and sum_accumulator have 32bit values

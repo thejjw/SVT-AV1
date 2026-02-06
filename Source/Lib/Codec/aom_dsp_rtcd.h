@@ -25,7 +25,7 @@
 #ifdef AOM_RTCD_C
 #define RTCD_EXTERN                //CHKN RTCD call in effect. declare the function pointers in  encHandle.
 #else
-#define RTCD_EXTERN extern         //CHKN run time externing the fucntion pointers.
+#define RTCD_EXTERN extern         //CHKN run time externing the function pointers.
 #endif
 
  /**************************************

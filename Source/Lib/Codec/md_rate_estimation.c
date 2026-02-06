@@ -434,7 +434,7 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
 }
 /**************************************************************************
  * svt_aom_estimate_coefficients_rate()
- * Estimate the rate of the quantised coefficient
+ * Estimate the rate of the quantized coefficient
  * based on the frame CDF
  ***************************************************************************/
 void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx, FRAME_CONTEXT *fc) {

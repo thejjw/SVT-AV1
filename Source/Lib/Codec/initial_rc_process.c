@@ -164,7 +164,7 @@ static uint8_t is_frame_already_exists(PictureParentControlSet *pcs, uint32_t en
 
 // validate pictures that will be used by the tpl algorithm based on tpl opts
 void validate_pic_for_tpl(PictureParentControlSet *pcs, uint32_t pic_index) {
-    // Check wether the i-th pic already exists in the tpl group
+    // Check whether the i-th pic already exists in the tpl group
     if (!is_frame_already_exists(pcs, pic_index, pcs->tpl_group[pic_index]->picture_number) &&
         // In the middle pass when rc_stat_gen_pass_mode is set, pictures in the highest temporal layer are skipped,
         // except the first one. The condition is added to prevent validating these frames for tpl

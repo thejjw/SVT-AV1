@@ -3023,7 +3023,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                             md_ctx->sb_origin_y >> 2,
                                                             md_ctx->sb_origin_x >> 2);
                                 // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
-                                // Reset neighnor information to current SB @ position (0,0)
+                                // Reset neighbor information to current SB @ position (0,0)
                                 if (!ed_ctx->md_ctx->skip_intra)
                                     copy_neighbour_arrays_light_pd0(pcs,
                                                                     ed_ctx->md_ctx,
@@ -3054,7 +3054,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                        md_ctx->sb_origin_y >> 2,
                                                        md_ctx->sb_origin_x >> 2);
                                 // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
-                                // Reset neighnor information to current SB @ position (0,0)
+                                // Reset neighbor information to current SB @ position (0,0)
                                 svt_aom_copy_neighbour_arrays(pcs,
                                                               ed_ctx->md_ctx,
                                                               MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX,
