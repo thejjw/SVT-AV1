@@ -117,7 +117,8 @@ static void determine_best_references(PictureControlSet *pcs, ModeDecisionContex
 /***************************************************
 * Update Recon Samples Neighbor Arrays
 ***************************************************/
-static void mode_decision_update_neighbor_arrays_light_pd0(SequenceControlSet* scs, ModeDecisionContext *ctx, uint32_t best_d1_idx) {
+static void mode_decision_update_neighbor_arrays_light_pd0(SequenceControlSet *scs, ModeDecisionContext *ctx,
+                                                           uint32_t best_d1_idx) {
     ctx->blk_geom  = get_blk_geom_mds(scs->blk_geom_mds, best_d1_idx);
     ctx->blk_org_x = ctx->sb_origin_x + ctx->blk_geom->org_x;
     ctx->blk_org_y = ctx->sb_origin_y + ctx->blk_geom->org_y;
@@ -8985,7 +8986,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (blk_geom->shape == PART_N || ctx->avail_blk_flag[blk_geom->sqi_mds] == false)
         return skip_nsq;
 
-    const BlockGeom* sq_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_geom->sqi_mds);
+    const BlockGeom *sq_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_geom->sqi_mds);
     // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
     const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
                                      ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
@@ -9860,17 +9861,27 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs
     pc_tree->block_data[PART_N][0]->split_flag = false;
     pc_tree->rdc.valid                         = 0;
 
-    // Iterate over all blocks which are flagged to be considered
+    // Check that shape is valid, and adjust tested blocks so only valid blocks are tested
+    // LPD0 assumes one block per shape
+    if (mds->tot_shapes) {
+        const Part shape    = mds->shapes[0];
+        const int  mi_rows  = pcs->ppcs->av1_cm->mi_rows;
+        const int  mi_cols  = pcs->ppcs->av1_cm->mi_cols;
+        const int  hbs      = mi_size_wide[mds->bsize] >> 1;
+        const bool has_rows = mi_row + hbs < mi_rows;
+        const bool has_cols = mi_col + hbs < mi_cols;
+        if ((!has_rows && !has_cols) || (!has_cols && shape != PART_V) || (!has_rows && shape != PART_H)) {
+            mds->tot_shapes = 0;
+        }
+    }
+
     if (mds->tot_shapes) {
         const Part     shape          = mds->shapes[0];
         const uint32_t blk_idx_mds    = mds->mds_idx + ns_blk_offset_md[shape];
-        const uint8_t  blk_split_flag = mds->split_flag; // mdc_sb_data->split_flag[blk_idx];
+        const uint8_t  blk_split_flag = mds->split_flag;
 
         ctx->blk_geom                 = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
         pc_tree->block_data[shape][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
-        // Only valid blocks should get here; LPD0 assumes one block per shape.
-        assert(((ctx->sb_origin_y + ctx->blk_geom->org_y) >> 2) < (uint32_t)pcs->ppcs->av1_cm->mi_rows &&
-               ((ctx->sb_origin_x + ctx->blk_geom->org_x) >> 2) < (uint32_t)pcs->ppcs->av1_cm->mi_cols);
 
         // Neighbour partition array is not updated in PD0, so set neighbour info to invalid.
         ctx->blk_ptr->left_part_ctx  = 0;
@@ -9954,6 +9965,20 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs
     pc_tree->block_data[PART_N][0]->split_flag = false;
     pc_tree->rdc.valid                         = 0;
 
+    // Check that shape is valid, and adjust tested blocks so only valid blocks are tested.
+    // LPD1 assumes one block per shape
+    if (mds->tot_shapes) {
+        const Part shape    = mds->shapes[0];
+        const int  mi_rows  = pcs->ppcs->av1_cm->mi_rows;
+        const int  mi_cols  = pcs->ppcs->av1_cm->mi_cols;
+        const int  hbs      = mi_size_wide[mds->bsize] >> 1;
+        const bool has_rows = mi_row + hbs < mi_rows;
+        const bool has_cols = mi_col + hbs < mi_cols;
+        if ((!has_rows && !has_cols) || (!has_cols && shape != PART_V) || (!has_rows && shape != PART_H)) {
+            mds->tot_shapes = 0;
+        }
+    }
+
     // Test current depth if flagged to be tested
     if (mds->tot_shapes) {
         // LPD1 does not support NSQ shapes, except for H/V at the picture boundaries. In all cases,
@@ -9964,10 +9989,6 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs
         // Get the blk_geom and blk_ptr for the current block within the shape being tested
         ctx->blk_geom                          = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
         pc_tree->block_data[mds->shapes[0]][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
-
-        // Only valid blocks should get here; LPD1 assumes one block per shape.
-        assert(((ctx->sb_origin_y + ctx->blk_geom->org_y) >> 2) < (uint32_t)pcs->ppcs->av1_cm->mi_rows &&
-               ((ctx->sb_origin_x + ctx->blk_geom->org_x) >> 2) < (uint32_t)pcs->ppcs->av1_cm->mi_cols);
 
         // LPD1 assumes a fixed partition structure, so partition neighbour arrays (blk_ptr->left_neighbor_partition and
         // blk_ptr->above_neighbor_partition) are not updated, and the neighbour arrays will not be accessed, since the
@@ -10279,7 +10300,7 @@ static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDeci
 
         for (uint32_t nsi = 0; nsi < shape_block_cnt; nsi++, blk_idx_mds++) {
             // Get the blk_geom and blk_ptr for the current block within the shape being tested
-            ctx->blk_geom = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
+            ctx->blk_geom                   = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
             pc_tree->block_data[shape][nsi] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
 
             init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
