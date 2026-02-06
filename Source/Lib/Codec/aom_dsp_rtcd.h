@@ -218,7 +218,6 @@ extern "C" {
     RTCD_EXTERN int(*svt_aom_satd)(const TranLow *coeff, int length);
     int64_t svt_av1_block_error_c(const TranLow *coeff, const TranLow *dqcoeff, intptr_t block_size, int64_t *ssz);
     RTCD_EXTERN int64_t(*svt_av1_block_error)(const TranLow *coeff, const TranLow *dqcoeff, intptr_t block_size, int64_t *ssz);
-    RTCD_EXTERN void(*svt_smooth_v_predictor)(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above, const uint8_t *left);
     void svt_get_proj_subspace_c(const uint8_t *src8, int width, int height, int src_stride, const uint8_t *dat8, int dat_stride, int use_highbitdepth, int32_t *flt0, int flt0_stride, int32_t *flt1, int flt1_stride, int *xq, const SgrParamsType *params);
     RTCD_EXTERN void(*svt_get_proj_subspace)(const uint8_t *src8, int width, int height, int src_stride, const uint8_t *dat8, int dat_stride, int use_highbitdepth, int32_t *flt0, int flt0_stride, int32_t *flt1, int flt1_stride, int *xq, const SgrParamsType *params);
     uint64_t svt_handle_transform16x64_c(int32_t *output);
@@ -795,8 +794,6 @@ extern "C" {
     RTCD_EXTERN void(*svt_sad_loop_kernel)(uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride, uint32_t block_height, uint32_t block_width, uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center, uint32_t src_stride_raw, uint8_t skip_search_line, int16_t search_area_width, int16_t search_area_height);
     void svt_av1_txb_init_levels_c(const TranLow *const coeff, const int32_t width, const int32_t height, uint8_t *const levels);
     RTCD_EXTERN void(*svt_av1_txb_init_levels)(const TranLow *const coeff, const int32_t width, const int32_t height, uint8_t *const levels);
-    void svt_av1_get_gradient_hist_c(const uint8_t *src, int src_stride, int rows, int cols, uint64_t *hist);
-    RTCD_EXTERN void(*svt_av1_get_gradient_hist)(const uint8_t *src, int src_stride, int rows, int cols, uint64_t *hist);
     double svt_av1_compute_cross_correlation_c(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
     RTCD_EXTERN double(*svt_av1_compute_cross_correlation)(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
     void svt_av1_k_means_dim1_c(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
@@ -807,10 +804,6 @@ extern "C" {
     RTCD_EXTERN void(*svt_av1_calc_indices_dim1)(const int* data, const int* centroids, uint8_t* indices, int n, int k);
     void svt_av1_calc_indices_dim2_c(const int* data, const int* centroids, uint8_t* indices, int n, int k);
     RTCD_EXTERN void(*svt_av1_calc_indices_dim2)(const int* data, const int* centroids, uint8_t* indices, int n, int k);
-    RTCD_EXTERN void(*svt_av1_apply_filtering)(const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre, const uint8_t *v_pre, int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, int strength, const int *blk_fw, int use_whole_blk, uint32_t *y_accum, uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
-#if CONFIG_ENABLE_HIGH_BIT_DEPTH
-    RTCD_EXTERN void(*svt_av1_apply_filtering_highbd)(const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride, const uint16_t *u_src, const uint16_t *v_src, int uv_src_stride, const uint16_t *u_pre, const uint16_t *v_pre, int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, int strength, const int *blk_fw, int use_whole_blk, uint32_t *y_accum, uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
-#endif
 
     struct MeContext;
     RTCD_EXTERN void(*svt_av1_apply_zz_based_temporal_filter_planewise_medium)(
@@ -877,7 +870,6 @@ extern "C" {
     RTCD_EXTERN uint32_t(*nxm_sad_avg_kernel)(uint8_t *src, uint32_t src_stride, uint8_t *ref1, uint32_t ref1_stride, uint8_t *ref2, uint32_t ref2_stride, uint32_t height, uint32_t width);
     RTCD_EXTERN uint64_t(*svt_compute_mean_8x8)(uint8_t *input_samples, uint32_t input_stride, uint32_t input_area_width, uint32_t input_area_height);
     RTCD_EXTERN uint64_t(*svt_compute_mean_square_values_8x8)(uint8_t *input_samples, uint32_t input_stride, uint32_t input_area_width, uint32_t input_area_height);
-    RTCD_EXTERN uint64_t(*svt_compute_sub_mean_8x8)(uint8_t* input_samples, uint16_t input_stride);
     uint64_t svt_compute_sub_mean_8x8_c(uint8_t* input_samples, uint16_t input_stride);
     RTCD_EXTERN void(*svt_compute_interm_var_four8x8)(uint8_t *input_samples, uint16_t input_stride, uint64_t *mean_of8x8_blocks, uint64_t *mean_of_squared8x8_blocks);
     RTCD_EXTERN uint32_t(*sad_16b_kernel)(uint16_t *src, uint32_t src_stride, uint16_t *ref, uint32_t ref_stride, uint32_t height, uint32_t width);
@@ -890,8 +882,6 @@ extern "C" {
     RTCD_EXTERN uint32_t(*variance_highbd)(const uint16_t *a, int a_stride, const uint16_t *b, int b_stride, int w, int h, uint32_t *sse);
     uint32_t svt_aom_variance_highbd_c(const uint16_t *a, int a_stride, const uint16_t *b, int b_stride, int w, int h, uint32_t *sse);
 #endif
-    RTCD_EXTERN int(*svt_av1_haar_ac_sad_8x8_uint8_input)(uint8_t *input, int stride, int hbd);
-    int svt_av1_haar_ac_sad_8x8_uint8_input_c(uint8_t *input, int stride, int hbd);
     void svt_unpack_and_2bcompress_sse4_1(uint16_t *in16b_buffer, uint32_t in16b_stride, uint8_t *out8b_buffer, uint32_t out8b_stride, uint8_t *out2b_buffer, uint32_t out2b_stride, uint32_t width, uint32_t height);
     void svt_unpack_and_2bcompress_avx2(uint16_t *in16b_buffer, uint32_t in16b_stride, uint8_t *out8b_buffer, uint32_t out8b_stride, uint8_t *out2b_buffer, uint32_t out2b_stride, uint32_t width, uint32_t height);
     RTCD_EXTERN void (*svt_unpack_and_2bcompress)(uint16_t *in16b_buffer, uint32_t in16b_stride, uint8_t *out8b_buffer, uint32_t out8b_stride,uint8_t *out2b_buffer, uint32_t out2b_stride, uint32_t width, uint32_t height);
@@ -2105,7 +2095,6 @@ void svt_aom_ifft16x16_float_avx2(const float *input, float *temp, float *output
     void svt_av1_txb_init_levels_avx512(const TranLow *const coeff, const int32_t width, const int32_t height, uint8_t *const levels);
     int svt_aom_satd_avx2(const TranLow *coeff, int length);
     int64_t svt_av1_block_error_avx2(const TranLow *coeff, const TranLow *dqcoeff, intptr_t block_size, int64_t *ssz);
-    void svt_av1_get_gradient_hist_avx2(const uint8_t *src, int src_stride, int rows, int cols, uint64_t *hist);
     double svt_av1_compute_cross_correlation_sse4_1(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
     double svt_av1_compute_cross_correlation_avx2(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
     void svt_av1_k_means_dim1_avx2(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
@@ -2260,7 +2249,6 @@ void svt_aom_ifft16x16_float_avx2(const float *input, float *temp, float *output
     uint32_t svt_aom_variance_highbd_avx2(const uint16_t *a, int a_stride, const uint16_t *b, int b_stride,
                               int w, int h, uint32_t *sse);
 #endif
-    int svt_av1_haar_ac_sad_8x8_uint8_input_avx2(uint8_t *input, int stride, int hbd);
 #if CONFIG_ENABLE_OBMC
     void svt_av1_calc_target_weighted_pred_above_avx2(uint8_t is16bit, MacroBlockD* xd, int rel_mi_col, uint8_t nb_mi_width, MbModeInfo* nb_mi, void* fun_ctxt);
     void svt_av1_calc_target_weighted_pred_left_avx2(uint8_t is16bit, MacroBlockD* xd, int rel_mi_row, uint8_t nb_mi_height, MbModeInfo* nb_mi, void* fun_ctxt);

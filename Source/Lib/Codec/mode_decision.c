@@ -3016,83 +3016,33 @@ static void inject_intra_bc_candidates(PictureControlSet *pcs, ModeDecisionConte
         INC_MD_CAND_CNT((*cand_cnt), pcs->ppcs->max_can_count);
     }
 }
-// Indices are sign, integer, and fractional part of the gradient value
-static const uint8_t gradient_to_angle_bin[2][7][16] = {
-    {
-        {6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-    },
-    {
-        {6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4},
-        {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3},
-        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-        {3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-    },
-};
 
 /* clang-format off */
-void svt_av1_get_gradient_hist_c(const uint8_t *src, int src_stride, int rows,
-    int cols, uint64_t *hist) {
-    src += src_stride;
-    for (int r = 1; r < rows; ++r) {
-        for (int c = 1; c < cols; ++c) {
-            int dx = src[c] - src[c - 1];
-            int dy = src[c] - src[c - src_stride];
-            int index;
-            const int temp = dx * dx + dy * dy;
-            if (dy == 0) {
-                index = 2;
-            }
-            else {
-                const int sn = (dx > 0) ^ (dy > 0);
-                dx = abs(dx);
-                dy = abs(dy);
-                const int remd = (dx % dy) * 16 / dy;
-                const int quot = dx / dy;
-                index = gradient_to_angle_bin[sn][AOMMIN(quot, 6)][AOMMIN(remd, 15)];
-            }
-            hist[index] += temp;
-        }
-        src += src_stride;
-    }
+static void inject_intra_candidates_light_pd0( PictureControlSet *pcs,
+    ModeDecisionContext *ctx, uint32_t *candidate_total_cnt) {
+    uint32_t cand_total_cnt = 0;
+    ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_total_cnt];
+    cand->skip_mode_allowed = false;
+    cand->palette_info = NULL;
+    cand->block_mi.use_intrabc = 0;
+    cand->block_mi.filter_intra_mode = FILTER_INTRA_MODES;
+    cand->block_mi.angle_delta[PLANE_TYPE_Y] = 0;
+    cand->block_mi.uv_mode = UV_DC_PRED;
+    cand->block_mi.angle_delta[PLANE_TYPE_UV] = 0;
+    cand->block_mi.cfl_alpha_signs = 0;
+    cand->block_mi.cfl_alpha_idx = 0;
+    cand->transform_type[0] = DCT_DCT;
+    cand->transform_type_uv = DCT_DCT;
+    cand->block_mi.ref_frame[0] = INTRA_FRAME;
+    cand->block_mi.ref_frame[1] = NONE_FRAME;
+    cand->block_mi.mode = (PredictionMode)DC_PRED;
+    cand->block_mi.motion_mode = SIMPLE_TRANSLATION;
+    cand->block_mi.is_interintra_used = 0;
+   INC_MD_CAND_CNT (cand_total_cnt,pcs->ppcs->max_can_count);
+    // update the total number of candidates injected
+    (*candidate_total_cnt) = cand_total_cnt;
+    return;
 }
-
- static void inject_intra_candidates_light_pd0( PictureControlSet *pcs,
-     ModeDecisionContext *ctx, uint32_t *candidate_total_cnt) {
-     uint32_t cand_total_cnt = 0;
-
-     ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_total_cnt];
-     cand->skip_mode_allowed = false;
-     cand->palette_info = NULL;
-     cand->block_mi.use_intrabc = 0;
-     cand->block_mi.filter_intra_mode = FILTER_INTRA_MODES;
-     cand->block_mi.angle_delta[PLANE_TYPE_Y] = 0;
-     cand->block_mi.uv_mode = UV_DC_PRED;
-     cand->block_mi.angle_delta[PLANE_TYPE_UV] = 0;
-     cand->block_mi.cfl_alpha_signs = 0;
-     cand->block_mi.cfl_alpha_idx = 0;
-     cand->transform_type[0] = DCT_DCT;
-     cand->transform_type_uv = DCT_DCT;
-     cand->block_mi.ref_frame[0] = INTRA_FRAME;
-     cand->block_mi.ref_frame[1] = NONE_FRAME;
-     cand->block_mi.mode = (PredictionMode)DC_PRED;
-     cand->block_mi.motion_mode = SIMPLE_TRANSLATION;
-     cand->block_mi.is_interintra_used = 0;
-    INC_MD_CAND_CNT (cand_total_cnt,pcs->ppcs->max_can_count);
-
-     // update the total number of candidates injected
-     (*candidate_total_cnt) = cand_total_cnt;
-
-     return;
- }
 
 static void inject_intra_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx,
     const bool dc_cand_only_flag, uint32_t *candidate_total_cnt) {

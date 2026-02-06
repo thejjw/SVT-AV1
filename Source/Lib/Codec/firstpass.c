@@ -23,7 +23,6 @@
 #include "svt_log.h"
 #include "md_process.h"
 #include "coding_loop.h"
-#include "dwt.h" // to move to firstpass.c
 #include "pd_process.h"
 #include "md_config_process.h"
 #include "mv.h"
