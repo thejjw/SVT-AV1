@@ -56,6 +56,10 @@ typedef struct QpBasedThScaling {
     bool cap_max_size_qp_based_th_scaling;
     bool var_skip_sub_depth_qp_based_th_scaling;
 } QpBasedThScaling;
+
+// Forward declaration for block geometry
+struct BlockGeom;
+
 /************************************
      * Sequence Control Set
      ************************************/
@@ -153,6 +157,8 @@ typedef struct SequenceControlSet {
     uint16_t picture_height_in_sb;
     uint16_t sb_total_count;
     uint16_t max_block_cnt;
+    // Pointer to block geometry table (owned by EbEncHandle)
+    struct BlockGeom *blk_geom_mds;
     /*!< Restoration Unit parameters set for the stream */
     int32_t rest_units_per_tile;
     /*!< Sub picture reagions for picture analysis */
