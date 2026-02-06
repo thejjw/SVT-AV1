@@ -1477,8 +1477,6 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
     }
 }
 
-#define LOW_8x8_DIST_VAR_TH 25000
-#define HIGH_8x8_DIST_VAR_TH 50000
 static void copy_neighbour_arrays_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t src_idx,
                                             uint32_t dst_idx, uint32_t sb_org_x, uint32_t sb_org_y) {
     const uint16_t tile_idx = ctx->tile_index;
@@ -2167,8 +2165,7 @@ static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSe
         }
 
         // adjust SB qindex based on variance
-        // note: do not enable Variance Boost for CBR rate control mode
-        if (scs->static_config.enable_variance_boost && scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR) {
+        if (scs->static_config.enable_variance_boost) {
             svt_variance_adjust_qp(pcs);
         }
 

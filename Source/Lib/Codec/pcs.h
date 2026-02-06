@@ -1060,8 +1060,6 @@ typedef struct PictureParentControlSet {
     int this_frame_target; // Actual frame target after rc adjustment.
     int projected_frame_size;
     int max_frame_size;
-    int frames_to_key;
-    int frames_since_key;
     int top_index;
     int bottom_index;
     // stores gf group (minigop) length

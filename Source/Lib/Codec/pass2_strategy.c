@@ -28,7 +28,6 @@
 static void init_gf_stats(GF_GROUP_STATS *gf_stats);
 // Calculate a modified Error used in distributing bits between easier and
 // harder frames.
-#define ACT_AREA_CORRECTION 0.5
 static double calculate_modified_err(const TWO_PASS *twopass, const FIRSTPASS_STATS *this_frame) {
     const FIRSTPASS_STATS *const stats = twopass->stats_buf_ctx->total_stats;
     if (stats == NULL)
@@ -106,8 +105,6 @@ static int find_qindex_by_rate_with_correction(int desired_bits_per_mb, aom_bit_
     return low;
 }
 
-// Bits Per MB at different Q (Multiplied by 512)
-#define BPER_MB_NORMBITS 9
 /*!\brief Choose a target maximum Q for a group of frames
  *
  * \ingroup rate_control
@@ -358,7 +355,6 @@ static void init_gf_stats(GF_GROUP_STATS *gf_stats) {
     gf_stats->this_frame_mv_in_out    = 0.0;
 }
 
-#define FRAME_OVERHEAD_BITS 200
 static int av1_rc_clamp_iframe_target_size(PictureParentControlSet *pcs, int target) {
     SequenceControlSet         *scs     = pcs->scs;
     EncodeContext              *enc_ctx = scs->enc_ctx;
@@ -434,7 +430,7 @@ static int av1_calc_iframe_target_size_one_pass_cbr(PictureParentControlSet *pcs
 static void av1_gop_bit_allocation(PictureParentControlSet *ppcs, RATE_CONTROL *const rc, int is_key_frame,
                                    int gf_interval, int use_arf, int64_t gf_group_bits);
 int         svt_aom_frame_is_kf_gf_arf(PictureParentControlSet *ppcs);
-#define MAX_GF_BOOST 5400
+
 /***********************************************************************************
 * calculate_gf_stats()
 * calculate the gf group stat by looping over frames within the gf
@@ -663,7 +659,7 @@ static double lap_rc_group_error_calc(PictureParentControlSet *pcs, FIRSTPASS_ST
     const FIRSTPASS_STATS *const start_position       = twopass->stats_in;
 
     // loop over the look ahead and calculate the modified_error_total
-    while (twopass->stats_in <= twopass->stats_buf_ctx->stats_in_end && num_stats < pcs->frames_to_key) {
+    while (twopass->stats_in <= twopass->stats_buf_ctx->stats_in_end && num_stats < scs->enc_ctx->rc.frames_to_key) {
         num_stats++;
         // Accumulate error.
         modified_error_total += calculate_modified_err(twopass, &this_frame);
@@ -1150,7 +1146,6 @@ void svt_aom_set_rc_param(SequenceControlSet *scs) {
     EncodeContext *enc_ctx    = scs->enc_ctx;
     FrameInfo     *frame_info = &enc_ctx->frame_info;
 
-    const int is_vbr = scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR;
     if (scs->first_pass_ctrls.ds) {
         frame_info->frame_width  = scs->max_input_luma_width << 1;
         frame_info->frame_height = scs->max_input_luma_height << 1;
@@ -1181,6 +1176,7 @@ void svt_aom_set_rc_param(SequenceControlSet *scs) {
         enc_ctx->rc_cfg.over_shoot_pct  = scs->static_config.over_shoot_pct;
         enc_ctx->rc_cfg.under_shoot_pct = scs->static_config.under_shoot_pct;
     }
+    const int is_vbr                         = enc_ctx->rc_cfg.mode == AOM_VBR;
     enc_ctx->rc_cfg.maximum_buffer_size_ms   = is_vbr ? 240000 : scs->static_config.maximum_buffer_size_ms;
     enc_ctx->rc_cfg.starting_buffer_level_ms = is_vbr ? 60000 : scs->static_config.starting_buffer_level_ms;
     enc_ctx->rc_cfg.optimal_buffer_level_ms  = is_vbr ? 60000 : scs->static_config.optimal_buffer_level_ms;
