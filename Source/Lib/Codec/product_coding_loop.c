@@ -117,7 +117,12 @@ static void determine_best_references(PictureControlSet *pcs, ModeDecisionContex
 /***************************************************
 * Update Recon Samples Neighbor Arrays
 ***************************************************/
-static void mode_decision_update_neighbor_arrays_light_pd0(ModeDecisionContext *ctx) {
+static void mode_decision_update_neighbor_arrays_light_pd0(ModeDecisionContext *ctx, uint32_t best_d1_idx) {
+    ctx->blk_geom  = get_blk_geom_mds(best_d1_idx);
+    ctx->blk_org_x = ctx->sb_origin_x + ctx->blk_geom->org_x;
+    ctx->blk_org_y = ctx->sb_origin_y + ctx->blk_geom->org_y;
+    ctx->blk_ptr   = &ctx->md_blk_arr_nsq[best_d1_idx];
+
     uint32_t bwidth  = ctx->blk_geom->bwidth;
     uint32_t bheight = ctx->blk_geom->bheight;
 
@@ -6722,8 +6727,8 @@ static void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *ct
     dst->drl_ctx_near[1]          = src->drl_ctx_near[1];
     dst->cnt_nz_coeff             = src->cnt_nz_coeff;
     dst->full_dist                = src->full_dist;
-    dst->left_neighbor_partition  = src->left_neighbor_partition;
-    dst->above_neighbor_partition = src->above_neighbor_partition;
+    dst->left_part_ctx            = src->left_part_ctx;
+    dst->above_part_ctx           = src->above_part_ctx;
     dst->cost                     = src->cost;
     // Similar to cost but does not get updated @ svt_aom_d1_non_square_block_decision() and
     // svt_aom_d2_inter_depth_block_decision()
@@ -8980,6 +8985,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (blk_geom->shape == PART_N || ctx->avail_blk_flag[blk_geom->sqi_mds] == false)
         return skip_nsq;
 
+    const BlockGeom *sq_blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
     // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
     const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
                                      ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
@@ -8991,13 +8997,16 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (nsq_split_cost_th) {
         if (blk_geom->sq_size <= 16)
             nsq_split_cost_th = MAX(1, nsq_split_cost_th - ctx->nsq_search_ctrls.rate_th_offset_lte16);
-        const uint64_t part_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                               ctx,
-                                                               blk_geom->sqi_mds,
-                                                               from_shape_to_part[blk_geom->shape],
-                                                               full_lambda,
-                                                               true, // Use accurate split cost for early exit
-                                                               ctx->md_rate_est_ctx);
+        const uint64_t split_rate = svt_aom_partition_rate_cost(
+            pcs->ppcs,
+            sq_blk_geom->bsize,
+            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+            ctx->md_rate_est_ctx,
+            from_shape_to_part[blk_geom->shape],
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t part_cost = RDCOST(full_lambda, split_rate, 0);
 
         if (part_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * nsq_split_cost_th)
             return true;
@@ -9007,21 +9016,25 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (H_vs_V_split_rate_th && (blk_geom->shape == PART_H || blk_geom->shape == PART_V)) {
         if (blk_geom->sq_size <= 16)
             H_vs_V_split_rate_th += ctx->nsq_search_ctrls.rate_th_offset_lte16;
-        const uint64_t H_rate_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                 ctx,
-                                                                 blk_geom->sqi_mds,
-                                                                 PARTITION_HORZ,
-                                                                 full_lambda,
-                                                                 true, // Use accurate split cost for early exit
-                                                                 ctx->md_rate_est_ctx);
+        const uint64_t H_rate      = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                            sq_blk_geom->bsize,
+                                                            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+                                                            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                            ctx->md_rate_est_ctx,
+                                                            PARTITION_HORZ,
+                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t H_rate_cost = RDCOST(full_lambda, H_rate, 0);
 
-        const uint64_t V_rate_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                 ctx,
-                                                                 blk_geom->sqi_mds,
-                                                                 PARTITION_VERT,
-                                                                 full_lambda,
-                                                                 true, // Use accurate split cost for early exit
-                                                                 ctx->md_rate_est_ctx);
+        const uint64_t V_rate      = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                            sq_blk_geom->bsize,
+                                                            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+                                                            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                            ctx->md_rate_est_ctx,
+                                                            PARTITION_VERT,
+                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t V_rate_cost = RDCOST(full_lambda, V_rate, 0);
 
         if (blk_geom->shape == PART_H && H_rate_cost * H_vs_V_split_rate_th > V_rate_cost * 100)
             return true;
@@ -9034,21 +9047,27 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (non_HV_split_rate_th && !(blk_geom->shape == PART_H || blk_geom->shape == PART_V)) {
         if (blk_geom->sq_size <= 16)
             non_HV_split_rate_th += ctx->nsq_search_ctrls.rate_th_offset_lte16;
-        const uint64_t part_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                               ctx,
-                                                               blk_geom->sqi_mds,
-                                                               from_shape_to_part[blk_geom->shape],
-                                                               full_lambda,
-                                                               true, // Use accurate split cost for early exit
-                                                               ctx->md_rate_est_ctx);
+        const uint64_t part_rate = svt_aom_partition_rate_cost(
+            pcs->ppcs,
+            sq_blk_geom->bsize,
+            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+            ctx->md_rate_est_ctx,
+            from_shape_to_part[blk_geom->shape],
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t part_cost = RDCOST(full_lambda, part_rate, 0);
 
-        const uint64_t best_part_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                    ctx,
-                                                                    blk_geom->sqi_mds,
-                                                                    ctx->md_blk_arr_nsq[blk_geom->sqi_mds].part,
-                                                                    full_lambda,
-                                                                    true, // Use accurate split cost for early exit
-                                                                    ctx->md_rate_est_ctx);
+        const uint64_t best_part_rate = svt_aom_partition_rate_cost(
+            pcs->ppcs,
+            sq_blk_geom->bsize,
+            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+            ctx->md_rate_est_ctx,
+            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].part,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t best_part_cost = RDCOST(full_lambda, best_part_rate, 0);
 
         if (part_cost * non_HV_split_rate_th > best_part_cost * 100)
             return true;
@@ -9058,14 +9077,16 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
     if (lower_depth_split_cost_th && ctx->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag) {
         if (blk_geom->sq_size <= 16)
             lower_depth_split_cost_th += ctx->nsq_search_ctrls.rate_th_offset_lte16;
-        const uint64_t split_cost = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                ctx,
-                                                                blk_geom->sqi_mds,
-                                                                PARTITION_SPLIT,
-                                                                full_lambda,
-                                                                true, // Use accurate split cost for early exit
-                                                                ctx->md_rate_est_ctx);
-
+        const uint64_t split_rate = svt_aom_partition_rate_cost(
+            pcs->ppcs,
+            sq_blk_geom->bsize,
+            (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
+            (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
+            ctx->md_rate_est_ctx,
+            PARTITION_SPLIT,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
+            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+        const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
         if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * lower_depth_split_cost_th)
             return true;
     }
@@ -9518,85 +9539,6 @@ static void get_blk_var_map(int block_size, int org_x, int org_y, int *blk_idx, 
     sub_idx[2] = sub_base + (sy + 1) * sub_grid + (sx + 0);
     sub_idx[3] = sub_base + (sy + 1) * sub_grid + (sx + 1);
 }
-static void check_curr_to_parent_cost_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs,
-                                                ModeDecisionContext *ctx, uint32_t *next_non_skip_blk_idx_mds,
-                                                bool *md_early_exit_sq) {
-    const BlockGeom *blk_geom = ctx->blk_geom;
-    BlkStruct       *blk_ptr  = ctx->blk_ptr;
-    // skip until we reach the next block @ the parent block depth
-    if (blk_ptr->mds_idx >= *next_non_skip_blk_idx_mds && *md_early_exit_sq == 1)
-        *md_early_exit_sq = 0;
-    // For quadrant 0 the cost will just be the split rate cost
-    if (!(*md_early_exit_sq)) {
-        uint64_t parent_depth_cost = 0, current_depth_cost = 0;
-
-        // from a given child index, derive the index of the parent
-        uint32_t parent_depth_idx_mds = blk_geom->parent_depth_idx_mds;
-
-        if ((pcs->slice_type == I_SLICE && parent_depth_idx_mds == 0 && scs->seq_header.sb_size == BLOCK_128X128) ||
-            !ctx->cost_avail[parent_depth_idx_mds]) {
-            *md_early_exit_sq = 0;
-            return;
-        } else {
-            svt_aom_compute_depth_costs_md_skip_light_pd0(pcs->ppcs,
-                                                          ctx,
-                                                          parent_depth_idx_mds,
-                                                          blk_geom->ns_depth_offset,
-                                                          &parent_depth_cost,
-                                                          &current_depth_cost);
-            const uint32_t th = blk_geom->quadi == 0
-                ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
-                : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
-            if (parent_depth_cost != MAX_MODE_COST && (parent_depth_cost * th) <= (current_depth_cost * 1000)) {
-                *md_early_exit_sq          = 1;
-                *next_non_skip_blk_idx_mds = parent_depth_idx_mds +
-                    ns_depth_offset[blk_geom->svt_aom_geom_idx][blk_geom->depth - 1];
-            } else {
-                *md_early_exit_sq = 0;
-            }
-        }
-    }
-}
-/*
- * Check cost of current depth to parent depth, and if current cost is larger, signal to exit
- * processing depth early.
- */
-static void check_curr_to_parent_cost(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                      uint32_t *next_non_skip_blk_idx_mds, bool *md_early_exit_sq) {
-    const BlockGeom *blk_geom = ctx->blk_geom;
-    BlkStruct       *blk_ptr  = ctx->blk_ptr;
-    // skip until we reach the next block @ the parent block depth
-    if (blk_ptr->mds_idx >= *next_non_skip_blk_idx_mds && *md_early_exit_sq == 1)
-        *md_early_exit_sq = 0;
-
-    // For quadrant 0 the cost will just be the split rate cost
-    if (!(*md_early_exit_sq)) {
-        uint64_t parent_depth_cost = 0, current_depth_cost = 0;
-
-        // from a given child index, derive the index of the parent
-        const uint32_t parent_depth_idx_mds = blk_geom->parent_depth_idx_mds;
-        if ((pcs->slice_type == I_SLICE && parent_depth_idx_mds == 0 && scs->seq_header.sb_size == BLOCK_128X128) ||
-            !ctx->cost_avail[parent_depth_idx_mds])
-            parent_depth_cost = MAX_MODE_COST;
-        else
-            svt_aom_compute_depth_costs_md_skip(ctx,
-                                                pcs->ppcs,
-                                                parent_depth_idx_mds,
-                                                blk_geom->ns_depth_offset,
-                                                &parent_depth_cost,
-                                                &current_depth_cost);
-        const uint32_t th = blk_geom->quadi == 0
-            ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
-            : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
-        if (parent_depth_cost != MAX_MODE_COST && (parent_depth_cost * th) <= (current_depth_cost * 1000)) {
-            *md_early_exit_sq          = 1;
-            *next_non_skip_blk_idx_mds = parent_depth_idx_mds +
-                ns_depth_offset[blk_geom->svt_aom_geom_idx][blk_geom->depth - 1];
-        } else {
-            *md_early_exit_sq = 0;
-        }
-    }
-}
 
 /*
  * Check if a block is redundant, and if so, copy the data from the original block
@@ -9686,30 +9628,6 @@ static bool update_redundant(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     }
     return 0;
 }
-/*
-
-*/
-static void process_block_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                    const uint8_t blk_split_flag, EbPictureBufferDesc *in_pic, uint32_t sb_addr,
-                                    uint32_t blk_idx_mds, uint32_t *next_non_skip_blk_idx_mds, bool *md_early_exit_sq) {
-    ctx->blk_geom      = get_blk_geom_mds(blk_idx_mds);
-    BlkStruct *blk_ptr = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
-
-    // Neighbour partition array is not updated in PD0, so set neighbour info to invalid.
-    blk_ptr->left_neighbor_partition  = INVALID_NEIGHBOR_DATA;
-    blk_ptr->above_neighbor_partition = INVALID_NEIGHBOR_DATA;
-    init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
-    // Check current depth cost; if larger than parent, exit early
-    check_curr_to_parent_cost_light_pd0(scs, pcs, ctx, next_non_skip_blk_idx_mds, md_early_exit_sq);
-    // encode the current block only if it's not redundant
-    {
-        bool skip_processing_block = *md_early_exit_sq;
-        if (!skip_processing_block && pcs->ppcs->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx]) {
-            // Encode the block
-            md_encode_block_light_pd0(pcs, ctx, in_pic);
-        }
-    }
-}
 static bool get_skip_processing_nsq_block(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     int skip_processing_block = false;
     if (update_skip_nsq_based_on_split_rate(pcs, ctx))
@@ -9722,27 +9640,6 @@ static bool get_skip_processing_nsq_block(PictureControlSet *pcs, ModeDecisionCo
     if (update_skip_nsq_shapes(ctx))
         return true;
     return skip_processing_block;
-}
-/*
- * Determined if a block should be processed, and if so, perform the MD pass on the block.
- */
-static void process_block_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictureBufferDesc *in_pic,
-                                    uint32_t sb_addr, uint32_t blk_idx_mds) {
-    ctx->blk_geom = get_blk_geom_mds(blk_idx_mds);
-    ctx->blk_ptr  = &ctx->md_blk_arr_nsq[blk_idx_mds];
-
-    // LPD1 assumes a fixed partition structure, so partition neighbour arrays (blk_ptr->left_neighbor_partition and
-    // blk_ptr->above_neighbor_partition) are not updated, and the neighbour arrays will not be accessed, since the
-    // partition rate is not needed (i.e. no calls to svt_aom_partition_rate_cost).
-    init_block_data(pcs,
-                    ctx,
-                    false, // blk_split_flag, - pred depth only; NSQ off
-                    blk_idx_mds);
-
-    // Encode the block
-    if (pcs->ppcs->sb_geom[sb_addr].block_is_allowed[blk_idx_mds]) {
-        md_encode_block_light_pd1(pcs, ctx, sb_addr, in_pic);
-    }
 }
 
 static bool eval_sub_depth_skip_cond1(ModeDecisionContext *ctx) {
@@ -9772,8 +9669,7 @@ static bool eval_sub_depth_skip_cond1(ModeDecisionContext *ctx) {
     return false;
 }
 // For certain configurations, update the feature settings for NSQ blocks in non-ISLICE frames
-static void faster_md_settings_nsq(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                   const EbMdcLeafData *const leaf_data_ptr) {
+static void faster_md_settings_nsq(PictureControlSet *pcs, ModeDecisionContext *ctx, const bool is_child) {
     // Update GM settings based on SQ block mode
     if (pcs->ppcs->gm_ctrls.enabled && pcs->ppcs->gm_ctrls.inj_psq_glb) {
         if (ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
@@ -9786,153 +9682,12 @@ static void faster_md_settings_nsq(PictureControlSet *pcs, ModeDecisionContext *
     }
 
     // Update settings for sub_depth_block_lvl feature
-    if (ctx->nsq_search_ctrls.sub_depth_block_lvl && ctx->pd_pass == PD_PASS_1 && leaf_data_ptr->is_child) {
+    if (ctx->nsq_search_ctrls.sub_depth_block_lvl && ctx->pd_pass == PD_PASS_1 && is_child) {
         ctx->nsq_search_ctrls.sq_weight            = MIN(85, ctx->nsq_search_ctrls.sq_weight);
         ctx->nsq_search_ctrls.nsq_split_cost_th    = MIN(60, ctx->nsq_search_ctrls.nsq_split_cost_th);
         ctx->nsq_search_ctrls.H_vs_V_split_rate_th = MAX(60, ctx->nsq_search_ctrls.H_vs_V_split_rate_th);
         ctx->nsq_search_ctrls.non_HV_split_rate_th = MAX(60, ctx->nsq_search_ctrls.non_HV_split_rate_th);
         ctx->params_status                         = 1;
-    }
-}
-/*
- * Determined if a block should be processed, and if so, perform the MD pass on the block.
- */
-static void process_block(PictureControlSet *pcs, ModeDecisionContext *ctx, const EbMdcLeafData *const leaf_data_ptr,
-                          EbPictureBufferDesc *in_pic) {
-    const BlockGeom *blk_geom              = ctx->blk_geom;
-    BlkStruct       *blk_ptr               = ctx->blk_ptr;
-    bool             skip_processing_block = !pcs->ppcs->sb_geom[ctx->sb_index].block_is_allowed[blk_ptr->mds_idx];
-
-    if (skip_processing_block)
-        return;
-    // If performing NSQ search, take shortcuts to reduce NSQ overhead
-    if (blk_geom->shape != PART_N && blk_geom->nsi == 0) {
-        // Update settings for the NSQ(s) for certain speed features
-        if (pcs->slice_type != I_SLICE) {
-            faster_md_settings_nsq(pcs, ctx, leaf_data_ptr);
-        }
-
-        // call nsq-reduction func if NSQ is on
-        skip_processing_block |= get_skip_processing_nsq_block(pcs, ctx);
-    }
-
-    // encode the current block only if it's not redundant
-    if (!skip_processing_block && (!ctx->redundant_blk || !update_redundant(pcs, ctx))) {
-        if (ctx->copied_neigh_arrays && blk_geom->nsi == 0) {
-            svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
-                pcs,
-                ctx,
-                NSQ_NEIGHBOR_ARRAY_INDEX,
-                MD_NEIGHBOR_ARRAY_INDEX,
-                blk_geom->sqi_mds);
-        }
-
-        // Encode the block
-        md_encode_block(pcs, ctx, ctx->sb_index, in_pic);
-    }
-}
-/*
- * Update d1 data (including d1 decision) after each processed block, determine if should use early exit.
- */
-static void update_d1_data(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t blk_idx_mds, bool *skip_next_nsq,
-                           uint8_t d1_blk_count, bool copy_neigh_arrays) {
-    const BlockGeom *blk_geom = ctx->blk_geom;
-    BlkStruct       *blk_ptr  = ctx->blk_ptr;
-
-    *skip_next_nsq = 0;
-    if (blk_geom->nsi + 1 == blk_geom->totns) {
-        svt_aom_d1_non_square_block_decision(pcs, ctx, d1_blk_count);
-    } else if (ctx->cost_avail[blk_geom->sqi_mds]) {
-        uint64_t tot_cost       = 0;
-        uint32_t first_blk_idx  = blk_ptr->mds_idx - (blk_geom->nsi); //index of first block in this partition
-        uint8_t  nsq_cost_avail = 1;
-        for (int blk_it = 0; blk_it < blk_geom->nsi + 1; blk_it++) {
-            nsq_cost_avail &= ctx->cost_avail[first_blk_idx + blk_it];
-            tot_cost += ctx->md_blk_arr_nsq[first_blk_idx + blk_it].cost;
-        }
-        // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
-        const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
-                                         ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
-        const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
-                                                                              : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-        uint64_t       part_cost          = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                         ctx,
-                                                         blk_geom->sqi_mds,
-                                                         from_shape_to_part[blk_geom->shape],
-                                                         full_lambda,
-                                                         pcs->ppcs->use_accurate_part_ctx,
-                                                         ctx->md_rate_est_ctx);
-
-        tot_cost += part_cost;
-        // Only the last block in an NSQ shape may be disallowed (H/V/H4/V4 partitions for incomplete blocks)
-        // so if the cost is unavailable here (which must be before processing the last block in a shape)
-        // the shape cannot be selected and the remaining blocks in the shape can be skipped.
-        if (!nsq_cost_avail || tot_cost > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].cost)
-            *skip_next_nsq = 1;
-    } else if (!ctx->cost_avail[blk_ptr->mds_idx]) {
-        // if the cost of the current block is not available, then there is no need to process further blocks
-        // in the shape. (Either the shape will be non-valid for selection, or the unavailable block is the
-        // last in the shape (for incomplete H/V/H4/V4) so the shape will be done anyway.
-        *skip_next_nsq = 1;
-    }
-
-    if (blk_geom->shape != PART_N && !(*skip_next_nsq)) {
-        if (blk_geom->nsi + 1 < blk_geom->totns) {
-            // For an NSQ block, if the next block is disallowed (outside picture bounds) then no need to update
-            // neighbour arrays. If the shape is allowed, then the shape must be H or V, and the allowed block (first
-            // block in the shape) has already been tested.
-            if (pcs->ppcs->sb_geom[ctx->sb_index].block_is_allowed[blk_idx_mds + 1]) {
-                // Copy neighbour arrays to temp buffer for later reuse if testing more than 1 NSQ shape
-                // or will be splitting (SQ doesn't need to update neighbour arrays)
-                if (!ctx->copied_neigh_arrays && copy_neigh_arrays) {
-                    svt_aom_copy_neighbour_arrays( //save a clean neigh in [1], encode uses [0], reload the clean in [0] after done last ns block in a partition
-                        pcs,
-                        ctx,
-                        MD_NEIGHBOR_ARRAY_INDEX,
-                        NSQ_NEIGHBOR_ARRAY_INDEX,
-                        ctx->blk_geom->sqi_mds);
-                    ctx->copied_neigh_arrays = 1;
-                }
-                md_update_all_neighbour_arrays(pcs, ctx, blk_idx_mds);
-            }
-        }
-    }
-}
-/*
- * Update d2 data (including d2 decision) after processing the last d1 block of a given square.
- */
-static void update_d2_decision_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx) {
-    uint32_t last_blk_index_mds = svt_aom_d2_inter_depth_block_decision(
-        pcs,
-        ctx,
-        ctx->blk_geom->sqi_mds); //input is parent square
-
-    // only needed to update recon
-    if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && ctx->md_blk_arr_nsq[last_blk_index_mds].split_flag == false) {
-        ctx->blk_geom  = get_blk_geom_mds(ctx->md_blk_arr_nsq[last_blk_index_mds].best_d1_blk);
-        ctx->blk_org_x = ctx->sb_origin_x + ctx->blk_geom->org_x;
-        ctx->blk_org_y = ctx->sb_origin_y + ctx->blk_geom->org_y;
-        ctx->blk_ptr   = &ctx->md_blk_arr_nsq[ctx->md_blk_arr_nsq[last_blk_index_mds].best_d1_blk];
-
-        if (ctx->cost_avail[last_blk_index_mds]) {
-            mode_decision_update_neighbor_arrays_light_pd0(ctx);
-        }
-    }
-}
-/*
- * Update d2 data (including d2 decision) after processing the last d1 block of a given square.
- */
-static void update_d2_decision(PictureControlSet *pcs, ModeDecisionContext *ctx) {
-    uint32_t last_blk_index_mds;
-
-    if (ctx->pd_pass == PD_PASS_1 && ctx->pred_depth_only)
-        last_blk_index_mds = ctx->blk_geom->sqi_mds;
-    else
-        last_blk_index_mds = svt_aom_d2_inter_depth_block_decision(pcs,
-                                                                   ctx,
-                                                                   ctx->blk_geom->sqi_mds); //input is parent square
-    if (ctx->cost_avail[last_blk_index_mds] && ctx->md_blk_arr_nsq[last_blk_index_mds].split_flag == false) {
-        md_update_all_neighbour_arrays_multiple(pcs, ctx, ctx->md_blk_arr_nsq[last_blk_index_mds].best_d1_blk);
     }
 }
 
@@ -9993,81 +9748,96 @@ static const uint8_t num_ns_per_shape[PART_S] = {1, 2, 2, 4, 4, 3, 3, 3, 3};
 static const uint32_t ns_blk_offset_md[PART_S]     = {0, 1, 3, 5, 9, 13, 16, 19, 22};
 static const uint32_t ns_blk_offset_128_md[PART_S] = {
     0, 1, 3, 0 /*H4 not allowed*/, 0 /*V4 not allowed*/, 5, 8, 11, 14};
-/*
- * Loop over all passed blocks in an SB and perform mode decision for each block,
- * then output the optimal mode distribution/partitioning for the given SB.
- *
- * For each block, selects the best mode through multiple MD stages (accuracy increases
- * while the number of mode candidates decreases as you move from one stage to another).
- * Based on the block costs, selects the best partition for a parent block (if NSQ
- * shapes are present). Finally, performs inter-depth decision towards a final partitiioning.
- */
-void svt_aom_mode_decision_sb_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                        const MdcSbData *const mdc_sb_data) {
-    // Set SB-level variables here
-    ctx->tx_depth                 = 0;
-    ctx->txb_1d_offset            = 0;
-    ctx->txb_itr                  = 0;
-    ctx->luma_txb_skip_context    = 0;
-    ctx->luma_dc_sign_context     = 0;
-    ctx->mds_do_rdoq              = true;
-    ctx->mds_do_spatial_sse       = false;
-    ctx->mds_fast_coeff_est_level = ctx->rate_est_ctrls.pd0_fast_coeff_est_level; //ON  !!!
-    ctx->ind_uv_avail             = 0;
-    // Update neighbour arrays for the SB
-    if (!ctx->skip_intra)
-        update_neighbour_arrays_light_pd0(pcs, ctx);
 
-    // get the input picture; if high bit-depth, pad the input pic
-    EbPictureBufferDesc *input_pic = pcs->ppcs->enhanced_pic;
+static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                      MdScan *mds, PC_TREE *pc_tree, int mi_row, int mi_col) {
+    assert(pc_tree->block_data[PART_N][0]->mds_idx == mds->mds_idx);
 
-    // Initialize variables used to track blocks
-    uint32_t                   leaf_count      = mdc_sb_data->leaf_count;
-    const EbMdcLeafData *const leaf_data_array = mdc_sb_data->leaf_data_array;
+    const uint32_t full_lambda      = ctx->full_sb_lambda_md[EB_8_BIT_MD];
+    int64_t        above_split_rate = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                           pc_tree->bsize,
+                                                           mi_row,
+                                                           mi_col,
+                                                           ctx->md_rate_est_ctx,
+                                                           PARTITION_SPLIT,
+                                                           0, //left_neighbor_partition,
+                                                           0); // above_neighbor_partition);
+    const int64_t  split_rate_cost  = RDCOST(full_lambda, above_split_rate, 0);
+    // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
+    if (!pcs->ppcs->use_accurate_part_ctx)
+        above_split_rate *= 2;
+    int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
+    const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
 
-    bool     md_early_exit_sq          = 0;
-    uint32_t next_non_skip_blk_idx_mds = 0;
-
-    // Iterate over all blocks which are flagged to be considered
-    for (uint32_t blk_idx = 0; blk_idx < leaf_count; blk_idx++) {
-        uint32_t blk_idx_mds = leaf_data_array[blk_idx].mds_idx;
-        blk_idx_mds += ns_blk_offset_md[leaf_data_array[blk_idx].shapes[0]];
-        const uint8_t blk_split_flag = mdc_sb_data->split_flag[blk_idx];
-
-        process_block_light_pd0(scs,
-                                pcs,
-                                ctx,
-                                blk_split_flag,
-                                input_pic,
-                                ctx->sb_index,
-                                blk_idx_mds,
-                                &next_non_skip_blk_idx_mds,
-                                &md_early_exit_sq);
-        ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].part        = from_shape_to_part[ctx->blk_geom->shape];
-        ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].best_d1_blk = blk_idx_mds;
-        if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
-            if (ctx->cost_avail[blk_idx_mds]) {
-                ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cost =
-                    ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].default_cost = ctx->md_blk_arr_nsq[blk_idx_mds].cost;
-                ctx->cost_avail[ctx->blk_geom->sqi_mds]                      = 1;
-            }
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].qindex                   = ctx->qp_index;
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].mds_idx                  = ctx->blk_geom->sqi_mds;
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag               = blk_split_flag;
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].left_neighbor_partition  = INVALID_NEIGHBOR_DATA;
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].above_neighbor_partition = INVALID_NEIGHBOR_DATA;
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
+    for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+        const int x_idx = (i & 1) * mi_step;
+        const int y_idx = (i >> 1) * mi_step;
+        // if block fully outside pic, don't process
+        if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) {
+            pc_tree->split[i]->block_data[PART_N][0]              = &ctx->md_blk_arr_nsq[mds->split[i]->mds_idx];
+            pc_tree->split[i]->block_data[PART_N][0]->mds_idx     = mds->split[i]->mds_idx;
+            pc_tree->split[i]->block_data[PART_N][0]->split_flag  = false;
+            pc_tree->split[i]->block_data[PART_N][0]->best_d1_blk = mds->split[i]->mds_idx;
+            continue;
         }
-        // Only using SQ, so always at tot_d1_blocks
-        update_d2_decision_light_pd0(pcs, ctx);
-        if (ctx->var_skip_sub_depth_ctrls.enabled && ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag &&
-            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
-            if (ctx->blk_geom->sq_size <= ctx->var_skip_sub_depth_ctrls.max_size &&
-                ctx->blk_geom->sq_size >= ctx->var_skip_sub_depth_ctrls.min_size && var_skip_sub_depth(pcs, ctx)) {
-                next_non_skip_blk_idx_mds = ctx->blk_geom->sqi_mds + ctx->blk_geom->ns_depth_offset;
-                md_early_exit_sq          = 1;
+
+        // Check current depth cost; if larger than parent, exit early
+        if (ctx->cost_avail[mds->mds_idx]) {
+            const uint32_t th = (i == 0)
+                ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
+                : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
+            // Use accurate split cost for early exit
+            const int64_t curr_cost = split_cost - (!pcs->ppcs->use_accurate_part_ctx ? accurate_split_cost_adj : 0);
+            if ((pc_tree->rdc.rd_cost * th) <= (curr_cost * 1000)) {
+                pc_tree->block_data[PART_N][0]->split_flag = false;
+                return false;
             }
         }
+
+        const bool valid_split_partition = svt_aom_pick_partition_lpd0(
+            scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
+
+        if (!valid_split_partition) {
+            // If split is invalid, set split to false and exit (all
+            // split quadrants must be valid for split to be selected).
+            pc_tree->block_data[PART_N][0]->split_flag = false;
+            return false;
+        }
+
+        split_cost += pc_tree->split[i]->rdc.rd_cost;
     }
+
+    // Set blk_geom to last quadrant for neighbour array updates
+    ctx->blk_geom = get_blk_geom_mds(mds->split[3]->mds_idx);
+    ctx->blk_ptr  = &ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds];
+
+    // Make decision between split/non-split here - only get here if all partitions are valid (and/or out of bounds)
+    const int64_t non_split_cost = ctx->cost_avail[ctx->blk_geom->parent_depth_idx_mds] ? pc_tree->rdc.rd_cost
+                                                                                        : MAX_MODE_COST;
+    if (ctx->inter_depth_bias && split_cost != MAX_MODE_COST) {
+        split_cost = (split_cost * ctx->inter_depth_bias) / 1000;
+    }
+    int      parent_bias        = non_split_cost != MAX_MODE_COST ? ctx->d2_parent_bias : 1000;
+    uint32_t last_blk_index_mds = ctx->blk_geom->sqi_mds;
+    if (((parent_bias * non_split_cost) / 1000) <= split_cost) {
+        pc_tree->block_data[PART_N][0]->split_flag = false;
+        pc_tree->rdc.valid                         = 1;
+        last_blk_index_mds                         = pc_tree->block_data[PART_N][0]->mds_idx;
+    } else {
+        pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
+        pc_tree->rdc.valid                                          = 1;
+        pc_tree->partition                                          = PARTITION_SPLIT;
+        pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
+        pc_tree->block_data[PART_N][0]->split_flag                  = true;
+        ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
+    }
+
+    if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && ctx->cost_avail[last_blk_index_mds] &&
+        ctx->md_blk_arr_nsq[last_blk_index_mds].split_flag == false) {
+        mode_decision_update_neighbor_arrays_light_pd0(ctx, ctx->md_blk_arr_nsq[last_blk_index_mds].best_d1_blk);
+    }
+    return true;
 }
 /*
  * Loop over all passed blocks in an SB and perform mode decision for each block,
@@ -10078,51 +9848,165 @@ void svt_aom_mode_decision_sb_light_pd0(SequenceControlSet *scs, PictureControlS
  * Based on the block costs, selects the best partition for a parent block (if NSQ
  * shapes are present). Finally, performs inter-depth decision towards a final partitiioning.
  */
-void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                        const MdcSbData *const mdc_sb_data) {
-    // Update neighbour arrays for the SB
-    update_neighbour_arrays(pcs, ctx);
-
+bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds,
+                                 PC_TREE *pc_tree, int mi_row, int mi_col) {
     // get the input picture; if high bit-depth, pad the input pic
     EbPictureBufferDesc *input_pic = pcs->ppcs->enhanced_pic;
-    // If will need the 16bit picture, pad the input pic.  Done once for SB.
-    if (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec) {
-        // If using 8bit MD but bypassing EncDec, will need th 16bit pic later, but don't change
-        // input_pic
-        pad_hbd_pictures(scs, pcs, ctx, input_pic);
+
+    // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
+    pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
+    pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
+    pc_tree->block_data[PART_N][0]->split_flag = false;
+    pc_tree->rdc.valid                         = 0;
+
+    // Check that shape is valid, and adjust tested blocks so only valid blocks are tested
+    // LPD0 assumes one block per shape
+    if (mds->tot_shapes) {
+        const Part shape    = mds->shapes[0];
+        const int  mi_rows  = pcs->ppcs->av1_cm->mi_rows;
+        const int  mi_cols  = pcs->ppcs->av1_cm->mi_cols;
+        const int  hbs      = mi_size_wide[mds->bsize] >> 1;
+        const bool has_rows = mi_row + hbs < mi_rows;
+        const bool has_cols = mi_col + hbs < mi_cols;
+        if ((!has_rows && !has_cols) || (!has_cols && shape != PART_V) || (!has_rows && shape != PART_H)) {
+            mds->tot_shapes = 0;
+        }
     }
 
-    // Initialize variables used to track blocks
-    uint32_t                   leaf_count      = mdc_sb_data->leaf_count;
-    const EbMdcLeafData *const leaf_data_array = mdc_sb_data->leaf_data_array;
+    if (mds->tot_shapes) {
+        const Part     shape          = mds->shapes[0];
+        const uint32_t blk_idx_mds    = mds->mds_idx + ns_blk_offset_md[shape];
+        const uint8_t  blk_split_flag = mds->split_flag;
 
-    ctx->coded_area_sb         = 0;
-    ctx->coded_area_sb_uv      = 0;
-    ctx->tx_depth              = 0;
-    ctx->txb_itr               = 0;
-    ctx->txb_1d_offset         = 0;
-    ctx->luma_txb_skip_context = 0;
-    ctx->luma_dc_sign_context  = 0;
-    ctx->cb_txb_skip_context   = 0;
-    ctx->cb_dc_sign_context    = 0;
-    ctx->cr_txb_skip_context   = 0;
-    ctx->cr_dc_sign_context    = 0;
-    ctx->ind_uv_avail          = 0;
+        ctx->blk_geom                 = get_blk_geom_mds(blk_idx_mds);
+        pc_tree->block_data[shape][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
 
-    // Iterate over all blocks which are flagged to be considered
-    for (uint32_t blk_idx = 0; blk_idx < leaf_count; blk_idx++) {
-        uint32_t blk_idx_mds = leaf_data_array[blk_idx].mds_idx;
-        blk_idx_mds += ns_blk_offset_md[leaf_data_array[blk_idx].shapes[0]];
+        // Neighbour partition array is not updated in PD0, so set neighbour info to invalid.
+        ctx->blk_ptr->left_part_ctx  = 0;
+        ctx->blk_ptr->above_part_ctx = 0;
+        init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
+        md_encode_block_light_pd0(pcs, ctx, input_pic);
 
-        process_block_light_pd1(pcs, ctx, input_pic, ctx->sb_index, blk_idx_mds);
+        pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->block_data[PART_N][0]->best_d1_blk = blk_idx_mds;
+        pc_tree->rdc.rd_cost                        = pc_tree->block_data[shape][0]->cost;
+        pc_tree->rdc.valid                          = 1;
+        pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
+        if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
+            if (ctx->cost_avail[blk_idx_mds]) {
+                pc_tree->block_data[PART_N][0]->cost = pc_tree->block_data[PART_N][0]->default_cost =
+                    ctx->md_blk_arr_nsq[blk_idx_mds].cost;
+                ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
+            }
+            pc_tree->block_data[PART_N][0]->qindex         = ctx->qp_index;
+            pc_tree->block_data[PART_N][0]->mds_idx        = ctx->blk_geom->sqi_mds;
+            pc_tree->block_data[PART_N][0]->split_flag     = blk_split_flag;
+            pc_tree->block_data[PART_N][0]->left_part_ctx  = 0;
+            pc_tree->block_data[PART_N][0]->above_part_ctx = 0;
+        }
+
+        if (ctx->var_skip_sub_depth_ctrls.enabled && ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag &&
+            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
+            if (ctx->blk_geom->sq_size <= ctx->var_skip_sub_depth_ctrls.max_size &&
+                ctx->blk_geom->sq_size >= ctx->var_skip_sub_depth_ctrls.min_size && var_skip_sub_depth(pcs, ctx)) {
+                mds->split_flag                            = false;
+                pc_tree->block_data[PART_N][0]->split_flag = false;
+            }
+        }
+    }
+
+    if (mds->split_flag) {
+        const bool valid_part = test_split_partition_lpd0(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
+        if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && !valid_part && ctx->cost_avail[mds->mds_idx])
+            mode_decision_update_neighbor_arrays_light_pd0(ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+    } else if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && ctx->cost_avail[mds->mds_idx] && mds->index < 3) {
+        mode_decision_update_neighbor_arrays_light_pd0(ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+    }
+
+    return ctx->cost_avail[mds->mds_idx];
+}
+
+static void test_split_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                      MdScan *mds, PC_TREE *pc_tree, int mi_row, int mi_col) {
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
+    for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+        const int x_idx = (i & 1) * mi_step;
+        const int y_idx = (i >> 1) * mi_step;
+
+        // if block fully outside pic, don't process
+        if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
+            continue;
+        svt_aom_pick_partition_lpd1(scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
+    }
+    pc_tree->block_data[PART_N][0]->split_flag = true;
+    pc_tree->block_data[PART_N][0]->part       = PARTITION_SPLIT;
+    pc_tree->partition                         = PARTITION_SPLIT;
+}
+/*
+ * Select the best partitioning and modes for the passed block. Recursively search lower subpartitions of the passed block.
+ * Output the optimal mode distribution/partitioning for the given SB.
+ *
+ * For each block, selects the best mode through multiple MD stages (accuracy increases
+ * while the number of mode candidates decreases as you move from one stage to another).
+ * Based on the block costs, selects the best partition for a parent block (if NSQ
+ * shapes are present). Finally, performs inter-depth decision towards a final partitiioning.
+ */
+void svt_aom_pick_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds,
+                                 PC_TREE *pc_tree, int mi_row, int mi_col) {
+    // LPD1 assumes 8bit MD; if it's 16bit and bypassing encdec, the high bit depth pic will
+    // be used in MDS3 only to generate a conformant recon.
+    EbPictureBufferDesc *input_pic = pcs->ppcs->enhanced_pic;
+
+    // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
+    pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
+    pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
+    pc_tree->block_data[PART_N][0]->split_flag = false;
+    pc_tree->rdc.valid                         = 0;
+
+    // Check that shape is valid, and adjust tested blocks so only valid blocks are tested.
+    // LPD1 assumes one block per shape
+    if (mds->tot_shapes) {
+        const Part shape    = mds->shapes[0];
+        const int  mi_rows  = pcs->ppcs->av1_cm->mi_rows;
+        const int  mi_cols  = pcs->ppcs->av1_cm->mi_cols;
+        const int  hbs      = mi_size_wide[mds->bsize] >> 1;
+        const bool has_rows = mi_row + hbs < mi_rows;
+        const bool has_cols = mi_col + hbs < mi_cols;
+        if ((!has_rows && !has_cols) || (!has_cols && shape != PART_V) || (!has_rows && shape != PART_H)) {
+            mds->tot_shapes = 0;
+        }
+    }
+
+    // Test current depth if flagged to be tested
+    if (mds->tot_shapes) {
+        // LPD1 does not support NSQ shapes, except for H/V at the picture boundaries. In all cases,
+        // only a single block would be tested (either SQ, or the first block in the H/V shape
+        // which is allowed in the picture).
+        uint32_t blk_idx_mds = mds->mds_idx + ns_blk_offset_md[mds->shapes[0]];
+
+        // Get the blk_geom and blk_ptr for the current block within the shape being tested
+        ctx->blk_geom                          = get_blk_geom_mds(blk_idx_mds);
+        pc_tree->block_data[mds->shapes[0]][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
+
+        // LPD1 assumes a fixed partition structure, so partition neighbour arrays (blk_ptr->left_neighbor_partition and
+        // blk_ptr->above_neighbor_partition) are not updated, and the neighbour arrays will not be accessed, since the
+        // partition rate is not needed (i.e. no calls to svt_aom_partition_rate_cost).
+        init_block_data(pcs,
+                        ctx,
+                        false, // blk_split_flag, - pred depth only; NSQ off
+                        blk_idx_mds);
+
+        // Encode the block
+        md_encode_block_light_pd1(pcs, ctx, ctx->sb_index, input_pic);
 
         // LPD1 uses a fixed partition structure, so no need to update cost
-        ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].part        = from_shape_to_part[ctx->blk_geom->shape];
-        ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].best_d1_blk = blk_idx_mds;
-        ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag  = false;
+        pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->block_data[PART_N][0]->best_d1_blk = blk_idx_mds;
+        pc_tree->block_data[PART_N][0]->split_flag  = false;
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].qindex  = ctx->qp_index;
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].mds_idx = ctx->blk_geom->sqi_mds;
+            pc_tree->block_data[PART_N][0]->qindex  = ctx->qp_index;
+            pc_tree->block_data[PART_N][0]->mds_idx = ctx->blk_geom->sqi_mds;
         }
         // The current block is the last at a given d1 level; if so update d2 info
         if (ctx->avail_blk_flag[blk_idx_mds]) {
@@ -10164,6 +10048,11 @@ void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet *scs, PictureControlS
             svt_aom_update_mi_map(ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y, ctx->blk_geom, pcs, ctx);
         }
     }
+
+    // ready for next depth
+    if (mds->split_flag) {
+        test_split_partition_lpd1(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
+    }
 }
 
 /*
@@ -10172,127 +10061,352 @@ in svt_aom_partition_rate_cost.  The partition is always signaled with respect t
 block, so only derive the neighbours for the square blocks (even if they will not be tested).  Only square blocks
 are passed to svt_aom_partition_rate_cost.
 */
-static void update_part_neighs(ModeDecisionContext *ctx) {
+static void update_part_neighs(ModeDecisionContext *ctx, BlkStruct *blk_ptr, const int mi_row, const int mi_col) {
     if (ctx->pd_pass == PD_PASS_0) {
-        ctx->blk_ptr->left_neighbor_partition  = INVALID_NEIGHBOR_DATA;
-        ctx->blk_ptr->above_neighbor_partition = INVALID_NEIGHBOR_DATA;
+        blk_ptr->left_part_ctx  = 0;
+        blk_ptr->above_part_ctx = 0;
         return;
     }
-    assert(ctx->blk_geom->shape == PART_N);
-    uint32_t           blk_org_x                     = ctx->blk_org_x;
-    uint32_t           blk_org_y                     = ctx->blk_org_y;
+    uint32_t           blk_org_x                     = mi_col << MI_SIZE_LOG2;
+    uint32_t           blk_org_y                     = mi_row << MI_SIZE_LOG2;
     NeighborArrayUnit *leaf_partition_na             = ctx->leaf_partition_na;
     uint32_t           partition_left_neighbor_index = get_neighbor_array_unit_left_index(leaf_partition_na, blk_org_y);
     uint32_t           partition_above_neighbor_index = get_neighbor_array_unit_top_index(leaf_partition_na, blk_org_x);
 
     // Generate Partition context
-    ctx->blk_ptr->above_neighbor_partition =
+    blk_ptr->above_part_ctx =
         (((PartitionContext *)leaf_partition_na->top_array)[partition_above_neighbor_index].above ==
          (char)INVALID_NEIGHBOR_DATA)
         ? 0
         : ((PartitionContext *)leaf_partition_na->top_array)[partition_above_neighbor_index].above;
 
-    ctx->blk_ptr->left_neighbor_partition =
-        (((PartitionContext *)leaf_partition_na->left_array)[partition_left_neighbor_index].left ==
-         (char)INVALID_NEIGHBOR_DATA)
+    blk_ptr->left_part_ctx = (((PartitionContext *)leaf_partition_na->left_array)[partition_left_neighbor_index].left ==
+                              (char)INVALID_NEIGHBOR_DATA)
         ? 0
         : ((PartitionContext *)leaf_partition_na->left_array)[partition_left_neighbor_index].left;
 }
+
+void svt_aom_init_sb_data(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx) {
+    // Update neighbour arrays for the SB
+    if (ctx->pd_pass == PD_PASS_0 && ctx->lpd0_ctrls.pd0_level > REGULAR_PD0) {
+        if (!ctx->skip_intra)
+            update_neighbour_arrays_light_pd0(pcs, ctx);
+    } else
+        update_neighbour_arrays(pcs, ctx);
+
+    // If high bit-depth, pad the input pic. Done once for SB.
+    // If using 8bit MD but bypassing EncDec, will need the 16bit pic for MDS3.
+    if (ctx->hbd_md || (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1)) {
+        pad_hbd_pictures(scs, pcs, ctx, pcs->ppcs->enhanced_pic);
+    }
+    ctx->coded_area_sb       = 0;
+    ctx->coded_area_sb_uv    = 0;
+    ctx->params_status       = 0;
+    ctx->copied_neigh_arrays = 0;
+    if (ctx->pd_pass == PD_PASS_1 && ctx->lpd1_ctrls.pd1_level > REGULAR_PD1) {
+        ctx->tx_depth              = 0;
+        ctx->txb_itr               = 0;
+        ctx->txb_1d_offset         = 0;
+        ctx->luma_txb_skip_context = 0;
+        ctx->luma_dc_sign_context  = 0;
+        ctx->cb_txb_skip_context   = 0;
+        ctx->cb_dc_sign_context    = 0;
+        ctx->cr_txb_skip_context   = 0;
+        ctx->cr_dc_sign_context    = 0;
+        ctx->ind_uv_avail          = 0;
+    } else if (ctx->pd_pass == PD_PASS_0 && ctx->lpd0_ctrls.pd0_level > REGULAR_PD0) {
+        // Set SB-level variables here
+        ctx->tx_depth                 = 0;
+        ctx->txb_1d_offset            = 0;
+        ctx->txb_itr                  = 0;
+        ctx->luma_txb_skip_context    = 0;
+        ctx->luma_dc_sign_context     = 0;
+        ctx->mds_do_rdoq              = true;
+        ctx->mds_do_spatial_sse       = false;
+        ctx->mds_fast_coeff_est_level = ctx->rate_est_ctrls.pd0_fast_coeff_est_level; //ON  !!!
+        ctx->ind_uv_avail             = 0;
+    }
+}
+
+static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds,
+                                 PC_TREE *pc_tree, int mi_row, int mi_col) {
+    assert(pc_tree->block_data[PART_N][0]->mds_idx == mds->mds_idx);
+
+    const int mi_rows = pcs->ppcs->av1_cm->mi_rows;
+    const int mi_cols = pcs->ppcs->av1_cm->mi_cols;
+    // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
+    const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
+                                     ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
+    const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
+                                                                          : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+    int64_t        above_split_rate   = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                           pc_tree->bsize,
+                                                           mi_row,
+                                                           mi_col,
+                                                           ctx->md_rate_est_ctx,
+                                                           PARTITION_SPLIT,
+                                                           pc_tree->block_data[PART_N][0]->left_part_ctx,
+                                                           pc_tree->block_data[PART_N][0]->above_part_ctx);
+
+    const int64_t split_rate_cost = RDCOST(full_lambda, above_split_rate, 0);
+    // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
+    if (!pcs->ppcs->use_accurate_part_ctx)
+        above_split_rate *= 2;
+    int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
+    const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
+
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
+    for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+        const int x_idx = (i & 1) * mi_step;
+        const int y_idx = (i >> 1) * mi_step;
+
+        // if block fully outside pic, don't process
+        if (mi_row + y_idx >= mi_rows || mi_col + x_idx >= mi_cols) {
+            pc_tree->split[i]->block_data[PART_N][0]              = &ctx->md_blk_arr_nsq[mds->split[i]->mds_idx];
+            pc_tree->split[i]->block_data[PART_N][0]->mds_idx     = mds->split[i]->mds_idx;
+            pc_tree->split[i]->block_data[PART_N][0]->split_flag  = false;
+            pc_tree->split[i]->block_data[PART_N][0]->best_d1_blk = mds->split[i]->mds_idx;
+            continue;
+        }
+
+        // Check current depth cost; if larger than parent, exit early
+        // TODO: The (mds->split[i]->tot_shapes || !blk_has_valid_shape) check is put there only to maintain identical
+        // bitstreams to before the refactoring changes. The check should be removed in the future as it is arbitrary.
+        const bool blk_has_valid_shape = mi_row + y_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_rows ||
+            mi_col + x_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_cols;
+        if (ctx->cost_avail[mds->mds_idx] && (mds->split[i]->tot_shapes || !blk_has_valid_shape)) {
+            assert(!(ctx->pd_pass == PD_PASS_1 && ctx->pred_depth_only) &&
+                   "If PD1 and pred depth only, parent depth cost should be unavailable");
+            const uint32_t th = (i == 0)
+                ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
+                : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
+            // Use accurate split cost for early exit
+            const int64_t curr_cost = split_cost - (!pcs->ppcs->use_accurate_part_ctx ? accurate_split_cost_adj : 0);
+            if ((pc_tree->rdc.rd_cost * th) <= (curr_cost * 1000)) {
+                pc_tree->block_data[PART_N][0]->split_flag = false;
+                return false;
+            }
+        }
+
+        const bool valid_split_partition = svt_aom_pick_partition(
+            scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
+
+        if (!valid_split_partition) {
+            // If split is invalid, set split to false and exit (all
+            // split quadrants must be valid for split to be selected).
+            pc_tree->block_data[PART_N][0]->split_flag = false;
+            return false;
+        }
+        split_cost += pc_tree->split[i]->rdc.rd_cost;
+    }
+
+    // Set blk_geom to last quadrant for neighbour array updates
+    ctx->blk_geom = get_blk_geom_mds(mds->split[3]->mds_idx);
+    ctx->blk_ptr  = &ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds];
+
+    // Make decision between split/non-split here - only get here if all partitions are valid (and/or out of bounds)
+    const int64_t non_split_cost = ctx->cost_avail[ctx->blk_geom->parent_depth_idx_mds] ? pc_tree->rdc.rd_cost
+                                                                                        : MAX_MODE_COST;
+    if (ctx->inter_depth_bias && split_cost != MAX_MODE_COST) {
+        split_cost = (split_cost * ctx->inter_depth_bias) / 1000;
+    }
+    int      parent_bias        = non_split_cost != MAX_MODE_COST ? ctx->d2_parent_bias : 1000;
+    uint32_t last_blk_index_mds = ctx->blk_geom->sqi_mds;
+    if (((parent_bias * non_split_cost) / 1000) <= split_cost) {
+        pc_tree->block_data[PART_N][0]->split_flag = false;
+        pc_tree->rdc.valid                         = 1;
+        last_blk_index_mds                         = pc_tree->block_data[PART_N][0]->mds_idx;
+    } else {
+        pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
+        pc_tree->rdc.valid                                          = 1;
+        pc_tree->partition                                          = PARTITION_SPLIT;
+        pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
+        pc_tree->block_data[PART_N][0]->split_flag                  = true;
+        ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
+    }
+
+    // When current depth is selected, this array update is for the 3rd quadrant (which is not updated in
+    // svt_aom_pick_partition to avoid redundant copies). Check that the block is available, since it may be
+    // an out of bounds block (the previous, in bound, quadrants would have updated the relevant neighbour
+    // arrays in svt_aom_pick_partition).
+    if (ctx->cost_avail[last_blk_index_mds] && ctx->md_blk_arr_nsq[last_blk_index_mds].split_flag == false) {
+        md_update_all_neighbour_arrays_multiple(pcs, ctx, ctx->md_blk_arr_nsq[last_blk_index_mds].best_d1_blk);
+    }
+
+    return true;
+}
+
+static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds,
+                       PC_TREE *pc_tree, const int mi_row, const int mi_col) {
+    EbPictureBufferDesc *input_pic        = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+    uint32_t             base_blk_idx_mds = mds->mds_idx;
+    const uint8_t        blk_split_flag   = mds->split_flag;
+    ctx->blk_geom                         = get_blk_geom_mds(base_blk_idx_mds);
+    ctx->blk_ptr                          = &ctx->md_blk_arr_nsq[base_blk_idx_mds];
+
+    // Reset settings, in case they were over-written by previous block
+    // Only reset settings when features that change settings are used.
+    if (ctx->params_status == 1) {
+        svt_aom_sig_deriv_enc_dec(scs, pcs, ctx);
+        ctx->params_status = 0;
+    }
+
+    init_block_data(pcs, ctx, blk_split_flag, base_blk_idx_mds);
+
+    // Copy neighbour arrays to temp buffer for later reuse if testing more than 1 NSQ shape
+    // or will be splitting (SQ doesn't need to update neighbour arrays)
+    const bool copy_neigh_arrays = (mds->tot_shapes > 2) || mds->split_flag ||
+        (mds->tot_shapes > 1 && mds->shapes[0] != PART_N);
+
+    const int mi_rows      = pcs->ppcs->av1_cm->mi_rows;
+    const int mi_cols      = pcs->ppcs->av1_cm->mi_cols;
+    const int hbs          = mi_size_wide[mds->bsize] >> 1;
+    const int quarter_step = mi_size_wide[mds->bsize] >> 2;
+
+    // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
+    const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
+                                     ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
+    const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
+                                                                          : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+    // Loop over all shapes set to be tested at the current depth
+    for (uint32_t shape_idx = 0; shape_idx < mds->tot_shapes; shape_idx++) {
+        Part     shape           = mds->shapes[shape_idx];
+        uint8_t  shape_block_cnt = num_ns_per_shape[shape];
+        uint32_t blk_idx_mds     = base_blk_idx_mds +
+            (ctx->blk_geom->sq_size == 128 ? ns_blk_offset_128_md[shape] : ns_blk_offset_md[shape]);
+
+        // Check that shape is valid, and adjust tested blocks so only valid blocks are tested
+        const bool has_rows = mi_row + hbs < mi_rows;
+        const bool has_cols = mi_col + hbs < mi_cols;
+        if ((!has_rows && !has_cols) || (!has_cols && shape != PART_V) || (!has_rows && shape != PART_H)) {
+            continue;
+        } else if (!has_rows || !has_cols || (shape == PART_H4 && mi_row + 3 * quarter_step >= mi_rows) ||
+                   (shape == PART_V4 && mi_col + 3 * quarter_step >= mi_cols)) {
+            shape_block_cnt--;
+        }
+
+        const int64_t part_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                              pc_tree->bsize,
+                                                              mi_row,
+                                                              mi_col,
+                                                              ctx->md_rate_est_ctx,
+                                                              from_shape_to_part[shape],
+                                                              pc_tree->block_data[PART_N][0]->left_part_ctx,
+                                                              pc_tree->block_data[PART_N][0]->above_part_ctx);
+        int64_t       part_cost  = RDCOST(full_lambda, part_rate, 0);
+        bool          valid_part = true;
+
+        for (uint32_t nsi = 0; nsi < shape_block_cnt; nsi++, blk_idx_mds++) {
+            // Get the blk_geom and blk_ptr for the current block within the shape being tested
+            ctx->blk_geom                   = get_blk_geom_mds(blk_idx_mds);
+            pc_tree->block_data[shape][nsi] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
+
+            init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
+
+            // If performing NSQ search, take shortcuts to reduce NSQ overhead
+            if (shape != PART_N && nsi == 0) {
+                // Update settings for the NSQ(s) for certain speed features
+                if (pcs->slice_type != I_SLICE)
+                    faster_md_settings_nsq(pcs, ctx, mds->is_child);
+
+                // call nsq-reduction func if NSQ is on
+                if (get_skip_processing_nsq_block(pcs, ctx)) {
+                    valid_part = false;
+                    break;
+                }
+            }
+
+            // encode the current block only if it's not redundant
+            if (!ctx->redundant_blk || !update_redundant(pcs, ctx)) {
+                if (ctx->copied_neigh_arrays && nsi == 0) {
+                    svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
+                        pcs,
+                        ctx,
+                        NSQ_NEIGHBOR_ARRAY_INDEX,
+                        MD_NEIGHBOR_ARRAY_INDEX,
+                        ctx->blk_geom->sqi_mds);
+                }
+
+                // Encode the block
+                md_encode_block(pcs, ctx, ctx->sb_index, input_pic);
+            }
+
+            part_cost += pc_tree->block_data[shape][nsi]->cost;
+
+            if (pc_tree->rdc.valid && part_cost > pc_tree->rdc.rd_cost) {
+                valid_part = false;
+                break;
+            }
+
+            // Copy neighbour arrays to temp buffer for later reuse if testing more than 1 NSQ shape
+            // or will be splitting (SQ doesn't need to update neighbour arrays)
+            if (nsi + 1 < shape_block_cnt) {
+                if (!ctx->copied_neigh_arrays && copy_neigh_arrays) {
+                    svt_aom_copy_neighbour_arrays( //save a clean neigh in [1], encode uses [0], reload the clean in [0] after done last ns block in a partition
+                        pcs,
+                        ctx,
+                        MD_NEIGHBOR_ARRAY_INDEX,
+                        NSQ_NEIGHBOR_ARRAY_INDEX,
+                        ctx->blk_geom->sqi_mds);
+                    ctx->copied_neigh_arrays = 1;
+                }
+                md_update_all_neighbour_arrays(pcs, ctx, blk_idx_mds);
+            }
+        }
+
+        if (valid_part) {
+            if (!pc_tree->rdc.valid || part_cost < pc_tree->rdc.rd_cost) {
+                pc_tree->partition   = from_shape_to_part[shape];
+                pc_tree->rdc.rd_cost = part_cost;
+                pc_tree->rdc.valid   = 1;
+
+                pc_tree->block_data[PART_N][0]->part = from_shape_to_part[shape];
+                const uint32_t first_blk_idx         = ctx->blk_geom->blkidx_mds -
+                    (ctx->blk_geom->nsi); //index of first block in this partition
+                pc_tree->block_data[PART_N][0]->best_d1_blk = first_blk_idx;
+                pc_tree->block_data[PART_N][0]->cost        = part_cost;
+                ctx->cost_avail[ctx->blk_geom->sqi_mds]     = 1;
+            }
+        }
+    }
+
+    return ctx->cost_avail[base_blk_idx_mds];
+}
 /*
- * Loop over all passed blocks in an SB and perform mode decision for each block,
- * then output the optimal mode distribution/partitioning for the given SB.
+ * Select the best partitioning and modes for the passed block. Recursively search lower subpartitions of the passed block.
+ * Output the optimal mode distribution/partitioning for the given SB.
  *
  * For each block, selects the best mode through multiple MD stages (accuracy increases
  * while the number of mode candidates decreases as you move from one stage to another).
  * Based on the block costs, selects the best partition for a parent block (if NSQ
  * shapes are present). Finally, performs inter-depth decision towards a final partitiioning.
  */
-void svt_aom_mode_decision_sb(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                              const MdcSbData *const mdc_sb_data) {
-    // Update neighbour arrays for the SB
-    update_neighbour_arrays(pcs, ctx);
+bool svt_aom_pick_partition(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds,
+                            PC_TREE *pc_tree, int mi_row, int mi_col) {
+    // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
+    pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
+    pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
+    pc_tree->block_data[PART_N][0]->split_flag = false;
+    pc_tree->rdc.valid                         = 0;
 
-    // get the input picture; if high bit-depth, pad the input pic
-    EbPictureBufferDesc *input_pic = pcs->ppcs->enhanced_pic;
-    // If will need the 16bit picture, pad the input pic.  Done once for SB.
-    if (ctx->hbd_md) {
-        input_pic = pad_hbd_pictures(scs, pcs, ctx, input_pic);
-    } else if (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
-        // If using 8bit MD but bypassing EncDec, will need th 16bit pic later, but don't change input_pic
-        pad_hbd_pictures(scs, pcs, ctx, input_pic);
-    }
-    // Initialize variables used to track blocks
-    uint32_t                   leaf_count      = mdc_sb_data->leaf_count;
-    const EbMdcLeafData *const leaf_data_array = mdc_sb_data->leaf_data_array;
+    // Update the left and above partition neighbours for the square block, which are used to derive
+    // the partition rate
+    update_part_neighs(ctx, pc_tree->block_data[PART_N][0], mi_row, mi_col);
 
-    bool     md_early_exit_sq          = 0;
-    uint32_t next_non_skip_blk_idx_mds = 0;
-    ctx->coded_area_sb                 = 0;
-    ctx->coded_area_sb_uv              = 0;
-    ctx->params_status                 = 0;
-    ctx->copied_neigh_arrays           = 0;
+    // Test current depth if shapes are set to be tested
+    if (mds->tot_shapes) {
+        test_depth(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
 
-    // Iterate over all blocks which are flagged to be considered
-    for (uint32_t blk_idx = 0; blk_idx < leaf_count; blk_idx++) {
-        uint32_t                   base_blk_idx_mds = leaf_data_array[blk_idx].mds_idx;
-        const EbMdcLeafData *const leaf_data_ptr    = &leaf_data_array[blk_idx];
-        const uint8_t              blk_split_flag   = mdc_sb_data->split_flag[blk_idx];
-        ctx->blk_geom                               = get_blk_geom_mds(base_blk_idx_mds);
-        ctx->blk_ptr                                = &ctx->md_blk_arr_nsq[base_blk_idx_mds];
-
-        // Reset settings, in case they were over-written by previous block
-        // Only reset settings when features that change settings are used.
-        if (ctx->params_status == 1) {
-            svt_aom_sig_deriv_enc_dec(scs, pcs, ctx);
-            ctx->params_status = 0;
-        }
-
-        assert(base_blk_idx_mds == ctx->blk_geom->sqi_mds);
-        init_block_data(pcs, ctx, blk_split_flag, base_blk_idx_mds);
-
-        // Update the left and above partition neighbours for the square block, which are used to derive
-        // the partition rate
-        update_part_neighs(ctx);
-        // Check current depth cost; if larger than parent, exit early
-        // if using pred depth only, you won't skip, so no need to check
-        if (!(ctx->pd_pass == PD_PASS_1 && ctx->pred_depth_only))
-            check_curr_to_parent_cost(scs, pcs, ctx, &next_non_skip_blk_idx_mds, &md_early_exit_sq);
-
-        // Copy neighbour arrays to temp buffer for later reuse if testing more than 1 NSQ shape
-        // or will be splitting (SQ doesn't need to update neighbour arrays)
-        const bool copy_neigh_arrays = (leaf_data_array[blk_idx].tot_shapes > 2 ||
-                                        (leaf_data_array[blk_idx].tot_shapes > 1 &&
-                                         leaf_data_array[blk_idx].shapes[0] != PART_N)) ||
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag;
-
-        // Loop over all shapes set to be tested at the current depth
-        for (uint32_t shape_idx = 0; shape_idx < leaf_data_array[blk_idx].tot_shapes && !md_early_exit_sq;
-             shape_idx++) {
-            Part     shape           = leaf_data_array[blk_idx].shapes[shape_idx];
-            uint8_t  shape_block_cnt = num_ns_per_shape[shape];
-            uint32_t blk_idx_mds     = base_blk_idx_mds +
-                (ctx->blk_geom->sq_size == 128 ? ns_blk_offset_128_md[shape] : ns_blk_offset_md[shape]);
-
-            for (uint32_t nsi = 0; nsi < shape_block_cnt; nsi++, blk_idx_mds++) {
-                // Get the blk_geom and blk_ptr for the current block within the shape being tested
-                ctx->blk_geom = get_blk_geom_mds(blk_idx_mds);
-                ctx->blk_ptr  = &ctx->md_blk_arr_nsq[blk_idx_mds];
-
-                init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
-
-                process_block(pcs, ctx, leaf_data_ptr, input_pic);
-
-                bool md_early_exit_nsq = 0;
-                update_d1_data(pcs, ctx, blk_idx_mds, &md_early_exit_nsq, shape_idx, copy_neigh_arrays);
-
-                if (md_early_exit_nsq) {
-                    break;
-                }
-            }
+        if (ctx->skip_sub_depth_ctrls.enabled && ctx->blk_geom->sq_size <= ctx->skip_sub_depth_ctrls.max_size &&
+            mds->split_flag && // could be further splitted
+            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds] && // valid block
+            eval_sub_depth_skip_cond1(ctx)) {
+            pc_tree->block_data[PART_N][0]->split_flag = false;
+            mds->split_flag                            = false;
         }
 
         // Now have checked all d1 blocks, so update d2 info
-        if (ctx->copied_neigh_arrays && ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag)
+        if (ctx->copied_neigh_arrays && mds->split_flag)
             svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
                 pcs,
                 ctx,
@@ -10300,18 +10414,17 @@ void svt_aom_mode_decision_sb(SequenceControlSet *scs, PictureControlSet *pcs, M
                 MD_NEIGHBOR_ARRAY_INDEX,
                 ctx->blk_geom->sqi_mds);
 
-        // Perform d2 inter-depth decision after final d1 block
-        update_d2_decision(pcs, ctx);
-
-        if (ctx->skip_sub_depth_ctrls.enabled &&
-            ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag && // could be further splitted
-            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) { // valid block
-
-            if (ctx->blk_geom->sq_size <= ctx->skip_sub_depth_ctrls.max_size && eval_sub_depth_skip_cond1(ctx)) {
-                next_non_skip_blk_idx_mds = ctx->blk_geom->sqi_mds + ctx->blk_geom->ns_depth_offset;
-                md_early_exit_sq          = 1;
-            }
-        }
         ctx->copied_neigh_arrays = 0;
     }
+
+    // Test lower depths if flagged to be tested
+    if (mds->split_flag) {
+        const bool valid_part = test_split_partition(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
+        if (!valid_part && ctx->cost_avail[mds->mds_idx])
+            md_update_all_neighbour_arrays_multiple(pcs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+    } else if (ctx->cost_avail[mds->mds_idx] && mds->index < 3) {
+        md_update_all_neighbour_arrays_multiple(pcs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+    }
+
+    return ctx->cost_avail[mds->mds_idx];
 }

@@ -87,6 +87,8 @@ static void mode_decision_context_dctor(EbPtr p) {
     if (obj->md_blk_arr_nsq) {
         EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].av1xd);
     }
+    EB_FREE_ARRAY(obj->mds);
+    EB_FREE_ARRAY(obj->pc_tree);
     EB_FREE_ARRAY(obj->avail_blk_flag);
     EB_FREE_ARRAY(obj->cost_avail);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
@@ -115,10 +117,6 @@ static void mode_decision_context_dctor(EbPtr p) {
         EB_FREE(obj->wsrc_buf);
     if (obj->mask_buf)
         EB_FREE(obj->mask_buf);
-    EB_FREE_ARRAY(obj->mdc_sb_array.leaf_data_array);
-    EB_FREE_ARRAY(obj->mdc_sb_array.split_flag);
-    EB_FREE_ARRAY(obj->mdc_sb_array.refined_split_flag);
-    EB_FREE_ARRAY(obj->mdc_sb_array.consider_block);
     for (uint32_t txt_itr = 0; txt_itr < TX_TYPES; ++txt_itr) {
         EB_DELETE(obj->recon_coeff_ptr[txt_itr]);
         EB_DELETE(obj->recon_ptr[txt_itr]);
@@ -134,6 +132,55 @@ static void mode_decision_context_dctor(EbPtr p) {
 void svt_aom_set_nics(SequenceControlSet *scs, NicScalingCtrls *scaling_ctrls, uint32_t mds1_count[CAND_CLASS_TOTAL],
                       uint32_t mds2_count[CAND_CLASS_TOTAL], uint32_t mds3_count[CAND_CLASS_TOTAL], uint8_t pic_type,
                       uint32_t qp);
+
+static void setup_mds(MdScan *mds, uint32_t *mds_idx, int index, BlockSize bsize, const int min_sq_size) {
+    mds->mds_idx = *mds_idx;
+    mds->bsize   = bsize;
+    mds->index   = index;
+
+    // If applicable, add split depths
+    const BlockGeom *blk_geom = get_blk_geom_mds(*mds_idx);
+    const int        sq_size  = block_size_wide[bsize];
+    if (sq_size > min_sq_size) {
+        const BlockSize subsize             = get_partition_subsize(bsize, PARTITION_SPLIT);
+        const int       sq_subsize          = block_size_wide[subsize];
+        int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
+        int             blocks_to_skip      = 0;
+
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+            blocks_to_skip += blocks_per_subdepth;
+
+        *mds_idx += blk_geom->d1_depth_offset;
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+            mds->split[i] = mds + i * blocks_to_skip + 1;
+            setup_mds(mds->split[i], mds_idx, i, subsize, min_sq_size);
+        }
+    } else {
+        *mds_idx += blk_geom->ns_depth_offset;
+    }
+}
+
+static void setup_pc_tree(PC_TREE *pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+    pc_tree->bsize = bsize;
+    pc_tree->index = index;
+
+    // If applicable, add split depths
+    const int sq_size = block_size_wide[bsize];
+    if (sq_size > min_sq_size) {
+        const BlockSize subsize             = get_partition_subsize(bsize, PARTITION_SPLIT);
+        const int       sq_subsize          = block_size_wide[subsize];
+        int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
+        int             blocks_to_skip      = 0;
+
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+            blocks_to_skip += blocks_per_subdepth;
+
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+            pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
+            setup_pc_tree(pc_tree->split[i], i, subsize, min_sq_size);
+        }
+    }
+}
 
 /******************************************************
  * Mode Decision Context Constructor
@@ -369,10 +416,23 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     EB_MALLOC_ARRAY(ctx->md_blk_arr_nsq[0].av1xd, block_max_count_sb);
     EB_MALLOC_ARRAY(ctx->avail_blk_flag, block_max_count_sb);
     EB_MALLOC_ARRAY(ctx->cost_avail, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->mdc_sb_array.leaf_data_array, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->mdc_sb_array.split_flag, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->mdc_sb_array.refined_split_flag, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->mdc_sb_array.consider_block, block_max_count_sb);
+
+    // Alloc mds and pc_tree, which are used to track tested blocks in MD
+    bool disallow_4x4 = svt_aom_get_disallow_4x4(enc_mode);
+    bool disallow_8x8 = svt_aom_get_disallow_8x8(
+        enc_mode, allintra, scs->static_config.rtc, scs->max_input_luma_width, scs->max_input_luma_height);
+    uint8_t min_bsize        = disallow_8x8 ? 16 : disallow_4x4 ? 8 : 4;
+    int     blocks_per_depth = (sb_size / min_bsize) * (sb_size / min_bsize);
+    int     blocks_to_alloc  = 0;
+
+    for (int i = min_bsize; i <= sb_size; i <<= 1, blocks_per_depth >>= 2) { blocks_to_alloc += blocks_per_depth; }
+    EB_CALLOC_ARRAY(ctx->mds, blocks_to_alloc);
+    uint32_t mds_idx = 0;
+    setup_mds(ctx->mds, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);
+
+    EB_CALLOC_ARRAY(ctx->pc_tree, blocks_to_alloc);
+    setup_pc_tree(ctx->pc_tree, 0, scs->seq_header.sb_size, min_bsize);
+
     for (coded_leaf_index = 0; coded_leaf_index < block_max_count_sb; ++coded_leaf_index) {
         ctx->md_blk_arr_nsq[coded_leaf_index].av1xd      = ctx->md_blk_arr_nsq[0].av1xd + coded_leaf_index;
         ctx->md_blk_arr_nsq[coded_leaf_index].segment_id = 0;

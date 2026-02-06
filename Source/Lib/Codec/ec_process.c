@@ -191,7 +191,17 @@ void *svt_aom_entropy_coding_kernel(void *input_ptr) {
                     }
 
                     EbPictureBufferDesc *coeff_picture_ptr = pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_index];
-                    svt_aom_write_sb(context_ptr, sb_ptr, pcs, tile_idx, pcs->ec_info[tile_idx]->ec, coeff_picture_ptr);
+                    context_ptr->coded_area_sb             = 0;
+                    context_ptr->coded_area_sb_uv          = 0;
+                    svt_aom_write_modes_sb(context_ptr,
+                                           sb_ptr,
+                                           pcs,
+                                           tile_idx,
+                                           pcs->ec_info[tile_idx]->ec,
+                                           coeff_picture_ptr,
+                                           sb_ptr->ptree,
+                                           context_ptr->sb_origin_y >> MI_SIZE_LOG2,
+                                           context_ptr->sb_origin_x >> MI_SIZE_LOG2);
                 }
             }
         }

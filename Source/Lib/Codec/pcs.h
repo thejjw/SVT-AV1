@@ -394,8 +394,6 @@ typedef struct SbGeom {
     uint16_t org_y;
     uint8_t  width;
     uint8_t  height;
-    uint8_t  is_complete_sb;
-    bool    *block_is_allowed;
 } SbGeom;
 
 typedef struct TileGroupInfo {
@@ -1144,7 +1142,6 @@ typedef struct PictureControlSetInitData {
     EbSvtAv1EncConfiguration static_config;
     uint8_t                  speed_control;
     int8_t                   hbd_md;
-    uint8_t                  over_boundary_block_mode;
     uint8_t                  mfmv;
     // init value for child pcs
     uint8_t tile_row_count;
@@ -1164,7 +1161,6 @@ typedef struct PictureControlSetInitData {
     uint8_t    tpl_synth_size;
     uint32_t   rate_control_mode;
     Av1Common *av1_cm;
-    uint16_t   init_max_block_cnt;
     uint8_t    ref_count_used_list0;
     uint8_t    ref_count_used_list1;
 
@@ -1208,9 +1204,9 @@ void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool *gm_need_full, bool 
 
 EbErrorType b64_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, B64Geom **b64_geoms);
 EbErrorType sb_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms);
-EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height, int num_blocks);
+EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height);
 void        free_sb_geoms(SbGeom *geom);
-void        copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height, int num_blocks);
+void        copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height);
 
 #ifdef __cplusplus
 }

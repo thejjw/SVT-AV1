@@ -842,23 +842,51 @@ typedef struct CompoundPredictionStore {
     Mv       pred1_mv[4];
 } CompoundPredictionStore;
 
-typedef struct EbMdcLeafData {
-    uint32_t mds_idx;
+// struct that specifies which blocks should be tested during MD
+typedef struct MdScan {
     // array containing all shapes to be tested for the current SQ block
     Part shapes[PART_S];
     // total number of shapes to test for the current SQ block
-    uint8_t tot_shapes;
-    bool    is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
-} EbMdcLeafData;
+    uint8_t        tot_shapes;
+    struct MdScan *split[4];
+    int            index; // should be written once when struct is initialized, then never overwritten
+    BlockSize      bsize; // should be written once when struct is initialized, then never overwritten
+    // for indexing blk_geom and assigning blk_ptr
+    uint32_t mds_idx; // should be written once when struct is initialized, then never overwritten
+    bool     split_flag;
+    bool     is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
+} MdScan;
 
-typedef struct MdcSbData {
-    uint32_t       leaf_count;
-    EbMdcLeafData *leaf_data_array;
-    bool          *split_flag;
-    uint8_t       *refined_split_flag;
-    // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
-    uint8_t *consider_block;
-} MdcSbData;
+/* Stores partition structure of the current block. */
+typedef struct PARTITION_TREE {
+    // Pointers to the children if the current block is further split.
+    struct PARTITION_TREE *sub_tree[4];
+    // Pointers to the EcBlkStruct holding the block's data for entropy coding
+    EcBlkStruct *blk_data[4];
+    // The partition type used to split the current block.
+    PartitionType partition;
+    // Block size of the current depth.
+    BlockSize bsize; // should be written once when struct is initialized, then never overwritten
+    // The index of current node among its siblings
+    int index; // should be written once when struct is initialized, then never overwritten
+} PARTITION_TREE;
+
+typedef struct RD_STATS {
+    int64_t rd_cost;
+    bool    valid;
+} RD_STATS;
+
+// TODO: replace BlkStrut with PICK_MODE_CONTEXT
+typedef struct PC_TREE {
+    BlockSize     bsize; // should be written once when struct is initialized, then never overwritten
+    PartitionType partition;
+
+    RD_STATS        rdc;
+    BlkStruct      *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
+    struct PC_TREE *split[4];
+    int             index; // should be written once when struct is initialized, then never overwritten
+} PC_TREE;
+
 typedef struct ModeDecisionContext {
     EbDctor dctor;
 
@@ -873,10 +901,13 @@ typedef struct ModeDecisionContext {
     BlkStruct                    *md_blk_arr_nsq;
     uint8_t                      *avail_blk_flag;
     uint8_t                      *cost_avail;
-    MdcSbData                     mdc_sb_array;
-    bool                          copied_neigh_arrays;
-    MvReferenceFrame              ref_frame_type_arr[MODE_CTX_REF_FRAMES];
-    uint8_t                       tot_ref_frame_types;
+    // Used to track which blocks should be tested in MD in each PD stage
+    MdScan *mds;
+    // Used to store results of MD
+    PC_TREE         *pc_tree;
+    bool             copied_neigh_arrays;
+    MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
+    uint8_t          tot_ref_frame_types;
 
     NeighborArrayUnit *recon_neigh_y;
     NeighborArrayUnit *recon_neigh_cb;

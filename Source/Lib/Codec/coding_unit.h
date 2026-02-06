@@ -212,8 +212,9 @@ typedef struct BlkStruct {
     PartitionType part;
     uint16_t      best_d1_blk;
 
-    PartitionContextType left_neighbor_partition;
-    PartitionContextType above_neighbor_partition;
+    // Partition contexts for the current block, derived from the neighbouring blocks' partitions
+    PartitionContextType left_part_ctx;
+    PartitionContextType above_part_ctx;
 
     // wm
     WarpedMotionParams wm_params_l0;
@@ -273,18 +274,18 @@ typedef struct SuperBlock {
     struct PictureControlSet *pcs;
     EcBlkStruct              *final_blk_arr;
     //for memory free only
-    MacroBlockD   *av1xd;
-    PartitionType *cu_partition_array;
-    unsigned       index : 32;
-    unsigned       org_x : 32;
-    unsigned       org_y : 32;
-    uint8_t        qindex;
-    TileInfo       tile_info;
-    uint16_t       final_blk_cnt; // number of block(s) posted from EncDec to EC
+    MacroBlockD           *av1xd;
+    struct PARTITION_TREE *ptree;
+    unsigned               index : 32;
+    unsigned               org_x : 32;
+    unsigned               org_y : 32;
+    uint8_t                qindex;
+    TileInfo               tile_info;
+    uint16_t               final_blk_cnt; // number of block(s) posted from EncDec to EC
 } SuperBlock;
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,
-                                             uint16_t max_block_cnt, bool allintra, ResolutionRange input_resolution,
+                                             bool allintra, ResolutionRange input_resolution,
                                              struct PictureControlSet *picture_control_set);
 
 #ifdef __cplusplus

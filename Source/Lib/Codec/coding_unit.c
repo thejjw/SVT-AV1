@@ -20,8 +20,31 @@ void svt_aom_largest_coding_unit_dctor(EbPtr p) {
     SuperBlock *obj = (SuperBlock *)p;
     EB_FREE_ARRAY(obj->av1xd);
     EB_FREE_ARRAY(obj->final_blk_arr);
-    EB_FREE_ARRAY(obj->cu_partition_array);
+    EB_FREE_ARRAY(obj->ptree);
 }
+
+static void setup_ptree(PARTITION_TREE *pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+    pc_tree->bsize = bsize;
+    pc_tree->index = index;
+
+    // If applicable, add split depths
+    const int sq_size = block_size_wide[bsize];
+    if (sq_size > min_sq_size) {
+        const BlockSize subsize             = get_partition_subsize(bsize, PARTITION_SPLIT);
+        const int       sq_subsize          = block_size_wide[subsize];
+        int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
+        int             blocks_to_skip      = 0;
+
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+            blocks_to_skip += blocks_per_subdepth;
+
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+            pc_tree->sub_tree[i] = pc_tree + i * blocks_to_skip + 1;
+            setup_ptree(pc_tree->sub_tree[i], i, subsize, min_sq_size);
+        }
+    }
+}
+
 /*
 Tasks & Questions
     -Need a GetEmptyChain function for testing sub partitions.  Tie it to an Itr?
@@ -33,7 +56,7 @@ Tasks & Questions
 */
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size_pix,
                                              uint16_t sb_origin_x, uint16_t sb_origin_y, uint16_t sb_index,
-                                             EncMode enc_mode, bool rtc, uint16_t max_block_cnt, bool allintra,
+                                             EncMode enc_mode, bool rtc, bool allintra,
                                              ResolutionRange input_resolution, PictureControlSet *picture_control_set) {
     larget_coding_unit_ptr->dctor = svt_aom_largest_coding_unit_dctor;
 
@@ -82,11 +105,21 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr,
         tot_blk_num = 128;
     else
         tot_blk_num = 256;
-    EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_blk_arr, tot_blk_num);
-    EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, 1);
     // Do NOT initialize the final_blk_arr here
     // Malloc maximum but only initialize it only when actually used.
     // This will help to same actually memory usage
-    EB_MALLOC_ARRAY(larget_coding_unit_ptr->cu_partition_array, max_block_cnt);
+    EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_blk_arr, tot_blk_num);
+    EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, 1);
+
+    // Alloc ptree, which is used to store final block data/mode info for the SB that is passed
+    // from encdec to EC
+    uint8_t min_bsize        = disallow_8x8 ? 16 : disallow_4x4 ? 8 : 4;
+    int     blocks_per_depth = (sb_size_pix / min_bsize) * (sb_size_pix / min_bsize);
+    int     blocks_to_alloc  = 0;
+
+    for (int i = min_bsize; i <= sb_size_pix; i <<= 1, blocks_per_depth >>= 2) { blocks_to_alloc += blocks_per_depth; }
+    EB_CALLOC_ARRAY(larget_coding_unit_ptr->ptree, blocks_to_alloc);
+    setup_ptree(larget_coding_unit_ptr->ptree, 0, sb_size_pix == 128 ? BLOCK_128X128 : BLOCK_64X64, min_bsize);
+
     return EB_ErrorNone;
 }
