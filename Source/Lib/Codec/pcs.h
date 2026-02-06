@@ -386,7 +386,6 @@ typedef struct B64Geom {
     uint8_t  width;
     uint8_t  height;
     uint8_t  is_complete_b64;
-    bool     raster_scan_blk_validity[CU_MAX_COUNT];
 } B64Geom;
 
 typedef struct SbGeom {
@@ -521,7 +520,6 @@ typedef struct GmControls {
 } GmControls;
 typedef struct CdefSearchControls {
     uint8_t enabled;
-    uint8_t number_of_prim_in_second_loop[2];
     // Number of primary filters considered in the first pass. (luma and chroma)
     uint8_t first_pass_fs_num;
     // Primary filter strengths to consider in the first pass.
@@ -1103,7 +1101,6 @@ typedef struct TplDispResults {
     EbDctor                  dctor;
     EbObjectWrapper         *pcs_wrapper;
     uint32_t                 frame_index;
-    EbFifo                  *sbo_feedback_fifo_ptr;
     uint32_t                 input_type;
     int16_t                  enc_dec_segment_row;
     uint16_t                 tile_group_index;
@@ -1122,7 +1119,6 @@ typedef struct PictureControlSetInitData {
     EbBitDepth    bit_depth;
     EbColorFormat color_format;
     uint32_t      b64_size;
-    uint8_t       cfg_palette;
     // since we still have lot of code assuming 64x64 SB, we add a new paramter supporting
     // both128x128 and 64x64, ultimately the fixed code supporting 64x64 should be upgraded to use
     // 128x128 and sb_size could be removed.
@@ -1131,7 +1127,6 @@ typedef struct PictureControlSetInitData {
     uint16_t                 enc_dec_segment_row;
     EncMode                  enc_mode;
     EbSvtAv1EncConfiguration static_config;
-    uint8_t                  speed_control;
     int8_t                   hbd_md;
     uint8_t                  mfmv;
     // init value for child pcs
@@ -1150,7 +1145,6 @@ typedef struct PictureControlSetInitData {
     uint16_t   non_m8_pad_h;
     uint8_t    enable_tpl_la;
     uint8_t    tpl_synth_size;
-    uint32_t   rate_control_mode;
     Av1Common *av1_cm;
     uint8_t    ref_count_used_list0;
     uint8_t    ref_count_used_list1;
@@ -1158,20 +1152,13 @@ typedef struct PictureControlSetInitData {
     uint8_t aq_mode;
     uint8_t calc_hist;
     uint8_t tpl_lad_mg;
-    uint8_t final_pass_preset;
     uint8_t input_resolution;
     uint8_t calculate_variance;
     bool    is_scale;
     bool    rtc_tune;
-    bool    enable_variance_boost;
-    uint8_t variance_boost_strength;
     uint8_t variance_octile;
-    uint8_t tf_strength;
     bool    allintra;
-    uint8_t qp_scale_compress_strength;
     bool    adaptive_film_grain;
-    uint8_t max_tx_size;
-    double  ac_bias;
     bool    use_flat_ipp;
 } PictureControlSetInitData;
 

@@ -1285,7 +1285,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.color_format = color_format;
         input_data.b64_size = scs->b64_size;
         input_data.enc_mode = scs->static_config.enc_mode;
-        input_data.speed_control = (uint8_t)scs->speed_control_flag;
         input_data.hbd_md = scs->enable_hbd_mode_decision;
         input_data.bit_depth = scs->static_config.encoder_bit_depth;
         input_data.log2_tile_rows = scs->static_config.tile_rows;
@@ -1297,8 +1296,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.enable_tpl_la = scs->tpl;
         input_data.enc_dec_segment_col = (uint16_t)scs->tpl_segment_col_count_array;
         input_data.enc_dec_segment_row = (uint16_t)scs->tpl_segment_row_count_array;
-        input_data.final_pass_preset = scs->final_pass_preset;
-        input_data.rate_control_mode = scs->static_config.rate_control_mode;
         MrpCtrls* mrp_ctrl = &(scs->mrp_ctrls);
         input_data.ref_count_used_list0 =
             MAX(mrp_ctrl->sc_base_ref_list0_count,
@@ -1328,14 +1325,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.is_scale = scs->static_config.superres_mode > SUPERRES_NONE ||
             scs->static_config.resize_mode > RESIZE_NONE;
         input_data.rtc_tune = scs->static_config.rtc;
-        input_data.enable_variance_boost = scs->static_config.enable_variance_boost;
-        input_data.variance_boost_strength = scs->static_config.variance_boost_strength;
         input_data.variance_octile = scs->static_config.variance_octile;
-        input_data.tf_strength = scs->static_config.tf_strength;
-        input_data.qp_scale_compress_strength = scs->static_config.qp_scale_compress_strength;
         input_data.adaptive_film_grain = scs->static_config.adaptive_film_grain;
-        input_data.max_tx_size = scs->static_config.max_tx_size;
-        input_data.ac_bias = scs->static_config.ac_bias;
         input_data.static_config = scs->static_config;
         input_data.allintra = scs->allintra;
         input_data.use_flat_ipp = scs->use_flat_ipp;
@@ -1387,7 +1378,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.sb_size = scs->super_block_size;
         input_data.hbd_md = scs->enable_hbd_mode_decision;
         input_data.mfmv = scs->mfmv_enabled;
-        input_data.cfg_palette = scs->static_config.screen_content_mode;
         //Jing: Get tile info from parent_pcs
         PictureParentControlSet* parent_pcs = (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
         input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
@@ -1434,7 +1424,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             input_data.sb_size = scs->super_block_size;
             input_data.hbd_md = scs->enable_hbd_mode_decision;
             input_data.mfmv = scs->mfmv_enabled;
-            input_data.cfg_palette = scs->static_config.screen_content_mode;
             //Jing: Get tile info from parent_pcs
             PictureParentControlSet* parent_pcs = (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
             input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;

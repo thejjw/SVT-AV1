@@ -1504,17 +1504,6 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
         b64_geom->width           = (uint8_t)MIN(width - b64_geom->org_x, b64_size);
         b64_geom->height          = (uint8_t)MIN(height - b64_geom->org_y, b64_size);
         b64_geom->is_complete_b64 = (b64_geom->width == b64_size && b64_geom->height == b64_size) ? 1 : 0;
-
-        // b64_geom->raster_scan_blk_validity is only used when this condition is true:
-        // if (scs->in_loop_ois == 0 && pcs->tpl_ctrls.enable)
-        // while today scs->in_loop_ois is always set to 1 in set_param_based_on_input()
-        for (int i = RASTER_SCAN_CU_INDEX_64x64; i <= RASTER_SCAN_CU_INDEX_8x8_63; i++) {
-            b64_geom->raster_scan_blk_validity[i] =
-                ((b64_geom->org_x + raster_scan_blk_x[i] + raster_scan_blk_size[i] > width) ||
-                 (b64_geom->org_y + raster_scan_blk_y[i] + raster_scan_blk_size[i] > height))
-                ? false
-                : true;
-        }
     }
 
     return return_error;
