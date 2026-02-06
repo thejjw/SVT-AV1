@@ -788,7 +788,7 @@ static unsigned int setup_obmc_center_error(const int32_t *mask, const Mv *bestm
         if (br0 != br || bc0 != bc)                          \
             CHECK_BETTER##k(second, br0 + kr, bc0 + kc, lp); \
     } while (0)
-static int upsampled_obmc_pref_error(MacroBlockD *xd, const AV1_COMMON *const cm, int mi_row, int mi_col,
+static int upsampled_obmc_pref_error(MacroBlockD *xd, const Av1Common *const cm, int mi_row, int mi_col,
                                      const Mv *const mv, const int32_t *mask, const AomVarianceFnPtr *vfp,
                                      const int32_t *const wsrc, const uint8_t *const y, int y_stride, int subpel_x_q3,
                                      int subpel_y_q3, int w, int h, unsigned int *sse, int subpel_search) {

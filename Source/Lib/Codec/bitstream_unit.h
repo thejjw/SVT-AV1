@@ -27,7 +27,6 @@ extern "C" {
 
 // Bistream Slice Buffer Size
 #define EB_BITSTREAM_SLICE_BUFFER_SIZE 0x300000
-#define SLICE_HEADER_COUNT 256
 
 /**********************************
  * Bitstream Unit Types
@@ -137,16 +136,6 @@ compile-time type checking  */
 #if !defined(OVERRIDE_OD_COPY)
 #define OD_COPY(dst, src, n) (svt_memcpy((dst), (src), sizeof(*(dst)) * (n) + 0 * ((dst) - (src))))
 #endif
-
-/** Copy n elements of memory from src to dst, allowing overlapping regions.
-The 0* term provides compile-time type checking */
-#if !defined(OVERRIDE_OD_MOVE)
-#define OD_MOVE(dst, src, n) (memmove((dst), (src), sizeof(*(dst)) * (n) + 0 * ((dst) - (src))))
-#endif
-
-/*All of these macros should expect floats as arguments.*/
-#define OD_SIGNMASK(a) (-((a) < 0))
-#define OD_FLIPSIGNI(a, b) (((a) + OD_SIGNMASK(b)) ^ OD_SIGNMASK(b))
 
 /********************************************************************************************************************************/
 //entcode.h

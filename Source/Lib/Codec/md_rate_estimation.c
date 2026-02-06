@@ -743,7 +743,6 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_pt
  * Updates all the syntax stats/CDF for the current block
  ******************************************************************************/
 void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row, int mi_col) {
-    //    const AV1_COMMON *const cm   = pcs->ppcs->av1_cm;
     FrameHeader            *frm_hdr = &pcs->ppcs->frm_hdr;
     MacroBlockD            *xd      = blk_ptr->av1xd;
     const MbModeInfo *const mbmi    = xd->mi[0];
@@ -961,11 +960,11 @@ void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
 void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint16_t tile_idx, int mi_row, int mi_col) {
-    const AV1_COMMON *const cm       = pcs->ppcs->av1_cm;
-    MacroBlockD            *xd       = blk_ptr->av1xd;
-    const BlockGeom        *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
-    BlockSize               bsize    = blk_geom->bsize;
-    FRAME_CONTEXT          *fc       = xd->tile_ctx;
+    const Av1Common *const cm       = pcs->ppcs->av1_cm;
+    MacroBlockD           *xd       = blk_ptr->av1xd;
+    const BlockGeom       *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    BlockSize              bsize    = blk_geom->bsize;
+    FRAME_CONTEXT         *fc       = xd->tile_ctx;
     assert(bsize < BlockSizeS_ALL);
 
     if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)

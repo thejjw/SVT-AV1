@@ -3939,7 +3939,7 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
     scs->picture_analysis_number_of_regions_per_width =
         scs->max_input_luma_width >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_WIDTH : 1;
     scs->picture_analysis_number_of_regions_per_height =
-        scs->max_input_luma_height >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_WIDTH : 1;
+        scs->max_input_luma_height >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_HEIGHT : 1;
 
     scs->pic_based_rate_est = false;
     scs->block_mean_calc_prec        = BLOCK_MEAN_PREC_SUB;

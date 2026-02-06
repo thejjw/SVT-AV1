@@ -670,7 +670,7 @@ extern void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage,
                                               uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
 
 struct build_prediction_ctxt {
-    const AV1_COMMON *cm;
+    const Av1Common  *cm;
     int               mi_row;
     int               mi_col;
     uint8_t         **tmp_buf;
@@ -698,7 +698,7 @@ static const int max_neighbor_obmc[6] = {0, 1, 2, 3, 4, 4};
 
 typedef void (*overlappable_nb_visitor_t)(uint8_t is16bit, MacroBlockD *xd, int rel_mi_pos, uint8_t nb_mi_size,
                                           MbModeInfo *nb_mi, void *fun_ctxt);
-static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const AV1_COMMON *cm, MacroBlockD *xd, int mi_col,
+static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_col,
                                                  int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
     if (!xd->up_available)
         return;
@@ -730,7 +730,7 @@ static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const AV1_COMM
     }
 }
 
-static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const AV1_COMMON *cm, MacroBlockD *xd, int mi_row,
+static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_row,
                                                 int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
     if (!xd->left_available)
         return;
@@ -1738,7 +1738,7 @@ static void av1_make_masked_warp_inter_predictor(uint8_t *src_ptr, uint8_t *src_
 //    wsrc(x, y) - mask(x, y) * P(x, y) / (AOM_BLEND_A64_MAX_ALPHA ** 2)
 //
 #if CONFIG_ENABLE_OBMC
-void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const AV1_COMMON *cm,
+void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride) {
     if (block_size_wide[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine ||

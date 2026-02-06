@@ -26,11 +26,6 @@ extern "C" {
 #define MAX_TXWH_IDX 5
 #define AOM_QM_BITS 5
 #define MAX_TX_SCALE 1
-/*****************************
-    * DEBUG MACROS
-    *****************************/
-#define ZERO_COEFF 0
-#define ZERO_COEFF_CHROMA 0
 
 #define IS_2D_TRANSFORM(tx_type) (tx_type < IDTX)
 

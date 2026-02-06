@@ -36,7 +36,7 @@
 #include "src_ops_process.h"
 #include "utility.h"
 #include "aom_dsp_rtcd.h"
-void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const AV1_COMMON *cm,
+void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride);
 #define INC_MD_CAND_CNT(cnt, max_can_count)                  \
@@ -3910,7 +3910,7 @@ static int get_superblock_tpl_column_end(PictureParentControlSet* ppcs, int mi_c
 
 void aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet *pcs,
                          const int mi_row, const int mi_col) {
-  const AV1_COMMON *const cm = pcs->ppcs->av1_cm;
+  const Av1Common *const cm = pcs->ppcs->av1_cm;
   BlockSize bsize = ctx->blk_geom->bsize;
 
   const int bsize_base = BLOCK_16X16;
