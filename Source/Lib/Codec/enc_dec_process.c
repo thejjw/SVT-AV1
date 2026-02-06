@@ -1499,32 +1499,29 @@ characteristics and settings.
 */
 static void set_blocks_to_test(PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds, const int mi_row,
                                const int mi_col, Part shapes[9], uint8_t *tot_shapes) {
-    const int sq_size  = block_size_wide[mds->bsize];
-    const int hbs      = mi_size_wide[mds->bsize] >> 1;
-    const int has_rows = mi_row + hbs < pcs->ppcs->av1_cm->mi_rows;
-    const int has_cols = mi_col + hbs < pcs->ppcs->av1_cm->mi_cols;
+    const int      sq_size  = block_size_wide[mds->bsize];
+    const int      hbs      = mi_size_wide[mds->bsize] >> 1;
+    const int      has_rows = mi_row + hbs < pcs->ppcs->av1_cm->mi_rows;
+    const int      has_cols = mi_col + hbs < pcs->ppcs->av1_cm->mi_cols;
+    const uint16_t min_nsq  = ctx->pd_pass == PD_PASS_1 && ctx->lpd1_ctrls.pd1_level != REGULAR_PD1 ? 8 : 4;
 
-    // if block has no valid partitions (i.e. must be SPLIT) exit immediately
-    if (!has_cols && !has_rows) {
+    // If block has no valid partitions (i.e. must be SPLIT) exit immediately.
+    // For an incomplete block if SQ shape is not allowed, H or V may still be allowed, but only
+    // if the NSQ geom allows for it.
+    if ((!has_cols && !has_rows) ||
+        ((!has_cols || !has_rows) &&
+         (!ctx->nsq_geom_ctrls.enabled || sq_size <= MAX(min_nsq, ctx->nsq_geom_ctrls.min_nsq_block_size)))) {
         *tot_shapes = 0;
         return;
     }
 
-    bool           inj_hv_incomp = false;
-    const uint16_t min_nsq       = ctx->pd_pass == PD_PASS_1 && ctx->lpd1_ctrls.pd1_level != REGULAR_PD1 ? 8 : 4;
-    if (ctx->nsq_geom_ctrls.enabled && sq_size > MAX(min_nsq, ctx->nsq_geom_ctrls.min_nsq_block_size)) {
-        // For an incomplete block if SQ shape is not allowed, H or V may still be allowed.  Therefore,
-        // check if H or V is allowed, and if so, set to be tested
-        if (!has_cols || !has_rows)
-            inj_hv_incomp = true;
-    }
-
-    uint8_t    shapes_idx = 0;
-    const Part max_part   = (!ctx->nsq_geom_ctrls.enabled || (sq_size <= ctx->nsq_geom_ctrls.min_nsq_block_size) ||
+    const bool inj_hv_incomp = (!has_cols || !has_rows);
+    uint8_t    shapes_idx    = 0;
+    const Part max_part      = (!ctx->nsq_geom_ctrls.enabled || (sq_size <= ctx->nsq_geom_ctrls.min_nsq_block_size) ||
                            sq_size == 4 || (ctx->md_disallow_nsq_search && !inj_hv_incomp))
-          ? PART_N
-          : (sq_size == 8 || inj_hv_incomp) ? PART_V
-                                            : PART_S - 1;
+             ? PART_N
+             : (sq_size == 8 || inj_hv_incomp) ? PART_V
+                                               : PART_S - 1;
     for (Part part = PART_N; part <= max_part; part++) {
         if (inj_hv_incomp) {
             if ((has_cols && part != PART_H) || (has_rows && part != PART_V))
@@ -1670,17 +1667,18 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
         uint32_t       parent_depth_idx_mds      = blk_geom->parent_depth_idx_mds;
         // Skip testing NSQ shapes at parent depth if the rate cost of splitting is very low
         if (lower_depth_split_cost_th && ctx->avail_blk_flag[parent_depth_idx_mds]) {
-            const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
-                                                     : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-            const BlockGeom* parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
-            const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                    parent_blk_geom->bsize,
-                                                                    (ctx->sb_origin_y + parent_blk_geom->org_y) >> MI_SIZE_LOG2,
-                                                                    (ctx->sb_origin_x + parent_blk_geom->org_x) >> MI_SIZE_LOG2,
-                                                                    ctx->md_rate_est_ctx,
-                                                                    PARTITION_SPLIT,
-                                                                    ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].left_part_ctx,
-                                                                    ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].above_part_ctx);
+            const uint32_t   full_lambda     = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
+                                                           : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+            const BlockGeom *parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
+            const uint64_t   split_rate      = svt_aom_partition_rate_cost(
+                pcs->ppcs,
+                parent_blk_geom->bsize,
+                (ctx->sb_origin_y + parent_blk_geom->org_y) >> MI_SIZE_LOG2,
+                (ctx->sb_origin_x + parent_blk_geom->org_x) >> MI_SIZE_LOG2,
+                ctx->md_rate_est_ctx,
+                PARTITION_SPLIT,
+                ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].left_part_ctx,
+                ctx->md_blk_arr_nsq[parent_blk_geom->sqi_mds].above_part_ctx);
             const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
             if (split_cost * 10000 < ctx->md_blk_arr_nsq[parent_depth_idx_mds].default_cost * lower_depth_split_cost_th)
                 *s_depth = 0;

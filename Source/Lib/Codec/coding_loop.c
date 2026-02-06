@@ -1915,9 +1915,10 @@ static void update_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
 *   Coefficient Samples
 *
 *******************************************/
-static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree) {
-    ModeDecisionContext* md_ctx = ctx->md_ctx;
-    const BlockGeom* blk_geom = ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+static void encode_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_ptr, PARTITION_TREE *ptree) {
+    ModeDecisionContext *md_ctx   = ctx->md_ctx;
+    const BlockGeom     *blk_geom = ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds,
+                                                                                    blk_ptr->mds_idx);
     ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
 
     ctx->blk_org_x = md_ctx->blk_org_x = (uint16_t)(md_ctx->sb_origin_x + blk_geom->org_x);

@@ -133,7 +133,8 @@ void svt_aom_set_nics(SequenceControlSet *scs, NicScalingCtrls *scaling_ctrls, u
                       uint32_t mds2_count[CAND_CLASS_TOTAL], uint32_t mds3_count[CAND_CLASS_TOTAL], uint8_t pic_type,
                       uint32_t qp);
 
-static void setup_mds(SequenceControlSet* scs, MdScan *mds, uint32_t *mds_idx, int index, BlockSize bsize, const int min_sq_size) {
+static void setup_mds(SequenceControlSet *scs, MdScan *mds, uint32_t *mds_idx, int index, BlockSize bsize,
+                      const int min_sq_size) {
     mds->mds_idx = *mds_idx;
     mds->bsize   = bsize;
     mds->index   = index;
