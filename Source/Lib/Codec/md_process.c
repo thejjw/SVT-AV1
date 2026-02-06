@@ -161,8 +161,8 @@ static void setup_mds(SequenceControlSet* scs, MdScan *mds, uint32_t *mds_idx, i
 }
 
 static void setup_pc_tree(PC_TREE *pc_tree, int index, BlockSize bsize, const int min_sq_size) {
-    pc_tree->block_size = bsize;
-    pc_tree->index      = index;
+    pc_tree->bsize = bsize;
+    pc_tree->index = index;
 
     // If applicable, add split depths
     const int sq_size = block_size_wide[bsize];

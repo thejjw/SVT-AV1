@@ -9756,7 +9756,7 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
 
     const uint32_t full_lambda      = ctx->full_sb_lambda_md[EB_8_BIT_MD];
     int64_t        above_split_rate = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                           pc_tree->block_size,
+                                                           pc_tree->bsize,
                                                            mi_row,
                                                            mi_col,
                                                            ctx->md_rate_est_ctx,
@@ -9770,7 +9770,7 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
     int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
     const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
 
-    const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
@@ -9828,7 +9828,7 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
     } else {
         pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
         pc_tree->rdc.valid                                          = 1;
-        pc_tree->partitioning                                       = PARTITION_SPLIT;
+        pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->split_flag                  = true;
         ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
@@ -9881,8 +9881,8 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->block_data[PART_N][0]->best_d1_blk = blk_idx_mds;
         pc_tree->rdc.rd_cost                        = pc_tree->block_data[shape][0]->cost;
-        //pc_tree->rdc.valid = 1;
-        pc_tree->partitioning = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->rdc.valid                          = 1;
+        pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
             if (ctx->cost_avail[blk_idx_mds]) {
                 pc_tree->block_data[PART_N][0]->cost = pc_tree->block_data[PART_N][0]->default_cost =
@@ -9919,7 +9919,7 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs
 
 static void test_split_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
                                       MdScan *mds, PC_TREE *pc_tree, int mi_row, int mi_col) {
-    const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
@@ -9931,7 +9931,7 @@ static void test_split_partition_lpd1(SequenceControlSet *scs, PictureControlSet
     }
     pc_tree->block_data[PART_N][0]->split_flag = true;
     pc_tree->block_data[PART_N][0]->part       = PARTITION_SPLIT;
-    pc_tree->partitioning                      = PARTITION_SPLIT;
+    pc_tree->partition                         = PARTITION_SPLIT;
 }
 /*
  * Select the best partitioning and modes for the passed block. Recursively search lower subpartitions of the passed block.
@@ -9982,7 +9982,7 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet *scs, PictureControlSet *pcs
 
         // LPD1 uses a fixed partition structure, so no need to update cost
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->partitioning                       = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->block_data[PART_N][0]->best_d1_blk = blk_idx_mds;
         pc_tree->block_data[PART_N][0]->split_flag  = false;
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
@@ -10121,7 +10121,7 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
     const uint32_t full_lambda        = ctx->hbd_md || used_10bit_at_mds3 ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                                           : ctx->full_sb_lambda_md[EB_8_BIT_MD];
     int64_t        above_split_rate   = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                           pc_tree->block_size,
+                                                           pc_tree->bsize,
                                                            mi_row,
                                                            mi_col,
                                                            ctx->md_rate_est_ctx,
@@ -10136,7 +10136,7 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
     int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
     const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
 
-    const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
+    const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
@@ -10200,7 +10200,7 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
     } else {
         pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
         pc_tree->rdc.valid                                          = 1;
-        pc_tree->partitioning                                       = PARTITION_SPLIT;
+        pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->split_flag                  = true;
         ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
@@ -10267,7 +10267,7 @@ static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDeci
         }
 
         const int64_t part_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                              pc_tree->block_size,
+                                                              pc_tree->bsize,
                                                               mi_row,
                                                               mi_col,
                                                               ctx->md_rate_est_ctx,
@@ -10337,9 +10337,9 @@ static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDeci
 
         if (valid_part) {
             if (!pc_tree->rdc.valid || part_cost < pc_tree->rdc.rd_cost) {
-                pc_tree->partitioning = from_shape_to_part[shape];
-                pc_tree->rdc.rd_cost  = part_cost;
-                pc_tree->rdc.valid    = 1;
+                pc_tree->partition   = from_shape_to_part[shape];
+                pc_tree->rdc.rd_cost = part_cost;
+                pc_tree->rdc.valid   = 1;
 
                 pc_tree->block_data[PART_N][0]->part = from_shape_to_part[shape];
                 const uint32_t first_blk_idx         = ctx->blk_geom->blkidx_mds -

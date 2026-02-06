@@ -2029,9 +2029,9 @@ static int refine_depth(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TRE
     }
 
     int s_depth = 0;
-    assert(IMPLIES(pc_tree->partitioning == PARTITION_SPLIT, ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
-    assert(IMPLIES(pc_tree->partitioning != PARTITION_SPLIT, !ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
-    if (pc_tree->partitioning != PARTITION_SPLIT) {
+    assert(IMPLIES(pc_tree->partition == PARTITION_SPLIT, ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
+    assert(IMPLIES(pc_tree->partition != PARTITION_SPLIT, !ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
+    if (pc_tree->partition != PARTITION_SPLIT) {
         // Add current pred depth to be tested. tot_shapes = 1 signals to test this depth;
         // the blocks to be tested will be updated in set_blocks_to_be_tested after
         // proper PD1 settings (esp. for NSQ) have been updated.
@@ -2082,14 +2082,14 @@ static void get_max_min_pd0_depths(PictureControlSet *pcs, ModeDecisionContext *
     if (mi_col >= pcs->ppcs->av1_cm->mi_cols || mi_row >= pcs->ppcs->av1_cm->mi_rows)
         return;
 
-    if (pc_tree->partitioning != PARTITION_SPLIT) {
-        const int sq_size = block_size_wide[pc_tree->block_size];
+    if (pc_tree->partition != PARTITION_SPLIT) {
+        const int sq_size = block_size_wide[pc_tree->bsize];
         if (sq_size > *max_pd0_size_out)
             *max_pd0_size_out = sq_size;
         if (sq_size < *min_pd0_size_out)
             *min_pd0_size_out = sq_size;
     } else {
-        const int mi_step = mi_size_wide[pc_tree->block_size] / 2;
+        const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             const int x_idx = (i & 1) * mi_step;
             const int y_idx = (i >> 1) * mi_step;
