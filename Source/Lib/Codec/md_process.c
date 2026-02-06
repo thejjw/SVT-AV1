@@ -86,6 +86,7 @@ void svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree) {
 }
 #endif
 #endif
+#if !OPT_ALLOC_PTREE_SB_PTR
 #if OPT_REFACTOR_ED_EC
 PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize) {
     PARTITION_TREE *ptree;
@@ -111,6 +112,7 @@ void svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree) {
     }
     EB_FREE(ptree);
 }
+#endif
 #endif
 static void mode_decision_context_dctor(EbPtr p) {
     ModeDecisionContext *obj = (ModeDecisionContext *)p;
@@ -251,12 +253,11 @@ static void setup_mds(MdScan *mds, uint32_t *mds_idx, int index, BlockSize bsize
 }
 #endif
 #if OPT_ALLOC_PC_TREE_CTX
-static void setup_pc_tree(PC_TREE* pc_tree, uint32_t* mds_idx, int index, BlockSize bsize, const int min_sq_size) {
+static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
     pc_tree->block_size = bsize;
     pc_tree->index = index;
 
     // If applicable, add split depths
-    const BlockGeom* blk_geom = get_blk_geom_mds(*mds_idx);
     const int        sq_size = block_size_wide[bsize];
     if (sq_size > min_sq_size) {
         const BlockSize subsize = get_partition_subsize(bsize, PARTITION_SPLIT);
@@ -267,14 +268,10 @@ static void setup_pc_tree(PC_TREE* pc_tree, uint32_t* mds_idx, int index, BlockS
         for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
             blocks_to_skip += blocks_per_subdepth;
 
-        *mds_idx += blk_geom->d1_depth_offset;
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
-            setup_pc_tree(pc_tree->split[i], mds_idx, i, subsize, min_sq_size);
+            setup_pc_tree(pc_tree->split[i], i, subsize, min_sq_size);
         }
-    }
-    else {
-        *mds_idx += blk_geom->ns_depth_offset;
     }
 }
 #endif
@@ -527,8 +524,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     setup_mds(ctx->mds, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);
 #if OPT_ALLOC_PC_TREE_CTX
     EB_CALLOC_ARRAY(ctx->pc_tree, blocks_to_alloc);
-    mds_idx = 0;
-    setup_pc_tree(ctx->pc_tree, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);
+    setup_pc_tree(ctx->pc_tree, 0, scs->seq_header.sb_size, min_bsize);
 #endif
 #else
     EB_MALLOC_ARRAY(ctx->mdc_sb_array.leaf_data_array, block_max_count_sb);

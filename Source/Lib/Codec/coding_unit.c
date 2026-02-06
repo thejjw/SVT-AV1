@@ -23,7 +23,33 @@ void svt_aom_largest_coding_unit_dctor(EbPtr p) {
 #if !OPT_REFACTOR_EC
     EB_FREE_ARRAY(obj->cu_partition_array);
 #endif
+#if OPT_ALLOC_PTREE_SB_PTR
+    EB_FREE_ARRAY(obj->ptree);
+#endif
 }
+#if OPT_ALLOC_PTREE_SB_PTR
+static void setup_ptree(PARTITION_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+    pc_tree->bsize = bsize;
+    pc_tree->index = index;
+
+    // If applicable, add split depths
+    const int        sq_size = block_size_wide[bsize];
+    if (sq_size > min_sq_size) {
+        const BlockSize subsize = get_partition_subsize(bsize, PARTITION_SPLIT);
+        const int       sq_subsize = block_size_wide[subsize];
+        int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
+        int             blocks_to_skip = 0;
+
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+            blocks_to_skip += blocks_per_subdepth;
+
+        for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
+            pc_tree->sub_tree[i] = pc_tree + i * blocks_to_skip + 1;
+            setup_ptree(pc_tree->sub_tree[i], i, subsize, min_sq_size);
+        }
+    }
+}
+#endif
 /*
 Tasks & Questions
     -Need a GetEmptyChain function for testing sub partitions.  Tie it to an Itr?
@@ -95,6 +121,15 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr,
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, 1);
 #if !OPT_REFACTOR_EC
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->cu_partition_array, max_block_cnt);
+#endif
+#if OPT_ALLOC_PTREE_SB_PTR
+    uint8_t min_bsize = disallow_8x8 ? 16 : disallow_4x4 ? 8 : 4;
+    int     blocks_per_depth = (sb_size_pix / min_bsize) * (sb_size_pix / min_bsize);
+    int     blocks_to_alloc = 0;
+
+    for (int i = min_bsize; i <= sb_size_pix; i <<= 1, blocks_per_depth >>= 2) { blocks_to_alloc += blocks_per_depth; }
+    EB_CALLOC_ARRAY(larget_coding_unit_ptr->ptree, blocks_to_alloc);
+    setup_ptree(larget_coding_unit_ptr->ptree, 0, sb_size_pix == 128 ? BLOCK_128X128 : BLOCK_64X64, min_bsize);
 #endif
     return EB_ErrorNone;
 }
