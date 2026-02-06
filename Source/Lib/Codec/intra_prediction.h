@@ -42,7 +42,6 @@ extern const int32_t sm_weight_log2_scale;
 extern const uint8_t sm_weight_arrays[2 * MAX_BLOCK_DIM];
 
 #define FILTER_INTRA_SCALE_BITS 4
-#define SHIFT_INTRA_SCALE_BITS 15 - FILTER_INTRA_SCALE_BITS
 extern const int8_t eb_av1_filter_intra_taps[FILTER_INTRA_MODES][8][8];
 
 int32_t svt_aom_use_intra_edge_upsample(int32_t bs0, int32_t bs1, int32_t delta, int32_t type);

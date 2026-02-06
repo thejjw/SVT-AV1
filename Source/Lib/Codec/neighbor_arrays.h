@@ -19,10 +19,7 @@
 extern "C" {
 #endif
 // Neighbor Array Granulairity
-#define SB_NEIGHBOR_ARRAY_GRANULARITY 64
-#define CU_NEIGHBOR_ARRAY_GRANULARITY 8
 #define PU_NEIGHBOR_ARRAY_GRANULARITY 4
-#define TU_NEIGHBOR_ARRAY_GRANULARITY 4
 #define SAMPLE_NEIGHBOR_ARRAY_GRANULARITY 1
 
 typedef enum NeighborArrayType {

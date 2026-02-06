@@ -180,7 +180,6 @@ uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_of
 // 2 - Regular uni-pred + Wedge compound Inter Intra
 // 3 - Regular uni-pred + Wedge compound Inter Intra + Smooth compound Inter Intra
 
-#define II_COUNT 3
 #if CONFIG_ENABLE_OBMC
 static bool warped_motion_mode_allowed(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;

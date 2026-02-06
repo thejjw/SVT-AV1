@@ -42,8 +42,6 @@ extern const int32_t svt_aom_eb_cdef_pri_taps[2][2];
 extern const int32_t svt_aom_eb_cdef_sec_taps[2][2];
 extern const int (*const svt_aom_eb_cdef_directions)[2];
 
-#define REDUCED_PRI_STRENGTHS 8
-#define REDUCED_TOTAL_STRENGTHS (REDUCED_PRI_STRENGTHS * CDEF_SEC_STRENGTHS)
 #define TOTAL_STRENGTHS (CDEF_PRI_STRENGTHS * CDEF_SEC_STRENGTHS)
 
 void svt_aom_copy_sb8_16(uint16_t *dst, int32_t dstride, const uint8_t *src, int32_t src_voffset, int32_t src_hoffset,

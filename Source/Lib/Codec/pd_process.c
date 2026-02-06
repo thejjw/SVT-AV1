@@ -3274,7 +3274,7 @@ bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
         return 0;
 }
 void first_pass_frame_end_one_pass(PictureParentControlSet *pcs);
-#define HIGH_BAND 250000
+
 /* modulate_ref_pics()
  For INTRA, the modulation uses the noise level, and towards increasing the number of ref_pics
  For BASE and L1, the modulation uses the filt_INTRA-to-unfilterd_INTRA distortion range, and towards decreasing the number of ref_pics
