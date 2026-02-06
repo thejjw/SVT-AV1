@@ -2343,16 +2343,6 @@ typedef enum RasterScanCuIndex
     RASTER_SCAN_CU_INDEX_8x8_63 = 84
 } RasterScanCuIndex;
 
-extern const uint32_t raster_scan_blk_x[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_y[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_size[CU_MAX_COUNT];
-
-extern const uint32_t md_scan_to_raster_scan[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_parent_index[CU_MAX_COUNT];
-
 typedef struct StatStruct
 {
     uint64_t   poc;
