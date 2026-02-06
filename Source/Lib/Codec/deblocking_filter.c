@@ -21,7 +21,6 @@
 #include "reference_object.h"
 #include "common_utils.h"
 #include "ac_bias.h"
-//#include "svt_log.h"
 #define DLF_MAX_LVL 4
 static const int32_t  inter_frame_multiplier[INPUT_SIZE_COUNT]      = {6017, 6017, 6017, 12034, 12034, 12034, 12034};
 static const uint32_t disable_dlf_th[DLF_MAX_LVL][INPUT_SIZE_COUNT] = {{0, 0, 0, 0, 0, 0, 0},

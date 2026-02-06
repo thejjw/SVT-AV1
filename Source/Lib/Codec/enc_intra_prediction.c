@@ -559,17 +559,6 @@ void svt_av1_predict_intra_block(
 
     const int32_t disable_edge_filter = !(seq_header_ptr->enable_intra_edge_filter);
 
-    //if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    //  build_intra_predictors_high(
-    //      xd, ref, ref_stride, dst, dst_stride, mode, angle_delta,
-    //      filter_intra_mode, tx_size, disable_edge_filter,
-    //      have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
-    //      have_top_right ? AOMMIN(txwpx, xr) : 0,
-    //      have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
-    //      have_bottom_left ? AOMMIN(txhpx, yd) : 0, plane);
-    //  return;
-    //}
-
     build_intra_predictors(
             xd,
             top_neigh_array,

@@ -13,7 +13,6 @@
 #include <stdlib.h>
 
 #include "enc_inter_prediction.h"
-//#include "convolve.h"
 #include "aom_dsp_rtcd.h"
 #include "rd_cost.h"
 #include "resize.h"

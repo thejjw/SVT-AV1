@@ -56,10 +56,7 @@
 |40||41||44||45|     |56||57||60||61|
 |42||43||46||47|     |58||59||62||63|
 -------------------------------------*/
-EbErrorType check_00_center(PictureParentControlSet *pcs, EbPictureBufferDesc *ref_pic_ptr,
-                            MeContext *me_ctx, uint32_t sb_origin_x, uint32_t sb_origin_y,
-                            uint32_t sb_width, uint32_t sb_height, int16_t *x_search_center,
-                            int16_t *y_search_center, uint32_t zz_sad);
+
 void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_idx);
 
 static void motion_estimation_context_dctor(EbPtr p) {

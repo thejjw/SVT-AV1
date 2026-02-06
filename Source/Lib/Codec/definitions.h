@@ -287,16 +287,6 @@ typedef struct {
     typedef uint8_t enumvar
 
 enum {
-    DIAMOND      = 0,
-    NSTEP        = 1,
-    HEX          = 2,
-    BIGDIA       = 3,
-    SQUARE       = 4,
-    FAST_HEX     = 5,
-    FAST_DIAMOND = 6
-} UENUM1BYTE(SEARCH_METHODS);
-
-enum {
     // No recode.
     DISALLOW_RECODE = 0,
     // Allow recode for KF and exceeding maximum frame bandwidth.
@@ -576,7 +566,6 @@ static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
     mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
 /* clang-format on */
-//#endif  // AOM_PORTS_MEM_OPS_H_
 
 typedef uint16_t ConvBufType;
 

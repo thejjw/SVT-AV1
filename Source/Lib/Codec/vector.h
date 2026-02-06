@@ -77,8 +77,6 @@ void svt_aom_iterator_increment(Iterator *iterator);
 
 /***** PRIVATE *****/
 
-//#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 bool _vector_should_grow(Vector *vector);
 
 void *_vector_offset(Vector *vector, size_t index);

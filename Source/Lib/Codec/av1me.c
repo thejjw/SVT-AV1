@@ -556,9 +556,6 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
     int                        range    = sf->mesh_patterns[0].range;
     int                        baseline_interval_divisor;
 
-    // Keep track of number of exhaustive calls (this frame in this thread).
-    //CHKN if (x->ex_search_count_ptr != NULL) ++(*x->ex_search_count_ptr);
-
     // Trap illegal values for interval and range for this function.
     if ((range < MIN_RANGE) || (range > MAX_RANGE) || (interval < MIN_INTERVAL) || (interval > range))
         return INT_MAX;
@@ -1027,12 +1024,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(struct ModeDecisionContext *ctx, In
 #endif
 
 int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSize bsize, Mv *mvp_full, int step_param,
-                              int method, int run_mesh_search, int error_per_bit, int *cost_list, const Mv *ref_mv,
-                              int var_max, int rd, int x_pos, int y_pos, int intra) {
-    UNUSED(run_mesh_search);
-    UNUSED(var_max);
-    UNUSED(rd);
-
+                              int error_per_bit, int *cost_list, const Mv *ref_mv, int x_pos, int y_pos, int intra) {
     int32_t ibc_shift = 0;
     //IBC Modes:   0: OFF 1:Slow   2:Faster   3:Fastest
     ibc_shift = pcs->ppcs->intraBC_ctrls.ibc_shift;
@@ -1050,67 +1042,28 @@ int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSi
         cost_list[4] = INT_MAX;
     }
 
-    // Keep track of number of searches (this frame in this thread).
-    //if (x->m_search_count_ptr != NULL) ++(*x->m_search_count_ptr);
+    var = full_pixel_diamond(
+        pcs, x, mvp_full, step_param, error_per_bit, MAX_MVSEARCH_STEPS - 1 - step_param, 1, cost_list, fn_ptr, ref_mv);
 
-    switch (method) {
-    case FAST_DIAMOND:
-        //var = fast_dia_search(x, mvp_full, step_param, error_per_bit, 0,
-        //                      cost_list, fn_ptr, 1, ref_mv);
-        break;
-    case FAST_HEX:
-        //var = fast_hex_search(x, mvp_full, step_param, error_per_bit, 0,
-        //                      cost_list, fn_ptr, 1, ref_mv);
-        break;
-    case HEX:
-        //var = av1_hex_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                     fn_ptr, 1, ref_mv);
-        break;
-    case SQUARE:
-        //var = square_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                    fn_ptr, 1, ref_mv);
-        break;
-    case BIGDIA:
-        //var = bigdia_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                    fn_ptr, 1, ref_mv);
-        break;
-    case NSTEP:
-        var = full_pixel_diamond(pcs,
-                                 x,
-                                 mvp_full,
-                                 step_param,
-                                 error_per_bit,
-                                 MAX_MVSEARCH_STEPS - 1 - step_param,
-                                 1,
-                                 cost_list,
-                                 fn_ptr,
-                                 ref_mv);
+    if (x->is_exhaustive_allowed) {
+        int exhuastive_thr = sf->exhaustive_searches_thresh;
+        exhuastive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
 
-        if (x->is_exhaustive_allowed) {
-            int exhuastive_thr = sf->exhaustive_searches_thresh;
-            exhuastive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
+        exhuastive_thr = exhuastive_thr << ibc_shift;
 
-            exhuastive_thr = exhuastive_thr << ibc_shift;
+        if (var > exhuastive_thr) {
+            int var_ex;
+            Mv  tmp_mv_ex;
+            var_ex = full_pixel_exhaustive(pcs, x, &x->best_mv, error_per_bit, cost_list, fn_ptr, ref_mv, &tmp_mv_ex);
 
-            if (var > exhuastive_thr) {
-                int var_ex;
-                Mv  tmp_mv_ex;
-                var_ex = full_pixel_exhaustive(
-                    pcs, x, &x->best_mv, error_per_bit, cost_list, fn_ptr, ref_mv, &tmp_mv_ex);
-
-                if (var_ex < var) {
-                    var        = var_ex;
-                    x->best_mv = tmp_mv_ex;
-                }
+            if (var_ex < var) {
+                var        = var_ex;
+                x->best_mv = tmp_mv_ex;
             }
         }
-        break;
-    default: assert(0 && "Invalid search method.");
     }
 
     do {
-        //CHKN if (!intra || !av1_use_hash_me(&cpi->common)) break;
-
         // already single ME
         // get block size and original buffer of current block
         const int block_height = block_size_high[bsize];
@@ -1170,5 +1123,5 @@ int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSi
         }
     } while (0);
 
-    return 0; //CHKN  var;
+    return 0;
 }

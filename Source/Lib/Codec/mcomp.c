@@ -30,13 +30,10 @@
 // when x->mv_cost_type is set to MV_COST_L1.
 // LOWRES
 #define SSE_LAMBDA_LOWRES 2 // Used by mv_cost_err_fn
-// #define SAD_LAMBDA_LOWRES 32 // Used by mvsad_err_cost during full pixel search
 // MIDRES
 #define SSE_LAMBDA_MIDRES 0 // Used by mv_cost_err_fn
-// #define SAD_LAMBDA_MIDRES 15 // Used by mvsad_err_cost during full pixel search
 // HDRES
 #define SSE_LAMBDA_HDRES 1 // Used by mv_cost_err_fn
-// #define SAD_LAMBDA_HDRES 8 // Used by mvsad_err_cost during full pixel search
 
 // Returns the cost of using the current mv during the motion search. This is
 // used when var is used as the error metric.
@@ -156,26 +153,12 @@ static INLINE int svt_estimated_pref_error(const Mv *this_mv, const SUBPEL_SEARC
     const uint8_t   *ref        = svt_get_buf_from_mv(ms_buffers->ref, *this_mv);
     const int        src_stride = ms_buffers->src->stride;
     const int        ref_stride = ms_buffers->ref->stride;
-    //const uint8_t *second_pred = ms_buffers->second_pred;
-    //const uint8_t *mask = ms_buffers->mask;
-    //const int mask_stride = ms_buffers->mask_stride;
-    //const int invert_mask = ms_buffers->inv_mask;
 
     const int subpel_x_q3 = svt_get_subpel_part(this_mv->x);
     const int subpel_y_q3 = svt_get_subpel_part(this_mv->y);
 
     // TODO: port other variance-related functions
-    //if (second_pred == NULL) {
     return vfp->svf(ref, ref_stride, subpel_x_q3, subpel_y_q3, src, src_stride, sse);
-    //}
-    //else if (mask) {
-    //    return vfp->msvf(ref, ref_stride, subpel_x_q3, subpel_y_q3, src, src_stride,
-    //        second_pred, mask, mask_stride, invert_mask, sse);
-    //}
-    //else {
-    //    return vfp->svaf(ref, ref_stride, subpel_x_q3, subpel_y_q3, src, src_stride,
-    //        sse, second_pred);
-    //}
 }
 // Estimates whether this_mv is better than best_mv. This function incorporates
 // both prediction error and residue into account. It is suffixed "fast" because

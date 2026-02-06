@@ -629,15 +629,6 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
 
         ybf->use_external_refernce_buffers = 0;
 
-        //if (use_highbitdepth) {
-        //    if (ybf->y_buffer_8bit) svt_aom_free(ybf->y_buffer_8bit);
-        //    ybf->y_buffer_8bit = (uint8_t *)svt_aom_memalign(32, (size_t)yplane_size);
-        //    if (!ybf->y_buffer_8bit) return -1;
-        //}
-        //else {
-        //    assert(!ybf->y_buffer_8bit);
-        //}
-
         ybf->corrupted = 0; /* assume not corrupted by errors */
         return 0;
     }

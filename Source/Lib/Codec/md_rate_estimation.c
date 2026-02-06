@@ -552,8 +552,7 @@ int svt_aom_get_palette_bsize_ctx(BlockSize bsize);
 
 int svt_aom_get_palette_mode_ctx(const MacroBlockD *xd);
 
-static INLINE InterpFilter av1_extract_interp_filter(InterpFilters filters, int32_t x_filter);
-int32_t                    svt_aom_partition_cdf_length(BlockSize bsize);
+int32_t svt_aom_partition_cdf_length(BlockSize bsize);
 /*******************************************************************************
  * Updates all the filter type stats/CDF for the current block
  ******************************************************************************/

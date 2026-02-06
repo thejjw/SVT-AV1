@@ -2942,21 +2942,8 @@ static void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *ctx, co
 
 #define INT_VAR_MAX 2147483647 // maximum (signed) int value
 
-        const int bestsme = svt_av1_full_pixel_search(pcs,
-                                                      x,
-                                                      bsize,
-                                                      &mvp_full,
-                                                      step_param,
-                                                      1,
-                                                      0,
-                                                      sadpb,
-                                                      NULL,
-                                                      &dv_ref,
-                                                      INT_VAR_MAX,
-                                                      1,
-                                                      (MI_SIZE * mi_col),
-                                                      (MI_SIZE * mi_row),
-                                                      1);
+        const int bestsme = svt_av1_full_pixel_search(
+            pcs, x, bsize, &mvp_full, step_param, sadpb, NULL, &dv_ref, MI_SIZE * mi_col, MI_SIZE * mi_row, 1);
 
         x->mv_limits = tmp_mv_limits;
         if (bestsme == INT_VAR_MAX)

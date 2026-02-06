@@ -2380,24 +2380,6 @@ TxfmFunc svt_aom_inv_txfm_type_to_func(TxfmType txfmtype) {
     }
 }
 
-//void svt_av1_round_shift_array_c(int32_t *arr, int32_t size, int32_t bit) {
-//    int32_t i;
-//    if (bit == 0) {
-//        return;
-//    }
-//    else {
-//        if (bit > 0) {
-//            for (i = 0; i < size; i++) {
-//                arr[i] = round_shift(arr[i], bit);
-//            }
-//        }
-//        else {
-//            for (i = 0; i < size; i++) {
-//                arr[i] = arr[i] * (1 << (-bit));
-//            }
-//        }
-//    }
-//}
 static INLINE TranHigh check_range(TranHigh input, int32_t bd) {
     // AV1 TX case
     // - 8 bit: signed 16 bit integer

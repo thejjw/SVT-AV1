@@ -43,14 +43,6 @@ void svt_aom_get_block_dimensions(BlockSize bsize, int plane, const MacroBlockD 
                                   int *rows_within_bounds, int *cols_within_bounds);
 int  svt_aom_allow_palette(int allow_screen_content_tools, BlockSize bsize);
 int  svt_aom_allow_intrabc(const FrameHeader *frm_hdr, SliceType slice_type);
-/* Symbols for coding which components are zero jointly */
-//#define MV_JOINTS 4
-//typedef enum {
-//    MV_JOINT_ZERO = 0,   /* zero vector */
-//    MV_JOINT_HNZVZ = 1,  /* Vert zero, hor nonzero */
-//    MV_JOINT_HZVNZ = 2,  /* Hor zero, vert nonzero */
-//    MV_JOINT_HNZVNZ = 3, /* Both components nonzero */
-//} MvJointType;
 
 MvJointType svt_av1_get_mv_joint(const Mv *mv) {
     if (mv->y == 0)
@@ -679,7 +671,6 @@ uint64_t estimate_ref_frame_type_bits(struct ModeDecisionContext *ctx, BlkStruct
                     }
                 }
                 return ref_rate_bits;
-                //return;
             }
 
             assert(comp_ref_type == BIDIR_COMP_REFERENCE);

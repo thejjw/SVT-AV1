@@ -165,11 +165,7 @@ void svt_aom_get_txb_ctx(PictureControlSet *pcs, const int32_t plane,
                          int16_t *const dc_sign_ctx);
 
 extern void svt_aom_collect_neighbors_ref_counts_new(MacroBlockD *const xd);
-// Obtain contexts to signal a reference frame be either BWDREF/ALTREF2, or
-// ALTREF.
-//extern int32_t get_pred_context_brfarf2_or_arf(const MacroBlockD *xd);
-// Obtain contexts to signal a reference frame be either BWDREF or ALTREF2.
-//extern int32_t get_pred_context_brf_or_arf2(const MacroBlockD *xd);
+
 // == Context functions for comp ref ==
 //
 // Returns a context number for the given MB prediction signal

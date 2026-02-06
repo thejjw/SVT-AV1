@@ -25,7 +25,6 @@
 #include "entropy_coding.h"
 #include "pd_process.h"
 
-static void init_gf_stats(GF_GROUP_STATS *gf_stats);
 // Calculate a modified Error used in distributing bits between easier and
 // harder frames.
 static double calculate_modified_err(const TWO_PASS *twopass, const FIRSTPASS_STATS *this_frame) {
