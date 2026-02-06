@@ -842,26 +842,6 @@ typedef struct CompoundPredictionStore {
     Mv       pred1_mv[4];
 } CompoundPredictionStore;
 
-#if !OPT_BLOCK_TRACKING
-typedef struct EbMdcLeafData {
-    uint32_t mds_idx;
-    // array containing all shapes to be tested for the current SQ block
-    Part shapes[PART_S];
-    // total number of shapes to test for the current SQ block
-    uint8_t tot_shapes;
-    bool    is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
-} EbMdcLeafData;
-
-typedef struct MdcSbData {
-    uint32_t       leaf_count;
-    EbMdcLeafData *leaf_data_array;
-    bool          *split_flag;
-    uint8_t       *refined_split_flag;
-    // 0: do not encode, 1: current or parent depth(s), 2: child depth(s)
-    uint8_t *consider_block;
-} MdcSbData;
-#endif
-#if OPT_BLK_LOOPING
 // struct that specifies which blocks should be tested during MD
 typedef struct MdScan {
     // array containing all shapes to be tested for the current SQ block
@@ -877,12 +857,6 @@ typedef struct MdScan {
     bool is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
 } MdScan;
 
-#if !OPT_BLOCK_TRACKING
-MdScan *svt_aom_alloc_md_scan_node(BlockSize bsize);
-void    svt_aom_free_md_scan_recursive(MdScan *mds_node);
-#endif
-#endif
-#if OPT_REFACTOR_ED_EC
 // TODO: Align field names between PC_TREE and PARTITION_TREE (e.g. partition vs. partitioning, split vs. sub_tree)
 /*! \brief Stores partition structure of the current block. */
 typedef struct PARTITION_TREE {
@@ -904,16 +878,12 @@ typedef struct PARTITION_TREE {
      * current->parent->sub_tree[current->index]. */
     int index;
 } PARTITION_TREE;
-#if !OPT_ALLOC_PTREE_SB_PTR
-PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize);
-void            svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree);
-#endif
-#endif
-#if OPT_REFACTOR_MD
+
 typedef struct RD_STATS {
     int64_t rd_cost;
     bool    valid;
 } RD_STATS;
+
 // TODO: replace BlkStrut with PICK_MODE_CONTEXT
 typedef struct PC_TREE {
     PartitionType partitioning;
@@ -925,11 +895,6 @@ typedef struct PC_TREE {
     int             index;
 } PC_TREE;
 
-#if !OPT_ALLOC_PC_TREE_CTX
-PC_TREE *svt_aom_alloc_pc_tree_node(BlockSize bsize);
-void     svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree);
-#endif
-#endif
 typedef struct ModeDecisionContext {
     EbDctor dctor;
 
@@ -944,16 +909,10 @@ typedef struct ModeDecisionContext {
     BlkStruct                    *md_blk_arr_nsq;
     uint8_t                      *avail_blk_flag;
     uint8_t                      *cost_avail;
-#if OPT_BLOCK_TRACKING
     // Used to track which blocks should be tested in MD in each PD stage
     MdScan *mds;
-#else
-    MdcSbData mdc_sb_array;
-#endif
-#if OPT_ALLOC_PC_TREE_CTX
     // Used to store results of MD
-    PC_TREE* pc_tree;
-#endif
+    PC_TREE         *pc_tree;
     bool             copied_neigh_arrays;
     MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
     uint8_t          tot_ref_frame_types;

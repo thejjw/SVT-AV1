@@ -167,13 +167,8 @@ EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSe
     memcpy(dst->b64_geom, src->b64_geom, sizeof(B64Geom) * dst->b64_total_count);
 
     // allocate buffers and copy data preserving dst pointers
-#if CLN_REMOVE_BLK_ALLOWED
     alloc_sb_geoms(&dst->sb_geom, dst->picture_width_in_sb, dst->picture_height_in_sb);
     copy_sb_geoms(dst->sb_geom, src->sb_geom, dst->picture_width_in_sb, dst->picture_height_in_sb);
-#else
-    alloc_sb_geoms(&dst->sb_geom, dst->picture_width_in_sb, dst->picture_height_in_sb, dst->max_block_cnt);
-    copy_sb_geoms(dst->sb_geom, src->sb_geom, dst->picture_width_in_sb, dst->picture_height_in_sb, dst->max_block_cnt);
-#endif
 
     if (src->static_config.frame_scale_evts.start_frame_nums) {
         EB_NO_THROW_MALLOC(dst->static_config.frame_scale_evts.start_frame_nums,

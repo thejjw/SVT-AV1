@@ -1752,24 +1752,14 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, 
                                                0);
     return bits;
 }
-#if OPT_REFACTOR_MD
+
 /*
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
  */
-#if CLN_MD_PATHS
 int64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
-#else
-int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
-#endif
                                     const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
-#if OPT_BLK_LOOPING
-                                    const PartitionContextType left_ctx,
-#else
-                                        bool use_accurate_part_ctx, const PartitionContextType left_ctx,
-#endif
-                                    const PartitionContextType above_ctx) {
-
+                                    const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
     assert(bsize < BlockSizeS_ALL);
     const bool is_partition_point = (bsize >= BLOCK_8X8);
@@ -1818,98 +1808,5 @@ int64_t svt_aom_partition_rate_cost_new(PictureParentControlSet *pcs, const Bloc
             : (uint64_t)md_rate_est_ctx->partition_horz_alike_fac_bits[context_index][p == PARTITION_SPLIT];
     }
 
-#if !OPT_BLK_LOOPING
-    // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
-    if (!use_accurate_part_ctx && p == PARTITION_SPLIT) {
-        split_rate *= 2;
-    }
-#endif
-
-    return split_rate; // (RDCOST(lambda, split_rate, 0));
+    return split_rate;
 }
-#endif
-#if !CLN_MD_PATHS
-/*
- * av1_partition_rate_cost function is used to generate the rate of signaling the
- * partition type for a given block.
- */
-uint64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, ModeDecisionContext *ctx, uint32_t blk_mds_idx,
-                                     PartitionType p, uint64_t lambda, bool use_accurate_part_ctx,
-                                     MdRateEstimationContext *md_rate_est_ctx) {
-    const BlockGeom *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_mds_idx);
-    const BlockSize  bsize    = blk_geom->bsize;
-    assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
-    assert(bsize < BlockSizeS_ALL);
-    const bool is_partition_point = (bsize >= BLOCK_8X8);
-
-    if (!is_partition_point) {
-        return 0;
-    }
-
-    const int blk_org_x = ctx->sb_origin_x + blk_geom->org_x;
-    const int blk_org_y = ctx->sb_origin_y + blk_geom->org_y;
-    const int hbs       = (mi_size_wide[bsize] << 2) >> 1;
-    const int has_rows  = (blk_org_y + hbs) < pcs->aligned_height;
-    const int has_cols  = (blk_org_x + hbs) < pcs->aligned_width;
-    // Don't consider blocks outside the picture
-    if (blk_org_y >= pcs->aligned_height || blk_org_x >= pcs->aligned_width)
-        return 0;
-    if (!has_rows && !has_cols) {
-        return 0;
-    }
-
-#if CLN_MD_PATHS
-    const PartitionContextType left_ctx  = ctx->md_blk_arr_nsq[blk_mds_idx].left_part_ctx ==
-            (char)(INVALID_NEIGHBOR_DATA)
-         ? 0
-         : ctx->md_blk_arr_nsq[blk_mds_idx].left_part_ctx;
-    const PartitionContextType above_ctx = ctx->md_blk_arr_nsq[blk_mds_idx].above_part_ctx ==
-            (char)(INVALID_NEIGHBOR_DATA)
-        ? 0
-        : ctx->md_blk_arr_nsq[blk_mds_idx].above_part_ctx;
-#else
-    const PartitionContextType left_ctx  = ctx->md_blk_arr_nsq[blk_mds_idx].left_neighbor_partition ==
-            (char)(INVALID_NEIGHBOR_DATA)
-         ? 0
-         : ctx->md_blk_arr_nsq[blk_mds_idx].left_neighbor_partition;
-    const PartitionContextType above_ctx = ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition ==
-            (char)(INVALID_NEIGHBOR_DATA)
-        ? 0
-        : ctx->md_blk_arr_nsq[blk_mds_idx].above_neighbor_partition;
-#endif
-    const int bsl = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
-    assert(bsl >= 0);
-
-    const int      above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
-    const uint32_t context_index = (left * 2 + above) + bsl * PARTITION_PLOFFSET;
-
-    uint64_t split_rate = 0;
-
-    if (has_rows && has_cols) {
-        split_rate = (uint64_t)md_rate_est_ctx->partition_fac_bits[context_index][p];
-    } else if (!has_rows && has_cols) {
-        // 8x8 blocks will not use the split_or_horz or the split_or_vert paritition CDFs, per
-        // section 8.3.2 of the AV1 spec (Cdf selection process).  Therefore, only update partition ctx 4+,
-        // which corresponds to the paritition CDFs for 16x16 and larger blocks
-        assert(bsize != BLOCK_8X8);
-        split_rate = bsize == BLOCK_128X128
-            ? (uint64_t)md_rate_est_ctx->partition_vert_alike_128x128_fac_bits[context_index][p == PARTITION_SPLIT]
-            : (uint64_t)md_rate_est_ctx->partition_vert_alike_fac_bits[context_index][p == PARTITION_SPLIT];
-    } else {
-        // 8x8 blocks will not use the split_or_horz or the split_or_vert paritition CDFs, per
-        // section 8.3.2 of the AV1 spec (Cdf selection process).  Therefore, only update partition ctx 4+,
-        // which corresponds to the paritition CDFs for 16x16 and larger blocks
-        assert(bsize != BLOCK_8X8);
-        split_rate = bsize == BLOCK_128X128
-            ? (uint64_t)md_rate_est_ctx->partition_horz_alike_128x128_fac_bits[context_index][p == PARTITION_SPLIT]
-            : (uint64_t)md_rate_est_ctx->partition_horz_alike_fac_bits[context_index][p == PARTITION_SPLIT];
-    }
-
-    // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
-    if (!use_accurate_part_ctx && p == PARTITION_SPLIT) {
-        split_rate *= 2;
-    }
-
-    return (RDCOST(lambda, split_rate, 0));
-}
-#endif
