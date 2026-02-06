@@ -872,7 +872,6 @@ void svt_aom_sig_deriv_me(SequenceControlSet *scs, PictureParentControlSet *pcs,
 
     me_ctx->me_safe_limit_zz_th = scs->mrp_ctrls.safe_limit_nref == 1 ? scs->mrp_ctrls.safe_limit_zz_th : 0;
 
-    me_ctx->skip_frame                  = 0;
     me_ctx->prev_me_stage_based_exit_th = 0;
     if (rtc_tune && sc_class1) {
         me_ctx->prev_me_stage_based_exit_th = BLOCK_SIZE_64 * BLOCK_SIZE_64 * 4;
@@ -925,7 +924,6 @@ void svt_aom_sig_deriv_me_tf(PictureParentControlSet *pcs, MeContext *me_ctx) {
     me_ctx->me_safe_limit_zz_th         = 0;
     me_ctx->reduce_hme_l0_sr_th_min     = 0;
     me_ctx->reduce_hme_l0_sr_th_max     = 0;
-    me_ctx->skip_frame                  = 0;
     me_ctx->prev_me_stage_based_exit_th = pcs->tf_ctrls.hme_me_level <= 1 ? 0 : BLOCK_SIZE_64 * BLOCK_SIZE_64 * 4;
 };
 static void set_cdef_search_controls(PictureParentControlSet *pcs, uint8_t cdef_search_level) {

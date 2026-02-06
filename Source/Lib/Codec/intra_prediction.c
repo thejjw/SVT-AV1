@@ -1208,19 +1208,6 @@ static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride, int b
     for (int r = 0; r < bh; ++r, dst += stride)
         for (int c = 0; c < bw; ++c) dst[c] = paeth_predictor_single(left[r], above[c], ytop_left);
 }
-//static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride,
-//    int32_t bw, int32_t bh, const uint16_t *above,
-//    const uint16_t *left, int32_t bd) {
-//    int32_t r, c;
-//    const uint16_t ytop_left = above[-1];
-//    (void)bd;
-//
-//    for (r = 0; r < bh; r++) {
-//        for (c = 0; c < bw; c++)
-//            dst[c] = paeth_predictor_single(left[r], above[c], ytop_left);
-//        dst += stride;
-//    }
-//}
 
 static INLINE void highbd_smooth_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
                                            const uint16_t *above, const uint16_t *left, int32_t bd) {

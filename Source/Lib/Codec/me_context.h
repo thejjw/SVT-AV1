@@ -373,7 +373,6 @@ typedef struct MeContext {
     uint32_t          *p_best_full_pel_mv16x16;
     uint32_t          *p_best_full_pel_mv32x32;
     uint32_t          *p_best_full_pel_mv64x64;
-    uint8_t            full_quarter_pel_refinement;
     uint16_t          *p_eight_pos_sad16x16;
     uint32_t           p_eight_sad32x32[4][8];
     uint32_t           p_eight_sad16x16[16][8];
@@ -387,7 +386,6 @@ typedef struct MeContext {
     MeHmeRefPruneCtrls me_hme_prune_ctrls;
     MeSrCtrls          me_sr_adjustment_ctrls;
     Me8x8VarCtrls      me_8x8_var_ctrls;
-    uint8_t            max_hme_sr_area_multipler;
     MvBasedSearchAdj   mv_based_sa_adj;
     // ME
     uint8_t          best_list_idx;
@@ -424,14 +422,10 @@ typedef struct MeContext {
                                       [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     uint64_t hme_level2_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
                            [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t adjust_hme_l1_factor[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    int16_t adjust_hme_l2_factor[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    int16_t hme_factor;
     // ------- Context for Alt-Ref ME ------
     void *alt_ref_reference_ptr;
     // Open Loop ME
-    EbMeType                    me_type;
-    EbDownScaledBufDescPtrArray mctf_ref_desc_ptr_array;
+    EbMeType me_type;
 
     uint8_t num_of_list_to_search;
     uint8_t num_of_ref_pic_to_search[2];
@@ -474,8 +468,6 @@ typedef struct MeContext {
     uint32_t me_safe_limit_zz_th;
     uint32_t tf_tot_vert_blks; //total vertical motion blocks in TF
     uint32_t tf_tot_horz_blks; //total horizontal motion blocks in TF
-    uint8_t  skip_frame;
-    uint8_t  bypass_blk_step;
     uint32_t b64_width;
     uint32_t b64_height;
     uint8_t  performed_phme[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][2];

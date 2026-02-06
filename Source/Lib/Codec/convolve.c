@@ -299,5 +299,3 @@ void svt_aom_convolve8_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t 
 
     svt_aom_convolve_vert(src, src_stride, dst, dst_stride, filters_y, y0_q4, y_step_q4, w, h);
 }
-static INLINE const int16_t *av1_get_interp_filter_subpel_kernel(const InterpFilterParams filter_params,
-                                                                 const int32_t            subpel);
