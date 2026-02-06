@@ -851,32 +851,24 @@ typedef struct MdScan {
     struct MdScan *split[4];
     int            index; // should be written once when struct is initialized, then never overwritten
     BlockSize      bsize; // should be written once when struct is initialized, then never overwritten
-    uint32_t
-        mds_idx; // for indexing blk_geom and assigning blk_ptr, should be written once when struct is initialized, then never overwritten
-    bool split_flag;
-    bool is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
+    // for indexing blk_geom and assigning blk_ptr
+    uint32_t mds_idx; // should be written once when struct is initialized, then never overwritten
+    bool     split_flag;
+    bool     is_child; // does is it belong to the child depth(s); relative to PRED (the output of PD0)
 } MdScan;
 
-// TODO: Align field names between PC_TREE and PARTITION_TREE (e.g. partition vs. partitioning, split vs. sub_tree)
-/*! \brief Stores partition structure of the current block. */
+/* Stores partition structure of the current block. */
 typedef struct PARTITION_TREE {
-    /*! \brief Pointer to the parent node. */
-    //struct PARTITION_TREE* parent;
-    /*! \brief Pointers to the children if the current block is further split. */
+    // Pointers to the children if the current block is further split.
     struct PARTITION_TREE *sub_tree[4];
     // Pointers to the EcBlkStruct holding the block's data for entropy coding
     EcBlkStruct *blk_data[4];
-    /*! \brief The partition type used to split the current block. */
+    // The partition type used to split the current block.
     PartitionType partition;
-    /*! \brief Block size of the current block. */
-    BlockSize bsize;
-    /*! \brief The row coordinate of the current block in units of mi. */
-    //int mi_row;
-    /*! \brief The col coordinate of the current block in units of mi. */
-    //int mi_col;
-    /*! \brief The index of current node among its siblings. i.e. current ==
-     * current->parent->sub_tree[current->index]. */
-    int index;
+    // Block size of the current depth.
+    BlockSize bsize; // should be written once when struct is initialized, then never overwritten
+    // The index of current node among its siblings
+    int index; // should be written once when struct is initialized, then never overwritten
 } PARTITION_TREE;
 
 typedef struct RD_STATS {
@@ -886,13 +878,13 @@ typedef struct RD_STATS {
 
 // TODO: replace BlkStrut with PICK_MODE_CONTEXT
 typedef struct PC_TREE {
-    PartitionType partitioning;
-    BlockSize     block_size;
+    BlockSize     bsize; // should be written once when struct is initialized, then never overwritten
+    PartitionType partition;
 
     RD_STATS        rdc;
     BlkStruct      *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
     struct PC_TREE *split[4];
-    int             index;
+    int             index; // should be written once when struct is initialized, then never overwritten
 } PC_TREE;
 
 typedef struct ModeDecisionContext {
