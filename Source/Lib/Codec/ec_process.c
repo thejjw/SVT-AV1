@@ -204,9 +204,11 @@ void *svt_aom_entropy_coding_kernel(void *input_ptr) {
                                            context_ptr->sb_origin_y >> MI_SIZE_LOG2,
                                            context_ptr->sb_origin_x >> MI_SIZE_LOG2);
 
+#if !OPT_ALLOC_PTREE_SB_PTR
                     // free ptree structure since it's not longer needed after data has been encoded
                     svt_aom_free_partition_tree_recursive(sb_ptr->ptree);
                     sb_ptr->ptree = NULL;
+#endif
 #else
                     svt_aom_write_sb(context_ptr, sb_ptr, pcs, tile_idx, pcs->ec_info[tile_idx]->ec, coeff_picture_ptr);
 #endif

@@ -904,9 +904,10 @@ typedef struct PARTITION_TREE {
      * current->parent->sub_tree[current->index]. */
     int index;
 } PARTITION_TREE;
-
+#if !OPT_ALLOC_PTREE_SB_PTR
 PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize);
 void            svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree);
+#endif
 #endif
 #if OPT_REFACTOR_MD
 typedef struct RD_STATS {

@@ -86,6 +86,7 @@ void svt_aom_free_pc_tree_recursive(PC_TREE *pc_tree) {
 }
 #endif
 #endif
+#if !OPT_ALLOC_PTREE_SB_PTR
 #if OPT_REFACTOR_ED_EC
 PARTITION_TREE *svt_aom_alloc_partition_tree_node(BlockSize bsize) {
     PARTITION_TREE *ptree;
@@ -111,6 +112,7 @@ void svt_aom_free_partition_tree_recursive(PARTITION_TREE *ptree) {
     }
     EB_FREE(ptree);
 }
+#endif
 #endif
 static void mode_decision_context_dctor(EbPtr p) {
     ModeDecisionContext *obj = (ModeDecisionContext *)p;
