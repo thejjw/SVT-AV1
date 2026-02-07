@@ -486,7 +486,7 @@ static void early_hme_b64(
     return;
 }
 
-void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_idx) {
+void dg_detector_hme_level0(PictureParentControlSet *ppcs, uint32_t seg_idx) {
     EbPictureBufferDesc * src_sixt_ds_pic = ((EbPaReferenceObject*)ppcs->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;
 
     EbPictureBufferDesc * ref_sixt_ds_pic = ((EbPaReferenceObject*)ppcs->dg_detector->ref_pic->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;

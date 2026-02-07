@@ -18,7 +18,6 @@
 #include "sys_resource_manager.h"
 #include "pic_buffer_desc.h"
 #include "enc_inter_prediction.h"
-#include "entropy_coding.h"
 #include "coding_unit.h"
 #include "object.h"
 

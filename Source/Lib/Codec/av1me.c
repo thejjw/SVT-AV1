@@ -90,7 +90,7 @@ void init_fn_ptr(void) {
 #endif
 }
 
-static INLINE const uint8_t *get_buf_from_mv(const struct Buf2D *buf, const Mv *mv) {
+static INLINE const uint8_t *get_buf_from_mv(const Buf2D *buf, const Mv *mv) {
     return &buf->buf[mv->y * buf->stride + mv->x];
 }
 
@@ -187,10 +187,10 @@ static INLINE int is_mv_in(const MvLimits *mv_limits, const Mv *mv) {
 
 int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv *center_mv, const AomVarianceFnPtr *vfp,
                            int use_mvcost) {
-    const struct Buf2D *const what    = &x->plane[0].src;
-    const struct Buf2D *const in_what = &x->xdplane[0].pre[0];
-    const Mv                  mv      = {{best_mv->x * 8, best_mv->y * 8}};
-    unsigned int              unused;
+    const Buf2D *const what    = &x->plane[0].src;
+    const Buf2D *const in_what = &x->xdplane[0].pre[0];
+    const Mv           mv      = {{best_mv->x * 8, best_mv->y * 8}};
+    unsigned int       unused;
     if (x->approx_inter_rate)
         return vfp->vf(what->buf, what->stride, get_buf_from_mv(in_what, best_mv), in_what->stride, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost_light(&mv, center_mv) : 0);
@@ -203,8 +203,8 @@ int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv 
 // step size.
 static int exhaustive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
                                   const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
-    const struct Buf2D *const what       = &x->plane[0].src;
-    const struct Buf2D *const in_what    = &x->xdplane[0].pre[0];
+    const Buf2D *const        what       = &x->plane[0].src;
+    const Buf2D *const        in_what    = &x->xdplane[0].pre[0];
     Mv                        fcenter_mv = {.as_int = center_mv->as_int};
     unsigned int              best_sad   = INT_MAX;
     int                       r, c, i;
@@ -412,12 +412,12 @@ int svt_av1_diamond_search_sad_c(IntraBcContext *x, const SearchSiteConfig *cfg,
 
 static int svt_av1_refining_search_sad(IntraBcContext *x, Mv *ref_mv, int error_per_bit, int search_range,
                                        const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
-    const Mv                  neighbors[4] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}};
-    const struct Buf2D *const what         = &x->plane[0].src;
-    const struct Buf2D *const in_what      = &x->xdplane[0].pre[0];
-    const Mv                  fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
-    const uint8_t            *best_address = get_buf_from_mv(in_what, ref_mv);
-    unsigned int              best_sad     = fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
+    const Mv           neighbors[4] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}};
+    const Buf2D *const what         = &x->plane[0].src;
+    const Buf2D *const in_what      = &x->xdplane[0].pre[0];
+    const Mv           fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
+    const uint8_t     *best_address = get_buf_from_mv(in_what, ref_mv);
+    unsigned int       best_sad     = fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
         mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
     for (int i = 0; i < search_range; i++) {
         int       best_site = -1;
@@ -604,24 +604,23 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
 #if CONFIG_ENABLE_OBMC
 static int get_obmc_mvpred_var(const IntraBcContext *x, const int32_t *wsrc, const int32_t *mask, const Mv *best_mv,
                                const Mv *center_mv, const AomVarianceFnPtr *vfp, int use_mvcost, int is_second) {
-    const struct Buf2D *in_what = (const struct Buf2D *)(&x->xdplane[0].pre[is_second]);
-    const Mv            mv      = {{best_mv->x * 8, best_mv->y * 8}};
-    unsigned int        unused;
+    const Buf2D *in_what = (const Buf2D *)(&x->xdplane[0].pre[is_second]);
+    const Mv     mv      = {{best_mv->x * 8, best_mv->y * 8}};
+    unsigned int unused;
     if (x->approx_inter_rate)
-        return vfp->ovf(get_buf_from_mv((const struct Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
+        return vfp->ovf(get_buf_from_mv((const Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost_light(&mv, center_mv) : 0);
     else
-        return vfp->ovf(get_buf_from_mv((const struct Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
+        return vfp->ovf(get_buf_from_mv((const Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost(&mv, center_mv, x->nmv_vec_cost, x->mv_cost_stack, x->errorperbit) : 0);
 }
 static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc, const int32_t *mask, Mv *ref_mv,
                                     int error_per_bit, int search_range, const AomVarianceFnPtr *fn_ptr,
                                     const Mv *center_mv, int is_second, uint8_t search_diag) {
-    const Mv neighbors[8] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
-    const struct Buf2D *in_what    = (const struct Buf2D *)(&x->xdplane[0].pre[is_second]);
-    const Mv            fcenter_mv = {{center_mv->x >> 3, center_mv->y >> 3}};
-    unsigned int        best_sad   = fn_ptr->osdf(
-                                get_buf_from_mv((const struct Buf2D *)in_what, ref_mv), in_what->stride, wsrc, mask) +
+    const Mv     neighbors[8] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
+    const Buf2D *in_what      = (const Buf2D *)(&x->xdplane[0].pre[is_second]);
+    const Mv     fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
+    unsigned int best_sad = fn_ptr->osdf(get_buf_from_mv((const Buf2D *)in_what, ref_mv), in_what->stride, wsrc, mask) +
         mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
     int i, j;
 
@@ -632,7 +631,7 @@ static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc
             const Mv mv = {{ref_mv->x + neighbors[j].x, ref_mv->y + neighbors[j].y}};
             if (is_mv_in(&x->mv_limits, &mv)) {
                 unsigned int sad = fn_ptr->osdf(
-                    get_buf_from_mv((const struct Buf2D *)in_what, &mv), in_what->stride, wsrc, mask);
+                    get_buf_from_mv((const Buf2D *)in_what, &mv), in_what->stride, wsrc, mask);
                 if (sad < best_sad) {
                     sad += mvsad_err_cost(x, &mv, &fcenter_mv, error_per_bit);
                     if (sad < best_sad) {

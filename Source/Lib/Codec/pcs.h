@@ -107,11 +107,11 @@ typedef struct Dequants {
 
 typedef struct MacroblockdPlane {
     // TranLow *dqcoeff;
-    PlaneType    plane_type;
-    int32_t      subsampling_x;
-    int32_t      subsampling_y;
-    struct Buf2D dst;
-    int32_t      is_16bit;
+    PlaneType plane_type;
+    int32_t   subsampling_x;
+    int32_t   subsampling_y;
+    Buf2D     dst;
+    int32_t   is_16bit;
 } MacroblockdPlane;
 
 /**************************************

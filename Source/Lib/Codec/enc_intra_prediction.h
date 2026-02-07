@@ -20,9 +20,6 @@
 extern "C" {
 #endif
 
-struct ModeDecisionCandidateBuffer;
-struct ModeDecisionCandidate;
-
 EbErrorType        svt_av1_intra_prediction(uint8_t hbd_md, struct ModeDecisionContext *ctx, PictureControlSet *pcs,
                                             ModeDecisionCandidateBuffer *cand_bf);
 extern EbErrorType svt_aom_update_neighbor_samples_array_open_loop_mb(uint8_t use_top_righ_bottom_left,

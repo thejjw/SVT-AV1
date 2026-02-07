@@ -64,7 +64,7 @@ static INLINE int svt_mv_err_cost(const Mv *mv, const Mv *ref_mv, const int *mvj
     }
 }
 
-static INLINE int svt_mv_err_cost_(const Mv *mv, const MV_COST_PARAMS *mv_cost_params) {
+static INLINE int svt_mv_err_cost_(const Mv *mv, const svt_mv_cost_param *mv_cost_params) {
     return svt_mv_err_cost(mv,
                            mv_cost_params->ref_mv,
                            mv_cost_params->mvjcost,
@@ -166,7 +166,7 @@ static INLINE int svt_estimated_pref_error(const Mv *this_mv, const SUBPEL_SEARC
 static INLINE unsigned int svt_check_better_fast(MacroBlockD *xd, const struct AV1Common *const cm, const Mv *this_mv,
                                                  Mv *best_mv, const SubpelMvLimits *mv_limits,
                                                  const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                 const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                 const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                  unsigned int *sse1, int *distortion, int *has_better_mv,
                                                  int is_scaled) {
     unsigned int cost;
@@ -207,7 +207,7 @@ static INLINE unsigned int svt_check_better_fast(MacroBlockD *xd, const struct A
 static AOM_FORCE_INLINE unsigned int svt_check_better(MacroBlockD *xd, const struct AV1Common *const cm,
                                                       const Mv *this_mv, Mv *best_mv, const SubpelMvLimits *mv_limits,
                                                       const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                      const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                      const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                       unsigned int *sse1, int *distortion, int *is_better) {
     unsigned int cost;
     if (svt_av1_is_subpelmv_in_range(mv_limits, *this_mv)) {
@@ -243,7 +243,7 @@ static INLINE Mv get_best_diag_step(int step_size, unsigned int left_cost, unsig
 static AOM_FORCE_INLINE Mv svt_first_level_check(MacroBlockD *xd, const struct AV1Common *const cm, const Mv this_mv,
                                                  Mv *best_mv, const int hstep, const SubpelMvLimits *mv_limits,
                                                  const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                 const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                 const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                  unsigned int *sse1, int *distortion) {
     int      dummy     = 0;
     const Mv left_mv   = {{this_mv.x - hstep, this_mv.y}};
@@ -277,7 +277,7 @@ static AOM_FORCE_INLINE void svt_second_level_check_v2(MacroBlockD *xd, const st
                                                        const Mv this_mv, Mv diag_step, Mv *best_mv,
                                                        const SubpelMvLimits           *mv_limits,
                                                        const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                       const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                       const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                        unsigned int *sse1, int *distortion, int is_scaled) {
     assert(best_mv->y == this_mv.y + diag_step.y || best_mv->x == this_mv.x + diag_step.x);
     if (CHECK_MV_EQUAL(this_mv, *best_mv)) {
@@ -336,7 +336,8 @@ static AOM_FORCE_INLINE void svt_second_level_check_v2(MacroBlockD *xd, const st
 
 // Gets the error at the beginning when the mv has fullpel precision
 static unsigned int svt_upsampled_setup_center_error(const Mv *bestmv, const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                     const MV_COST_PARAMS *mv_cost_params, unsigned int *distortion) {
+                                                     const svt_mv_cost_param *mv_cost_params,
+                                                     unsigned int            *distortion) {
     const MSBuffers *ms_buffers = &var_params->ms_buffers;
     const uint8_t   *ref        = svt_get_buf_from_mv(ms_buffers->ref, *bestmv);
     *distortion                 = var_params->vfp->vf(
@@ -350,7 +351,7 @@ static unsigned int svt_upsampled_setup_center_error(const Mv *bestmv, const SUB
 static AOM_FORCE_INLINE Mv first_level_check_fast(MacroBlockD *xd, const struct AV1Common *const cm, const Mv this_mv,
                                                   Mv *best_mv, int hstep, const SubpelMvLimits *mv_limits,
                                                   const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                  const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                  const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                   unsigned int orgerr, unsigned int *sse1, int *distortion,
                                                   int is_scaled) {
     // Check the four cardinal directions
@@ -408,7 +409,7 @@ static AOM_FORCE_INLINE void second_level_check_fast(MacroBlockD *xd, const stru
                                                      const Mv this_mv, const Mv diag_step, Mv *best_mv, int hstep,
                                                      const SubpelMvLimits           *mv_limits,
                                                      const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                     const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                     const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                      unsigned int *sse1, int *distortion, int is_scaled) {
     assert(diag_step.y == hstep || diag_step.y == -hstep);
     assert(diag_step.x == hstep || diag_step.x == -hstep);
@@ -544,7 +545,7 @@ static AOM_FORCE_INLINE void second_level_check_fast(MacroBlockD *xd, const stru
 static AOM_FORCE_INLINE void two_level_checks_fast(MacroBlockD *xd, const struct AV1Common *const cm, const Mv this_mv,
                                                    Mv *best_mv, int hstep, const SubpelMvLimits *mv_limits,
                                                    const SUBPEL_SEARCH_VAR_PARAMS *var_params,
-                                                   const MV_COST_PARAMS *mv_cost_params, unsigned int *besterr,
+                                                   const svt_mv_cost_param *mv_cost_params, unsigned int *besterr,
                                                    unsigned int orgerr, unsigned int *sse1, int *distortion, int iters,
                                                    int is_scaled) {
     const Mv diag_step = first_level_check_fast(xd,
@@ -588,9 +589,9 @@ int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const s
     const int                       forced_stop    = ms_params->forced_stop;
     const int                       iters_per_step = ms_params->iters_per_step;
     const SubpelMvLimits           *mv_limits      = &ms_params->mv_limits;
-    const MV_COST_PARAMS           *mv_cost_params = &ms_params->mv_cost_params;
+    const svt_mv_cost_param        *mv_cost_params = &ms_params->mv_cost_params;
     const SUBPEL_SEARCH_VAR_PARAMS *var_params     = &ms_params->var_params;
-    int                             hstep          = INIT_SUBPEL_STEP_SIZE; // Step size, initialized to 4/8=1/2 pel
+    int                             hstep = INIT_SUBPEL_STEP_SIZE; // Step size, initialized to 4/8=1/2 pel
     unsigned int                    besterr;
     unsigned int                    org_error;
     *bestmv = start_mv;
@@ -671,7 +672,7 @@ int svt_av1_find_best_sub_pixel_tree(void *ictx, MacroBlockD *xd, const struct A
     const int            forced_stop    = ms_params->forced_stop;
     const int            iters_per_step = ms_params->iters_per_step;
 
-    MV_COST_PARAMS                 *mv_cost_params = &ms_params->mv_cost_params;
+    svt_mv_cost_param              *mv_cost_params = &ms_params->mv_cost_params;
     const SUBPEL_SEARCH_VAR_PARAMS *var_params     = &ms_params->var_params;
     const SubpelMvLimits           *mv_limits      = &ms_params->mv_limits;
 
@@ -754,6 +755,6 @@ int svt_av1_find_best_sub_pixel_tree(void *ictx, MacroBlockD *xd, const struct A
 // =============================================================================
 //  SVT Functions
 // =============================================================================
-int svt_aom_fp_mv_err_cost(const Mv *mv, const MV_COST_PARAMS *mv_cost_params) {
+int svt_aom_fp_mv_err_cost(const Mv *mv, const svt_mv_cost_param *mv_cost_params) {
     return svt_mv_err_cost_(mv, mv_cost_params);
 }

@@ -101,7 +101,7 @@ static INLINE int32_t scaled_buffer_offset(int32_t x_offset, int32_t y_offset, i
         /*sf ? sf->scale_value_y(y_offset, sf) >> SCALE_EXTRA_BITS :*/ y_offset;
     return y * stride + x;
 }
-static INLINE void setup_pred_plane(struct Buf2D *dst, BlockSize bsize, uint8_t *src, int32_t width, int32_t height,
+static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, int32_t width, int32_t height,
                                     int32_t stride, int32_t mi_row, int32_t mi_col,
                                     /*const struct scale_factors *scale,*/
                                     int32_t subsampling_x, int32_t subsampling_y, int32_t is_16bit) {
@@ -119,14 +119,14 @@ static INLINE void setup_pred_plane(struct Buf2D *dst, BlockSize bsize, uint8_t 
     dst->height     = height;
     dst->stride     = stride;
 }
-void svt_av1_setup_dst_planes(PictureControlSet *pcs, struct MacroblockdPlane *planes, BlockSize bsize,
+void svt_av1_setup_dst_planes(PictureControlSet *pcs, MacroblockdPlane *planes, BlockSize bsize,
                               //const Yv12BufferConfig *src,
                               const EbPictureBufferDesc *src, int32_t mi_row, int32_t mi_col, const int32_t plane_start,
                               const int32_t plane_end) {
     // We use AOMMIN(num_planes, MAX_MB_PLANE) instead of num_planes to quiet
     // the static analysis warnings.
     //for (int32_t i = plane_start; i < AOMMIN(plane_end, MAX_MB_PLANE); ++i) {
-    //    struct MacroblockdPlane *const pd = &planes[i];
+    //    MacroblockdPlane *const pd = &planes[i];
     //    const int32_t is_uv = i > 0;
     //    setup_pred_plane(&pd->dst, bsize, src->buffers[i], src->crop_widths[is_uv],
     //        src->crop_heights[is_uv], src->strides[is_uv], mi_row,
@@ -135,7 +135,7 @@ void svt_av1_setup_dst_planes(PictureControlSet *pcs, struct MacroblockdPlane *p
     SequenceControlSet *scs = pcs->scs;
     for (int32_t i = plane_start; i < AOMMIN(plane_end, 3); ++i) {
         if (i == 0) {
-            struct MacroblockdPlane *const pd = &planes[0];
+            MacroblockdPlane *const pd = &planes[0];
             setup_pred_plane(
                 &pd->dst,
                 bsize,
@@ -150,7 +150,7 @@ void svt_av1_setup_dst_planes(PictureControlSet *pcs, struct MacroblockdPlane *p
                 pd->subsampling_y,
                 pd->is_16bit); //AMIR: Updated to point to the right location
         } else if (i == 1) {
-            struct MacroblockdPlane *const pd = &planes[1];
+            MacroblockdPlane *const pd = &planes[1];
             setup_pred_plane(
                 &pd->dst,
                 bsize,
@@ -165,7 +165,7 @@ void svt_av1_setup_dst_planes(PictureControlSet *pcs, struct MacroblockdPlane *p
                 pd->subsampling_y,
                 pd->is_16bit);
         } else if (i == 2) {
-            struct MacroblockdPlane *const pd = &planes[2];
+            MacroblockdPlane *const pd = &planes[2];
             setup_pred_plane(
                 &pd->dst,
                 bsize,
@@ -185,7 +185,7 @@ void svt_av1_setup_dst_planes(PictureControlSet *pcs, struct MacroblockdPlane *p
 
 //***************************************************************************************************//
 static INLINE TxSize get_transform_size(const MbModeInfo *const mbmi, const EdgeDir edge_dir, const int32_t plane,
-                                        const struct MacroblockdPlane *plane_ptr, const bool is_skip) {
+                                        const MacroblockdPlane *plane_ptr, const bool is_skip) {
     assert(mbmi != NULL);
 
     TxSize tx_size = (plane == COMPONENT_LUMA)
@@ -205,8 +205,7 @@ static INLINE TxSize get_transform_size(const MbModeInfo *const mbmi, const Edge
 // awared
 static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const uint64_t mode_step,
                                  const PictureControlSet *const pcs, const EdgeDir edge_dir, const uint32_t x,
-                                 const uint32_t y, const int32_t plane,
-                                 const struct MacroblockdPlane *const plane_ptr) {
+                                 const uint32_t y, const int32_t plane, const MacroblockdPlane *const plane_ptr) {
     FrameHeader           *frm_hdr = &pcs->ppcs->frm_hdr;
     const LoopFilterInfoN *lfi_n   = &pcs->ppcs->lf_info;
 
@@ -588,9 +587,9 @@ void svt_aom_loop_filter_sb(EbPictureBufferDesc *frame_buffer, //reconpicture,
                             //Yv12BufferConfig *frame_buffer,
                             PictureControlSet *pcs, int32_t mi_row, int32_t mi_col, int32_t plane_start,
                             int32_t plane_end, uint8_t last_col) {
-    FrameHeader            *frm_hdr = &pcs->ppcs->frm_hdr;
-    struct MacroblockdPlane pd[3];
-    int32_t                 plane;
+    FrameHeader     *frm_hdr = &pcs->ppcs->frm_hdr;
+    MacroblockdPlane pd[3];
+    int32_t          plane;
 
     pd[0].subsampling_x = 0;
     pd[0].subsampling_y = 0;

@@ -4590,13 +4590,13 @@ uint32_t svt_aom_sad_16bit_kernel_avx2(uint16_t *src, // input parameter, source
         x_best  = mvx + (search_position_start_x + j + k) * 8;     \
         y_best  = mvy + (search_position_start_y + i) * 8;         \
     }
-void svt_pme_sad_loop_kernel_avx2(const struct svt_mv_cost_param *mv_cost_params,
-                                  uint8_t                        *src, // input parameter, source samples Ptr
-                                  uint32_t                        src_stride, // input parameter, source stride
-                                  uint8_t                        *ref, // input parameter, reference samples Ptr
-                                  uint32_t                        ref_stride, // input parameter, reference stride
-                                  uint32_t                        block_height, // input parameter, block height (M)
-                                  uint32_t                        block_width, // input parameter, block width (N)
+void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
+                                  uint8_t                 *src, // input parameter, source samples Ptr
+                                  uint32_t                 src_stride, // input parameter, source stride
+                                  uint8_t                 *ref, // input parameter, reference samples Ptr
+                                  uint32_t                 ref_stride, // input parameter, reference stride
+                                  uint32_t                 block_height, // input parameter, block height (M)
+                                  uint32_t                 block_width, // input parameter, block width (N)
                                   uint32_t *best_cost, int16_t *best_mvx, int16_t *best_mvy,
                                   int16_t search_position_start_x, int16_t search_position_start_y,
                                   int16_t search_area_width, int16_t search_area_height, int16_t search_step,

@@ -376,7 +376,7 @@ static uint32_t blk_end_array[MAX_TPL_MODE]      = {20, 4, 0};
 static TxSize   tx_size_array[MAX_TPL_MODE]      = {TX_16X16, TX_32X32, TX_64X64};
 static TxSize   sub2_tx_size_array[MAX_TPL_MODE] = {TX_16X8, TX_32X16, TX_64X32};
 static TxSize   sub4_tx_size_array[MAX_TPL_MODE] = {TX_16X4, TX_32X8, TX_64X16};
-static void     svt_tpl_init_mv_cost_params(MV_COST_PARAMS *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
+static void     svt_tpl_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
                                             uint32_t rdmult, uint8_t hbd_md) {
     mv_cost_params->ref_mv        = ref_mv;
     mv_cost_params->full_ref_mv   = get_fullmv_from_mv(ref_mv);

@@ -20,6 +20,7 @@
 
 #include "aom_dsp_rtcd.h"
 #include "md_process.h"
+#include "entropy_coding.h"
 #include "enc_inter_prediction.h"
 #include "svt_log.h"
 #include "random.h"

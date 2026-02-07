@@ -2785,7 +2785,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
         PictureControlSet              *pcs           = (PictureControlSet *)enc_dec_tasks->pcs_wrapper->object_ptr;
         SequenceControlSet             *scs           = pcs->scs;
         ModeDecisionContext            *md_ctx        = ed_ctx->md_ctx;
-        struct PictureParentControlSet *ppcs          = pcs->ppcs;
+        PictureParentControlSet        *ppcs          = pcs->ppcs;
         md_ctx->encoder_bit_depth                     = (uint8_t)scs->static_config.encoder_bit_depth;
         md_ctx->corrupted_mv_check                    = (pcs->ppcs->aligned_width >= (1 << (MV_IN_USE_BITS - 3))) ||
             (pcs->ppcs->aligned_height >= (1 << (MV_IN_USE_BITS - 3)));

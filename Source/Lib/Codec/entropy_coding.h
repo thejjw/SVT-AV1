@@ -32,14 +32,10 @@
 extern "C" {
 #endif
 
-struct ModeDecisionCandidateBuffer;
-struct ModeDecisionCandidate;
-
 /**************************************
  * Extern Function Declarations
  **************************************/
-struct EntropyCodingContext;
-void svt_aom_write_modes_sb(struct EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs,
+void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs,
                             uint16_t tile_idx, EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr,
                             struct PARTITION_TREE *ptree, int mi_row, int mi_col);
 
@@ -49,17 +45,15 @@ extern EbErrorType svt_aom_encode_slice_finish(EntropyCoder *ec);
 
 extern EbErrorType svt_aom_reset_entropy_coder(EncodeContext *enc_ctx, EntropyCoder *ec, uint32_t qp,
                                                SliceType slice_type);
-EbErrorType        svt_aom_txb_estimate_coeff_bits(struct ModeDecisionContext *ctx, uint8_t allow_update_cdf,
-                                                   FRAME_CONTEXT *ec_ctx, PictureControlSet *pcs,
-                                                   struct ModeDecisionCandidateBuffer *cand_bf, uint32_t txb_origin_index,
-                                                   uint32_t txb_chroma_origin_index, EbPictureBufferDesc *coeff_buffer_sb,
-                                                   uint32_t y_eob, uint32_t cb_eob, uint32_t cr_eob,
-                                                   uint64_t *y_txb_coeff_bits, uint64_t *cb_txb_coeff_bits,
-                                                   uint64_t *cr_txb_coeff_bits, TxSize txsize, TxSize txsize_uv,
-                                                   TxType tx_type, TxType tx_type_uv, COMPONENT_TYPE component_type);
+EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
+                                            PictureControlSet *pcs, ModeDecisionCandidateBuffer *cand_bf,
+                                            uint32_t txb_origin_index, uint32_t txb_chroma_origin_index,
+                                            EbPictureBufferDesc *coeff_buffer_sb, uint32_t y_eob, uint32_t cb_eob,
+                                            uint32_t cr_eob, uint64_t *y_txb_coeff_bits, uint64_t *cb_txb_coeff_bits,
+                                            uint64_t *cr_txb_coeff_bits, TxSize txsize, TxSize txsize_uv,
+                                            TxType tx_type, TxType tx_type_uv, COMPONENT_TYPE component_type);
 
-EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(struct ModeDecisionContext         *ctx,
-                                                      struct ModeDecisionCandidateBuffer *cand_bf,
+EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
                                                       uint32_t txb_origin_index, EbPictureBufferDesc *coeff_buffer_sb,
                                                       uint32_t y_eob, uint64_t *y_txb_coeff_bits, TxSize txsize);
 //**********************************************************************************************************//
@@ -143,18 +137,18 @@ static INLINE int32_t get_ref_frame_map_idx(const PictureParentControlSet *pcs, 
 
 //*******************************************************************************************//
 // bitwriter_buffer.h
-struct AomWriteBitBuffer {
+typedef struct AomWriteBitBuffer {
     uint8_t *bit_buffer;
     uint32_t bit_offset;
-};
+} AomWriteBitBuffer;
 
-int32_t  svt_aom_wb_is_byte_aligned(const struct AomWriteBitBuffer *wb);
-uint32_t svt_aom_wb_bytes_written(const struct AomWriteBitBuffer *wb);
+int32_t  svt_aom_wb_is_byte_aligned(const AomWriteBitBuffer *wb);
+uint32_t svt_aom_wb_bytes_written(const AomWriteBitBuffer *wb);
 
-void svt_aom_wb_write_bit(struct AomWriteBitBuffer *wb, int32_t bit);
-void svt_aom_wb_write_literal(struct AomWriteBitBuffer *wb, int32_t data, int32_t bits);
+void svt_aom_wb_write_bit(AomWriteBitBuffer *wb, int32_t bit);
+void svt_aom_wb_write_literal(AomWriteBitBuffer *wb, int32_t data, int32_t bits);
 
-void svt_aom_wb_write_inv_signed_literal(struct AomWriteBitBuffer *wb, int32_t data, int32_t bits);
+void svt_aom_wb_write_inv_signed_literal(AomWriteBitBuffer *wb, int32_t data, int32_t bits);
 
 //*******************************************************************************************//
 // blockd.h
@@ -247,7 +241,7 @@ uint8_t svt_av1_get_intra_inter_context(const MacroBlockD *xd);
 void    svt_aom_get_kf_y_mode_ctx(const MacroBlockD *xd, uint8_t *above_ctx, uint8_t *left_ctx);
 uint8_t av1_get_skip_mode_context(const MacroBlockD *xd);
 uint8_t av1_get_skip_context(const MacroBlockD *xd);
-void    svt_av1_reset_loop_restoration(struct EntropyCodingContext *ctx);
+void    svt_av1_reset_loop_restoration(EntropyCodingContext *ctx);
 
 #ifdef __cplusplus
 }

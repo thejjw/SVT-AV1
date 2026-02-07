@@ -698,7 +698,7 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             svt_aom_init_enc_dec_segement(entry_ppcs);
 
             int                             sb_size_log2 = entry_scs_ptr->seq_header.sb_size_log2;
-            struct PictureParentControlSet *ppcs         = child_pcs->ppcs;
+            PictureParentControlSet        *ppcs         = child_pcs->ppcs;
             const int                       tile_cols    = ppcs->av1_cm->tiles_info.tile_cols;
             const int                       tile_rows    = ppcs->av1_cm->tiles_info.tile_rows;
             Av1Common *const                cm           = ppcs->av1_cm;

@@ -635,7 +635,7 @@ void svt_sad_loop_kernel_neon(uint8_t *src, uint32_t src_stride, uint8_t *ref, u
     }
 }
 
-static inline uint32x4_t get_mv_cost_vector(const struct svt_mv_cost_param *mv_cost_params, int16_t row, int16_t col,
+static inline uint32x4_t get_mv_cost_vector(const svt_mv_cost_param *mv_cost_params, int16_t row, int16_t col,
                                             int16_t mvx, int16_t mvy, int16_t search_position_start_x,
                                             int16_t search_position_start_y) {
     const Mv baseMv = {
@@ -668,7 +668,7 @@ static inline void update_best_cost_u32(uint32x4_t cost4, uint32_t *best_cost, i
     }
 }
 
-static inline void svt_pme_sad_loop_kernel4xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel4xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                    uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                    uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                    int16_t *best_mvy, int16_t search_position_start_x,
@@ -715,7 +715,7 @@ static inline void svt_pme_sad_loop_kernel4xh_neon(const struct svt_mv_cost_para
     }
 }
 
-static inline void svt_pme_sad_loop_kernel8xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel8xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                    uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                    uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                    int16_t *best_mvy, int16_t search_position_start_x,
@@ -761,7 +761,7 @@ static inline void svt_pme_sad_loop_kernel8xh_neon(const struct svt_mv_cost_para
     }
 }
 
-static inline void svt_pme_sad_loop_kernel16xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel16xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                     uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                     uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                     int16_t *best_mvy, int16_t search_position_start_x,
@@ -807,7 +807,7 @@ static inline void svt_pme_sad_loop_kernel16xh_neon(const struct svt_mv_cost_par
     }
 }
 
-static inline void svt_pme_sad_loop_kernel24xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel24xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                     uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                     uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                     int16_t *best_mvy, int16_t search_position_start_x,
@@ -853,7 +853,7 @@ static inline void svt_pme_sad_loop_kernel24xh_neon(const struct svt_mv_cost_par
     }
 }
 
-static inline void svt_pme_sad_loop_kernel32xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel32xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                     uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                     uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                     int16_t *best_mvy, int16_t search_position_start_x,
@@ -899,7 +899,7 @@ static inline void svt_pme_sad_loop_kernel32xh_neon(const struct svt_mv_cost_par
     }
 }
 
-static inline void svt_pme_sad_loop_kernel48xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel48xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                     uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                     uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                     int16_t *best_mvy, int16_t search_position_start_x,
@@ -945,7 +945,7 @@ static inline void svt_pme_sad_loop_kernel48xh_neon(const struct svt_mv_cost_par
     }
 }
 
-static inline void svt_pme_sad_loop_kernel64xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel64xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                     uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                     uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                     int16_t *best_mvy, int16_t search_position_start_x,
@@ -992,7 +992,7 @@ static inline void svt_pme_sad_loop_kernel64xh_neon(const struct svt_mv_cost_par
     }
 }
 
-static inline void svt_pme_sad_loop_kernel128xh_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src,
+static inline void svt_pme_sad_loop_kernel128xh_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src,
                                                      uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
                                                      uint32_t block_height, uint32_t *best_cost, int16_t *best_mvx,
                                                      int16_t *best_mvy, int16_t search_position_start_x,
@@ -1038,7 +1038,7 @@ static inline void svt_pme_sad_loop_kernel128xh_neon(const struct svt_mv_cost_pa
     }
 }
 
-void svt_pme_sad_loop_kernel_neon(const struct svt_mv_cost_param *mv_cost_params, uint8_t *src, uint32_t src_stride,
+void svt_pme_sad_loop_kernel_neon(const svt_mv_cost_param *mv_cost_params, uint8_t *src, uint32_t src_stride,
                                   uint8_t *ref, uint32_t ref_stride, uint32_t block_height, uint32_t block_width,
                                   uint32_t *best_cost, int16_t *best_mvx, int16_t *best_mvy,
                                   int16_t search_position_start_x, int16_t search_position_start_y,

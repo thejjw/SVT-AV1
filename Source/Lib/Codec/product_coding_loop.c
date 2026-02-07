@@ -1678,13 +1678,13 @@ static void md_stage_0(PictureControlSet *pcs, ModeDecisionContext *ctx,
     // Set the cost of the scratch candidate to max to get discarded @ the sorting phase
     *(cand_bf_ptr_array_base[highest_cost_index]->fast_cost) = MAX_CU_COST;
 }
-void svt_pme_sad_loop_kernel_c(const struct svt_mv_cost_param *mv_cost_params,
-                               uint8_t                        *src, // input parameter, source samples Ptr
-                               uint32_t                        src_stride, // input parameter, source stride
-                               uint8_t                        *ref, // input parameter, reference samples Ptr
-                               uint32_t                        ref_stride, // input parameter, reference stride
-                               uint32_t                        block_height, // input parameter, block height (M)
-                               uint32_t                        block_width, // input parameter, block width (N)
+void svt_pme_sad_loop_kernel_c(const svt_mv_cost_param *mv_cost_params,
+                               uint8_t                 *src, // input parameter, source samples Ptr
+                               uint32_t                 src_stride, // input parameter, source stride
+                               uint8_t                 *ref, // input parameter, reference samples Ptr
+                               uint32_t                 ref_stride, // input parameter, reference stride
+                               uint32_t                 block_height, // input parameter, block height (M)
+                               uint32_t                 block_width, // input parameter, block width (N)
                                uint32_t *best_cost, int16_t *best_mvx, int16_t *best_mvy,
                                int16_t search_position_start_x, int16_t search_position_start_y,
                                int16_t search_area_width, int16_t search_area_height, int16_t search_step, int16_t mvx,
@@ -1731,7 +1731,7 @@ void svt_pme_sad_loop_kernel_c(const struct svt_mv_cost_param *mv_cost_params,
     return;
 }
 
-static void md_full_pel_search_large_lbd(MV_COST_PARAMS *mv_cost_params, ModeDecisionContext *ctx,
+static void md_full_pel_search_large_lbd(svt_mv_cost_param *mv_cost_params, ModeDecisionContext *ctx,
                                          EbPictureBufferDesc *input_pic, EbPictureBufferDesc *ref_pic,
                                          uint32_t input_origin_index, int16_t mvx, int16_t mvy,
                                          int16_t search_position_start_x, int16_t search_position_end_x,
@@ -1802,7 +1802,7 @@ static void md_full_pel_search_large_lbd(MV_COST_PARAMS *mv_cost_params, ModeDec
     }
 }
 
-static void svt_init_mv_cost_params(MV_COST_PARAMS *mv_cost_params, ModeDecisionContext *ctx, const Mv *ref_mv,
+static void svt_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, ModeDecisionContext *ctx, const Mv *ref_mv,
                                     uint8_t base_q_idx, uint32_t rdmult, uint8_t hbd_md) {
     mv_cost_params->ref_mv        = ref_mv;
     mv_cost_params->full_ref_mv   = get_fullmv_from_mv(ref_mv);
@@ -1821,10 +1821,10 @@ static void md_full_pel_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                int16_t sparse_search_step, uint8_t is_sprs_lev0_performed, int16_t *best_mvx,
                                int16_t *best_mvy, uint32_t *best_cost, uint8_t hbd_md) {
     // Mvcost params
-    MV_COST_PARAMS mv_cost_params;
-    FrameHeader   *frm_hdr = &pcs->ppcs->frm_hdr;
-    uint32_t       rdmult  = dist_type != SAD ? ctx->full_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD]
-                                              : ctx->fast_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD];
+    svt_mv_cost_param mv_cost_params;
+    FrameHeader      *frm_hdr = &pcs->ppcs->frm_hdr;
+    uint32_t          rdmult  = dist_type != SAD ? ctx->full_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD]
+                                                 : ctx->fast_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD];
     svt_init_mv_cost_params(
         &mv_cost_params, ctx, &ctx->ref_mv, frm_hdr->quantization_params.base_q_idx, rdmult, hbd_md);
     uint32_t cost;
@@ -2684,8 +2684,8 @@ static void read_refine_me_mvs(PictureControlSet *pcs, ModeDecisionContext *ctx)
                     ctx->fp_me_dist[list][ref]     = fn_ptr->vf(
                         pred_y, ref_pic->stride_y, src_y, input_pic->stride_y, &sse);
 
-                    MV_COST_PARAMS mv_cost_params;
-                    FrameHeader   *frm_hdr = &pcs->ppcs->frm_hdr;
+                    svt_mv_cost_param mv_cost_params;
+                    FrameHeader      *frm_hdr = &pcs->ppcs->frm_hdr;
                     // Variance is computed for 8bit, so use 8bit lambda
                     uint32_t rdmult = ctx->full_lambda_md[EB_8_BIT_MD];
                     svt_init_mv_cost_params(
@@ -4259,8 +4259,8 @@ static INLINE bool search_dct_dct_only(PictureControlSet *pcs, ModeDecisionConte
         return 1;
     return 0;
 }
-static int32_t av1_txt_rate_est(struct ModeDecisionContext *ctx, struct ModeDecisionCandidateBuffer *cand_bf,
-                                bool is_inter, TxSize tx_size, TxType tx_type, bool reduced_tx_set_used) {
+static int32_t av1_txt_rate_est(struct ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf, bool is_inter,
+                                TxSize tx_size, TxType tx_type, bool reduced_tx_set_used) {
     if (get_ext_tx_types(tx_size, is_inter, reduced_tx_set_used) > 1) {
         const TxSize square_tx_size = txsize_sqr_map[tx_size];
         assert(square_tx_size < EXT_TX_SIZES);

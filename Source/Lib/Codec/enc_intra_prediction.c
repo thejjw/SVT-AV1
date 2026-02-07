@@ -511,8 +511,8 @@ void svt_av1_predict_intra_block(
     }
 
     //CHKN BlockSize bsize = mbmi->bsize;
-    struct MacroblockdPlane  pd_s;
-    struct MacroblockdPlane * pd = &pd_s;
+    MacroblockdPlane  pd_s;
+    MacroblockdPlane * pd = &pd_s;
     if (plane == 0)
         pd->subsampling_x = pd->subsampling_y = 0;
     else
@@ -648,8 +648,8 @@ void svt_av1_predict_intra_block_16bit(
 
     //CHKN BlockSize bsize = mbmi->bsize;
 
-    struct MacroblockdPlane  pd_s;
-    struct MacroblockdPlane * pd = &pd_s;
+    MacroblockdPlane  pd_s;
+    MacroblockdPlane * pd = &pd_s;
     if (plane == 0)
         pd->subsampling_x = pd->subsampling_y = 0;
     else

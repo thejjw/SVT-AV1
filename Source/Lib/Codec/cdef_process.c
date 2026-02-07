@@ -271,7 +271,7 @@ static uint64_t compute_cdef_dist(const EbByte dst, int32_t doffset, int32_t dst
  * Call cdef_filter_fb() to perform filtering, then compute the MSE for each pair.
 */
 static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uint32_t segment_index) {
-    struct PictureParentControlSet *ppcs     = pcs->ppcs;
+    PictureParentControlSet        *ppcs     = pcs->ppcs;
     FrameHeader                    *frm_hdr  = &ppcs->frm_hdr;
     Av1Common                      *cm       = ppcs->av1_cm;
     const bool                      is_16bit = scs->is_16bit_pipeline;

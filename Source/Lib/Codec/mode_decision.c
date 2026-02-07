@@ -1925,7 +1925,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
 
     return 0;
 }
-static INLINE void setup_pred_plane(struct Buf2D *dst, BlockSize bsize, uint8_t *src, int width, int height, int stride,
+static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, int width, int height, int stride,
                                     int mi_row, int mi_col, int subsampling_x, int subsampling_y) {
     // Offset the buffer pointer
     if (subsampling_y && (mi_row & 0x01) && (mi_size_high[bsize] == 1))
@@ -1941,7 +1941,7 @@ static INLINE void setup_pred_plane(struct Buf2D *dst, BlockSize bsize, uint8_t 
     dst->height = height;
     dst->stride = stride;
 }
-void svt_av1_setup_pred_block(BlockSize bsize, struct Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig *src, int mi_row,
+void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig *src, int mi_row,
                               int mi_col) {
     dst[0].buf    = src->y_buffer;
     dst[0].stride = src->y_stride;
@@ -2160,7 +2160,7 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, struct ModeDecisi
         Yv12BufferConfig ref_buf;
         svt_aom_link_eb_to_aom_buffer_desc_8bit(reference_picture, &ref_buf);
 
-        struct Buf2D yv12_mb[MAX_MB_PLANE];
+        Buf2D yv12_mb[MAX_MB_PLANE];
         svt_av1_setup_pred_block(ctx->blk_geom->bsize, yv12_mb, &ref_buf, mi_row, mi_col);
         for (int i = 0; i < 1; ++i) x->xdplane[i].pre[0] = yv12_mb[i]; //ref in ME
 

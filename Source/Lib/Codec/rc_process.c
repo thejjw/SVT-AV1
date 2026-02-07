@@ -718,8 +718,7 @@ static const rate_factor_level rate_factor_levels[SVT_AV1_FRAME_UPDATE_TYPES] = 
     GF_ARF_LOW, // INTNL_ARF_UPDATE
 };
 
-static int av1_frame_type_qdelta_org(struct PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q,
-                                     const int bit_depth) {
+static int av1_frame_type_qdelta_org(PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, const int bit_depth) {
     const rate_factor_level rf_lvl      = rate_factor_levels[ppcs->update_type];
     const FrameType         frame_type  = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
     double                  rate_factor = rate_factor_deltas[rf_lvl];
@@ -1286,7 +1285,7 @@ void svt_aom_lambda_assign(PictureControlSet *pcs, uint32_t *fast_lambda, uint32
 * compute_deltaq
 * Compute delta-q based on the q, bitdepth and cyclic refresh parameters
 *******************************************************************************/
-static int compute_deltaq(struct PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, double rate_ratio_qdelta,
+static int compute_deltaq(PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, double rate_ratio_qdelta,
                           const int bit_depth) {
     const rate_factor_level rf_lvl     = rate_factor_levels[ppcs->update_type];
     const FrameType         frame_type = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
@@ -2751,7 +2750,7 @@ static void update_buffer_level(PictureParentControlSet *ppcs, int encoded_frame
 /*********************************************************************************************
 * Reset rate_control_param into default values
 ***********************************************************************************************/
-static void rc_param_reset(struct RateControlIntervalParamContext *rc_param) {
+static void rc_param_reset(RateControlIntervalParamContext *rc_param) {
     rc_param->size                     = -1;
     rc_param->processed_frame_number   = 0;
     rc_param->vbr_bits_off_target      = 0;

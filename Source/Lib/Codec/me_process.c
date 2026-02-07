@@ -57,7 +57,7 @@
 |42||43||46||47|     |58||59||62||63|
 -------------------------------------*/
 
-void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_idx);
+void dg_detector_hme_level0(PictureParentControlSet *ppcs, uint32_t seg_idx);
 
 static void motion_estimation_context_dctor(EbPtr p) {
     EbThreadContext *          thread_ctx = (EbThreadContext *)p;
