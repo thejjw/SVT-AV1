@@ -636,7 +636,7 @@ void process_input_buffer(EncChannel *channel) {
 double get_psnr(double sse, double max) {
     double psnr;
     if (sse == 0)
-        psnr = 10 * log10(max / (double)0.1);
+        psnr = 10 * log10(max / 0.1);
     else
         psnr = 10 * log10(max / sse);
 

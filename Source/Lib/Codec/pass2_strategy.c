@@ -274,7 +274,7 @@ static void   allocate_gf_group_bits(PictureParentControlSet *pcs, RATE_CONTROL 
     if (rc->baseline_gf_interval)
         base_frame_bits = (int)(total_group_bits / rc->baseline_gf_interval);
     else
-        base_frame_bits = (int)1;
+        base_frame_bits = 1;
 
     // For key frames the frame target rate is already set
     int frame_index = key_frame ? 1 : 0;

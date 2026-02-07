@@ -3020,7 +3020,7 @@ static void inject_intra_candidates_light_pd0( PictureControlSet *pcs,
     cand->transform_type_uv = DCT_DCT;
     cand->block_mi.ref_frame[0] = INTRA_FRAME;
     cand->block_mi.ref_frame[1] = NONE_FRAME;
-    cand->block_mi.mode = (PredictionMode)DC_PRED;
+    cand->block_mi.mode = DC_PRED;
     cand->block_mi.motion_mode = SIMPLE_TRANSLATION;
     cand->block_mi.is_interintra_used = 0;
    INC_MD_CAND_CNT (cand_total_cnt,pcs->ppcs->max_can_count);

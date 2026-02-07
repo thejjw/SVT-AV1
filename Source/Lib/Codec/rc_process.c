@@ -3439,9 +3439,8 @@ static void coded_frames_stat_calc(PictureParentControlSet *ppcs) {
                 ? queue_entry_index_temp - CODED_FRAMES_STAT_QUEUE_MAX_DEPTH
                 : queue_entry_index_temp;
 
-            move_slide_window_flag =
-                (bool)(move_slide_window_flag &&
-                       (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1));
+            move_slide_window_flag = move_slide_window_flag &&
+                (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1);
 
             if (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1) {
                 // check if it is the last frame. If we have reached the last frame, we would output the buffered frames in the Queue.

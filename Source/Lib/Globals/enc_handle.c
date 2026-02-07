@@ -1154,7 +1154,7 @@ static int create_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
     EbReferenceObjectDescInitData     eb_ref_obj_ect_desc_init_data_structure;
     EbPictureBufferDescInitData       ref_pic_buf_desc_init_data;
     SequenceControlSet* scs = enc_handle_ptr->scs_instance->scs;
-    bool is_16bit = (bool)(scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
+    bool is_16bit = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
     // Initialize the various Picture types
     ref_pic_buf_desc_init_data.max_width = scs->max_input_luma_width;
     ref_pic_buf_desc_init_data.max_height = scs->max_input_luma_height;
@@ -4877,7 +4877,7 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
             EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)dst->p_buffer;
             EbSvtAv1EncConfiguration* config = &scs->static_config;
-            bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+            bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t subsampling_x  = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t subsampling_y  = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
             const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
@@ -4907,7 +4907,7 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
             EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)dst->p_buffer;
             EbSvtAv1EncConfiguration* config = &scs->static_config;
-            bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+            bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t subsampling_x  = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t subsampling_y  = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
             const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
@@ -5161,7 +5161,7 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     // check whether the n_filled_len has enough samples to be processed
     EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)lib_y8b_hdr->p_buffer;
     EbSvtAv1EncConfiguration* config = &scs->static_config;
-    bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+    bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
 
     const uint8_t subsampling_x = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
     const uint8_t subsampling_y = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);

@@ -96,7 +96,7 @@ svt_reference_param_update: update the parameters in EbReferenceObject for chang
 EbErrorType svt_reference_param_update(EbReferenceObject *ref_object, SequenceControlSet *scs) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data_ptr;
 
-    bool is_16bit = (bool)(scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
+    bool is_16bit = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
     // Initialize the various Picture types
     picture_buffer_desc_init_data_ptr.max_width           = scs->max_input_luma_width;
     picture_buffer_desc_init_data_ptr.max_height          = scs->max_input_luma_height;

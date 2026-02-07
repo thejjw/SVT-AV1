@@ -447,7 +447,7 @@ static void tpl_subpel_search(SequenceControlSet *scs, PictureParentControlSet *
     int32_t qIndex = quantizer_to_qindex[(uint8_t)scs->static_config.qp] +
         scs->static_config.extended_crf_qindex_offset;
     qIndex          = AOMMIN(MAXQ, qIndex);
-    uint32_t rdmult = svt_aom_compute_rd_mult_based_on_qindex((EbBitDepth)8, pcs->update_type, qIndex) /
+    uint32_t rdmult = svt_aom_compute_rd_mult_based_on_qindex(EB_EIGHT_BIT, pcs->update_type, qIndex) /
         TPL_RDMULT_SCALING_FACTOR;
     svt_tpl_init_mv_cost_params(&ms_params->mv_cost_params, &ref_mv, qIndex, rdmult,
                                 0); // 10BIT not supported
@@ -1337,7 +1337,7 @@ static void tpl_mc_flow_dispenser(EncodeContext *enc_ctx, SequenceControlSet *sc
                 q_val, q_val * delta_rate_new[pcs->hierarchical_levels][pcs->tpl_data.tpl_temporal_layer_index], 8);
         qIndex = (qIndex + delta_qindex);
     }
-    *base_rdmult = svt_aom_compute_rd_mult_based_on_qindex((EbBitDepth)8, pcs->update_type, qIndex) /
+    *base_rdmult = svt_aom_compute_rd_mult_based_on_qindex(EB_EIGHT_BIT, pcs->update_type, qIndex) /
         TPL_RDMULT_SCALING_FACTOR;
 
     {
