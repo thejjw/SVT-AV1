@@ -26,7 +26,6 @@
 #include "svt_log.h"
 #include "pass2_strategy.h"
 #include "common_dsp_rtcd.h"
-#include "resize.h"
 #include "metadata_handle.h"
 #include "enc_mode_config.h"
 

@@ -271,10 +271,6 @@ void svt_od_ec_encode_cdf_q15(OdEcEnc* enc, int s, const uint16_t* icdf, int nsy
     svt_od_ec_encode_q15(enc, s > 0 ? icdf[s - 1] : OD_ICDF(0), icdf[s], s, nsyms);
 }
 
-#if OD_MEASURE_EC_OVERHEAD
-#include <stdio.h>
-#endif
-
 /*Indicates that there are no more symbols to encode.
   All remaining output bytes are flushed to the output buffer.
   od_ec_enc_reset() should be called before using the encoder again.

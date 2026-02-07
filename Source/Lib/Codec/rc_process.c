@@ -31,7 +31,6 @@
 
 #include "transforms.h"
 #include "aom_dsp_rtcd.h"
-#include "svt_log.h"
 #include "intra_prediction.h"
 #include "motion_estimation.h"
 

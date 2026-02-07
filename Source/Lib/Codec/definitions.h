@@ -1916,7 +1916,6 @@ static const WarpedMotionParams default_warp_params = {
 /** Redefine ASSERT() to avoid warnings
 */
 #if defined _DEBUG || _DEBUG_
-#include <assert.h>
 #define ASSERT assert
 #elif defined _DEBUG
 #define ASSERT assert

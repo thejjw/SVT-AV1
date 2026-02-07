@@ -18,7 +18,6 @@
 #include "pic_buffer_desc.h"
 #include "coding_unit.h"
 #include "ec_object.h"
-#include "definitions.h"
 #include "pred_structure.h"
 #include "neighbor_arrays.h"
 #include "enc_dec_segments.h"

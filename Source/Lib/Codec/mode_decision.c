@@ -35,7 +35,6 @@
 #include "ac_bias.h"
 #include "src_ops_process.h"
 #include "utility.h"
-#include "aom_dsp_rtcd.h"
 void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride);
