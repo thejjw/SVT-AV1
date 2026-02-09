@@ -201,7 +201,7 @@ extern "C" {
     * Estimate the rate of motion vectors
     * based on the frame CDF
     ***************************************************************************/
-extern void svt_aom_estimate_mv_rate(
+void svt_aom_estimate_mv_rate(
         struct PictureControlSet *pcs,
         MdRateEstimationContext  *md_rate_est_ctx,
         FRAME_CONTEXT            *fc);

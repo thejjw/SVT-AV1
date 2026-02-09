@@ -324,11 +324,11 @@ typedef struct EbSequenceControlSetInstance {
 /**************************************
      * Extern Function Declarations
      **************************************/
-extern EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_ptr);
+EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_ptr);
 
-extern EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution, uint32_t input_size);
-extern EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSet *src);
-extern EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution, uint32_t input_size);
+EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSet *src);
+EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
 
 #ifdef __cplusplus
 }

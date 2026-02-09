@@ -40,7 +40,7 @@ typedef struct ResourceCoordinationResultInitData {
 /**************************************
      * Extern Function Declarations
      **************************************/
-extern EbErrorType svt_aom_resource_coordination_result_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_resource_coordination_result_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
 
 #ifdef __cplusplus
 }

@@ -4011,7 +4011,7 @@ void  svt_aom_set_tuned_blk_lambda(ModeDecisionContext *ctx, PictureControlSet *
     }
 }
 
-extern double similarity(uint32_t sum_s, uint32_t sum_r, uint32_t sum_sq_s, uint32_t sum_sq_r,
+double similarity(uint32_t sum_s, uint32_t sum_r, uint32_t sum_sq_s, uint32_t sum_sq_r,
                   uint32_t sum_sxr, int count, uint32_t bd);
 double svt_ssim_4x4_c(const uint8_t* s, uint32_t sp, const uint8_t* r, uint32_t rp) {
     const int32_t count = 4 * 4;

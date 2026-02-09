@@ -114,17 +114,17 @@ typedef EbErrorType (*EbAv1FullCostFunc)(PictureControlSet *pcs, struct ModeDeci
 /**************************************
     * Extern Function Declarations
     **************************************/
-extern EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepth max_bitdepth,
-                                                      uint8_t sb_size, uint32_t buffer_mask,
-                                                      EbPictureBufferDesc *temp_residual,
-                                                      EbPictureBufferDesc *temp_recon_ptr, uint64_t *fast_cost,
-                                                      uint64_t *full_cost, uint64_t *full_cost_ssim_ptr);
+EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepth max_bitdepth,
+                                               uint8_t sb_size, uint32_t buffer_mask,
+                                               EbPictureBufferDesc *temp_residual, EbPictureBufferDesc *temp_recon_ptr,
+                                               uint64_t *fast_cost, uint64_t *full_cost, uint64_t *full_cost_ssim_ptr);
 
-extern EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, uint8_t sb_size,
-                                                              EbBitDepth max_bitdepth);
+EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, uint8_t sb_size,
+                                                       EbBitDepth max_bitdepth);
 
 uint32_t product_full_mode_decision_light_pd0(struct ModeDecisionContext *ctx, BlkStruct *blk_ptr,
                                               ModeDecisionCandidateBuffer **buffer_ptr_array);
+
 void     svt_aom_product_full_mode_decision_light_pd1(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
                                                       uint32_t sb_addr, ModeDecisionCandidateBuffer *cand_bf);
 uint32_t svt_aom_product_full_mode_decision(PictureControlSet *pcs, struct ModeDecisionContext *ctx, uint32_t sb_addr,
@@ -201,8 +201,8 @@ struct CodingLoopContext_s;
       |-------------------------------------------------------------|
     */
 #define INVALID_REF 0xF
-extern MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
-int                     svt_aom_get_sad_per_bit(int qidx, EbBitDepth is_hbd);
+MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
+int              svt_aom_get_sad_per_bit(int qidx, EbBitDepth is_hbd);
 
 int  svt_av1_allow_palette(int allow_palette, BlockSize bsize);
 bool svt_av1_is_lossless_segment(PictureControlSet *pcs, int8_t segment_id);

@@ -51,7 +51,7 @@ typedef struct EncDecResultsInitData {
 /**************************************
      * Extern Function Declarations
      **************************************/
-extern EbErrorType svt_aom_enc_dec_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_enc_dec_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
 
 #ifdef __cplusplus
 }

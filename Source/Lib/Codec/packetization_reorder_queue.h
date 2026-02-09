@@ -52,8 +52,7 @@ typedef struct PacketizationReorderEntry {
     struct SvtMetadataArray *metadata;
 } PacketizationReorderEntry;
 
-extern EbErrorType svt_aom_packetization_reorder_entry_ctor(PacketizationReorderEntry *entry_ptr,
-                                                            uint32_t                   picture_number);
+EbErrorType svt_aom_packetization_reorder_entry_ctor(PacketizationReorderEntry *entry_ptr, uint32_t picture_number);
 
 #ifdef __cplusplus
 }

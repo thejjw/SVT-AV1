@@ -616,7 +616,7 @@ static SgrprojInfo search_selfguided_restoration(const uint8_t *dat8, int32_t wi
     ret.xqd[1] = bestxqd[1];
     return ret;
 }
-extern int32_t svt_aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t ref, uint16_t v);
+int32_t svt_aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t ref, uint16_t v);
 
 static int32_t count_sgrproj_bits(SgrprojInfo *sgrproj_info, SgrprojInfo *ref_sgrproj_info) {
     int32_t              bits   = SGRPROJ_PARAMS_BITS;

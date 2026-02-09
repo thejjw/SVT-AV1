@@ -541,7 +541,7 @@ int         svt_aom_is_interintra_allowed_ref(const MvReferenceFrame rf[2]);
 int         svt_aom_is_interintra_allowed(const MbModeInfo *mbmi);
 int         svt_aom_get_comp_group_idx_context_enc(const MacroBlockD *xd);
 
-extern int svt_aom_allow_intrabc(const FrameHeader *frm_hdr, SliceType slice_type);
+int svt_aom_allow_intrabc(const FrameHeader *frm_hdr, SliceType slice_type);
 
 INLINE int32_t is_chroma_reference(int32_t mi_row, int32_t mi_col, BlockSize bsize, int32_t subsampling_x,
                                    int32_t subsampling_y);

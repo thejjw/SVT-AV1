@@ -81,8 +81,8 @@ typedef struct {
     uint8_t      resize_denom;
 } ResizePendingParams;
 
-extern EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry *entry_ptr,
-                                                                        uint64_t                  picture_number);
+EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry *entry_ptr,
+                                                                 uint64_t                  picture_number);
 typedef struct {
     int     last_boosted_qindex; // Last boosted GF/KF/ARF q
     int     gfu_boost;
@@ -215,8 +215,8 @@ void    svt_av1_normalize_sb_delta_q(struct PictureControlSet *pcs);
 EbErrorType svt_aom_rate_control_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
                                               int me_port_index);
 
-extern void *svt_aom_rate_control_kernel(void *input_ptr);
-int svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex);
+void *svt_aom_rate_control_kernel(void *input_ptr);
+int   svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex);
 struct PictureControlSet;
 int  svt_aom_compute_rd_mult(struct PictureControlSet *pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
 int  svt_aom_compute_fast_lambda(struct PictureControlSet *pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);

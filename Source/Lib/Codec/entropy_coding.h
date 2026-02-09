@@ -39,12 +39,11 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
                             EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr, struct PARTITION_TREE *ptree, int mi_row,
                             int mi_col);
 
-extern int svt_aom_get_wedge_params_bits(BlockSize bsize);
+int svt_aom_get_wedge_params_bits(BlockSize bsize);
 
-extern EbErrorType svt_aom_encode_slice_finish(EntropyCoder *ec);
+EbErrorType svt_aom_encode_slice_finish(EntropyCoder *ec);
 
-extern EbErrorType svt_aom_reset_entropy_coder(EncodeContext *enc_ctx, EntropyCoder *ec, uint32_t qp,
-                                               SliceType slice_type);
+EbErrorType svt_aom_reset_entropy_coder(EncodeContext *enc_ctx, EntropyCoder *ec, uint32_t qp, SliceType slice_type);
 EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
                                             PictureControlSet *pcs, ModeDecisionCandidateBuffer *cand_bf,
                                             uint32_t txb_origin_index, uint32_t txb_chroma_origin_index,
@@ -158,70 +157,70 @@ void svt_aom_get_txb_ctx(PictureControlSet *pcs, const int32_t plane,
                          const BlockSize plane_bsize, const TxSize tx_size, int16_t *const txb_skip_ctx,
                          int16_t *const dc_sign_ctx);
 
-extern void svt_aom_collect_neighbors_ref_counts_new(MacroBlockD *const xd);
+void svt_aom_collect_neighbors_ref_counts_new(MacroBlockD *const xd);
 
 // == Context functions for comp ref ==
 //
 // Returns a context number for the given MB prediction signal
 // Signal the first reference frame for a compound mode be either
 // GOLDEN/LAST3, or LAST/LAST2.
-extern int32_t svt_av1_get_pred_context_comp_ref_p(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_comp_ref_p(const MacroBlockD *xd);
 
 // Returns a context number for the given MB prediction signal
 // Signal the first reference frame for a compound mode be LAST,
 // conditioning on that it is known either LAST/LAST2.
-extern int32_t svt_av1_get_pred_context_comp_ref_p1(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_comp_ref_p1(const MacroBlockD *xd);
 
 // Returns a context number for the given MB prediction signal
 // Signal the first reference frame for a compound mode be GOLDEN,
 // conditioning on that it is known either GOLDEN or LAST3.
-extern int32_t svt_av1_get_pred_context_comp_ref_p2(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_comp_ref_p2(const MacroBlockD *xd);
 
 // Signal the 2nd reference frame for a compound mode be either
 // ALTREF, or ALTREF2/BWDREF.
-extern int32_t svt_av1_get_pred_context_comp_bwdref_p(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_comp_bwdref_p(const MacroBlockD *xd);
 
 // Signal the 2nd reference frame for a compound mode be either
 // ALTREF2 or BWDREF.
-extern int32_t svt_av1_get_pred_context_comp_bwdref_p1(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_comp_bwdref_p1(const MacroBlockD *xd);
 // == Context functions for single ref ==
 //
 // For the bit to signal whether the single reference is a forward reference
 // frame or a backward reference frame.
-extern int32_t svt_av1_get_pred_context_single_ref_p1(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p1(const MacroBlockD *xd);
 
 // For the bit to signal whether the single reference is ALTREF_FRAME or
 // non-ALTREF backward reference frame, knowing that it shall be either of
 // these 2 choices.
-extern int32_t svt_av1_get_pred_context_single_ref_p2(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p2(const MacroBlockD *xd);
 
 // For the bit to signal whether the single reference is LAST3/GOLDEN or
 // LAST2/LAST, knowing that it shall be either of these 2 choices.
-extern int32_t svt_av1_get_pred_context_single_ref_p3(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p3(const MacroBlockD *xd);
 
 // For the bit to signal whether the single reference is LAST2_FRAME or
 // LAST_FRAME, knowing that it shall be either of these 2 choices.
-extern int32_t svt_av1_get_pred_context_single_ref_p4(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p4(const MacroBlockD *xd);
 
 // For the bit to signal whether the single reference is GOLDEN_FRAME or
 // LAST3_FRAME, knowing that it shall be either of these 2 choices.
-extern int32_t svt_av1_get_pred_context_single_ref_p5(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p5(const MacroBlockD *xd);
 
 // For the bit to signal whether the single reference is ALTREF2_FRAME or
 // BWDREF_FRAME, knowing that it shall be either of these 2 choices.
-extern int32_t svt_av1_get_pred_context_single_ref_p6(const MacroBlockD *xd);
+int32_t svt_av1_get_pred_context_single_ref_p6(const MacroBlockD *xd);
 
 /*!\brief Writes a valid metadata object to the AV1 bitstream.
  * \param[in]    bitstream_ptr       AV1 bitstream
  * \param[in]    metadata            Metadata array object
  * \param[in]    type                Metadata type descriptor
  */
-extern EbErrorType svt_aom_write_metadata_av1(Bitstream *bitstream_ptr, SvtMetadataArrayT *metadata,
-                                              const EbAv1MetadataType type);
-extern EbErrorType svt_aom_write_frame_header_av1(Bitstream *bitstream_ptr, SequenceControlSet *scs,
-                                                  PictureControlSet *pcs, uint8_t show_existing);
-extern EbErrorType svt_aom_encode_td_av1(uint8_t *bitstream_ptr);
-extern EbErrorType svt_aom_encode_sps_av1(Bitstream *bitstream_ptr, SequenceControlSet *scs);
+EbErrorType svt_aom_write_metadata_av1(Bitstream *bitstream_ptr, SvtMetadataArrayT *metadata,
+                                       const EbAv1MetadataType type);
+EbErrorType svt_aom_write_frame_header_av1(Bitstream *bitstream_ptr, SequenceControlSet *scs, PictureControlSet *pcs,
+                                           uint8_t show_existing);
+EbErrorType svt_aom_encode_td_av1(uint8_t *bitstream_ptr);
+EbErrorType svt_aom_encode_sps_av1(Bitstream *bitstream_ptr, SequenceControlSet *scs);
 
 //*******************************************************************************************//
 MotionMode svt_aom_motion_mode_allowed(const PictureControlSet *pcs, uint16_t num_proj_ref,

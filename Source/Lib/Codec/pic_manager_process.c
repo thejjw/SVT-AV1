@@ -119,7 +119,7 @@ static inline bool heap_push(uint64_t *heap, int *count_io, int capacity, uint64
     return true;
 }
 
-extern MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
+MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
 
 void svt_aom_largest_coding_unit_dctor(EbPtr p);
 void write_stat_to_file(SequenceControlSet *scs, StatStruct stat_struct, uint64_t ref_poc);

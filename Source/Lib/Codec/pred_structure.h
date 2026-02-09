@@ -57,9 +57,8 @@ typedef struct PredictionStructureGroup {
 /************************************************
      * Declarations
      ************************************************/
-extern PredictionStructure *svt_aom_get_prediction_structure(PredictionStructureGroup *prediction_structure_group_ptr,
-                                                             PredStructure             pred_structure,
-                                                             uint32_t                  levels_of_hierarchy);
+PredictionStructure *svt_aom_get_prediction_structure(PredictionStructureGroup *prediction_structure_group_ptr,
+                                                      PredStructure pred_structure, uint32_t levels_of_hierarchy);
 typedef enum { LAST = 0, LAST2 = 1, LAST3 = 2, GOLD = 3, BWD = 4, ALT2 = 5, ALT = 6 } REF_FRAME_MINUS1;
 typedef struct Av1RpsNode {
     uint8_t  refresh_frame_mask;

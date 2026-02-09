@@ -20,9 +20,9 @@
 /***************************************
  * Extern Function Declaration
  ***************************************/
-EbErrorType  svt_aom_picture_decision_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
-                                                   uint8_t calc_hist);
-extern void *svt_aom_picture_decision_kernel(void *input_ptr);
+EbErrorType svt_aom_picture_decision_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
+                                                  uint8_t calc_hist);
+void       *svt_aom_picture_decision_kernel(void *input_ptr);
 
 void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlSet  *scs,
                                                                 EbPictureBufferDesc *input_pic);

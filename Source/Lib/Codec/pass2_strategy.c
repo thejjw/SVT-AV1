@@ -939,7 +939,7 @@ void svt_aom_reset_update_frame_target(PictureParentControlSet *ppcs) {
     ppcs->this_frame_target     = av1_calc_pframe_target_size_one_pass_cbr(ppcs, SVT_AV1_LF_UPDATE);
 }
 
-extern void svt_av1_resize_reset_rc(PictureParentControlSet *ppcs, int32_t resize_width, int32_t resize_height,
+void        svt_av1_resize_reset_rc(PictureParentControlSet *ppcs, int32_t resize_width, int32_t resize_height,
                                     int32_t prev_width, int32_t prev_height);
 static void dynamic_resize_one_pass_cbr(PictureParentControlSet *ppcs) {
     SequenceControlSet *scs           = ppcs->scs;

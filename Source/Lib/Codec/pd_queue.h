@@ -33,6 +33,6 @@ typedef struct PaReferenceEntry {
     uint8_t  is_alt_ref;
 } PaReferenceEntry;
 
-extern EbErrorType svt_aom_pa_reference_queue_entry_ctor(PaReferenceEntry *entry_ptr);
+EbErrorType svt_aom_pa_reference_queue_entry_ctor(PaReferenceEntry *entry_ptr);
 
 #endif // EbPictureDecisionQueue_h

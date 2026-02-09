@@ -28,28 +28,28 @@ extern "C" {
 /**************************************
      * Threads
      **************************************/
-extern EbHandle svt_create_thread(void *thread_function(void *), void *thread_context);
+EbHandle svt_create_thread(void *thread_function(void *), void *thread_context);
 
-extern EbErrorType svt_destroy_thread(EbHandle thread_handle);
+EbErrorType svt_destroy_thread(EbHandle thread_handle);
 
 /**************************************
      * Semaphores
      **************************************/
-extern EbHandle svt_create_semaphore(uint32_t initial_count, uint32_t max_count);
+EbHandle svt_create_semaphore(uint32_t initial_count, uint32_t max_count);
 
-extern EbErrorType svt_post_semaphore(EbHandle semaphore_handle);
+EbErrorType svt_post_semaphore(EbHandle semaphore_handle);
 
-extern EbErrorType svt_block_on_semaphore(EbHandle semaphore_handle);
+EbErrorType svt_block_on_semaphore(EbHandle semaphore_handle);
 
-extern EbErrorType svt_destroy_semaphore(EbHandle semaphore_handle);
+EbErrorType svt_destroy_semaphore(EbHandle semaphore_handle);
 
 /**************************************
      * Mutex
      **************************************/
-extern EbHandle    svt_create_mutex(void);
-extern EbErrorType svt_release_mutex(EbHandle mutex_handle);
-extern EbErrorType svt_block_on_mutex(EbHandle mutex_handle);
-extern EbErrorType svt_destroy_mutex(EbHandle mutex_handle);
+EbHandle    svt_create_mutex(void);
+EbErrorType svt_release_mutex(EbHandle mutex_handle);
+EbErrorType svt_block_on_mutex(EbHandle mutex_handle);
+EbErrorType svt_destroy_mutex(EbHandle mutex_handle);
 #ifndef _WIN32
 #ifndef __USE_GNU
 #define __USE_GNU

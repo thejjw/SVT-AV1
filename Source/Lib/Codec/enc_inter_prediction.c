@@ -652,23 +652,21 @@ void model_rd_for_sb_with_curvfit(PictureControlSet *pcs, ModeDecisionContext *c
     *out_dist_sum = dist_sum;
 }
 
-extern void svt_av1_predict_intra_block(STAGE stage, const BlockGeom *blk_geom, MacroBlockD *xd, int32_t wpx,
-                                        int32_t hpx, TxSize tx_size, PredictionMode mode, int32_t angle_delta,
-                                        int32_t use_palette, PaletteInfo *palette_info,
-                                        FilterIntraMode filter_intra_mode, uint8_t *topNeighArray,
-                                        uint8_t *leftNeighArray, EbPictureBufferDesc *recon_buffer, int32_t col_off,
-                                        int32_t row_off, int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
-                                        uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
-                                        uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
-extern void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const BlockGeom *blk_geom,
-                                              MacroBlockD *xd, int32_t wpx, int32_t hpx, TxSize tx_size,
-                                              PredictionMode mode, int32_t angle_delta, int32_t use_palette,
-                                              PaletteInfo *palette_info, FilterIntraMode filter_intra_mode,
-                                              uint16_t *topNeighArray, uint16_t *leftNeighArray,
-                                              EbPictureBufferDesc *recon_buffer, int32_t col_off, int32_t row_off,
-                                              int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
-                                              uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
-                                              uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
+void svt_av1_predict_intra_block(STAGE stage, const BlockGeom *blk_geom, MacroBlockD *xd, int32_t wpx, int32_t hpx,
+                                 TxSize tx_size, PredictionMode mode, int32_t angle_delta, int32_t use_palette,
+                                 PaletteInfo *palette_info, FilterIntraMode filter_intra_mode, uint8_t *topNeighArray,
+                                 uint8_t *leftNeighArray, EbPictureBufferDesc *recon_buffer, int32_t col_off,
+                                 int32_t row_off, int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
+                                 uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
+                                 uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
+void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const BlockGeom *blk_geom, MacroBlockD *xd,
+                                       int32_t wpx, int32_t hpx, TxSize tx_size, PredictionMode mode,
+                                       int32_t angle_delta, int32_t use_palette, PaletteInfo *palette_info,
+                                       FilterIntraMode filter_intra_mode, uint16_t *topNeighArray,
+                                       uint16_t *leftNeighArray, EbPictureBufferDesc *recon_buffer, int32_t col_off,
+                                       int32_t row_off, int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
+                                       uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
+                                       uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
 
 struct build_prediction_ctxt {
     const Av1Common  *cm;

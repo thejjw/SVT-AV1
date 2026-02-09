@@ -76,10 +76,10 @@ typedef struct EncDecContext {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
-                                                int index, int tasks_index);
+EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr, int index,
+                                         int tasks_index);
 
-extern void *svt_aom_mode_decision_kernel(void *input_ptr);
+void *svt_aom_mode_decision_kernel(void *input_ptr);
 
 #ifdef __cplusplus
 }

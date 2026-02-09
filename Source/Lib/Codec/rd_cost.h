@@ -26,11 +26,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
-                                        ModeDecisionCandidateBuffer *cand_bf, const TranLow *const qcoeff, uint16_t eob,
-                                        PlaneType plane_type, TxSize transform_size, TxType transform_type,
-                                        int16_t txb_skip_ctx, int16_t dc_sign_ctx, bool reduced_transform_set_flag);
-void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, ModeDecisionContext *ctx);
+uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
+                                 ModeDecisionCandidateBuffer *cand_bf, const TranLow *const qcoeff, uint16_t eob,
+                                 PlaneType plane_type, TxSize transform_size, TxType transform_type,
+                                 int16_t txb_skip_ctx, int16_t dc_sign_ctx, bool reduced_transform_set_flag);
+void     svt_aom_coding_loop_context_generation(PictureControlSet *pcs, ModeDecisionContext *ctx);
 #define RDDIV_BITS 7
 
 #define RDCOST(RM, R, D)                                                         \

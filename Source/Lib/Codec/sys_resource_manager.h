@@ -158,7 +158,7 @@ typedef struct EbSystemResource {
      *   wrapper_ptr
      *      pointer to the EbObjectWrapper to be modified.
      *********************************************************************/
-extern EbErrorType svt_object_release_enable(EbObjectWrapper *wrapper_ptr);
+EbErrorType svt_object_release_enable(EbObjectWrapper *wrapper_ptr);
 
 /*********************************************************************
      * svt_object_release_disable
@@ -174,7 +174,7 @@ extern EbErrorType svt_object_release_enable(EbObjectWrapper *wrapper_ptr);
      *   wrapper_ptr
      *      pointer to the EbObjectWrapper to be modified.
      *********************************************************************/
-extern EbErrorType svt_object_release_disable(EbObjectWrapper *wrapper_ptr);
+EbErrorType svt_object_release_disable(EbObjectWrapper *wrapper_ptr);
 
 /*********************************************************************
      * svt_object_inc_live_count
@@ -193,7 +193,7 @@ extern EbErrorType svt_object_release_disable(EbObjectWrapper *wrapper_ptr);
      *   increment_number
      *      The number to increment the live count by.
      *********************************************************************/
-extern EbErrorType svt_object_inc_live_count(EbObjectWrapper *wrapper_ptr, uint32_t increment_number);
+EbErrorType svt_object_inc_live_count(EbObjectWrapper *wrapper_ptr, uint32_t increment_number);
 
 /*********************************************************************
      * svt_system_resource_ctor
@@ -217,10 +217,9 @@ extern EbErrorType svt_object_inc_live_count(EbObjectWrapper *wrapper_ptr, uint3
      *     the object. object_init_data_ptr is passed to object_ctor when
      *     object_ctor is called.
      *********************************************************************/
-extern EbErrorType svt_system_resource_ctor(EbSystemResource *resource_ptr, uint32_t object_total_count,
-                                            uint32_t producer_process_total_count,
-                                            uint32_t consumer_process_total_count, EbCreator object_ctor,
-                                            EbPtr object_init_data_ptr, EbDctor object_destroyer);
+EbErrorType svt_system_resource_ctor(EbSystemResource *resource_ptr, uint32_t object_total_count,
+                                     uint32_t producer_process_total_count, uint32_t consumer_process_total_count,
+                                     EbCreator object_ctor, EbPtr object_init_data_ptr, EbDctor object_destroyer);
 
 /*********************************************************************
      * svt_system_resource_get_producer_fifo
@@ -262,7 +261,7 @@ EbFifo *svt_system_resource_get_consumer_fifo(const EbSystemResource *resource_p
      *      Double pointer used to pass the pointer to the empty
      *      EbObjectWrapper pointer.
      *********************************************************************/
-extern EbErrorType svt_get_empty_object(EbFifo *empty_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
+EbErrorType svt_get_empty_object(EbFifo *empty_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
 #if SRM_REPORT
 /*
   dump pictures occuping the SRM
@@ -283,7 +282,7 @@ EbErrorType dump_srm_content(EbSystemResource *resource_ptr, uint8_t log);
      *   wrapper_ptr
      *      pointer to EbObjectWrapper to be posted.
      *********************************************************************/
-extern EbErrorType svt_post_full_object(EbObjectWrapper *object_ptr);
+EbErrorType svt_post_full_object(EbObjectWrapper *object_ptr);
 
 /*********************************************************************
      * EbSystemResourceGetFullObject
@@ -300,9 +299,9 @@ extern EbErrorType svt_post_full_object(EbObjectWrapper *object_ptr);
      *      Double pointer used to pass the pointer to the full
      *      EbObjectWrapper pointer.
      *********************************************************************/
-extern EbErrorType svt_get_full_object(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
+EbErrorType svt_get_full_object(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
 
-extern EbErrorType svt_get_full_object_non_blocking(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
+EbErrorType svt_get_full_object_non_blocking(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr);
 
 /*********************************************************************
      * EbSystemResourceReleaseObject
@@ -314,7 +313,7 @@ extern EbErrorType svt_get_full_object_non_blocking(EbFifo *full_fifo_ptr, EbObj
      *   object_ptr
      *      pointer to EbObjectWrapper to be released.
      *********************************************************************/
-extern EbErrorType svt_release_object(EbObjectWrapper *object_ptr);
+EbErrorType svt_release_object(EbObjectWrapper *object_ptr);
 
 /*********************************************************************
      * svt_shutdown_process
@@ -324,7 +323,7 @@ extern EbErrorType svt_release_object(EbObjectWrapper *object_ptr);
      *   resource_ptr
      *      pointer to the SystemResource.
      *********************************************************************/
-extern EbErrorType svt_shutdown_process(const EbSystemResource *resource_ptr);
+EbErrorType svt_shutdown_process(const EbSystemResource *resource_ptr);
 
 #define EB_GET_FULL_OBJECT(full_fifo_ptr, wrapper_dbl_ptr)                     \
     do {                                                                       \

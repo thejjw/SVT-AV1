@@ -197,7 +197,7 @@ typedef struct CodedBlockStats {
     uint8_t parent32x32_index;
 } CodedBlockStats;
 
-extern const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx);
+const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx);
 
 /****************************
      * MACROS
@@ -300,7 +300,7 @@ typedef struct MiniGopStats {
     uint8_t end_index;
     uint8_t length;
 } MiniGopStats;
-extern const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index);
+const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index);
 typedef enum MinigopIndex {
     L6_INDEX    = 0,
     L5_0_INDEX  = 1,

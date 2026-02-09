@@ -85,9 +85,9 @@ int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t 
                                     int32_t top_available, int32_t right_available, PartitionType partition,
                                     TxSize txsz, int32_t row_off, int32_t col_off, int32_t ss_x, int32_t ss_y);
 
-extern int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_t mi_row, int32_t mi_col,
-                                             int32_t bottom_available, int32_t left_available, PartitionType partition,
-                                             TxSize txsz, int32_t row_off, int32_t col_off, int32_t ss_x, int32_t ss_y);
+int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_t mi_row, int32_t mi_col,
+                                      int32_t bottom_available, int32_t left_available, PartitionType partition,
+                                      TxSize txsz, int32_t row_off, int32_t col_off, int32_t ss_x, int32_t ss_y);
 
 extern IntraPredFn svt_aom_eb_pred[INTRA_MODES][TX_SIZES_ALL];
 extern IntraPredFn svt_aom_dc_pred[2][2][TX_SIZES_ALL];
@@ -109,12 +109,12 @@ void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left);
 void svt_aom_highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride, TxSize tx_size, const uint16_t *above,
                                            const uint16_t *left, int mode, int bd);
 
-extern void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t *input, // AMIR-> Changed to 8 bit
-                                               int32_t input_stride, int16_t *output_q3, int32_t width, int32_t height);
-extern void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t *input, int32_t input_stride, int16_t *output_q3,
-                                               int32_t width, int32_t height);
-extern void svt_subtract_average_c(int16_t *pred_buf_q3, int32_t width, int32_t height, int32_t round_offset,
-                                   int32_t num_pel_log2);
+void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t *input, // AMIR-> Changed to 8 bit
+                                        int32_t input_stride, int16_t *output_q3, int32_t width, int32_t height);
+void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t *input, int32_t input_stride, int16_t *output_q3, int32_t width,
+                                        int32_t height);
+void svt_subtract_average_c(int16_t *pred_buf_q3, int32_t width, int32_t height, int32_t round_offset,
+                            int32_t num_pel_log2);
 
 //CFL_PREDICT_FN(c, lbd)
 
@@ -139,9 +139,9 @@ static INLINE int32_t cfl_idx_to_alpha(int32_t alpha_idx, int32_t joint_sign, Cf
 }
 void svt_aom_filter_intra_edge(uint8_t mode, uint16_t max_frame_width, uint16_t max_frame_height, int32_t p_angle,
                                int32_t cu_origin_x, int32_t cu_origin_y, uint8_t *above_row, uint8_t *left_col);
-extern EbErrorType svt_aom_intra_prediction_open_loop_mb(int32_t p_angle, uint8_t ois_intra_mode, uint32_t srcOriginX,
-                                                         uint32_t srcOriginY, TxSize tx_size, uint8_t *above_row,
-                                                         uint8_t *left_col, uint8_t *dst, uint32_t dst_stride);
+EbErrorType svt_aom_intra_prediction_open_loop_mb(int32_t p_angle, uint8_t ois_intra_mode, uint32_t srcOriginX,
+                                                  uint32_t srcOriginY, TxSize tx_size, uint8_t *above_row,
+                                                  uint8_t *left_col, uint8_t *dst, uint32_t dst_stride);
 /* Function pointers return by CfL functions */
 typedef void (*CflSubtractAverageFn)(int16_t *dst);
 

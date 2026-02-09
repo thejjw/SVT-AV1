@@ -93,6 +93,6 @@ typedef struct EntropyCodingContext {
 EbErrorType svt_aom_entropy_coding_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
                                                 int index);
 
-extern void *svt_aom_entropy_coding_kernel(void *input_ptr);
+void *svt_aom_entropy_coding_kernel(void *input_ptr);
 
 #endif // EbEntropyCodingProcess_h
