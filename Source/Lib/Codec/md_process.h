@@ -1206,9 +1206,11 @@ typedef struct ModeDecisionContext {
     // 0: off, 1: on, 2: on (more aggressive)
     uint8_t approx_inter_rate;
     // Enable pSad
-    uint8_t     enable_psad;
-    uint32_t    inter_depth_bias;
-    uint32_t    d2_parent_bias;
+    uint8_t enable_psad;
+    // Bias the inter-depth decision cost in MD towards the parent block. This will scale the cost of the
+    // parent depth by parent_cost_bias/1000. Values <1000 favour the  parent, while values >1000 favour
+    // the child depth. 1000 means no bias.
+    uint32_t    parent_cost_bias;
     uint8_t     is_intra_bordered;
     uint8_t     updated_enable_pme;
     Lpd1TxCtrls lpd1_tx_ctrls;
