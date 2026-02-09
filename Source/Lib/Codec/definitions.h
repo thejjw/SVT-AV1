@@ -435,6 +435,10 @@ one more than the minimum. */
 #define SCALE_EXTRA_BITS (SCALE_SUBPEL_BITS - SUBPEL_BITS)
 #define SCALE_EXTRA_OFF ((1 << SCALE_EXTRA_BITS) / 2)
 
+#define LEAST_SQUARES_SAMPLES_MAX_BITS 3
+#define LEAST_SQUARES_SAMPLES_MAX (1 << LEAST_SQUARES_SAMPLES_MAX_BITS)
+#define SAMPLES_ARRAY_SIZE (LEAST_SQUARES_SAMPLES_MAX * 2)
+
 typedef int16_t InterpKernel[SUBPEL_TAPS];
 
 /***************************************************/

@@ -26,11 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern uint64_t svt_av1_cost_coeffs_txb(struct ModeDecisionContext *ctx, uint8_t allow_update_cdf,
-                                        FRAME_CONTEXT *ec_ctx, ModeDecisionCandidateBuffer *cand_bf,
-                                        const TranLow *const qcoeff, uint16_t eob, PlaneType plane_type,
-                                        TxSize transform_size, TxType transform_type, int16_t txb_skip_ctx,
-                                        int16_t dc_sign_ctx, bool reduced_transform_set_flag);
+extern uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
+                                        ModeDecisionCandidateBuffer *cand_bf, const TranLow *const qcoeff, uint16_t eob,
+                                        PlaneType plane_type, TxSize transform_size, TxType transform_type,
+                                        int16_t txb_skip_ctx, int16_t dc_sign_ctx, bool reduced_transform_set_flag);
 void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, ModeDecisionContext *ctx);
 #define RDDIV_BITS 7
 
@@ -41,22 +40,22 @@ void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, M
 int64_t         svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
                                             const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
                                             const PartitionContextType left_ctx, const PartitionContextType above_ctx);
-uint64_t        svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
+uint64_t        svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                ModeDecisionCandidateBuffer *cand_bf, bool use_accurate_cfl);
-uint64_t        svt_aom_intra_fast_cost(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
-                                        ModeDecisionCandidateBuffer *cand_bf, uint64_t lambda, uint64_t luma_distortion);
-uint64_t        svt_aom_inter_fast_cost(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
-                                        ModeDecisionCandidateBuffer *cand_bf, uint64_t lambda, uint64_t luma_distortion);
-EbErrorType     svt_aom_full_cost_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
-                                            uint64_t *y_distortion, uint64_t lambda, uint64_t *y_coeff_bits);
-void     svt_aom_full_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
-                           uint64_t lambda, uint64_t y_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
-                           uint64_t cb_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
-                           uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t *y_coeff_bits,
-                           uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits);
-uint64_t svt_aom_tx_size_bits(PictureControlSet *pcs, uint8_t segment_id, MdRateEstimationContext *md_rate_est_ctx,
-                              MacroBlockD *xd, const MbModeInfo *mbmi, TxSize tx_size, TxMode tx_mode, BlockSize bsize,
-                              uint8_t skip, FRAME_CONTEXT *ec_ctx, uint8_t allow_update_cdf);
+uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+                                 uint64_t lambda, uint64_t luma_distortion);
+uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+                                 uint64_t lambda, uint64_t luma_distortion);
+EbErrorType svt_aom_full_cost_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+                                        uint64_t *y_distortion, uint64_t lambda, uint64_t *y_coeff_bits);
+void        svt_aom_full_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+                              uint64_t lambda, uint64_t y_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
+                              uint64_t cb_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
+                              uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t *y_coeff_bits,
+                              uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits);
+uint64_t    svt_aom_tx_size_bits(PictureControlSet *pcs, uint8_t segment_id, MdRateEstimationContext *md_rate_est_ctx,
+                                 MacroBlockD *xd, const MbModeInfo *mbmi, TxSize tx_size, TxMode tx_mode, BlockSize bsize,
+                                 uint8_t skip, FRAME_CONTEXT *ec_ctx, uint8_t allow_update_cdf);
 
 uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, ModeDecisionContext *ctx,
                                   PictureControlSet *pcs, uint8_t tx_depth, bool block_has_coeff);

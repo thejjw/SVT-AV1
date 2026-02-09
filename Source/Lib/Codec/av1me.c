@@ -652,7 +652,7 @@ static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc
     return best_sad;
 }
 
-int svt_av1_obmc_full_pixel_search(struct ModeDecisionContext *ctx, IntraBcContext *x, const Mv *mvp_full, int sadpb,
+int svt_av1_obmc_full_pixel_search(ModeDecisionContext *ctx, IntraBcContext *x, const Mv *mvp_full, int sadpb,
                                    const AomVarianceFnPtr *fn_ptr, const Mv *ref_mv, Mv *dst_mv, int is_second) {
     // obmc_full_pixel_diamond does not provide BDR gain on 360p
     const int32_t *wsrc         = ctx->wsrc_buf;
@@ -849,7 +849,7 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
     return buf + offset;
 }
 
-int svt_av1_find_best_obmc_sub_pixel_tree_up(struct ModeDecisionContext *ctx, IntraBcContext *x,
+int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext *ctx, IntraBcContext *x,
                                              const struct Av1Common *const cm, int mi_row, int mi_col, Mv *bestmv,
                                              const Mv *ref_mv, int allow_hp, int error_per_bit,
                                              const AomVarianceFnPtr *vfp, int forced_stop, int iters_per_step,

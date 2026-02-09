@@ -40,6 +40,8 @@
 #include "inter_prediction.h"
 #include "enc_intra_prediction.h"
 #include "mode_decision.h"
+#include "adaptive_mv_pred.h"
+
 #define INIT_BIT_EST 6000
 #define DIVIDE_AND_ROUND(x, y) (((x) + ((y) >> 1)) / (y))
 void     svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureControlSet *pcs,
@@ -47,8 +49,7 @@ void     svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom
 uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_stride,
                                                  uint8_t *recon, int32_t recon_offset, uint32_t recon_stride,
                                                  uint32_t area_width, uint32_t area_height, bool hbd, double ac_bias);
-void     aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row,
-                                 const int mi_col);
+void     aom_av1_set_ssim_rdmult(ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row, const int mi_col);
 
 extern IntraSize              svt_aom_intra_unit[];
 static const EbPredictionFunc product_prediction_fun_table_light_pd0[2] = {svt_av1_intra_prediction,
@@ -1345,7 +1346,7 @@ void set_md_stage_counts(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     ctx->bypass_md_stage_2 = (ctx->nic_ctrls.md_staging_mode == MD_STAGING_MODE_2) ? false : true;
 }
 static void sort_fast_cost_based_candidates(
-    struct ModeDecisionContext *ctx, uint32_t input_buffer_start_idx,
+    ModeDecisionContext *ctx, uint32_t input_buffer_start_idx,
     uint32_t  input_buffer_count, //how many cand buffers to sort. one of the buffer can have max cost.
     uint32_t *cand_buff_indices) {
     ModeDecisionCandidateBuffer **buffer_ptr_array     = ctx->cand_bf_ptr_array;
@@ -1366,7 +1367,7 @@ static void sort_fast_cost_based_candidates(
         }
     }
 }
-void sort_full_cost_based_candidates(struct ModeDecisionContext *ctx, uint32_t num_of_cand_to_sort,
+void sort_full_cost_based_candidates(ModeDecisionContext *ctx, uint32_t num_of_cand_to_sort,
                                      uint32_t *cand_buff_indices) {
     uint32_t                      i, j, index;
     ModeDecisionCandidateBuffer **buffer_ptr_array = ctx->cand_bf_ptr_array;
@@ -1382,8 +1383,8 @@ void sort_full_cost_based_candidates(struct ModeDecisionContext *ctx, uint32_t n
     }
 }
 static void construct_best_sorted_arrays_md_stage_3(
-    struct ModeDecisionContext *ctx,
-    uint32_t                   *best_candidate_index_array) { //best = union from all classes
+    ModeDecisionContext *ctx,
+    uint32_t            *best_candidate_index_array) { //best = union from all classes
 
     uint32_t best_candi = 0;
     for (CandClass class_i = CAND_CLASS_0; class_i < CAND_CLASS_TOTAL; class_i++)
@@ -1396,9 +1397,8 @@ static void construct_best_sorted_arrays_md_stage_3(
 independent chroma search is set to be performed before the last MD stage.
 
 The chroma search may be skipped if there are no intra candidates, or based on speed features.*/
-static bool perform_ind_uv_search_last_mds(struct ModeDecisionContext   *ctx,
-                                           ModeDecisionCandidateBuffer **buffer_ptr_array,
-                                           uint32_t                     *best_cand_idx_array) {
+static bool perform_ind_uv_search_last_mds(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer **buffer_ptr_array,
+                                           uint32_t *best_cand_idx_array) {
     const uint32_t mds3_cand_count  = ctx->md_stage_3_total_count;
     uint16_t       mds3_intra_count = 0;
     uint64_t       best_intra_cost  = MAX_MODE_COST;
@@ -2960,7 +2960,7 @@ static void build_single_ref_mvp_array(PictureControlSet *pcs, ModeDecisionConte
         }
     }
 }
-bool svt_aom_is_valid_unipred_ref(struct ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
+bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
                                   uint8_t ref_idx);
 /*
 * Performs an ME search around MVP(s)
@@ -4259,7 +4259,7 @@ static INLINE bool search_dct_dct_only(PictureControlSet *pcs, ModeDecisionConte
         return 1;
     return 0;
 }
-static int32_t av1_txt_rate_est(struct ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf, bool is_inter,
+static int32_t av1_txt_rate_est(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf, bool is_inter,
                                 TxSize tx_size, TxType tx_type, bool reduced_tx_set_used) {
     if (get_ext_tx_types(tx_size, is_inter, reduced_tx_set_used) > 1) {
         const TxSize square_tx_size = txsize_sqr_map[tx_size];
@@ -7462,7 +7462,7 @@ uint64_t estimate_ref_frame_type_bits(ModeDecisionContext *ctx, BlkStruct *blk_p
 /*
  * Estimate the rate of signaling all available ref_frame_type
  */
-static void estimate_ref_frames_num_bits(struct ModeDecisionContext *ctx, PictureControlSet *pcs) {
+static void estimate_ref_frames_num_bits(ModeDecisionContext *ctx, PictureControlSet *pcs) {
     uint64_t     comp_inter_fac_bits_uni = 0;
     uint64_t     comp_inter_fac_bits_bi  = 0;
     FrameHeader *frm_hdr                 = &pcs->ppcs->frm_hdr;

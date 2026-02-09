@@ -35,6 +35,8 @@
 #include "ac_bias.h"
 #include "src_ops_process.h"
 #include "utility.h"
+#include "adaptive_mv_pred.h"
+
 void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride);
@@ -187,7 +189,7 @@ static bool warped_motion_mode_allowed(PictureControlSet *pcs, ModeDecisionConte
 }
 #endif
 MotionMode svt_aom_obmc_motion_mode_allowed(
-    const PictureControlSet *pcs, struct ModeDecisionContext *ctx, const BlockSize bsize,
+    const PictureControlSet *pcs, ModeDecisionContext *ctx, const BlockSize bsize,
     uint8_t          situation, // 0: candidate(s) preparation, 1: data preparation, 2: simple translation face-off
     MvReferenceFrame rf0, MvReferenceFrame rf1, PredictionMode mode) {
     if (ctx->obmc_ctrls.trans_face_off && !situation)
@@ -751,7 +753,7 @@ static bool mv_is_already_injected(ModeDecisionContext *ctx, Mv mv0, Mv mv1, uin
     }
     return false;
 }
-bool svt_aom_is_valid_unipred_ref(struct ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
+bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
                                   uint8_t ref_idx) {
     if (!ctx->ref_pruning_ctrls.enabled)
         return true;
@@ -780,7 +782,7 @@ static bool is_valid_mv_diff(Mv best_pred_mv[2], Mv mv0, Mv mv1, uint8_t is_comp
     return true;
 }
 
-static bool is_valid_bipred_ref(struct ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx_0,
+static bool is_valid_bipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx_0,
                                 uint8_t ref_idx_0, uint8_t list_idx_1, uint8_t ref_idx_1) {
     if (!ctx->ref_pruning_ctrls.enabled)
         return true;
@@ -812,7 +814,7 @@ static int8_t bipred_3x3_y_pos[BIPRED_3x3_REFINMENT_POSITIONS]      = {0, 1, 1, 
 // enable_ii, enable_wm, and enable_obmc allow the caller to disable some modes explicitly; if enabled, the
 // mode will be injected if the block size/candidate type supports the mode. The enable signals are left as
 // arguments because some candidates do not inject all modes (e.g. unipred does not inject WM/OBMC).
-static void inj_non_simple_modes(PictureControlSet *pcs, struct ModeDecisionContext *ctx, uint32_t *total_cand_count,
+static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *total_cand_count,
                                  const bool enable_ii, const bool enable_wm, const bool enable_obmc) {
     // index of simple translation candidate (to be used to copy cand info for other modes)
     // assumes the simple trans cand is the previously injected candidate
@@ -966,7 +968,7 @@ static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFram
 // total_cand_count is the index to ctx->fast_cand_array for the next candidate injected (which is the
 // same as the number of candidates injected so far).  It is assumed the AVG candidate to base
 // the other candidtes on is the previously injected candidate (at index total_cand_count - 1).
-static void inj_comp_modes(PictureControlSet *pcs, struct ModeDecisionContext *ctx, uint32_t *total_cand_count) {
+static void inj_comp_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *total_cand_count) {
     // index of MD_COMP_AVG candidate (to be used to copy cand info for other modes)
     // assumes the avg cand is the previously injected candidate
     const uint32_t         avg_cand_idx = *total_cand_count - 1;
@@ -2087,8 +2089,8 @@ static void single_motion_search(PictureControlSet *pcs, ModeDecisionContext *ct
 }
 
 // Refine the OBMC MV (8 bit search). Return true if search found a valid MV; false otherwise
-uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
-                                       ModeDecisionCandidate *cand, int refine_level) {
+uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand,
+                                       int refine_level) {
     if (block_size_wide[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine ||
         block_size_high[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine)
         return 1;
@@ -2195,7 +2197,7 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, struct ModeDecisi
 /*
    inject ME candidates for Light PD0
 */
-static void inject_new_candidates_light_pd0(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
+static void inject_new_candidates_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                             uint32_t *candidate_total_cnt, const bool allow_bipred) {
     const uint32_t         me_sb_addr       = ctx->me_sb_addr;
     const uint32_t         me_block_offset  = ctx->me_block_offset;
@@ -2271,7 +2273,7 @@ static void inject_new_candidates_light_pd0(PictureControlSet *pcs, struct ModeD
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_new_candidates_light_pd1(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
+static void inject_new_candidates_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                             uint32_t *candidate_total_cnt, const bool allow_bipred) {
     const uint32_t         me_sb_addr       = ctx->me_sb_addr;
     const uint32_t         me_block_offset  = ctx->me_block_offset;
@@ -3147,7 +3149,7 @@ static void inject_filter_intra_candidates(PictureControlSet *pcs,
 
 static void inject_zz_backup_candidate(
     PictureControlSet *pcs,
-    struct ModeDecisionContext *ctx,
+    ModeDecisionContext *ctx,
     uint32_t *candidate_total_cnt) {
     ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
     Mv best_pred_mv[2] = { {{0}}, {{0}} };
@@ -3278,7 +3280,7 @@ static bool valid_ref_frame_type(MvReferenceFrame rf[2], const MvReferenceFrame 
 // refer to inject_zz_backup_candidate, but use BWD ref instead of LAST
 static void inject_sframe_backup_candidate(
     PictureControlSet *pcs,
-    struct ModeDecisionContext *ctx,
+    ModeDecisionContext *ctx,
     uint32_t *candidate_total_cnt) {
     ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
     Mv best_pred_mv[2] = { {{0}}, {{0}} };
@@ -3536,7 +3538,7 @@ uint8_t av1_drl_ctx(const CandidateMv *ref_mv_stack, int32_t ref_idx);
 * Update symbols for light-PD1 path
 ***************************************/
 void svt_aom_product_full_mode_decision_light_pd1(
-    PictureControlSet* pcs, struct ModeDecisionContext *ctx,
+    PictureControlSet* pcs, ModeDecisionContext *ctx,
     uint32_t sb_addr, ModeDecisionCandidateBuffer *cand_bf) {
     BlkStruct* blk_ptr = ctx->blk_ptr;
     ModeDecisionCandidate* cand = cand_bf->cand;
@@ -3661,7 +3663,7 @@ static INLINE double derive_ssim_threshold_factor_for_full_md(SequenceControlSet
 ***************************************/
 uint32_t svt_aom_product_full_mode_decision(
     PictureControlSet* pcs,
-    struct ModeDecisionContext *ctx,
+    ModeDecisionContext *ctx,
     uint32_t sb_addr,
     ModeDecisionCandidateBuffer **buffer_ptr_array,
     uint32_t candidate_total_count,
@@ -3907,7 +3909,7 @@ static int get_superblock_tpl_column_end(PictureParentControlSet* ppcs, int mi_c
     return (sb_mi_end + num_mi_w - 1) / num_mi_w;
 }
 
-void aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet *pcs,
+void aom_av1_set_ssim_rdmult(ModeDecisionContext *ctx, PictureControlSet *pcs,
                          const int mi_row, const int mi_col) {
   const Av1Common *const cm = pcs->ppcs->av1_cm;
   BlockSize bsize = ctx->blk_geom->bsize;
@@ -3947,7 +3949,7 @@ void aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet 
   }
 }
 
-void  svt_aom_set_tuned_blk_lambda(struct ModeDecisionContext *ctx, PictureControlSet *pcs){
+void  svt_aom_set_tuned_blk_lambda(ModeDecisionContext *ctx, PictureControlSet *pcs){
     PictureParentControlSet *ppcs = pcs->ppcs;
     Av1Common *cm = ppcs->av1_cm;
 

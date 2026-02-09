@@ -19,6 +19,7 @@
 #include "av1me.h"
 #include "sequence_control_set.h"
 #include "ac_bias.h"
+#include "warped_motion.h"
 
 void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_ptr, bool is_highbd) {
     if (!is_highbd) {
@@ -2779,10 +2780,9 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet *scs, ScaleFactors sf
                        subsampling_shift);
     return return_error;
 }
-static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, struct ModeDecisionContext *ctx,
-                                           BlockModeInfo *block_mi, EbPictureBufferDesc *ref_pic_0,
-                                           EbPictureBufferDesc *ref_pic_1, EbPictureBufferDesc *pred, ScaleFactors *sf0,
-                                           ScaleFactors *sf1) {
+static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, ModeDecisionContext *ctx, BlockModeInfo *block_mi,
+                                           EbPictureBufferDesc *ref_pic_0, EbPictureBufferDesc *ref_pic_1,
+                                           EbPictureBufferDesc *pred, ScaleFactors *sf0, ScaleFactors *sf1) {
     const BlockGeom *blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
@@ -2837,11 +2837,10 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, struct ModeD
 /*
   inter prediction for light PD1
 */
-static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, struct ModeDecisionContext *ctx,
-                                           BlockModeInfo *block_mi, EbPictureBufferDesc *ref_pic_0,
-                                           EbPictureBufferDesc *ref_pic_1, EbPictureBufferDesc *pred_pic,
-                                           uint32_t component_mask, uint8_t hbd_md, ScaleFactors *sf0,
-                                           ScaleFactors *sf1) {
+static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, ModeDecisionContext *ctx, BlockModeInfo *block_mi,
+                                           EbPictureBufferDesc *ref_pic_0, EbPictureBufferDesc *ref_pic_1,
+                                           EbPictureBufferDesc *pred_pic, uint32_t component_mask, uint8_t hbd_md,
+                                           ScaleFactors *sf0, ScaleFactors *sf1) {
     const BlockGeom *blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
@@ -2991,7 +2990,7 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, struct ModeD
 
 #if CONFIG_ENABLE_OBMC
 static void av1_inter_prediction_obmc(PictureControlSet *pcs, BlkStruct *blk_ptr, uint8_t use_precomputed_obmc,
-                                      struct ModeDecisionContext *ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
+                                      ModeDecisionContext *ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
                                       EbPictureBufferDesc *pred_pic, uint16_t dst_origin_x, uint16_t dst_origin_y,
                                       uint32_t component_mask, uint8_t bit_depth, uint8_t is_16bit_pipeline) {
     uint8_t is16bit = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
@@ -3278,7 +3277,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
 EbErrorType svt_aom_inter_prediction(SequenceControlSet *scs, PictureControlSet *pcs, BlockModeInfo *block_mi,
                                      WarpedMotionParams *wm_params_0, WarpedMotionParams *wm_params_1,
                                      BlkStruct *blk_ptr, const BlockGeom *blk_geom, bool use_precomputed_obmc,
-                                     bool use_precomputed_ii, struct ModeDecisionContext *ctx,
+                                     bool use_precomputed_ii, ModeDecisionContext *ctx,
                                      NeighborArrayUnit *recon_neigh_y, NeighborArrayUnit *recon_neigh_cb,
                                      NeighborArrayUnit *recon_neigh_cr, EbPictureBufferDesc *ref_pic_0,
                                      EbPictureBufferDesc *ref_pic_1, uint16_t ref_origin_x, uint16_t ref_origin_y,
