@@ -6469,8 +6469,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet *scs, PictureControl
 
     uint8_t depth_early_exit_lvl = 1;
     // When only the predicted depth is used, use safe early exit THs
-    if ((rtc_tune && !scs->use_flat_ipp && pcs->enc_mode <= ENC_M11 && pd0_level == VERY_LIGHT_PD0) ||
-        (rtc_tune && scs->use_flat_ipp && pcs->enc_mode <= ENC_M12 && pd0_level == VERY_LIGHT_PD0))
+    if (rtc_tune && pd0_level == VERY_LIGHT_PD0)
         depth_early_exit_lvl = 0;
     else if (pd0_level <= LPD0_LVL_0 || ctx->pic_pred_depth_only)
         depth_early_exit_lvl = 1;
@@ -6502,22 +6501,21 @@ void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet *scs, PictureControl
         // Modulate the inter-depth bias based on the QP and the temporal complexity of the SB
         // towards more split for low QPs or/and complex SBs,
         // and less split for high QPs or/and easy SBs (to compensate for the absence of the coeff rate)
-        const uint32_t init_bias_tab[INPUT_SIZE_COUNT] = {800, 850, 850, 850, 900, 950, 1000};
-        ctx->inter_depth_bias                          = init_bias_tab[pcs->ppcs->input_resolution] +
+        const uint32_t init_bias_tab[INPUT_SIZE_COUNT] = {1200, 1150, 1150, 1150, 1100, 1050, 1000};
+        ctx->parent_cost_bias                          = init_bias_tab[pcs->ppcs->input_resolution] -
             pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
         if (ppcs->me_8x8_cost_variance[ctx->sb_index] > 1000)
-            ctx->inter_depth_bias = ctx->inter_depth_bias - 150;
+            ctx->parent_cost_bias = ctx->parent_cost_bias + 150;
         else if (ppcs->me_8x8_cost_variance[ctx->sb_index] > 500)
-            ctx->inter_depth_bias = ctx->inter_depth_bias - 50;
+            ctx->parent_cost_bias = ctx->parent_cost_bias + 50;
         else if (ppcs->me_8x8_cost_variance[ctx->sb_index] > 250)
-            ctx->inter_depth_bias = ctx->inter_depth_bias + 50;
+            ctx->parent_cost_bias = ctx->parent_cost_bias - 50;
         else
-            ctx->inter_depth_bias = ctx->inter_depth_bias + 150;
+            ctx->parent_cost_bias = ctx->parent_cost_bias - 150;
     } else {
-        ctx->inter_depth_bias = 0;
+        ctx->parent_cost_bias = 1000;
     }
 
-    ctx->d2_parent_bias = 1000;
     if (allintra)
         ctx->lpd0_use_src_samples = true;
     else
@@ -7021,11 +7019,10 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
     }
     set_mds0_controls(ctx, pcs->mds0_level);
     set_subres_controls(ctx, 0);
-    ctx->inter_depth_bias = 0;
     if (pd_pass == PD_PASS_0)
-        ctx->d2_parent_bias = 1000;
+        ctx->parent_cost_bias = 1000;
     else
-        ctx->d2_parent_bias = 995;
+        ctx->parent_cost_bias = 995;
     uint8_t skip_sub_depth_lvl;
     if (pd_pass == PD_PASS_0)
         skip_sub_depth_lvl = 0;
@@ -7680,14 +7677,14 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureCont
     // for a given picture.
     pcs->pic_filter_intra_level = get_filter_intra_level(scs, enc_mode);
     if (allintra)
-        if (pcs->enc_mode <= ENC_M9)
-            pcs->ppcs->use_accurate_part_ctx = true;
+        if (enc_mode <= ENC_M9)
+            ppcs->use_accurate_part_ctx = true;
         else
-            pcs->ppcs->use_accurate_part_ctx = false;
-    else if ((!pcs->scs->use_flat_ipp && pcs->enc_mode <= ENC_M7) || (scs->use_flat_ipp && pcs->enc_mode <= ENC_M8))
-        pcs->ppcs->use_accurate_part_ctx = true;
+            ppcs->use_accurate_part_ctx = false;
+    else if (enc_mode <= ENC_M8)
+        ppcs->use_accurate_part_ctx = true;
     else
-        pcs->ppcs->use_accurate_part_ctx = false;
+        ppcs->use_accurate_part_ctx = false;
     FrameHeader *frm_hdr             = &ppcs->frm_hdr;
     frm_hdr->allow_high_precision_mv = (frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH_0 ||
                                         (pcs->ref_hp_percentage > HIGH_PRECISION_REF_PERC_TH &&
