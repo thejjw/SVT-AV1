@@ -136,7 +136,7 @@ static int get_twopass_worst_quality(PictureParentControlSet *pcs, const double 
     const RateControlCfg *const rc_cfg  = &enc_ctx->rc_cfg;
     uint32_t                    mb_cols;
     uint32_t                    mb_rows;
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         mb_cols = 2 * (scs->max_input_luma_width + 16 - 1) / 16;
         mb_rows = 2 * (scs->max_input_luma_height + 16 - 1) / 16;
     } else {
@@ -1145,7 +1145,7 @@ void svt_aom_set_rc_param(SequenceControlSet *scs) {
     EncodeContext *enc_ctx    = scs->enc_ctx;
     FrameInfo     *frame_info = &enc_ctx->frame_info;
 
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         frame_info->frame_width  = scs->max_input_luma_width << 1;
         frame_info->frame_height = scs->max_input_luma_height << 1;
         frame_info->mb_cols      = ((scs->max_input_luma_width + 16 - 1) / 16) << 1;
@@ -1175,7 +1175,7 @@ void svt_aom_set_rc_param(SequenceControlSet *scs) {
         enc_ctx->rc_cfg.over_shoot_pct  = scs->static_config.over_shoot_pct;
         enc_ctx->rc_cfg.under_shoot_pct = scs->static_config.under_shoot_pct;
     }
-    const int is_vbr                         = enc_ctx->rc_cfg.mode == AOM_VBR;
+    const bool is_vbr                        = enc_ctx->rc_cfg.mode == AOM_VBR;
     enc_ctx->rc_cfg.maximum_buffer_size_ms   = is_vbr ? 240000 : scs->static_config.maximum_buffer_size_ms;
     enc_ctx->rc_cfg.starting_buffer_level_ms = is_vbr ? 60000 : scs->static_config.starting_buffer_level_ms;
     enc_ctx->rc_cfg.optimal_buffer_level_ms  = is_vbr ? 60000 : scs->static_config.optimal_buffer_level_ms;

@@ -37,11 +37,11 @@ void            svt_aom_coding_loop_context_generation(PictureControlSet *pcs, M
     (ROUND_POWER_OF_TWO(((int64_t)(R)) * ((int64_t)(RM)), AV1_PROB_COST_SHIFT) + \
      ((int64_t)(D) * ((int64_t)1 << RDDIV_BITS)))
 
-int64_t         svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
-                                            const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
-                                            const PartitionContextType left_ctx, const PartitionContextType above_ctx);
-uint64_t        svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                               ModeDecisionCandidateBuffer *cand_bf, bool use_accurate_cfl);
+int64_t  svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
+                                     const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
+                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx);
+uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                        ModeDecisionCandidateBuffer *cand_bf, bool use_accurate_cfl);
 uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
                                  uint64_t lambda, uint64_t luma_distortion);
 uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,

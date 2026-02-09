@@ -3328,15 +3328,12 @@ void set_multi_pass_params(SequenceControlSet *scs)
     switch (config->pass) {
 
         case ENC_SINGLE_PASS: {
-            scs->first_pass_ctrls.ds = 0;
+            scs->first_pass_downsample = false;
             scs->final_pass_preset = config->enc_mode;
             break;
         }
         case ENC_FIRST_PASS: {
-            if (config->enc_mode <= ENC_M8)
-                scs->first_pass_ctrls.ds = 0;
-            else
-                scs->first_pass_ctrls.ds = 1;
+            scs->first_pass_downsample = config->enc_mode > ENC_M8;
             scs->final_pass_preset = config->enc_mode;
             if (scs->final_pass_preset <= ENC_M6)
                 scs->static_config.enc_mode = ENC_M9;
@@ -3360,7 +3357,7 @@ void set_multi_pass_params(SequenceControlSet *scs)
     }
 
     int do_downsample =
-        (scs->first_pass_ctrls.ds) && scs->max_input_luma_width >= 128 && scs->max_input_luma_height >= 128
+        scs->first_pass_downsample && scs->max_input_luma_width >= 128 && scs->max_input_luma_height >= 128
         ? 1
         : 0;
 
@@ -3846,10 +3843,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     svt_aom_set_mfmv_config(scs);
 
-    if (scs->static_config.enc_mode <= ENC_M2)
-        scs->list0_only_base_ctrls.enabled = 0;
-    else
-        scs->list0_only_base_ctrls.enabled = 1;
+    scs->list0_only_base = scs->static_config.enc_mode > ENC_M2;
 
     if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ||
         scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
@@ -4870,7 +4864,7 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
     dst->size         = src->size;
     dst->qp           = src->qp;
     dst->pic_type = src->pic_type;
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
 
@@ -4956,7 +4950,7 @@ static void copy_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst,
     dst->size         = src->size;
     dst->qp           = src->qp;
     dst->pic_type     = src->pic_type;
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         // Copy the picture buffer
         if (src->p_buffer != NULL)
             downsample_copy_frame_buffer(

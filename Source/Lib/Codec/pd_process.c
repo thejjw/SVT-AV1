@@ -820,7 +820,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
             end_pcs);
     }
     ctx->list0_only = 0;
-    if (scs->list0_only_base_ctrls.enabled) {
+    if (scs->list0_only_base) {
         ctx->list0_only = 1;
     }
 }

@@ -35,9 +35,9 @@ extern "C" {
 /**************************************
  * Extern Function Declarations
  **************************************/
-void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs,
-                            uint16_t tile_idx, EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr,
-                            struct PARTITION_TREE *ptree, int mi_row, int mi_col);
+void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs, uint16_t tile_idx,
+                            EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr, struct PARTITION_TREE *ptree, int mi_row,
+                            int mi_col);
 
 extern int svt_aom_get_wedge_params_bits(BlockSize bsize);
 

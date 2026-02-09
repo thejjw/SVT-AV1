@@ -816,7 +816,7 @@ void *svt_aom_packetization_kernel(void *input_ptr) {
         if (scs->passes == 2 && scs->static_config.pass == ENC_FIRST_PASS) {
             StatStruct stat_struct;
             stat_struct.poc = pcs->picture_number;
-            if (scs->first_pass_ctrls.ds)
+            if (scs->first_pass_downsample)
                 stat_struct.total_num_bits = pcs->ppcs->total_num_bits * DS_SC_FACT / 10;
             else
                 stat_struct.total_num_bits = pcs->ppcs->total_num_bits;
