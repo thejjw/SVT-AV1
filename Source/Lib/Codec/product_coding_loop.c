@@ -9764,12 +9764,10 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
                                                            PARTITION_SPLIT,
                                                            0, //left_neighbor_partition,
                                                            0); // above_neighbor_partition);
-    const int64_t  split_rate_cost  = RDCOST(full_lambda, above_split_rate, 0);
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
     if (!pcs->ppcs->use_accurate_part_ctx)
         above_split_rate *= 2;
-    int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
-    const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
+    int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
@@ -9785,13 +9783,11 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
         }
 
         // Check current depth cost; if larger than parent, exit early
-        if (ctx->cost_avail[mds->mds_idx]) {
+        if (pc_tree->rdc.valid) {
             const uint32_t th = (i == 0)
                 ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
                 : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
-            // Use accurate split cost for early exit
-            const int64_t curr_cost = split_cost - (!pcs->ppcs->use_accurate_part_ctx ? accurate_split_cost_adj : 0);
-            if ((pc_tree->rdc.rd_cost * th) <= (curr_cost * 1000)) {
+            if ((pc_tree->rdc.rd_cost * th * ctx->parent_cost_bias) <= (split_cost * 1000 * 1000)) {
                 pc_tree->block_data[PART_N][0]->split_flag = false;
                 return false;
             }
@@ -9810,19 +9806,10 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
         split_cost += pc_tree->split[i]->rdc.rd_cost;
     }
 
-    // Set blk_geom to last quadrant for neighbour array updates
-    ctx->blk_geom = get_blk_geom_mds(scs->blk_geom_mds, mds->split[3]->mds_idx);
-    ctx->blk_ptr  = &ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds];
-
-    // Make decision between split/non-split here - only get here if all partitions are valid (and/or out of bounds)
-    const int64_t non_split_cost = ctx->cost_avail[ctx->blk_geom->parent_depth_idx_mds] ? pc_tree->rdc.rd_cost
-                                                                                        : MAX_MODE_COST;
-    if (ctx->inter_depth_bias && split_cost != MAX_MODE_COST) {
-        split_cost = (split_cost * ctx->inter_depth_bias) / 1000;
-    }
-    int      parent_bias        = non_split_cost != MAX_MODE_COST ? ctx->d2_parent_bias : 1000;
-    uint32_t last_blk_index_mds = ctx->blk_geom->sqi_mds;
-    if (((parent_bias * non_split_cost) / 1000) <= split_cost) {
+    // Set last_blk_index_mds to last quadrant for neighbour array updates.
+    // Only get here if all partitions are valid (and/or out of bounds).
+    uint32_t last_blk_index_mds = mds->split[3]->mds_idx;
+    if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
         pc_tree->block_data[PART_N][0]->split_flag = false;
         pc_tree->rdc.valid                         = 1;
         last_blk_index_mds                         = pc_tree->block_data[PART_N][0]->mds_idx;
@@ -10150,12 +10137,10 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
                                                            pc_tree->block_data[PART_N][0]->left_part_ctx,
                                                            pc_tree->block_data[PART_N][0]->above_part_ctx);
 
-    const int64_t split_rate_cost = RDCOST(full_lambda, above_split_rate, 0);
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
     if (!pcs->ppcs->use_accurate_part_ctx)
         above_split_rate *= 2;
-    int64_t       split_cost              = RDCOST(full_lambda, above_split_rate, 0);
-    const int64_t accurate_split_cost_adj = split_cost - split_rate_cost;
+    int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
@@ -10172,19 +10157,13 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
         }
 
         // Check current depth cost; if larger than parent, exit early
-        // TODO: The (mds->split[i]->tot_shapes || !blk_has_valid_shape) check is put there only to maintain identical
-        // bitstreams to before the refactoring changes. The check should be removed in the future as it is arbitrary.
-        const bool blk_has_valid_shape = mi_row + y_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_rows ||
-            mi_col + x_idx + (mi_step >> 1) < pcs->ppcs->av1_cm->mi_cols;
-        if (ctx->cost_avail[mds->mds_idx] && (mds->split[i]->tot_shapes || !blk_has_valid_shape)) {
+        if (pc_tree->rdc.valid) {
             assert(!(ctx->pd_pass == PD_PASS_1 && ctx->pred_depth_only) &&
                    "If PD1 and pred depth only, parent depth cost should be unavailable");
             const uint32_t th = (i == 0)
                 ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
                 : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
-            // Use accurate split cost for early exit
-            const int64_t curr_cost = split_cost - (!pcs->ppcs->use_accurate_part_ctx ? accurate_split_cost_adj : 0);
-            if ((pc_tree->rdc.rd_cost * th) <= (curr_cost * 1000)) {
+            if ((pc_tree->rdc.rd_cost * th * ctx->parent_cost_bias) <= (split_cost * 1000 * 1000)) {
                 pc_tree->block_data[PART_N][0]->split_flag = false;
                 return false;
             }
@@ -10202,19 +10181,10 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
         split_cost += pc_tree->split[i]->rdc.rd_cost;
     }
 
-    // Set blk_geom to last quadrant for neighbour array updates
-    ctx->blk_geom = get_blk_geom_mds(scs->blk_geom_mds, mds->split[3]->mds_idx);
-    ctx->blk_ptr  = &ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds];
-
-    // Make decision between split/non-split here - only get here if all partitions are valid (and/or out of bounds)
-    const int64_t non_split_cost = ctx->cost_avail[ctx->blk_geom->parent_depth_idx_mds] ? pc_tree->rdc.rd_cost
-                                                                                        : MAX_MODE_COST;
-    if (ctx->inter_depth_bias && split_cost != MAX_MODE_COST) {
-        split_cost = (split_cost * ctx->inter_depth_bias) / 1000;
-    }
-    int      parent_bias        = non_split_cost != MAX_MODE_COST ? ctx->d2_parent_bias : 1000;
-    uint32_t last_blk_index_mds = ctx->blk_geom->sqi_mds;
-    if (((parent_bias * non_split_cost) / 1000) <= split_cost) {
+    // Set last_blk_index_mds to last quadrant for neighbour array updates.
+    // Only get here if all partitions are valid (and/or out of bounds).
+    uint32_t last_blk_index_mds = mds->split[3]->mds_idx;
+    if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
         pc_tree->block_data[PART_N][0]->split_flag = false;
         pc_tree->rdc.valid                         = 1;
         last_blk_index_mds                         = pc_tree->block_data[PART_N][0]->mds_idx;
