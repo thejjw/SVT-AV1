@@ -24,7 +24,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define ENABLE_AMVP_MV_FOR_RC_PU 0
 #define MAX_MB_PLANE 3
 #define MAX_MPM_CANDIDATES 3
 #define MERGE_PENALTY 10

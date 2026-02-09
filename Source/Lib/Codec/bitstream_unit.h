@@ -25,9 +25,6 @@ extern "C" {
 #endif
 #endif
 
-// Bistream Slice Buffer Size
-#define EB_BITSTREAM_SLICE_BUFFER_SIZE 0x300000
-
 /**********************************
  * Bitstream Unit Types
  **********************************/

@@ -65,7 +65,6 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 #define TPL_DEP_COST_SCALE_LOG2 4
 #define MAX_TX_WEIGHT 500
 #define MAX_TPL_LA_SW MAX_TPL_GROUP_SIZE // Max TPL look ahead sliding window size
-#define DEPTH_PROB_PRECISION 10000
 #define UPDATED_LINKS 100 //max number of pictures a dep-Cnt-cleanUp triggering picture can process
 #define MAX_TILE_CNTS 128 // Annex A.3
 
@@ -377,7 +376,6 @@ enum {
 // 4 frame filter levels: y plane vertical, y plane horizontal,
 // u plane, and v plane
 #define FRAME_LF_COUNT 4
-#define DEFAULT_DELTA_LF_MULTI 0
 #define MAX_MODE_LF_DELTAS 2
 #define LEVEL_MAJOR_BITS 3
 #define LEVEL_MINOR_BITS 2
@@ -416,9 +414,7 @@ one more than the minimum. */
 // Pad 16 extra bytes to avoid reading overflow in SIMD optimization.
 #define TX_PAD_END 16
 #define TX_PAD_2D ((MAX_TX_SIZE + TX_PAD_HOR) * (MAX_TX_SIZE + TX_PAD_VER) + TX_PAD_END)
-#define COMPOUND_WEIGHT_MODE DIST
 #define DIST_PRECISION_BITS 4
-#define DIST_PRECISION (1 << DIST_PRECISION_BITS) // 16
 
 #define PROFILE_BITS 3
 
@@ -1137,7 +1133,6 @@ typedef enum ATTRIBUTE_PACKED { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } Plane
 
 #define CFL_ALPHABET_SIZE_LOG2 4
 #define CFL_ALPHABET_SIZE (1 << CFL_ALPHABET_SIZE_LOG2)
-#define CFL_MAGS_SIZE ((2 << CFL_ALPHABET_SIZE_LOG2) + 1)
 #define CFL_IDX_U(idx) (idx >> CFL_ALPHABET_SIZE_LOG2)
 #define CFL_IDX_V(idx) (idx & (CFL_ALPHABET_SIZE - 1))
 

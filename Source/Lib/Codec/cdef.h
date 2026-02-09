@@ -25,7 +25,6 @@ extern "C" {
 #define CDEF_BLOCKSIZE 64
 #define CDEF_BLOCKSIZE_LOG2 6
 #define CDEF_NBLOCKS ((1 << MAX_SB_SIZE_LOG2) / 8)
-#define CDEF_SB_SHIFT (MAX_SB_SIZE_LOG2 - CDEF_BLOCKSIZE_LOG2)
 
 /* We need to buffer three vertical lines. */
 #define CDEF_VBORDER (3)

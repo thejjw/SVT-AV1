@@ -29,9 +29,6 @@ extern "C" {
  **************************************/
 #define MODE_DECISION_CANDIDATE_MAX_COUNT_Y 1855
 #define MODE_DECISION_CANDIDATE_MAX_COUNT (MODE_DECISION_CANDIDATE_MAX_COUNT_Y + 84)
-#define DEPTH_ONE_STEP 21
-#define DEPTH_TWO_STEP 5
-#define DEPTH_THREE_STEP 1
 #define MAX_MVP_CANIDATES 4
 /**************************************
  * Macros
