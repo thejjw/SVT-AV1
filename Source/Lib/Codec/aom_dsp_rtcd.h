@@ -1025,7 +1025,6 @@ unsigned int svt_aom_variance64x128_neon(const uint8_t *src, int src_stride, con
 unsigned int svt_aom_variance128x64_neon(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse);
 unsigned int svt_aom_variance128x128_neon(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse);
 
-unsigned int svt_aom_variance4x4_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse);
 unsigned int svt_aom_variance4x8_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse);
 unsigned int svt_aom_variance4x16_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse);
 

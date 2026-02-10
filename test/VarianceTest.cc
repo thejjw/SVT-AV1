@@ -582,8 +582,6 @@ INSTANTIATE_TEST_SUITE_P(NEON, VarianceTest,
 
 #if HAVE_NEON_DOTPROD
 VarianceParam variance_func_neon_dotprod[] = {
-    VarianceParam(4, 4, &svt_aom_variance4x4_c,
-                  &svt_aom_variance4x4_neon_dotprod),
     VarianceParam(4, 8, &svt_aom_variance4x8_c,
                   &svt_aom_variance4x8_neon_dotprod),
     VarianceParam(4, 16, &svt_aom_variance4x16_c,

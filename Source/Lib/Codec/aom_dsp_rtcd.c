@@ -734,7 +734,7 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
 #endif
 
     //VARIANCE
-    SET_NEON_NEON_DOTPROD(svt_aom_variance4x4, svt_aom_variance4x4_c, svt_aom_variance4x4_neon, svt_aom_variance4x4_neon_dotprod);
+    SET_NEON(svt_aom_variance4x4, svt_aom_variance4x4_c, svt_aom_variance4x4_neon);
     SET_NEON_NEON_DOTPROD(svt_aom_variance4x8, svt_aom_variance4x8_c, svt_aom_variance4x8_neon, svt_aom_variance4x8_neon_dotprod);
     SET_NEON_NEON_DOTPROD(svt_aom_variance4x16, svt_aom_variance4x16_c, svt_aom_variance4x16_neon, svt_aom_variance4x16_neon_dotprod);
     SET_NEON_NEON_DOTPROD(svt_aom_variance8x4, svt_aom_variance8x4_c, svt_aom_variance8x4_neon, svt_aom_variance8x4_neon_dotprod);
