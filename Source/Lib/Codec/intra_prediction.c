@@ -1,4 +1,3 @@
-// clang-format off
 /*
 * Copyright(c) 2019 Intel Corporation
 * Copyright (c) 2016, Alliance for Open Media. All rights reserved
@@ -19,6 +18,7 @@
 #include "md_process.h"
 #include "common_dsp_rtcd.h"
 
+// clang-format off
 // Weights are quadratic from '1' to '1 / BlockSize', scaled by
 // 2^sm_weight_log2_scale.
 const int32_t sm_weight_log2_scale = 8;
@@ -113,6 +113,7 @@ DECLARE_ALIGNED(16, uint8_t, even_odd_mask_x[8][16]) = {{0, 2, 4, 6, 8, 10, 12, 
                                                         {0, 0, 0, 0, 0, 5, 7, 9, 0, 0, 0, 0, 0, 6, 8, 10},
                                                         {0, 0, 0, 0, 0, 0, 6, 8, 0, 0, 0, 0, 0, 0, 7, 9},
                                                         {0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 8}};
+// clang-format on
 
 // Some basic checks on weights for smooth predictor.
 #define sm_weights_sanity_checks(weights_w, weights_h, weights_scale, pred_scale) \
@@ -124,123 +125,130 @@ DECLARE_ALIGNED(16, uint8_t, even_odd_mask_x[8][16]) = {{0, 2, 4, 6, 8, 10, 12, 
         assert(pred_scale < 31);                                                  \
     } while (0) // ensures no overflow when calculating predictor.
 
-int svt_aom_is_smooth(const BlockModeInfo* block_mi, int plane)
-{
+int svt_aom_is_smooth(const BlockModeInfo* block_mi, int plane) {
     if (plane == 0) {
         const PredictionMode mode = block_mi->mode;
-        return (mode == SMOOTH_PRED || mode == SMOOTH_V_PRED ||
-            mode == SMOOTH_H_PRED);
-    }
-    else {
+        return (mode == SMOOTH_PRED || mode == SMOOTH_V_PRED || mode == SMOOTH_H_PRED);
+    } else {
         // uv_mode is not set for inter blocks, so need to explicitly
         // detect that case.
-        if (is_inter_block(block_mi)) return 0;
+        if (is_inter_block(block_mi)) {
+            return 0;
+        }
 
         const UvPredictionMode uv_mode = block_mi->uv_mode;
-        return (uv_mode == UV_SMOOTH_PRED || uv_mode == UV_SMOOTH_V_PRED ||
-            uv_mode == UV_SMOOTH_H_PRED);
+        return (uv_mode == UV_SMOOTH_PRED || uv_mode == UV_SMOOTH_V_PRED || uv_mode == UV_SMOOTH_H_PRED);
     }
 }
 
-int32_t svt_aom_use_intra_edge_upsample(int32_t bs0, int32_t bs1, int32_t delta, int32_t type)
-{
-    const int32_t d = abs(delta);
+int32_t svt_aom_use_intra_edge_upsample(int32_t bs0, int32_t bs1, int32_t delta, int32_t type) {
+    const int32_t d      = abs(delta);
     const int32_t blk_wh = bs0 + bs1;
-    if (d <= 0 || d >= 40) return 0;
+    if (d <= 0 || d >= 40) {
+        return 0;
+    }
     return type ? (blk_wh <= 8) : (blk_wh <= 16);
 }
 
 #define INTRA_EDGE_FILT 3
 #define INTRA_EDGE_TAPS 5
-void svt_av1_filter_intra_edge_c(uint8_t *p, int32_t sz, int32_t strength)
-{
-    if (!strength) return;
 
-    const int32_t kernel[INTRA_EDGE_FILT][INTRA_EDGE_TAPS] = {
-      { 0, 4, 8, 4, 0 }, { 0, 5, 6, 5, 0 }, { 2, 4, 4, 4, 2 }
-    };
+void svt_av1_filter_intra_edge_c(uint8_t* p, int32_t sz, int32_t strength) {
+    if (!strength) {
+        return;
+    }
+
+    static const int32_t kernel[INTRA_EDGE_FILT][INTRA_EDGE_TAPS] = {{0, 4, 8, 4, 0}, {0, 5, 6, 5, 0}, {2, 4, 4, 4, 2}};
+
     const int32_t filt = strength - 1;
-    uint8_t edge[129];
+    uint8_t       edge[129];
 
     svt_memcpy(edge, p, sz * sizeof(*p));
     for (int32_t i = 1; i < sz; i++) {
         int32_t s = 0;
         for (int32_t j = 0; j < INTRA_EDGE_TAPS; j++) {
             int32_t k = i - 2 + j;
-            k = (k < 0) ? 0 : k;
-            k = (k > sz - 1) ? sz - 1 : k;
+            k         = (k < 0) ? 0 : k;
+            k         = (k > sz - 1) ? sz - 1 : k;
             s += edge[k] * kernel[filt][j];
         }
-        s = (s + 8) >> 4;
+        s    = (s + 8) >> 4;
         p[i] = (uint8_t)s;
     }
 }
 
-int32_t svt_aom_intra_edge_filter_strength(int32_t bs0, int32_t bs1, int32_t delta, int32_t type)
-{
-    const int32_t d = abs(delta);
-    int32_t strength = 0;
+int32_t svt_aom_intra_edge_filter_strength(int32_t bs0, int32_t bs1, int32_t delta, int32_t type) {
+    const int32_t d        = abs(delta);
+    int32_t       strength = 0;
 
     const int32_t blk_wh = bs0 + bs1;
     if (type == 0) {
         if (blk_wh <= 8) {
-            if (d >= 56)
+            if (d >= 56) {
                 strength = 1;
-        }
-        else if (blk_wh <= 12) {
-            if (d >= 40)
+            }
+        } else if (blk_wh <= 12) {
+            if (d >= 40) {
                 strength = 1;
-        }
-        else if (blk_wh <= 16) {
-            if (d >= 40)
+            }
+        } else if (blk_wh <= 16) {
+            if (d >= 40) {
                 strength = 1;
-        }
-        else if (blk_wh <= 24) {
-            if (d >= 8)
+            }
+        } else if (blk_wh <= 24) {
+            if (d >= 8) {
                 strength = 1;
-            if (d >= 16)
+            }
+            if (d >= 16) {
                 strength = 2;
-            if (d >= 32)
+            }
+            if (d >= 32) {
                 strength = 3;
-        }
-        else if (blk_wh <= 32) {
-            if (d >= 1)
+            }
+        } else if (blk_wh <= 32) {
+            if (d >= 1) {
                 strength = 1;
-            if (d >= 4)
+            }
+            if (d >= 4) {
                 strength = 2;
-            if (d >= 32)
+            }
+            if (d >= 32) {
                 strength = 3;
-        }
-        else {
-            if (d >= 1)
+            }
+        } else {
+            if (d >= 1) {
                 strength = 3;
+            }
         }
-    }
-    else {
+    } else {
         if (blk_wh <= 8) {
-            if (d >= 40)
+            if (d >= 40) {
                 strength = 1;
-            if (d >= 64)
+            }
+            if (d >= 64) {
                 strength = 2;
-        }
-        else if (blk_wh <= 16) {
-            if (d >= 20)
+            }
+        } else if (blk_wh <= 16) {
+            if (d >= 20) {
                 strength = 1;
-            if (d >= 48)
+            }
+            if (d >= 48) {
                 strength = 2;
-        }
-        else if (blk_wh <= 24) {
-            if (d >= 4)
+            }
+        } else if (blk_wh <= 24) {
+            if (d >= 4) {
                 strength = 3;
-        }
-        else {
-            if (d >= 1)
+            }
+        } else {
+            if (d >= 1) {
                 strength = 3;
+            }
         }
     }
     return strength;
 }
 
+// clang-format off
 static const uint16_t eb_dr_intra_derivative[90] = {
     // More evenly spread out angles and limited to 10-bit
     // Values that are 0 will never be used
@@ -274,46 +282,44 @@ static const uint16_t eb_dr_intra_derivative[90] = {
     7,    0, 0,        // 84, ...
     3,    0, 0,        // 87, ...
 };
+// clang-format on
 
 // Get the shift (up-scaled by 256) in Y w.r.t a unit change in X.
 // If angle > 0 && angle < 90, dy = 1;
 // If angle > 90 && angle < 180, dy = (int32_t)(256 * t);
 // If angle > 180 && angle < 270, dy = -((int32_t)(256 * t));
 
-#define divide_round(value, bits) (((value) + (1 << ((bits)-1))) >> (bits))
+#define divide_round(value, bits) (((value) + (1 << ((bits) - 1))) >> (bits))
 
-static INLINE uint16_t get_dy(int32_t angle)
-{
-    if (angle > 90 && angle < 180)
+static INLINE uint16_t get_dy(int32_t angle) {
+    if (angle > 90 && angle < 180) {
         return eb_dr_intra_derivative[angle - 90];
-    else if (angle > 180 && angle < 270)
+    } else if (angle > 180 && angle < 270) {
         return eb_dr_intra_derivative[270 - angle];
-    else {
+    } else {
         // In this case, we are not really going to use dy. We may return any value.
         return 1;
     }
 }
+
 // Get the shift (up-scaled by 256) in X w.r.t a unit change in Y.
 // If angle > 0 && angle < 90, dx = -((int32_t)(256 / t));
 // If angle > 90 && angle < 180, dx = (int32_t)(256 / t);
 // If angle > 180 && angle < 270, dx = 1;
-static INLINE uint16_t get_dx(int32_t angle)
-{
-    if (angle > 0 && angle < 90)
+static INLINE uint16_t get_dx(int32_t angle) {
+    if (angle > 0 && angle < 90) {
         return eb_dr_intra_derivative[angle];
-    else if (angle > 90 && angle < 180)
+    } else if (angle > 90 && angle < 180) {
         return eb_dr_intra_derivative[180 - angle];
-    else {
+    } else {
         // In this case, we are not really going to use dx. We may return any value.
         return 1;
     }
 }
 
 // Directional prediction, zone 3: 180 < angle < 270
-void svt_av1_dr_prediction_z3_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-    const uint8_t *above, const uint8_t *left,
-    int32_t upsample_left, int32_t dx, int32_t dy)
-{
+void svt_av1_dr_prediction_z3_c(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                const uint8_t* left, int32_t upsample_left, int32_t dx, int32_t dy) {
     (void)above;
     (void)dx;
 
@@ -321,37 +327,37 @@ void svt_av1_dr_prediction_z3_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
     assert(dy > 0);
 
     const int32_t max_base_y = (bw + bh - 1) << upsample_left;
-    const int32_t frac_bits = 6 - upsample_left;
-    const int32_t base_inc = 1 << upsample_left;
+    const int32_t frac_bits  = 6 - upsample_left;
+    const int32_t base_inc   = 1 << upsample_left;
     for (int32_t c = 0, y = dy; c < bw; ++c, y += dy) {
         int32_t base = y >> frac_bits, shift = ((y << upsample_left) & 0x3F) >> 1;
 
         for (int32_t r = 0; r < bh; ++r, base += base_inc) {
             if (base < max_base_y) {
                 int32_t val;
-                val = left[base] * (32 - shift) + left[base + 1] * shift;
-                val = ROUND_POWER_OF_TWO(val, 5);
+                val                 = left[base] * (32 - shift) + left[base + 1] * shift;
+                val                 = ROUND_POWER_OF_TWO(val, 5);
                 dst[r * stride + c] = (uint8_t)clip_pixel_highbd(val, 8);
-            }
-            else {
-                for (; r < bh; ++r) dst[r * stride + c] = left[max_base_y];
+            } else {
+                for (; r < bh; ++r) {
+                    dst[r * stride + c] = left[max_base_y];
+                }
                 break;
             }
         }
     }
 }
-void svt_av1_dr_prediction_z1_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-    const uint8_t *above, const uint8_t *left,
-    int32_t upsample_above, int32_t dx, int32_t dy)
-{
+
+void svt_av1_dr_prediction_z1_c(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                const uint8_t* left, int32_t upsample_above, int32_t dx, int32_t dy) {
     (void)left;
     (void)dy;
     assert(dy == 1);
     assert(dx > 0);
 
     const int32_t max_base_x = ((bw + bh) - 1) << upsample_above;
-    const int32_t frac_bits = 6 - upsample_above;
-    const int32_t base_inc = 1 << upsample_above;
+    const int32_t frac_bits  = 6 - upsample_above;
+    const int32_t base_inc   = 1 << upsample_above;
     for (int32_t r = 0, x = dx; r < bh; ++r, dst += stride, x += dx) {
         int32_t base = x >> frac_bits, shift = ((x << upsample_above) & 0x3F) >> 1;
 
@@ -366,52 +372,47 @@ void svt_av1_dr_prediction_z1_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
         for (int32_t c = 0; c < bw; ++c, base += base_inc) {
             if (base < max_base_x) {
                 int32_t val;
-                val = above[base] * (32 - shift) + above[base + 1] * shift;
-                val = ROUND_POWER_OF_TWO(val, 5);
+                val    = above[base] * (32 - shift) + above[base + 1] * shift;
+                val    = ROUND_POWER_OF_TWO(val, 5);
                 dst[c] = (uint8_t)clip_pixel_highbd(val, 8);
-            }
-            else
+            } else {
                 dst[c] = above[max_base_x];
+            }
         }
     }
 }
 
 // Directional prediction, zone 2: 90 < angle < 180
-void svt_av1_dr_prediction_z2_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-    const uint8_t *above, const uint8_t *left,
-    int32_t upsample_above, int32_t upsample_left, int32_t dx,
-    int32_t dy)
-{
+void svt_av1_dr_prediction_z2_c(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                const uint8_t* left, int32_t upsample_above, int32_t upsample_left, int32_t dx,
+                                int32_t dy) {
     assert(dx > 0);
     assert(dy > 0);
 
-    const int32_t min_base_x = -(1 << upsample_above);
+    const int32_t min_base_x  = -(1 << upsample_above);
     const int32_t frac_bits_x = 6 - upsample_above;
     const int32_t frac_bits_y = 6 - upsample_left;
-    const int32_t base_inc_x = 1 << upsample_above;
+    const int32_t base_inc_x  = 1 << upsample_above;
     for (int32_t r = 0, x = -dx; r < bh; ++r, x -= dx, dst += stride) {
         int32_t val;
         int32_t base1 = x >> frac_bits_x;
-        int32_t y = (r << 6) - dy;
+        int32_t y     = (r << 6) - dy;
         for (int32_t c = 0; c < bw; ++c, base1 += base_inc_x, y -= dy) {
             if (base1 >= min_base_x) {
                 int32_t shift1 = ((x * (1 << upsample_above)) & 0x3F) >> 1;
-                val = above[base1] * (32 - shift1) + above[base1 + 1] * shift1;
-                val = ROUND_POWER_OF_TWO(val, 5);
-            }
-            else {
+                val            = above[base1] * (32 - shift1) + above[base1 + 1] * shift1;
+                val            = ROUND_POWER_OF_TWO(val, 5);
+            } else {
                 int32_t base2 = y >> frac_bits_y;
                 assert(base2 >= -(1 << upsample_left));
                 int32_t shift2 = ((y * (1 << upsample_left)) & 0x3F) >> 1;
-                val = left[base2] * (32 - shift2) + left[base2 + 1] * shift2;
-                val = ROUND_POWER_OF_TWO(val, 5);
+                val            = left[base2] * (32 - shift2) + left[base2 + 1] * shift2;
+                val            = ROUND_POWER_OF_TWO(val, 5);
             }
             dst[c] = (uint8_t)clip_pixel_highbd(val, 8);
         }
     }
 }
-
-/* clang-format on */
 
 /************************************************************************************************
 * svt_cfl_luma_subsampling_420_lbd_c
@@ -472,6 +473,7 @@ void svt_subtract_average_c(int16_t* pred_buf_q3, int32_t width, int32_t height,
 
 CFL_SUB_AVG_FN(c)
 
+// clang-format off
 const uint8_t extend_modes[INTRA_MODES] = {
     NEED_ABOVE | NEED_LEFT, // DC
     NEED_ABOVE, // V
@@ -685,6 +687,7 @@ static const uint8_t* const has_tr_vert_tables[BlockSizeS] = {
     has_tr_64x128,
     NULL,
     has_tr_128x128};
+// clang-format on
 
 static const uint8_t* get_has_tr_table(PartitionType partition, BlockSize bsize) {
     const uint8_t* ret = NULL;
@@ -757,6 +760,7 @@ int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t 
     }
 }
 
+// clang-format off
 // Similar to the has_tr_* tables, but store if the bottom-left reference
 // pixels are available.
 static uint8_t has_bl_4x4[128] = {
@@ -945,6 +949,7 @@ static const uint8_t* const has_bl_vert_tables[BlockSizeS] = {
     has_bl_64x128,
     NULL,
     has_bl_128x128};
+// clang-format on
 
 static const uint8_t* get_has_bl_table(PartitionType partition, BlockSize bsize) {
     const uint8_t* ret = NULL;

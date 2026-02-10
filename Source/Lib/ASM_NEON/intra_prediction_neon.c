@@ -1329,10 +1329,10 @@ void svt_av1_dr_prediction_z3_neon(uint8_t* dst, ptrdiff_t stride, int32_t bw, i
     }
 }
 
+// clang-format off
 // These kernels are a transposed version of those defined in filterintra_c.c,
 // with the absolute value of the negatives taken in the top row.
 DECLARE_ALIGNED(16, static const uint8_t, av1_filter_intra_taps_neon[FILTER_INTRA_MODES][7][8]) = {
-    // clang-format off
     {
         {  6,  5,  3,  3,  4,  3,  3,  3 },
         { 10,  2,  1,  1,  6,  2,  2,  1 },
@@ -1378,8 +1378,8 @@ DECLARE_ALIGNED(16, static const uint8_t, av1_filter_intra_taps_neon[FILTER_INTR
         { 14, 12, 11, 10,  0,  0,  1,  1 },
         {  0,  0,  0,  0, 14, 12, 11,  9 }
     }
-    // clang-format on
 };
+// clang-format on
 
 static inline uint8x8_t filter_intra_predictor(uint8x8_t s0, uint8x8_t s1, uint8x8_t s2, uint8x8_t s3, uint8x8_t s4,
                                                uint8x8_t s5, uint8x8_t s6, const uint8x8_t f0, const uint8x8_t f1,

@@ -97,7 +97,7 @@
 #define ENCDEC_INPUT_PORT_INVALID                       -1
 
 #define ENCODE_FIRST_PASS                               1
-// clang-format off
+// clang-format on
 
 uint8_t svt_aom_get_tpl_synthesizer_block_size(int8_t tpl_level, uint32_t picture_width, uint32_t picture_height);
 
@@ -120,9 +120,9 @@ static uint16_t get_num_refs_in_one_mg(uint32_t hierarchical_levels, uint32_t re
     return tot_refs;
 }
 
-static const char *get_asm_level_name_str(EbCpuFlags cpu_flags) {
-// clang-format off
-    const struct {
+static const char* get_asm_level_name_str(EbCpuFlags cpu_flags) {
+    // clang-format off
+    static const struct {
         const char *name;
         EbCpuFlags  flags;
     } param_maps[] = {
@@ -149,7 +149,7 @@ static const char *get_asm_level_name_str(EbCpuFlags cpu_flags) {
 #endif
     };
     // clang-format on
-    const uint32_t para_map_size = sizeof(param_maps) / sizeof(param_maps[0]);
+    static const uint32_t para_map_size = sizeof(param_maps) / sizeof(param_maps[0]);
 
     for (int32_t i = para_map_size - 1; i >= 0; --i) {
         if (param_maps[i].flags & cpu_flags) {
@@ -681,16 +681,16 @@ static EbErrorType load_default_buffer_configuration_settings(SequenceControlSet
 
 // clang-format off
 static RateControlPorts rate_control_ports[] = {
-    {RATE_CONTROL_INPUT_PORT_INLME,                 0},
-    {RATE_CONTROL_INPUT_PORT_PACKETIZATION,         0},
-    {RATE_CONTROL_INPUT_PORT_INVALID,               0}
+    {RATE_CONTROL_INPUT_PORT_INLME,         0},
+    {RATE_CONTROL_INPUT_PORT_PACKETIZATION, 0},
+    {RATE_CONTROL_INPUT_PORT_INVALID,       0}
 };
 
 static PicMgrPorts pic_mgr_ports[] = {
-    {PIC_MGR_INPUT_PORT_SOP,            0},
-    {PIC_MGR_INPUT_PORT_PACKETIZATION,  0},
-    {PIC_MGR_INPUT_PORT_REST,           0},
-    {PIC_MGR_INPUT_PORT_INVALID,        0}
+    {PIC_MGR_INPUT_PORT_SOP,           0},
+    {PIC_MGR_INPUT_PORT_PACKETIZATION, 0},
+    {PIC_MGR_INPUT_PORT_REST,          0},
+    {PIC_MGR_INPUT_PORT_INVALID,       0}
 };
 
 typedef struct {
@@ -699,14 +699,14 @@ typedef struct {
 } EncDecPorts_t;
 
 static EncDecPorts_t enc_dec_ports[] = {
-    {ENCDEC_INPUT_PORT_MDC,        0},
-    {ENCDEC_INPUT_PORT_ENCDEC,     0},
-    {ENCDEC_INPUT_PORT_INVALID,    0}
+    {ENCDEC_INPUT_PORT_MDC,     0},
+    {ENCDEC_INPUT_PORT_ENCDEC,  0},
+    {ENCDEC_INPUT_PORT_INVALID, 0}
 };
 static EncDecPorts_t tpl_ports[] = {
     {TPL_INPUT_PORT_SOP,     0},
     {TPL_INPUT_PORT_TPL,     0},
-    {TPL_INPUT_PORT_INVALID,    0}
+    {TPL_INPUT_PORT_INVALID, 0}
 };
 // clang-format on
 

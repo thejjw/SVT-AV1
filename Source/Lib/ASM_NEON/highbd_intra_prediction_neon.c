@@ -1539,6 +1539,7 @@ void svt_av1_highbd_dr_prediction_z1_neon(uint16_t* dst, ptrdiff_t stride, int b
 // -----------------------------------------------------------------------------
 // Z2
 
+// clang-format off
 // Incrementally shift more elements from `above` into the result, merging with
 // existing `left` elements.
 // X0, X1, X2, X3
@@ -1546,7 +1547,6 @@ void svt_av1_highbd_dr_prediction_z1_neon(uint16_t* dst, ptrdiff_t stride, int b
 // Y0, Y1, X0, X1
 // Y0, Y1, Y2, X0
 // Y0, Y1, Y2, Y3
-// clang-format off
 static const uint8_t z2_merge_shuffles_u16x4[5][8] = {
   {  8,  9, 10, 11, 12, 13, 14, 15 },
   {  0,  1,  8,  9, 10, 11, 12, 13 },
@@ -1554,7 +1554,6 @@ static const uint8_t z2_merge_shuffles_u16x4[5][8] = {
   {  0,  1,  2,  3,  4,  5,  8,  9 },
   {  0,  1,  2,  3,  4,  5,  6,  7 },
 };
-// clang-format on
 
 // Incrementally shift more elements from `above` into the result, merging with
 // existing `left` elements.
@@ -1567,7 +1566,6 @@ static const uint8_t z2_merge_shuffles_u16x4[5][8] = {
 // Y0, Y1, Y2, Y3, Y4, Y5, X0, X1
 // Y0, Y1, Y2, Y3, Y4, Y5, Y6, X0
 // Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7
-// clang-format off
 static const uint8_t z2_merge_shuffles_u16x8[9][16] = {
   { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 },
   {  0,  1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 },
@@ -1579,9 +1577,7 @@ static const uint8_t z2_merge_shuffles_u16x8[9][16] = {
   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 16, 17 },
   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 },
 };
-// clang-format on
 
-// clang-format off
 static const uint16_t z2_y_iter_masks_u16x4[5][4] = {
   {      0U,      0U,      0U,      0U },
   { 0xffffU,      0U,      0U,      0U },
@@ -1589,9 +1585,7 @@ static const uint16_t z2_y_iter_masks_u16x4[5][4] = {
   { 0xffffU, 0xffffU, 0xffffU,      0U },
   { 0xffffU, 0xffffU, 0xffffU, 0xffffU },
 };
-// clang-format on
 
-// clang-format off
 static const uint16_t z2_y_iter_masks_u16x8[9][8] = {
   {      0U,      0U,      0U,      0U,      0U,      0U,      0U,      0U },
   { 0xffffU,      0U,      0U,      0U,      0U,      0U,      0U,      0U },

@@ -462,12 +462,8 @@ void search_palette_luma(PictureControlSet* pcs, ModeDecisionContext* ctx, Palet
     }
 }
 
-/* clang-format off */
- typedef AomCdfProb(*MapCdf)[PALETTE_COLOR_INDEX_CONTEXTS]
-     [CDF_SIZE(PALETTE_COLORS)];
- typedef const int(*ColorCost)[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS]
-     [PALETTE_COLORS];
-/* clang-format on */
+typedef AomCdfProb (*MapCdf)[PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)];
+typedef const int (*ColorCost)[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS];
 
 typedef struct {
     int       rows;
