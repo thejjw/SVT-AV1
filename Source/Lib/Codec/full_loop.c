@@ -55,10 +55,11 @@ void svt_aom_quantize_b_c(const TranLow *coeff_ptr, intptr_t n_coeffs, const int
         const QmVal   wt    = qm_ptr != NULL ? qm_ptr[rc] : (1 << AOM_QM_BITS);
         const int32_t coeff = coeff_ptr[rc] * wt;
 
-        if (coeff < (zbins[rc != 0] * (1 << AOM_QM_BITS)) && coeff > (nzbins[rc != 0] * (1 << AOM_QM_BITS)))
+        if (coeff < (zbins[rc != 0] * (1 << AOM_QM_BITS)) && coeff > (nzbins[rc != 0] * (1 << AOM_QM_BITS))) {
             non_zero_count--;
-        else
+        } else {
             break;
+        }
     }
 
     // Quantization pass: All coefficients with index >= zero_flag are
@@ -81,8 +82,9 @@ void svt_aom_quantize_b_c(const TranLow *coeff_ptr, intptr_t n_coeffs, const int
             const TranLow abs_dqcoeff = (tmp32 * dequant) >> log_scale;
             dqcoeff_ptr[rc]           = (TranLow)((abs_dqcoeff ^ coeff_sign) - coeff_sign);
 
-            if (tmp32)
+            if (tmp32) {
                 eob = i;
+            }
         }
     }
     *eob_ptr = (uint16_t)(eob + 1);
@@ -111,8 +113,9 @@ void svt_aom_highbd_quantize_b_c(const TranLow *coeff_ptr, intptr_t n_coeffs, co
 
         // If the coefficient is out of the base ZBIN range, keep it for
         // quantization.
-        if (coeff >= (zbins[rc != 0] * (1 << AOM_QM_BITS)) || coeff <= (nzbins[rc != 0] * (1 << AOM_QM_BITS)))
+        if (coeff >= (zbins[rc != 0] * (1 << AOM_QM_BITS)) || coeff <= (nzbins[rc != 0] * (1 << AOM_QM_BITS))) {
             idx_arr[idx++] = i;
+        }
     }
 
     // Quantization pass: only process the coefficients selected in
@@ -132,8 +135,9 @@ void svt_aom_highbd_quantize_b_c(const TranLow *coeff_ptr, intptr_t n_coeffs, co
         int32_t       dequant     = (dequant_ptr[rc != 0] * iwt + (1 << (AOM_QM_BITS - 1))) >> AOM_QM_BITS;
         const TranLow abs_dqcoeff = (abs_qcoeff * dequant) >> log_scale;
         dqcoeff_ptr[rc]           = (TranLow)((abs_dqcoeff ^ coeff_sign) - coeff_sign);
-        if (abs_qcoeff)
+        if (abs_qcoeff) {
             eob = idx_arr[i];
+        }
     }
 
     *eob_ptr = (uint16_t)(eob + 1);
@@ -254,8 +258,9 @@ static void quantize_fp_helper_c(const TranLow *coeff_ptr, intptr_t n_coeffs, co
                     dqcoeff_ptr[rc]           = (abs_dqcoeff ^ coeff_sign) - coeff_sign;
                 }
             }
-            if (tmp32)
+            if (tmp32) {
                 eob = i;
+            }
         }
     } else {
         // Quantization pass: All coefficients with index >= zero_flag are
@@ -278,8 +283,9 @@ static void quantize_fp_helper_c(const TranLow *coeff_ptr, intptr_t n_coeffs, co
                 dqcoeff_ptr[rc]           = (abs_dqcoeff ^ coeff_sign) - coeff_sign;
             }
 
-            if (tmp32)
+            if (tmp32) {
                 eob = i;
+            }
         }
     }
     *eob_ptr = eob + 1;
@@ -358,8 +364,9 @@ static void highbd_quantize_fp_helper_c(const TranLow *coeff_ptr, intptr_t count
                 qcoeff_ptr[rc]            = (TranLow)((abs_qcoeff ^ coeff_sign) - coeff_sign);
                 const TranLow abs_dqcoeff = (abs_qcoeff * dequant) >> log_scale;
                 dqcoeff_ptr[rc]           = (TranLow)((abs_dqcoeff ^ coeff_sign) - coeff_sign);
-                if (abs_qcoeff)
+                if (abs_qcoeff) {
                     eob = i;
+                }
             } else {
                 qcoeff_ptr[rc]  = 0;
                 dqcoeff_ptr[rc] = 0;
@@ -384,8 +391,9 @@ static void highbd_quantize_fp_helper_c(const TranLow *coeff_ptr, intptr_t count
                 const int     abs_qcoeff  = (int)((tmp * quant) >> shift);
                 qcoeff_ptr[rc]            = (TranLow)((abs_qcoeff ^ coeff_sign) - coeff_sign);
                 const TranLow abs_dqcoeff = (abs_qcoeff * dequant) >> log_scale;
-                if (abs_qcoeff)
+                if (abs_qcoeff) {
                     eob = i;
+                }
                 dqcoeff_ptr[rc] = (TranLow)((abs_dqcoeff ^ coeff_sign) - coeff_sign);
             } else {
                 qcoeff_ptr[rc]  = 0;
@@ -465,7 +473,7 @@ void svt_av1_quantize_fp_facade(const TranLow *coeff_ptr, intptr_t n_coeffs, con
     const QmVal *qm_ptr  = qparam->qmatrix;
     const QmVal *iqm_ptr = qparam->iqmatrix;
 
-    if (qm_ptr || iqm_ptr)
+    if (qm_ptr || iqm_ptr) {
         svt_av1_quantize_fp_qm(coeff_ptr,
                                n_coeffs,
                                p->zbin_qtx,
@@ -481,7 +489,7 @@ void svt_av1_quantize_fp_facade(const TranLow *coeff_ptr, intptr_t n_coeffs, con
                                qm_ptr,
                                iqm_ptr,
                                qparam->log_scale);
-    else {
+    } else {
         switch (qparam->log_scale) {
         case 0:
             svt_av1_quantize_fp(coeff_ptr,
@@ -525,7 +533,8 @@ void svt_av1_quantize_fp_facade(const TranLow *coeff_ptr, intptr_t n_coeffs, con
                                       sc->scan,
                                       sc->iscan);
             break;
-        default: assert(0);
+        default:
+            assert(0);
         }
     }
 }
@@ -595,12 +604,15 @@ void svt_av1_highbd_quantize_fp_qm_c(const TranLow *coeff_ptr, intptr_t count, c
 static INLINE int get_lower_levels_ctx_general(int is_last, int scan_idx, int bwl, int height, const uint8_t *levels,
                                                int coeff_idx, TxSize tx_size, TxClass tx_class) {
     if (is_last) {
-        if (scan_idx == 0)
+        if (scan_idx == 0) {
             return 0;
-        if (scan_idx <= (height << bwl) >> 3)
+        }
+        if (scan_idx <= (height << bwl) >> 3) {
             return 1;
-        if (scan_idx <= (height << bwl) >> 2)
+        }
+        if (scan_idx <= (height << bwl) >> 2) {
             return 2;
+        }
         return 3;
     }
     return get_lower_levels_ctx(levels, coeff_idx, bwl, tx_size, tx_class);
@@ -624,21 +636,24 @@ static INLINE int get_coeff_cost_general(int is_last, int ci, TranLow abs_qc, in
                                          const LvMapCoeffCost *txb_costs, int bwl, TxClass tx_class,
                                          const uint8_t *levels) {
     int cost = 0;
-    if (is_last)
+    if (is_last) {
         cost += txb_costs->base_eob_cost[coeff_ctx][AOMMIN(abs_qc, 3) - 1];
-    else
+    } else {
         cost += txb_costs->base_cost[coeff_ctx][AOMMIN(abs_qc, 3)];
+    }
     if (abs_qc != 0) {
-        if (ci == 0)
+        if (ci == 0) {
             cost += txb_costs->dc_sign_cost[dc_sign_ctx][sign];
-        else
+        } else {
             cost += av1_cost_literal(1);
+        }
         if (abs_qc > NUM_BASE_LEVELS) {
             int br_ctx;
-            if (is_last)
+            if (is_last) {
                 br_ctx = get_br_ctx_eob(ci, bwl, tx_class);
-            else
+            } else {
                 br_ctx = get_br_ctx(levels, ci, bwl, tx_class);
+            }
             cost += get_br_cost(abs_qc, txb_costs->lps_cost[br_ctx]);
         }
     }
@@ -668,8 +683,9 @@ static const int golomb_cost_diff[32] = {0,       512, 512 * 2, 0, 512 * 2, 0, 0
 static INLINE int get_br_cost_with_diff(TranLow level, const int *coeff_lps, int *diff) {
     const int base_range  = AOMMIN(level - 1 - NUM_BASE_LEVELS, COEFF_BASE_RANGE);
     int       golomb_bits = 0;
-    if (level <= COEFF_BASE_RANGE + 1 + NUM_BASE_LEVELS)
+    if (level <= COEFF_BASE_RANGE + 1 + NUM_BASE_LEVELS) {
         *diff += coeff_lps[base_range + COEFF_BASE_RANGE + 1];
+    }
 
     if (level >= COEFF_BASE_RANGE + 1 + NUM_BASE_LEVELS) {
         int r = level - COEFF_BASE_RANGE - NUM_BASE_LEVELS;
@@ -694,8 +710,9 @@ static AOM_FORCE_INLINE int get_two_coeff_cost_simple(int ci, TranLow abs_qc, in
     //assert(abs_qc + 4 < 4);
     int cost = txb_costs->base_cost[coeff_ctx][AOMMIN(abs_qc, 3)];
     int diff = 0;
-    if (abs_qc <= 3)
+    if (abs_qc <= 3) {
         diff = txb_costs->base_cost[coeff_ctx][abs_qc + 4];
+    }
     if (abs_qc) {
         cost += av1_cost_literal(1);
         if (abs_qc > NUM_BASE_LEVELS) {
@@ -715,10 +732,11 @@ static INLINE int get_coeff_cost_eob(int ci, TranLow abs_qc, int sign, int coeff
     int cost = 0;
     cost += txb_costs->base_eob_cost[coeff_ctx][AOMMIN(abs_qc, 3) - 1];
     if (abs_qc != 0) {
-        if (ci == 0)
+        if (ci == 0) {
             cost += txb_costs->dc_sign_cost[dc_sign_ctx][sign];
-        else
+        } else {
             cost += av1_cost_literal(1);
+        }
         if (abs_qc > NUM_BASE_LEVELS) {
             int br_ctx;
             br_ctx = get_br_ctx_eob(ci, bwl, tx_class);
@@ -730,8 +748,9 @@ static INLINE int get_coeff_cost_eob(int ci, TranLow abs_qc, int sign, int coeff
 
 static INLINE int get_dqv(const int16_t *dequant, int coeff_idx, const QmVal *iqm_ptr) {
     int dqv = dequant[!!coeff_idx];
-    if (iqm_ptr != NULL)
+    if (iqm_ptr != NULL) {
         dqv = ((iqm_ptr[coeff_idx] * dqv) + (1 << (AOM_QM_BITS - 1))) >> AOM_QM_BITS;
+    }
     return dqv;
 }
 
@@ -746,9 +765,9 @@ static AOM_FORCE_INLINE void update_coeff_eob(int *accu_rate, int64_t *accu_dist
     const int     dqv       = get_dqv(dequant, ci, iqm_ptr);
     const TranLow qc        = qcoeff[ci];
     const int     coeff_ctx = get_lower_levels_ctx(levels, ci, bwl, tx_size, tx_class);
-    if (qc == 0)
+    if (qc == 0) {
         *accu_rate += txb_costs->base_cost[coeff_ctx][0];
-    else {
+    } else {
         int           lower_level = 0;
         const TranLow abs_qc      = abs(qc);
         const TranLow tqc         = tcoeff[ci];
@@ -847,9 +866,9 @@ static INLINE void update_coeff_general(int *accu_rate, int64_t *accu_dist, int 
     const TranLow qc        = qcoeff[ci];
     const int     is_last   = si == (eob - 1);
     const int     coeff_ctx = get_lower_levels_ctx_general(is_last, si, bwl, height, levels, ci, tx_size, tx_class);
-    if (qc == 0)
+    if (qc == 0) {
         *accu_rate += txb_costs->base_cost[coeff_ctx][0];
-    else {
+    } else {
         const int     sign   = (qc < 0) ? 1 : 0;
         const TranLow abs_qc = abs(qc);
         const TranLow tqc    = tcoeff[ci];
@@ -904,9 +923,9 @@ static AOM_FORCE_INLINE void update_coeff_simple(int *accu_rate, int si, int eob
     const int     ci        = scan[si];
     const TranLow qc        = qcoeff[ci];
     const int     coeff_ctx = get_lower_levels_ctx(levels, ci, bwl, tx_size, tx_class);
-    if (qc == 0)
+    if (qc == 0) {
         *accu_rate += txb_costs->base_cost[coeff_ctx][0];
-    else {
+    } else {
         const TranLow abs_qc   = abs(qc);
         const TranLow abs_tqc  = abs(tcoeff[ci]);
         const TranLow abs_dqc  = abs(dqcoeff[ci]);
@@ -931,8 +950,9 @@ static AOM_FORCE_INLINE void update_coeff_simple(int *accu_rate, int si, int eob
             dqcoeff[ci]                     = (-sign ^ abs_dqc_low) + sign;
             levels[get_padded_idx(ci, bwl)] = AOMMIN(abs_qc_low, INT8_MAX);
             *accu_rate += rate_low;
-        } else
+        } else {
             *accu_rate += rate;
+        }
     }
 }
 
@@ -1006,8 +1026,9 @@ static INLINE void update_coeff_eob_fast(uint16_t *eob, int shift, const int16_t
             eob_out--;
             qcoeff_ptr[rc]  = 0;
             dqcoeff_ptr[rc] = 0;
-        } else
+        } else {
             break;
+        }
     }
     *eob = eob_out;
 }
@@ -1069,8 +1090,9 @@ static void svt_av1_optimize_b(PictureControlSet *pcs, ModeDecisionContext *ctx,
 
     if (fast_mode) {
         update_coeff_eob_fast(eob, shift, p->dequant_qtx, scan, coeff_ptr, qcoeff_ptr, dqcoeff_ptr);
-        if (*eob == 0)
+        if (*eob == 0) {
             return;
+        }
     }
     int           rweight       = 100;
     const int32_t sharpness_val = CLIP3(0, 7, pcs->scs->static_config.sharpness);
@@ -1087,8 +1109,9 @@ static void svt_av1_optimize_b(PictureControlSet *pcs, ModeDecisionContext *ctx,
     uint8_t        levels_buf[TX_PAD_2D];
     uint8_t *const levels = set_levels(levels_buf, width);
 
-    if (*eob > 1)
+    if (*eob > 1) {
         svt_av1_txb_init_levels(qcoeff_ptr, width, height, levels);
+    }
     int accu_rate = eob_cost;
 
     int64_t       accu_dist  = 0;
@@ -1167,7 +1190,8 @@ static void svt_av1_optimize_b(PictureControlSet *pcs, ModeDecisionContext *ctx,
         UPDATE_COEFF_EOB_CASE(TX_CLASS_HORIZ);
         UPDATE_COEFF_EOB_CASE(TX_CLASS_VERT);
 #undef UPDATE_COEFF_EOB_CASE
-    default: assert(false);
+    default:
+        assert(false);
     }
 
     if (si == -1 && nz_num <= max_nz_num) {
@@ -1215,7 +1239,8 @@ static void svt_av1_optimize_b(PictureControlSet *pcs, ModeDecisionContext *ctx,
         UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_HORIZ);
         UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_VERT);
 #undef UPDATE_COEFF_SIMPLE_CASE
-    default: assert(false);
+    default:
+        assert(false);
     }
 
     // DC position
@@ -1248,10 +1273,14 @@ static INLINE TxSize aom_av1_get_adjusted_tx_size(TxSize tx_size) {
     switch (tx_size) {
     case TX_64X64:
     case TX_64X32:
-    case TX_32X64: return TX_32X32;
-    case TX_64X16: return TX_32X16;
-    case TX_16X64: return TX_16X32;
-    default: return tx_size;
+    case TX_32X64:
+        return TX_32X32;
+    case TX_64X16:
+        return TX_32X16;
+    case TX_16X64:
+        return TX_16X32;
+    default:
+        return tx_size;
     }
 }
 
@@ -1366,8 +1395,9 @@ uint8_t svt_av1_compute_cul_level_c(const int16_t *const scan, const int32_t *co
         int32_t       level = ABS(v);
         cul_level += level;
         // Early exit the loop if cul_level reaches COEFF_CONTEXT_MASK
-        if (cul_level >= COEFF_CONTEXT_MASK)
+        if (cul_level >= COEFF_CONTEXT_MASK) {
             break;
+        }
     }
 
     cul_level = AOMMIN(COEFF_CONTEXT_MASK, cul_level);
@@ -1490,8 +1520,9 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet *pcs, ModeDecisionContex
     const int qstep         = candidate_plane.dequant_qtx[1] /*[AC]*/ >> dequant_shift;
     if (!is_encode_pass) {
         if ((ctx->rdoq_ctrls.dct_dct_only && tx_type != DCT_DCT) ||
-            (ctx->rdoq_ctrls.skip_uv && component_type != COMPONENT_LUMA))
+            (ctx->rdoq_ctrls.skip_uv && component_type != COMPONENT_LUMA)) {
             perform_rdoq = 0;
+        }
     }
     if (perform_rdoq && ctx->rdoq_ctrls.satd_factor != ((uint8_t)~0)) {
         int       satd  = svt_aom_satd(coeff, n_coeffs);
@@ -1501,8 +1532,9 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet *pcs, ModeDecisionContex
         satd >>= (pcs->ppcs->enhanced_pic->bit_depth - 8);
         const int skip_block_trellis = ((uint64_t)satd >
                                         (uint64_t)ctx->rdoq_ctrls.satd_factor * qstep * sqrt_tx_pixels_2d[txsize]);
-        if (skip_block_trellis)
+        if (skip_block_trellis) {
             perform_rdoq = 0;
+        }
     }
 
     if (perform_rdoq && ((!component_type && ctx->rdoq_ctrls.fp_q_y) || (component_type && ctx->rdoq_ctrls.fp_q_uv))) {
@@ -1610,8 +1642,9 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet *pcs, ModeDecisionContex
                            (component_type == COMPONENT_LUMA) ? 0 : 1);
     }
 
-    if (!ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx)
+    if (!ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx) {
         return 0;
+    }
 
     // Derive cul_level
     return svt_av1_compute_cul_level(scan_order->scan, quant_coeff, eob);
@@ -1673,8 +1706,9 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet *pcs, ModeDecisionCont
             const uint16_t th = ((ctx->blk_geom->tx_width_uv[0] >> 4) * (ctx->blk_geom->tx_height_uv[0] >> 4));
             use_pfn4_cond     = (cand_bf->cnt_nz_coeff < th) || !cand_bf->block_has_coeff ? 1 : 0;
         }
-        if (use_pfn4_cond)
+        if (use_pfn4_cond) {
             pf_shape = N4_SHAPE;
+        }
     }
     assert(tx_size_uv < TX_SIZES_ALL);
     const int32_t chroma_shift = (MAX_TX_SCALE - av1_get_tx_scale_tab[tx_size_uv]) * 2;
@@ -1755,8 +1789,9 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet *pcs, ModeDecisionCont
             const uint16_t th = ((ctx->blk_geom->tx_width_uv[0] >> 4) * (ctx->blk_geom->tx_height_uv[0] >> 4));
             use_pfn4_cond     = (cand_bf->cnt_nz_coeff < th) || !cand_bf->block_has_coeff ? 1 : 0;
         }
-        if (use_pfn4_cond)
+        if (use_pfn4_cond) {
             pf_shape = N4_SHAPE;
+        }
     }
     bwidth  = ctx->blk_geom->tx_width_uv[0];
     bheight = ctx->blk_geom->tx_height_uv[0];
@@ -1909,8 +1944,9 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                  (ctx->blk_geom->tx_height_uv[tx_depth] >> 4));
             use_pfn4_cond     = (cand_bf->cnt_nz_coeff < th) || !cand_bf->block_has_coeff ? 1 : 0;
 
-            if (use_pfn4_cond)
+            if (use_pfn4_cond) {
                 pf_shape = N4_SHAPE;
+            }
         }
         //    This function replaces the previous Intra Chroma mode if the LM fast
         //    cost is better.
@@ -1919,7 +1955,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
             component_type == COMPONENT_ALL) {
             ctx->cb_txb_skip_context = 0;
             ctx->cb_dc_sign_context  = 0;
-            if (ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx)
+            if (ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx) {
                 svt_aom_get_txb_ctx(pcs,
                                     COMPONENT_CHROMA,
                                     ctx->cb_dc_sign_level_coeff_na,
@@ -1929,6 +1965,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                     ctx->blk_geom->txsize_uv[tx_depth],
                                     &ctx->cb_txb_skip_context,
                                     &ctx->cb_dc_sign_context);
+            }
             // Configure the Chroma Residual Ptr
 
             chroma_residual_ptr = //(cand_bf->cand->type  == INTRA_MODE )?
@@ -1974,7 +2011,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
             if (is_full_loop && ctx->mds_do_spatial_sse) {
                 uint32_t cb_has_coeff = cand_bf->eob.u[txb_itr] > 0;
 
-                if (cb_has_coeff)
+                if (cb_has_coeff) {
                     svt_aom_inv_transform_recon_wrapper(pcs,
                                                         ctx,
                                                         cand_bf->pred->buffer_cb,
@@ -1990,7 +2027,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                                         cand_bf->cand->transform_type_uv,
                                                         PLANE_TYPE_UV,
                                                         (uint32_t)cand_bf->eob.u[txb_itr]);
-                else
+                } else {
                     svt_av1_picture_copy_cb(cand_bf->pred,
                                             tu_cb_origin_index,
                                             cand_bf->recon,
@@ -1998,6 +2035,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                             ctx->blk_geom->tx_width_uv[tx_depth],
                                             ctx->blk_geom->tx_height_uv[tx_depth],
                                             ctx->hbd_md);
+                }
 
                 uint32_t input_chroma_txb_origin_index = (((ctx->sb_origin_y + ((txb_origin_y >> 3) << 3)) >> 1) +
                                                           (input_pic->org_y >> 1)) *
@@ -2126,7 +2164,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
             component_type == COMPONENT_ALL) {
             ctx->cr_txb_skip_context = 0;
             ctx->cr_dc_sign_context  = 0;
-            if (ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx)
+            if (ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx) {
                 svt_aom_get_txb_ctx(pcs,
                                     COMPONENT_CHROMA,
                                     ctx->cr_dc_sign_level_coeff_na,
@@ -2136,6 +2174,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                     ctx->blk_geom->txsize_uv[tx_depth],
                                     &ctx->cr_txb_skip_context,
                                     &ctx->cr_dc_sign_context);
+            }
             // Configure the Chroma Residual Ptr
 
             chroma_residual_ptr = //(cand_bf->cand->type  == INTRA_MODE )?
@@ -2179,7 +2218,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
             if (is_full_loop && ctx->mds_do_spatial_sse) {
                 uint32_t cr_has_coeff = cand_bf->eob.v[txb_itr] > 0;
 
-                if (cr_has_coeff)
+                if (cr_has_coeff) {
                     svt_aom_inv_transform_recon_wrapper(pcs,
                                                         ctx,
                                                         cand_bf->pred->buffer_cr,
@@ -2195,7 +2234,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                                         cand_bf->cand->transform_type_uv,
                                                         PLANE_TYPE_UV,
                                                         (uint32_t)cand_bf->eob.v[txb_itr]);
-                else
+                } else {
                     svt_av1_picture_copy_cr(cand_bf->pred,
                                             tu_cb_origin_index,
                                             cand_bf->recon,
@@ -2203,6 +2242,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
                                             ctx->blk_geom->tx_width_uv[tx_depth],
                                             ctx->blk_geom->tx_height_uv[tx_depth],
                                             ctx->hbd_md);
+                }
                 uint32_t input_chroma_txb_origin_index = (((ctx->sb_origin_y + ((txb_origin_y >> 3) << 3)) >> 1) +
                                                           (input_pic->org_y >> 1)) *
                         input_pic->stride_cb +
@@ -2380,10 +2420,11 @@ uint8_t svt_aom_do_md_recon(PictureParentControlSet *pcs, ModeDecisionContext *c
         (ctx->pd_pass == PD_PASS_1); // stat report needs recon samples for metrics
     uint8_t do_recon;
     if (need_md_rec_for_intra_pred || need_md_rec_for_ref || need_md_rec_for_dlf_search ||
-        need_md_rec_for_cdef_search || need_md_rec_for_restoration_search || need_md_rec_for_quality)
+        need_md_rec_for_cdef_search || need_md_rec_for_restoration_search || need_md_rec_for_quality) {
         do_recon = 1;
-    else
+    } else {
         do_recon = 0;
+    }
 
     return do_recon;
 }

@@ -31,15 +31,25 @@ static INLINE __m128i xx_loadl_32(const void *a) {
     return _mm_cvtsi32_si128(val);
 }
 
-static INLINE __m128i xx_loadl_64(const void *a) { return _mm_loadl_epi64((const __m128i *)a); }
+static INLINE __m128i xx_loadl_64(const void *a) {
+    return _mm_loadl_epi64((const __m128i *)a);
+}
 
-static INLINE __m128i xx_loadu_128(const void *a) { return _mm_loadu_si128((const __m128i *)a); }
+static INLINE __m128i xx_loadu_128(const void *a) {
+    return _mm_loadu_si128((const __m128i *)a);
+}
 
-static INLINE void xx_storel_32(void *const a, const __m128i v) { *(uint32_t *)a = _mm_cvtsi128_si32(v); }
+static INLINE void xx_storel_32(void *const a, const __m128i v) {
+    *(uint32_t *)a = _mm_cvtsi128_si32(v);
+}
 
-static INLINE void xx_storel_64(void *const a, const __m128i v) { _mm_storel_epi64((__m128i *)a, v); }
+static INLINE void xx_storel_64(void *const a, const __m128i v) {
+    _mm_storel_epi64((__m128i *)a, v);
+}
 
-static INLINE void xx_storeu_128(void *const a, const __m128i v) { _mm_storeu_si128((__m128i *)a, v); }
+static INLINE void xx_storeu_128(void *const a, const __m128i v) {
+    _mm_storeu_si128((__m128i *)a, v);
+}
 
 static INLINE __m128i _mm_loadh_epi64(const void *const p, const __m128i s) {
     return _mm_castpd_si128(_mm_loadh_pd(_mm_castsi128_pd(s), (double *)p));
@@ -109,7 +119,9 @@ static INLINE __m128i xx_set1_64_from_32i(int32_t a) {
 #endif
 }
 
-static INLINE __m128i xx_round_epu16(__m128i v_val_w) { return _mm_avg_epu16(v_val_w, _mm_setzero_si128()); }
+static INLINE __m128i xx_round_epu16(__m128i v_val_w) {
+    return _mm_avg_epu16(v_val_w, _mm_setzero_si128());
+}
 
 static INLINE __m128i xx_roundn_epu16(__m128i v_val_w, int32_t bits) {
     const __m128i v_s_w = _mm_srli_epi16(v_val_w, bits - 1);
@@ -167,9 +179,13 @@ static INLINE __m128i xx_roundn_epi16(__m128i v_val_d, int32_t bits) {
 #define _mm256_insert_epi16(a, d, indx) \
     _mm256_insertf128_si256(a, _mm_insert_epi16(_mm256_extractf128_si256(a, indx >> 3), d, indx % 8), indx >> 3)
 
-static INLINE int32_t _mm256_extract_epi32(__m256i a, const int32_t i) { return a.m256i_i32[i & 7]; }
+static INLINE int32_t _mm256_extract_epi32(__m256i a, const int32_t i) {
+    return a.m256i_i32[i & 7];
+}
 
-static INLINE int32_t _mm256_extract_epi16(__m256i a, const int32_t i) { return a.m256i_i16[i & 15]; }
+static INLINE int32_t _mm256_extract_epi16(__m256i a, const int32_t i) {
+    return a.m256i_i16[i & 15];
+}
 
 static INLINE __m256i _mm256_insert_epi32(__m256i a, int32_t b, const int32_t i) {
     __m256i c          = a;

@@ -125,9 +125,15 @@ void svt_aom_highbd_blend_a64_d16_mask_c(uint8_t *dst_8, uint32_t dst_stride, co
     unsigned int saturation_value;
     switch (bd) {
     case 8:
-    default: saturation_value = 255; break;
-    case 10: saturation_value = 1023; break;
-    case 12: saturation_value = 4095; break;
+    default:
+        saturation_value = 255;
+        break;
+    case 10:
+        saturation_value = 1023;
+        break;
+    case 12:
+        saturation_value = 4095;
+        break;
     }
 
     if (subw == 0 && subh == 0) {

@@ -15,7 +15,9 @@
 #include "mem_neon.h"
 
 /* Store half of a vector. */
-static inline void vsth_u8(uint8_t *ptr, uint8x8_t val) { vst1_lane_u32((uint32_t *)ptr, vreinterpret_u32_u8(val), 0); }
+static inline void vsth_u8(uint8_t *ptr, uint8x8_t val) {
+    vst1_lane_u32((uint32_t *)ptr, vreinterpret_u32_u8(val), 0);
+}
 
 /* Saturating negate 16-bit integers in a when the corresponding signed 16-bit
 integer in b is negative.

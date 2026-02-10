@@ -267,10 +267,11 @@ void svt_av1_convolve_y_sr_sse2(const uint8_t *src, int32_t src_stride, uint8_t 
                 res16            = _mm_packs_epi32(res_round, res_round);
                 uint32_t res_int = _mm_cvtsi128_si32(_mm_packus_epi16(res16, res16));
 
-                if (w == 2)
+                if (w == 2) {
                     *(uint16_t *)dst = (uint16_t)res_int;
-                else
+                } else {
                     *(uint32_t *)dst = res_int;
+                }
 
                 src_ptr += src_stride;
                 dst += dst_stride;
@@ -280,10 +281,11 @@ void svt_av1_convolve_y_sr_sse2(const uint8_t *src, int32_t src_stride, uint8_t 
                 res16     = _mm_packs_epi32(res_round, res_round);
                 res_int   = _mm_cvtsi128_si32(_mm_packus_epi16(res16, res16));
 
-                if (w == 2)
+                if (w == 2) {
                     *(uint16_t *)dst = (uint16_t)res_int;
-                else
+                } else {
                     *(uint32_t *)dst = res_int;
+                }
 
                 src_ptr += src_stride;
                 dst += dst_stride;
@@ -461,10 +463,11 @@ void svt_av1_convolve_x_sr_sse2(const uint8_t *src, int32_t src_stride, uint8_t 
                 const __m128i res   = _mm_packus_epi16(res16, res16);
 
                 uint32_t r = _mm_cvtsi128_si32(res);
-                if (w == 2)
+                if (w == 2) {
                     *(uint16_t *)dst = (uint16_t)r;
-                else
+                } else {
                     *(uint32_t *)dst = r;
+                }
 
                 src_ptr += src_stride;
                 dst += dst_stride;
@@ -666,7 +669,9 @@ int8_t svt_av1_wedge_sign_from_residuals_sse2(const int16_t *ds, const uint8_t *
 
 // Loads and stores to do away with the tedium of casting the address
 // to the right type.
-static INLINE __m128i xx_load_128(const void *a) { return _mm_loadu_si128((const __m128i *)a); }
+static INLINE __m128i xx_load_128(const void *a) {
+    return _mm_loadu_si128((const __m128i *)a);
+}
 
 static INLINE uint64_t xx_cvtsi128_si64(__m128i a) {
 #if ARCH_X86_64

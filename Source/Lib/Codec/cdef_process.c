@@ -33,9 +33,9 @@ static void set_unscaled_input_16bit(PictureControlSet *pcs) {
     uint16_t             ss_x       = pcs->ppcs->scs->subsampling_x;
     uint16_t             ss_y       = pcs->ppcs->scs->subsampling_y;
     svt_aom_copy_buffer_info(input_pic, pcs->input_frame16bit);
-    if (input_pic->bit_depth == EB_EIGHT_BIT)
+    if (input_pic->bit_depth == EB_EIGHT_BIT) {
         svt_aom_convert_pic_8bit_to_16bit(input_pic, output_pic, ss_x, ss_y);
-    else {
+    } else {
         uint16_t *planes[3] = {
             (uint16_t *)output_pic->buffer_y + (output_pic->org_y * output_pic->stride_y) + (output_pic->org_x),
             (uint16_t *)output_pic->buffer_cb + (((output_pic->org_y) >> ss_y) * output_pic->stride_cb) +
@@ -66,19 +66,21 @@ static void derive_blk_pointers_enc(EbPictureBufferDesc *recon_picture_buf, int3
     }
 
     if (use_highbd) { //16bit
-        if (plane == 0)
+        if (plane == 0) {
             *pp_blk_recon_buf = (void *)((uint16_t *)recon_picture_buf->buffer_y + block_offset);
-        else if (plane == 1)
+        } else if (plane == 1) {
             *pp_blk_recon_buf = (void *)((uint16_t *)recon_picture_buf->buffer_cb + block_offset);
-        else
+        } else {
             *pp_blk_recon_buf = (void *)((uint16_t *)recon_picture_buf->buffer_cr + block_offset);
+        }
     } else {
-        if (plane == 0)
+        if (plane == 0) {
             *pp_blk_recon_buf = (void *)((uint8_t *)recon_picture_buf->buffer_y + block_offset);
-        else if (plane == 1)
+        } else if (plane == 1) {
             *pp_blk_recon_buf = (void *)((uint8_t *)recon_picture_buf->buffer_cb + block_offset);
-        else
+        } else {
             *pp_blk_recon_buf = (void *)((uint8_t *)recon_picture_buf->buffer_cr + block_offset);
+        }
     }
 }
 
@@ -115,18 +117,21 @@ static EbErrorType copy_recon_enc(SequenceControlSet *scs, EbPictureBufferDesc *
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         EB_MALLOC_ALIGNED(recon_picture_dst->buffer_y, recon_picture_dst->luma_size * bytesPerPixel);
         svt_memset(recon_picture_dst->buffer_y, 0, recon_picture_dst->luma_size * bytesPerPixel);
-    } else
+    } else {
         recon_picture_dst->buffer_y = 0;
+    }
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
         EB_MALLOC_ALIGNED(recon_picture_dst->buffer_cb, recon_picture_dst->chroma_size * bytesPerPixel);
         svt_memset(recon_picture_dst->buffer_cb, 0, recon_picture_dst->chroma_size * bytesPerPixel);
-    } else
+    } else {
         recon_picture_dst->buffer_cb = 0;
+    }
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
         EB_MALLOC_ALIGNED(recon_picture_dst->buffer_cr, recon_picture_dst->chroma_size * bytesPerPixel);
         svt_memset(recon_picture_dst->buffer_cr, 0, recon_picture_dst->chroma_size * bytesPerPixel);
-    } else
+    } else {
         recon_picture_dst->buffer_cr = 0;
+    }
 
     int use_highbd = scs->is_16bit_pipeline;
 
@@ -354,10 +359,12 @@ static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uin
             const MbModeInfo *mbmi    = pcs->mi_grid_base[lr * cm->mi_stride + lc];
             const BlockSize   bsize   = mbmi->bsize;
             if (((fbc & 1) && (bsize == BLOCK_128X128 || bsize == BLOCK_128X64)) ||
-                ((fbr & 1) && (bsize == BLOCK_128X128 || bsize == BLOCK_64X128)))
+                ((fbr & 1) && (bsize == BLOCK_128X128 || bsize == BLOCK_64X128))) {
                 continue;
-            if (bsize == BLOCK_128X128 || bsize == BLOCK_128X64 || bsize == BLOCK_64X128)
+            }
+            if (bsize == BLOCK_128X128 || bsize == BLOCK_128X64 || bsize == BLOCK_64X128) {
                 bs = bsize;
+            }
 
             if (bs == BLOCK_128X128 || bs == BLOCK_128X64) {
                 nhb     = AOMMIN(MI_SIZE_128X128, cm->mi_cols - lc);
@@ -423,10 +430,16 @@ static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uin
                 is too large, the intrinsics will begin accessing memory outside the block.
                 */
                 switch (plane_bsize[pli]) {
-                case BLOCK_8X8: subsampling_factor = MIN(subsampling_factor, 4); break;
+                case BLOCK_8X8:
+                    subsampling_factor = MIN(subsampling_factor, 4);
+                    break;
                 case BLOCK_8X4:
-                case BLOCK_4X8: subsampling_factor = MIN(subsampling_factor, 2); break;
-                case BLOCK_4X4: subsampling_factor = MIN(subsampling_factor, 1); break;
+                case BLOCK_4X8:
+                    subsampling_factor = MIN(subsampling_factor, 2);
+                    break;
+                case BLOCK_4X4:
+                    subsampling_factor = MIN(subsampling_factor, 1);
+                    break;
                 }
 
                 /* first cdef stage
@@ -472,10 +485,11 @@ static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uin
                         subsampling_factor,
                         is_16bit);
 
-                    if (pli < 2)
+                    if (pli < 2) {
                         pcs->mse_seg[pli][fb_idx][gi] = curr_mse * subsampling_factor;
-                    else
+                    } else {
                         pcs->mse_seg[1][fb_idx][gi] += (curr_mse * subsampling_factor);
+                    }
                 }
 
                 /* second cdef stage
@@ -523,10 +537,11 @@ static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uin
                         subsampling_factor,
                         is_16bit);
 
-                    if (pli < 2)
+                    if (pli < 2) {
                         pcs->mse_seg[pli][fb_idx][gi] = curr_mse * subsampling_factor;
-                    else
+                    } else {
                         pcs->mse_seg[1][fb_idx][gi] += (curr_mse * subsampling_factor);
+                    }
                 }
             }
         }

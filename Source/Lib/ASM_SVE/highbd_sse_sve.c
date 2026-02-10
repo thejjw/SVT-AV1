@@ -188,13 +188,20 @@ int64_t svt_aom_highbd_sse_sve(const uint8_t *src8, int src_stride, const uint8_
     uint16_t *ref = (uint16_t *)ref8;
 
     switch (width) {
-    case 4: return highbd_sse_4xh_sve(src, src_stride, ref, ref_stride, height);
-    case 8: return highbd_sse_8xh_sve(src, src_stride, ref, ref_stride, height);
-    case 16: return highbd_sse_16xh_sve(src, src_stride, ref, ref_stride, height);
-    case 32: return highbd_sse_32xh_sve(src, src_stride, ref, ref_stride, height);
-    case 64: return highbd_sse_64xh_sve(src, src_stride, ref, ref_stride, height);
-    case 128: return highbd_sse_128xh_sve(src, src_stride, ref, ref_stride, height);
-    default: return highbd_sse_wxh_sve(src, src_stride, ref, ref_stride, width, height);
+    case 4:
+        return highbd_sse_4xh_sve(src, src_stride, ref, ref_stride, height);
+    case 8:
+        return highbd_sse_8xh_sve(src, src_stride, ref, ref_stride, height);
+    case 16:
+        return highbd_sse_16xh_sve(src, src_stride, ref, ref_stride, height);
+    case 32:
+        return highbd_sse_32xh_sve(src, src_stride, ref, ref_stride, height);
+    case 64:
+        return highbd_sse_64xh_sve(src, src_stride, ref, ref_stride, height);
+    case 128:
+        return highbd_sse_128xh_sve(src, src_stride, ref, ref_stride, height);
+    default:
+        return highbd_sse_wxh_sve(src, src_stride, ref, ref_stride, width, height);
     }
 }
 
@@ -207,12 +214,19 @@ uint64_t svt_full_distortion_kernel16_bits_sve(uint8_t *input8, uint32_t input_o
     recon += recon_offset;
 
     switch (area_width) {
-    case 4: return highbd_sse_4xh_sve(input, input_stride, recon, recon_stride, area_height);
-    case 8: return highbd_sse_8xh_sve(input, input_stride, recon, recon_stride, area_height);
-    case 16: return highbd_sse_16xh_sve(input, input_stride, recon, recon_stride, area_height);
-    case 32: return highbd_sse_32xh_sve(input, input_stride, recon, recon_stride, area_height);
-    case 64: return highbd_sse_64xh_sve(input, input_stride, recon, recon_stride, area_height);
-    case 128: return highbd_sse_128xh_sve(input, input_stride, recon, recon_stride, area_height);
-    default: return highbd_sse_wxh_sve(input, input_stride, recon, recon_stride, area_width, area_height);
+    case 4:
+        return highbd_sse_4xh_sve(input, input_stride, recon, recon_stride, area_height);
+    case 8:
+        return highbd_sse_8xh_sve(input, input_stride, recon, recon_stride, area_height);
+    case 16:
+        return highbd_sse_16xh_sve(input, input_stride, recon, recon_stride, area_height);
+    case 32:
+        return highbd_sse_32xh_sve(input, input_stride, recon, recon_stride, area_height);
+    case 64:
+        return highbd_sse_64xh_sve(input, input_stride, recon, recon_stride, area_height);
+    case 128:
+        return highbd_sse_128xh_sve(input, input_stride, recon, recon_stride, area_height);
+    default:
+        return highbd_sse_wxh_sve(input, input_stride, recon, recon_stride, area_width, area_height);
     }
 }

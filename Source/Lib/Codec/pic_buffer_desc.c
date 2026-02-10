@@ -230,8 +230,9 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBufferDescP
 
     if (picture_buffer_desc_init_data_ptr->bit_depth > EB_EIGHT_BIT &&
         picture_buffer_desc_init_data_ptr->bit_depth <= EB_SIXTEEN_BIT &&
-        picture_buffer_desc_init_data_ptr->split_mode == true)
+        picture_buffer_desc_init_data_ptr->split_mode == true) {
         bytes_per_pixel = 1;
+    }
 
     // Set the Picture Buffer Static variables
     pictureBufferDescPtr->max_width         = picture_buffer_desc_init_data_ptr->max_width;
@@ -300,12 +301,15 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBufferDescP
 
 static void svt_recon_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc *obj = (EbPictureBufferDesc *)p;
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG)
+    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         EB_FREE_ALIGNED_ARRAY(obj->buffer_y);
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG)
+    }
+    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
         EB_FREE_ALIGNED_ARRAY(obj->buffer_cb);
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG)
+    }
+    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
         EB_FREE_ALIGNED_ARRAY(obj->buffer_cr);
+    }
 }
 
 /*****************************************
@@ -555,15 +559,18 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
 
             assert(fb != NULL);
 
-            if (external_frame_size != (size_t)external_frame_size)
+            if (external_frame_size != (size_t)external_frame_size) {
                 return -1;
+            }
 
             // Allocation to hold larger frame, or first allocation.
-            if (cb(cb_priv, (size_t)external_frame_size, fb) < 0)
+            if (cb(cb_priv, (size_t)external_frame_size, fb) < 0) {
                 return -1;
+            }
 
-            if (fb->data == NULL || fb->size < external_frame_size)
+            if (fb->data == NULL || fb->size < external_frame_size) {
                 return -1;
+            }
 
             ybf->buffer_alloc = (uint8_t *)yv12_align_addr(fb->data, 32);
 
@@ -577,14 +584,17 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
 #endif
         } else if (frame_size > (size_t)ybf->buffer_alloc_sz) {
             // Allocation to hold larger frame, or first allocation.
-            if (ybf->buffer_alloc_sz > 0)
+            if (ybf->buffer_alloc_sz > 0) {
                 EB_FREE_ARRAY(ybf->buffer_alloc);
-            if (frame_size != (size_t)frame_size)
+            }
+            if (frame_size != (size_t)frame_size) {
                 return -1;
+            }
             EB_MALLOC_ARRAY(ybf->buffer_alloc, frame_size);
 
-            if (!ybf->buffer_alloc)
+            if (!ybf->buffer_alloc) {
                 return -1;
+            }
 
             ybf->buffer_alloc_sz = (size_t)frame_size;
 
@@ -599,8 +609,9 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
         * the start of the chroma rows without introducing an arbitrary gap
         * between planes, which would break the semantics of things like
         * aom_img_set_rect(). */
-        if (border & 0x1f)
+        if (border & 0x1f) {
             return -3;
+        }
 
         ybf->y_crop_width  = width;
         ybf->y_crop_height = height;
@@ -624,8 +635,9 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
             // Store uint16 addresses when using 16bit framebuffers
             buf        = CONVERT_TO_BYTEPTR(ybf->buffer_alloc);
             ybf->flags = YV12_FLAG_HIGHBITDEPTH;
-        } else
+        } else {
             ybf->flags = 0;
+        }
         ybf->y_buffer = (uint8_t *)yv12_align_addr(buf + (border * y_stride) + border, aom_byte_align);
         ybf->u_buffer = (uint8_t *)yv12_align_addr(buf + yplane_size + (uv_border_h * uv_stride) + uv_border_w,
                                                    aom_byte_align);

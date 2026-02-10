@@ -139,10 +139,11 @@ static void push_to_lad_queue(PictureParentControlSet *pcs, InitialRateControlCo
     uint32_t       entry_idx   = pcs->decode_order % queue->cir_buf_size;
     LadQueueEntry *queue_entry = queue->cir_buf[entry_idx];
     svt_aom_assert_err(queue_entry->pcs == NULL, "lad queue overflow");
-    if (queue_entry->pcs == NULL)
+    if (queue_entry->pcs == NULL) {
         queue_entry->pcs = pcs;
-    else
+    } else {
         SVT_ERROR("\n lad queue overflow \n");
+    }
 }
 
 /* send picture out from irc process */
@@ -158,9 +159,11 @@ static void irc_send_picture_out(InitialRateControlContext *ctx, PictureParentCo
 }
 
 static uint8_t is_frame_already_exists(PictureParentControlSet *pcs, uint32_t end_index, uint64_t pic_num) {
-    for (uint32_t i = 0; i < end_index; i++)
-        if (pcs->tpl_group[i]->picture_number == pic_num)
+    for (uint32_t i = 0; i < end_index; i++) {
+        if (pcs->tpl_group[i]->picture_number == pic_num) {
             return 1;
+        }
+    }
     return 0;
 }
 
@@ -186,14 +189,15 @@ void validate_pic_for_tpl(PictureParentControlSet *pcs, uint32_t pic_index) {
 
 uint8_t svt_aom_get_tpl_group_level(uint8_t tpl, int8_t enc_mode) {
     uint8_t tpl_group_level;
-    if (!tpl)
+    if (!tpl) {
         tpl_group_level = 0;
-    else if (enc_mode <= ENC_M5)
+    } else if (enc_mode <= ENC_M5) {
         tpl_group_level = 1;
-    else if (enc_mode <= ENC_M8)
+    } else if (enc_mode <= ENC_M8) {
         tpl_group_level = 3;
-    else
+    } else {
         tpl_group_level = 4;
+    }
     return tpl_group_level;
 }
 
@@ -203,7 +207,9 @@ uint8_t svt_aom_set_tpl_group(PictureParentControlSet *pcs, uint8_t tpl_group_le
     TplControls *tpl_ctrls        = &tpl_ctrls_struct;
 
     switch (tpl_group_level) {
-    case 0: tpl_ctrls->enable = 0; break;
+    case 0:
+        tpl_ctrls->enable = 0;
+        break;
     case 1:
         tpl_ctrls->enable            = 1;
         tpl_ctrls->reduced_tpl_group = -1;
@@ -232,21 +238,27 @@ uint8_t svt_aom_set_tpl_group(PictureParentControlSet *pcs, uint8_t tpl_group_le
                               : (pcs->scs->input_resolution <= INPUT_SIZE_480p_RANGE ? 2 : 0);
         tpl_ctrls->synth_blk_size    = AOMMIN(source_width, source_height) >= 720 ? 32 : 16;
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 
-    if (pcs == NULL)
+    if (pcs == NULL) {
         return tpl_ctrls->synth_blk_size;
+    }
 
-    if ((int)pcs->hierarchical_levels <= tpl_ctrls->reduced_tpl_group)
+    if ((int)pcs->hierarchical_levels <= tpl_ctrls->reduced_tpl_group) {
         tpl_ctrls->reduced_tpl_group = -1;
+    }
 
     // TPL may only look at a subset of available pictures in tpl group, which may affect the r0 calcuation.
     // As a result, we defined a factor to adjust r0 (to compensate for TPL not using all available frames).
     if (tpl_ctrls->reduced_tpl_group >= 0) {
         switch ((pcs->hierarchical_levels - tpl_ctrls->reduced_tpl_group)) {
         case 0:
-        default: tpl_ctrls->r0_adjust_factor = 0; break;
+        default:
+            tpl_ctrls->r0_adjust_factor = 0;
+            break;
         case 1:
             tpl_ctrls->r0_adjust_factor = pcs->hierarchical_levels <= 2 ? 0.4
                 : pcs->hierarchical_levels <= 3                         ? 0.8
@@ -257,14 +269,21 @@ uint8_t svt_aom_set_tpl_group(PictureParentControlSet *pcs, uint8_t tpl_group_le
                 : pcs->hierarchical_levels <= 3                         ? 1.2
                                                                         : 2.4;
             break;
-        case 3: tpl_ctrls->r0_adjust_factor = pcs->hierarchical_levels <= 3 ? 1.4 : 2.8; break;
-        case 4: tpl_ctrls->r0_adjust_factor = 4.0; break;
-        case 5: tpl_ctrls->r0_adjust_factor = 6.0; break;
+        case 3:
+            tpl_ctrls->r0_adjust_factor = pcs->hierarchical_levels <= 3 ? 1.4 : 2.8;
+            break;
+        case 4:
+            tpl_ctrls->r0_adjust_factor = 4.0;
+            break;
+        case 5:
+            tpl_ctrls->r0_adjust_factor = 6.0;
+            break;
         }
 
         // Adjust r0 scaling factor based on GOP structure and lookahead
-        if (!pcs->scs->tpl_lad_mg)
+        if (!pcs->scs->tpl_lad_mg) {
             tpl_ctrls->r0_adjust_factor *= 1.25;
+        }
     } else {
         // No r0 adjustment when all frames are used
         tpl_ctrls->r0_adjust_factor = 0;
@@ -375,7 +394,9 @@ static void set_tpl_params(PictureParentControlSet *pcs, uint8_t tpl_level) {
         tpl_ctrls->subpel_depth            = FULL_PEL;
         tpl_ctrls->subpel_diag_refinement  = 4;
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 }
 
@@ -407,8 +428,9 @@ void store_extended_group(PictureParentControlSet *pcs, InitialRateControlContex
     if (log) {
         SVT_LOG("\n EXT group Pic:%lld  size:%i  \n", pcs->picture_number, pcs->ext_group_size);
         for (uint32_t i = 0; i < pcs->ext_group_size; i++) {
-            if (pcs->ext_group[i]->temporal_layer_index == 0)
+            if (pcs->ext_group[i]->temporal_layer_index == 0) {
                 SVT_LOG(" | ");
+            }
             SVT_LOG("%lld ", pcs->ext_group[i]->picture_number);
         }
         SVT_LOG("\n");
@@ -446,8 +468,9 @@ void store_extended_group(PictureParentControlSet *pcs, InitialRateControlContex
                 if (i == 0) {
                     pcs->tpl_group[pcs->tpl_group_size++] = cur_pcs;
                     validate_pic_for_tpl(pcs, i);
-                } else
+                } else {
                     break;
+                }
             } else {
                 if (i == 0) {
                     pcs->tpl_group[pcs->tpl_group_size++] = cur_pcs;
@@ -466,8 +489,9 @@ void store_extended_group(PictureParentControlSet *pcs, InitialRateControlContex
             } else if (cur_pcs->ext_mg_id == last_intra_mg_id) {
                 pcs->tpl_group[pcs->tpl_group_size++] = cur_pcs;
                 validate_pic_for_tpl(pcs, i);
-            } else
+            } else {
                 break;
+            }
         }
     }
 
@@ -485,8 +509,9 @@ void store_extended_group(PictureParentControlSet *pcs, InitialRateControlContex
                 pcs->hierarchical_levels,
                 pcs->tpl_group_size);
         for (uint32_t i = 0; i < pcs->tpl_group_size; i++) {
-            if (pcs->ext_group[i]->temporal_layer_index == 0)
+            if (pcs->ext_group[i]->temporal_layer_index == 0) {
                 SVT_LOG(" | ");
+            }
             SVT_LOG("%lld ", pcs->tpl_group[i]->picture_number);
         }
         SVT_LOG("\n");
@@ -535,8 +560,9 @@ static void process_lad_queue(InitialRateControlContext *ctx, uint8_t pass_thru)
                             head_pcs->end_of_sequence_region = true;
                         }
                         if (tmp_pcs->ext_mg_id >= cur_mg) {
-                            if (tmp_pcs->ext_mg_id > cur_mg)
+                            if (tmp_pcs->ext_mg_id > cur_mg) {
                                 svt_aom_assert_err(tmp_pcs->ext_mg_id == cur_mg + 1, "err continuity in mg id");
+                            }
 
                             tot_acc_frames_in_cur_mg++;
 
@@ -625,11 +651,13 @@ static void set_1pvbr_param(PictureParentControlSet *pcs) {
         avg_variance_me_dist /= pcs->b64_total_count;
 
         double weight = 1;
-        if (avg_variance_me_dist > HIGH_8x8_DIST_VAR_TH)
+        if (avg_variance_me_dist > HIGH_8x8_DIST_VAR_TH) {
             weight = 1.5;
+        }
 
-        if (scs->input_resolution <= INPUT_SIZE_480p_RANGE)
+        if (scs->input_resolution <= INPUT_SIZE_480p_RANGE) {
             weight = 1.5 * weight;
+        }
         pcs->stat_struct.poc = pcs->picture_number;
         (scs->twopass.stats_buf_ctx->stats_in_start + pcs->picture_number)->stat_struct.total_num_bits = MAX(
             MIN_AVG_ME_DIST, avg_me_dist);
@@ -743,14 +771,17 @@ void *svt_aom_initial_rate_control_kernel(void *input_ptr) {
                         if (pcs->tpl_ctrls.enable) {
                             for (uint32_t i = 0; i < pcs->tpl_group_size; i++) {
                                 if (svt_aom_is_incomp_mg_frame(pcs->tpl_group[i])) {
-                                    if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id + 1)
+                                    if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id + 1) {
                                         svt_aom_release_pa_reference_objects(scs, pcs->tpl_group[i]);
+                                    }
                                 } else {
-                                    if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id)
+                                    if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id) {
                                         svt_aom_release_pa_reference_objects(scs, pcs->tpl_group[i]);
+                                    }
                                 }
-                                if (pcs->tpl_group[i]->non_tf_input)
+                                if (pcs->tpl_group[i]->non_tf_input) {
                                     EB_DELETE(pcs->tpl_group[i]->non_tf_input);
+                                }
                             }
                         } else {
                             svt_aom_release_pa_reference_objects(scs, pcs);
@@ -797,8 +828,9 @@ void *svt_aom_initial_rate_control_kernel(void *input_ptr) {
             //   1. TPL is OFF and
             //   2. super-res mode is NONE or FIXED or RANDOM.
             //     For other super-res modes, pa_ref_objs are needed in TASK_SUPERRES_RE_ME task
-            if (pcs->tpl_ctrls.enable == 0 && scs->static_config.superres_mode <= SUPERRES_RANDOM)
+            if (pcs->tpl_ctrls.enable == 0 && scs->static_config.superres_mode <= SUPERRES_RANDOM) {
                 svt_aom_release_pa_reference_objects(scs, pcs);
+            }
 
             /*In case Look-Ahead is zero there is no need to place pictures in the
               re-order queue. this will cause an artificial delay since pictures come in dec-order*/

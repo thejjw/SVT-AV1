@@ -28,7 +28,9 @@ static INLINE void transpose4x4(const float *A, float *b, const int32_t lda, con
 
 void svt_aom_transpose_float_sse2(const float *A, float *b, int32_t n) {
     for (int32_t y = 0; y < n; y += 4) {
-        for (int32_t x = 0; x < n; x += 4) transpose4x4(A + y * n + x, b + x * n + y, n, n);
+        for (int32_t x = 0; x < n; x += 4) {
+            transpose4x4(A + y * n + x, b + x * n + y, n, n);
+        }
     }
 }
 

@@ -163,7 +163,9 @@ static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_avx2
     uint32_t block_error_fp8[4];
 
     if (me_ctx->tf_32x32_block_split_flag[idx_32x32]) {
-        for (i = 0; i < 4; ++i) { block_error_fp8[i] = (uint32_t)(me_ctx->tf_16x16_block_error[idx_32x32 * 4 + i]); }
+        for (i = 0; i < 4; ++i) {
+            block_error_fp8[i] = (uint32_t)(me_ctx->tf_16x16_block_error[idx_32x32 * 4 + i]);
+        }
     } else {
         block_error_fp8[0] = block_error_fp8[1] = block_error_fp8[2] = block_error_fp8[3] =
             (uint32_t)(me_ctx->tf_32x32_block_error[idx_32x32] >> 2);

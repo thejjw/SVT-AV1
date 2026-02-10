@@ -40,7 +40,9 @@ static void load_buffer_64x64_lower_32x32_avx512(const int32_t *coeff, __m512i *
         }
     }
 
-    for (i = 0; i < 128; ++i) in[128 + i] = zeroes;
+    for (i = 0; i < 128; ++i) {
+        in[128 + i] = zeroes;
+    }
 }
 
 static void round_shift_64x64_avx512(__m512i *in, const int8_t shift) {
@@ -464,7 +466,9 @@ static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_
         }
 
         // stage 8
-        for (i = 0; i < 4; ++i) { addsub_avx512(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 4; ++i) {
+            addsub_avx512(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi);
+        }
 
         v[8]  = u[8];
         v[9]  = u[9];
@@ -506,7 +510,9 @@ static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_
         v[59] = half_btf_avx512(&cospi48, &u[36], &cospi16, &u[59], &rnding, bit);
 
         // stage 9
-        for (i = 0; i < 8; ++i) { addsub_avx512(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 8; ++i) {
+            addsub_avx512(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi);
+        }
 
         for (i = 16; i < 20; ++i) {
             u[i]      = v[i];
@@ -522,14 +528,22 @@ static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_
         u[26] = half_btf_avx512(&cospi32, &v[21], &cospi32, &v[26], &rnding, bit);
         u[27] = half_btf_avx512(&cospi32, &v[20], &cospi32, &v[27], &rnding, bit);
 
-        for (i = 32; i < 40; i++) { addsub_avx512(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi); }
+        for (i = 32; i < 40; i++) {
+            addsub_avx512(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi);
+        }
 
-        for (i = 48; i < 56; i++) { addsub_avx512(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi); }
+        for (i = 48; i < 56; i++) {
+            addsub_avx512(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi);
+        }
 
         // stage 10
-        for (i = 0; i < 16; i++) { addsub_avx512(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 16; i++) {
+            addsub_avx512(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi);
+        }
 
-        for (i = 32; i < 40; i++) v[i] = u[i];
+        for (i = 32; i < 40; i++) {
+            v[i] = u[i];
+        }
 
         v[40] = half_btf_avx512(&cospim32, &u[40], &cospi32, &u[55], &rnding, bit);
         v[41] = half_btf_avx512(&cospim32, &u[41], &cospi32, &u[54], &rnding, bit);
@@ -548,7 +562,9 @@ static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_
         v[54] = half_btf_avx512(&cospi32, &u[41], &cospi32, &u[54], &rnding, bit);
         v[55] = half_btf_avx512(&cospi32, &u[40], &cospi32, &u[55], &rnding, bit);
 
-        for (i = 56; i < 64; i++) v[i] = u[i];
+        for (i = 56; i < 64; i++) {
+            v[i] = u[i];
+        }
 
         // stage 11
         for (i = 0; i < 32; i++) {
@@ -1192,7 +1208,8 @@ void svt_av1_inv_txfm2d_add_16x16_avx512(const int32_t *coeff, uint16_t *output_
         write_buffer_16x16_avx512_new(in, output_r, stride_r, output_w, stride_w, 0, 1, bd);
         break;
 
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -1715,7 +1732,8 @@ void svt_av1_inv_txfm2d_add_32x32_avx512(const int32_t *coeff, uint16_t *output_
         round_shift_32x32_avx512(in_avx512, -shift[0] - shift[1] - 4);
         write_buffer_32x32_avx512(in_avx512, output_r, stride_r, output_w, stride_w, 0, 0, bd);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -1785,7 +1803,9 @@ void svt_av1_inv_txfm2d_add_64x64_avx512(const int32_t *coeff, uint16_t *output_
         write_buffer_64x64_avx512(in, output_r, stride_r, output_w, stride_w, 0, 0, -shift[1], bd);
         break;
 
-    default: svt_av1_inv_txfm2d_add_64x64_c(coeff, output_r, stride_r, output_w, stride_w, tx_type, bd); break;
+    default:
+        svt_av1_inv_txfm2d_add_64x64_c(coeff, output_r, stride_r, output_w, stride_w, tx_type, bd);
+        break;
     }
 }
 
@@ -2268,7 +2288,9 @@ static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t d
         }
 
         // stage 8
-        for (i = 0; i < 4; ++i) { addsub_avx512(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 4; ++i) {
+            addsub_avx512(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi);
+        }
 
         v[8]  = u[8];
         v[9]  = u[9];
@@ -2310,7 +2332,9 @@ static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t d
         v[59] = half_btf_avx512(&cospi48, &u[36], &cospi16, &u[59], &rnding, bit);
 
         // stage 9
-        for (i = 0; i < 8; ++i) { addsub_avx512(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 8; ++i) {
+            addsub_avx512(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi);
+        }
 
         for (i = 16; i < 20; ++i) {
             u[i]      = v[i];
@@ -2326,14 +2350,22 @@ static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t d
         u[26] = half_btf_avx512(&cospi32, &v[21], &cospi32, &v[26], &rnding, bit);
         u[27] = half_btf_avx512(&cospi32, &v[20], &cospi32, &v[27], &rnding, bit);
 
-        for (i = 32; i < 40; i++) { addsub_avx512(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi); }
+        for (i = 32; i < 40; i++) {
+            addsub_avx512(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi);
+        }
 
-        for (i = 48; i < 56; i++) { addsub_avx512(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi); }
+        for (i = 48; i < 56; i++) {
+            addsub_avx512(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi);
+        }
 
         // stage 10
-        for (i = 0; i < 16; i++) { addsub_avx512(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi); }
+        for (i = 0; i < 16; i++) {
+            addsub_avx512(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi);
+        }
 
-        for (i = 32; i < 40; i++) v[i] = u[i];
+        for (i = 32; i < 40; i++) {
+            v[i] = u[i];
+        }
 
         v[40] = half_btf_avx512(&cospim32, &u[40], &cospi32, &u[55], &rnding, bit);
         v[41] = half_btf_avx512(&cospim32, &u[41], &cospi32, &u[54], &rnding, bit);
@@ -2352,7 +2384,9 @@ static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t d
         v[54] = half_btf_avx512(&cospi32, &u[41], &cospi32, &u[54], &rnding, bit);
         v[55] = half_btf_avx512(&cospi32, &u[40], &cospi32, &u[55], &rnding, bit);
 
-        for (i = 56; i < 64; i++) v[i] = u[i];
+        for (i = 56; i < 64; i++) {
+            v[i] = u[i];
+        }
 
         // stage 11
         for (i = 0; i < 32; i++) {
@@ -2384,7 +2418,9 @@ static void iidtx16_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t 
 
 void iidtx32_avx512(__m512i *input, __m512i *output, const int8_t cos_bit, int32_t col_num) {
     (void)cos_bit;
-    for (int32_t i = 0; i < 32; i++) { output[i * col_num] = _mm512_slli_epi32(input[i * col_num], (uint8_t)2); }
+    for (int32_t i = 0; i < 32; i++) {
+        output[i * col_num] = _mm512_slli_epi32(input[i * col_num], (uint8_t)2);
+    }
 }
 
 static void write_buffer_16x16n_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
@@ -2494,10 +2530,14 @@ static INLINE void av1_round_shift_array_avx512(__m512i *input, __m512i *output,
     if (bit > 0) {
         __m512i round = _mm512_set1_epi32(1 << (bit - 1));
         int32_t i;
-        for (i = 0; i < size; i++) { output[i] = _mm512_srai_epi32(_mm512_add_epi32(input[i], round), (uint8_t)bit); }
+        for (i = 0; i < size; i++) {
+            output[i] = _mm512_srai_epi32(_mm512_add_epi32(input[i], round), (uint8_t)bit);
+        }
     } else {
         int32_t i;
-        for (i = 0; i < size; i++) { output[i] = _mm512_slli_epi32(input[i], (uint8_t)(-bit)); }
+        for (i = 0; i < size; i++) {
+            output[i] = _mm512_slli_epi32(input[i], (uint8_t)(-bit));
+        }
     }
 }
 
@@ -2541,7 +2581,9 @@ void svt_av1_inv_txfm2d_add_16x64_avx512(const int32_t *coeff, uint16_t *output_
     const int32_t num_col       = txfm_size_col >> 4;
 
     // row tranform
-    for (int32_t i = 0; i < txfm_size_row; i++) { load_buffer_16_avx512(coeff + i * txfm_size_col, in + i); }
+    for (int32_t i = 0; i < txfm_size_row; i++) {
+        load_buffer_16_avx512(coeff + i * txfm_size_col, in + i);
+    }
     transpose_16nx16m_inv_avx512(in, out, txfm_size_col, txfm_size_row);
     idct16_avx512(out, in, inv_cos_bit_row[txw_idx][txh_idx], num_row);
     round_shift_16x16_avx512(in, -shift[0]);
@@ -2569,7 +2611,9 @@ void svt_av1_inv_txfm2d_add_64x16_avx512(const int32_t *coeff, uint16_t *output_
     const int32_t num_col       = txfm_size_col >> 4;
 
     // row tranform
-    for (int32_t i = 0; i < txfm_size_row; i++) { load_buffer_64_avx512(coeff + i * txfm_size_col, in + (i * 4)); }
+    for (int32_t i = 0; i < txfm_size_row; i++) {
+        load_buffer_64_avx512(coeff + i * txfm_size_col, in + (i * 4));
+    }
     transpose_16nx16m_inv_avx512(in, out, 32, 16);
     idct64_avx512(out, in, inv_cos_bit_row[txw_idx][txh_idx], num_row, bd, -shift[0]);
     transpose_16nx16m_inv_avx512(in, out, txfm_size_row, txfm_size_col);
@@ -2601,7 +2645,9 @@ void svt_av1_inv_txfm2d_add_32x64_avx512(const int32_t *coeff, uint16_t *output_
     transpose_16nx16m_inv_avx512(in, out, txfm_size_col, txfm_size_row);
     av1_round_shift_rect_array_32_avx512(out, out, 128, (int8_t)0, 2896);
     idct32_avx512(out, in, inv_cos_bit_row[txw_idx][txh_idx], num_row);
-    for (int32_t i = 0; i < 8; i++) { round_shift_16x16_avx512((in + i * 16), -shift[0]); }
+    for (int32_t i = 0; i < 8; i++) {
+        round_shift_16x16_avx512((in + i * 16), -shift[0]);
+    }
     transpose_16nx16m_inv_avx512(in, out, txfm_size_row, txfm_size_col);
 
     // column transform
@@ -2693,11 +2739,15 @@ void svt_av1_inv_txfm2d_add_16x32_avx512(const int32_t *coeff, uint16_t *output_
     const inv_transform_1d_avx512 row_txfm      = row_invtxfm_16x32_arr[tx_type];
 
     // row tranform
-    for (int32_t i = 0; i < txfm_size_row; i++) { load_buffer_16_avx512(coeff + i * txfm_size_col, in + i); }
+    for (int32_t i = 0; i < txfm_size_row; i++) {
+        load_buffer_16_avx512(coeff + i * txfm_size_col, in + i);
+    }
     transpose_16nx16m_inv_avx512(in, out, txfm_size_col, txfm_size_row);
     av1_round_shift_rect_array_32_avx512(out, out, 32, (int8_t)0, 2896);
     row_txfm(out, in, inv_cos_bit_row[txw_idx][txh_idx], num_row);
-    for (int32_t i = 0; i < 2; i++) { round_shift_16x16_avx512((in + i * 16), -shift[0]); }
+    for (int32_t i = 0; i < 2; i++) {
+        round_shift_16x16_avx512((in + i * 16), -shift[0]);
+    }
     transpose_16nx16m_inv_avx512(in, out, txfm_size_row, txfm_size_col);
 
     // column transform
@@ -2728,7 +2778,9 @@ void svt_av1_inv_txfm2d_add_32x16_avx512(const int32_t *coeff, uint16_t *output_
     transpose_16nx16m_inv_avx512(in, out, txfm_size_col, txfm_size_row);
     av1_round_shift_rect_array_32_avx512(out, out, 32, (int8_t)0, 2896);
     row_txfm(out, in, inv_cos_bit_row[txw_idx][txh_idx], num_row);
-    for (int32_t i = 0; i < 2; i++) { round_shift_16x16_avx512((in + i * 16), -shift[0]); }
+    for (int32_t i = 0; i < 2; i++) {
+        round_shift_16x16_avx512((in + i * 16), -shift[0]);
+    }
     transpose_16nx16m_inv_avx512(in, out, txfm_size_row, txfm_size_col);
 
     // column transform

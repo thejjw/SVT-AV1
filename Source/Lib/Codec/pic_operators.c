@@ -609,7 +609,7 @@ void svt_aom_pack_highbd_pic(const EbPictureBufferDesc *pic_ptr, uint16_t *buffe
                                height);
 
     uint32_t comp_stride_uv = pic_ptr->stride_cb / 4;
-    if (buffer_16bit[1 /*U*/])
+    if (buffer_16bit[1 /*U*/]) {
         svt_aom_compressed_pack_sb(pic_ptr->buffer_cb,
                                    pic_ptr->stride_cb,
                                    pic_ptr->buffer_bit_inc_cb,
@@ -618,7 +618,8 @@ void svt_aom_pack_highbd_pic(const EbPictureBufferDesc *pic_ptr, uint16_t *buffe
                                    pic_ptr->stride_cb,
                                    (width + ss_x) >> ss_x,
                                    (height + ss_y) >> ss_y);
-    if (buffer_16bit[2 /*V*/])
+    }
+    if (buffer_16bit[2 /*V*/]) {
         svt_aom_compressed_pack_sb(pic_ptr->buffer_cr,
                                    pic_ptr->stride_cr,
                                    pic_ptr->buffer_bit_inc_cr,
@@ -627,6 +628,7 @@ void svt_aom_pack_highbd_pic(const EbPictureBufferDesc *pic_ptr, uint16_t *buffe
                                    pic_ptr->stride_cr,
                                    (width + ss_x) >> ss_x,
                                    (height + ss_y) >> ss_y);
+    }
 }
 
 void svt_aom_unpack_highbd_pic(uint16_t *buffer_highbd[3], EbPictureBufferDesc *pic_ptr, uint32_t ss_x, uint32_t ss_y,
@@ -648,7 +650,7 @@ void svt_aom_unpack_highbd_pic(uint16_t *buffer_highbd[3], EbPictureBufferDesc *
                               width,
                               height);
 
-    if (buffer_highbd[1 /*U*/])
+    if (buffer_highbd[1 /*U*/]) {
         svt_unpack_and_2bcompress(buffer_highbd[1 /*U*/],
                                   pic_ptr->stride_cb,
                                   pic_ptr->buffer_cb,
@@ -657,8 +659,9 @@ void svt_aom_unpack_highbd_pic(uint16_t *buffer_highbd[3], EbPictureBufferDesc *
                                   comp_stride_uv,
                                   (width + ss_x) >> ss_x,
                                   (height + ss_y) >> ss_y);
+    }
 
-    if (buffer_highbd[2 /*V*/])
+    if (buffer_highbd[2 /*V*/]) {
         svt_unpack_and_2bcompress(buffer_highbd[2 /*V*/],
                                   pic_ptr->stride_cr,
                                   pic_ptr->buffer_cr,
@@ -667,4 +670,5 @@ void svt_aom_unpack_highbd_pic(uint16_t *buffer_highbd[3], EbPictureBufferDesc *
                                   comp_stride_uv,
                                   (width + ss_x) >> ss_x,
                                   (height + ss_y) >> ss_y);
+    }
 }

@@ -219,12 +219,19 @@ uint64_t svt_spatial_full_distortion_kernel_neon(uint8_t *src, uint32_t src_offs
     src += src_offset;
     ref += ref_offset;
     switch (width) {
-    case 4: return sse_4xh_neon(src, src_stride, ref, ref_stride, height);
-    case 8: return sse_8xh_neon(src, src_stride, ref, ref_stride, height);
-    case 16: return sse_16xh_neon(src, src_stride, ref, ref_stride, height);
-    case 32: return sse_32xh_neon(src, src_stride, ref, ref_stride, height);
-    case 64: return sse_64xh_neon(src, src_stride, ref, ref_stride, height);
-    case 128: return sse_128xh_neon(src, src_stride, ref, ref_stride, height);
-    default: return sse_wxh_neon(src, src_stride, ref, ref_stride, width, height);
+    case 4:
+        return sse_4xh_neon(src, src_stride, ref, ref_stride, height);
+    case 8:
+        return sse_8xh_neon(src, src_stride, ref, ref_stride, height);
+    case 16:
+        return sse_16xh_neon(src, src_stride, ref, ref_stride, height);
+    case 32:
+        return sse_32xh_neon(src, src_stride, ref, ref_stride, height);
+    case 64:
+        return sse_64xh_neon(src, src_stride, ref, ref_stride, height);
+    case 128:
+        return sse_128xh_neon(src, src_stride, ref, ref_stride, height);
+    default:
+        return sse_wxh_neon(src, src_stride, ref, ref_stride, width, height);
     }
 }

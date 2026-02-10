@@ -57,7 +57,9 @@ static inline void copy_16Xxh(uint8_t *src, uint32_t src_stride, uint8_t *dst, u
     assert(width % 16 == 0);
 
     do {
-        for (uint32_t i = 0; i < width; i += 16) { vst1q_u8(dst + i, vld1q_u8(src + i)); }
+        for (uint32_t i = 0; i < width; i += 16) {
+            vst1q_u8(dst + i, vld1q_u8(src + i));
+        }
 
         src += src_stride;
         dst += dst_stride;
@@ -67,13 +69,25 @@ static inline void copy_16Xxh(uint8_t *src, uint32_t src_stride, uint8_t *dst, u
 void svt_av1_copy_wxh_8bit_neon(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height,
                                 uint32_t width) {
     switch (width) {
-    case 4: copy_4xh(src, src_stride, dst, dst_stride, height); break;
-    case 8: copy_8xh(src, src_stride, dst, dst_stride, height); break;
-    case 16: copy_16xh(src, src_stride, dst, dst_stride, height); break;
-    case 32: copy_16Xxh(src, src_stride, dst, dst_stride, height, 32); break;
-    case 64: copy_16Xxh(src, src_stride, dst, dst_stride, height, 64); break;
+    case 4:
+        copy_4xh(src, src_stride, dst, dst_stride, height);
+        break;
+    case 8:
+        copy_8xh(src, src_stride, dst, dst_stride, height);
+        break;
+    case 16:
+        copy_16xh(src, src_stride, dst, dst_stride, height);
+        break;
+    case 32:
+        copy_16Xxh(src, src_stride, dst, dst_stride, height, 32);
+        break;
+    case 64:
+        copy_16Xxh(src, src_stride, dst, dst_stride, height, 64);
+        break;
     default:
-        for (uint32_t j = 0; j < height; j++) { svt_memcpy_c(dst + j * dst_stride, src + j * src_stride, width); }
+        for (uint32_t j = 0; j < height; j++) {
+            svt_memcpy_c(dst + j * dst_stride, src + j * src_stride, width);
+        }
     }
 }
 
@@ -87,13 +101,23 @@ void svt_av1_copy_wxh_16bit_neon(uint16_t *src, uint32_t src_stride, uint16_t *d
     uint32_t width8      = width * 2;
 
     switch (width) {
-    case 4: copy_8xh(src8, src_stride8, dst8, dst_stride8, height); break;
-    case 8: copy_16xh(src8, src_stride8, dst8, dst_stride8, height); break;
-    case 16: copy_16Xxh(src8, src_stride8, dst8, dst_stride8, height, 16 * 2); break;
-    case 32: copy_16Xxh(src8, src_stride8, dst8, dst_stride8, height, 32 * 2); break;
+    case 4:
+        copy_8xh(src8, src_stride8, dst8, dst_stride8, height);
+        break;
+    case 8:
+        copy_16xh(src8, src_stride8, dst8, dst_stride8, height);
+        break;
+    case 16:
+        copy_16Xxh(src8, src_stride8, dst8, dst_stride8, height, 16 * 2);
+        break;
+    case 32:
+        copy_16Xxh(src8, src_stride8, dst8, dst_stride8, height, 32 * 2);
+        break;
     // 64 pixels (ie 128 bytes) copy has ~same perf as system
     default:
-        for (uint32_t j = 0; j < height; j++) { svt_memcpy_c(dst8 + j * dst_stride8, src8 + j * src_stride8, width8); }
+        for (uint32_t j = 0; j < height; j++) {
+            svt_memcpy_c(dst8 + j * dst_stride8, src8 + j * src_stride8, width8);
+        }
     }
 }
 
@@ -118,7 +142,9 @@ void svt_memcpy_neon(void *dst_ptr, void const *src_ptr, size_t size) {
         i += 8;
     }
 
-    for (; i < size; ++i) dst[i] = src[i];
+    for (; i < size; ++i) {
+        dst[i] = src[i];
+    }
 }
 
 void svt_memset_neon(void *dst_ptr, int c, size_t size) {
@@ -143,5 +169,7 @@ void svt_memset_neon(void *dst_ptr, int c, size_t size) {
         i += 8;
     }
 
-    for (; i < size; ++i) dst[i] = c;
+    for (; i < size; ++i) {
+        dst[i] = c;
+    }
 }

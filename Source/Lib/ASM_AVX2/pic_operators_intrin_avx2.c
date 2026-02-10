@@ -1144,7 +1144,9 @@ void svt_convert_8bit_to_16bit_avx2(uint8_t *src, uint32_t src_stride, uint16_t 
                 _mm256_storeu_si256((__m256i *)(_dst + k), tmp2);
                 _mm256_storeu_si256((__m256i *)(_dst + k + 16), tmp3);
             }
-            for (; k < (int32_t)width; k++) { _dst[k] = (_src[k]); }
+            for (; k < (int32_t)width; k++) {
+                _dst[k] = (_src[k]);
+            }
             _dst += dst_stride;
             _src += src_stride;
         }
@@ -1168,7 +1170,9 @@ void svt_convert_16bit_to_8bit_avx2(uint16_t *src, uint32_t src_stride, uint8_t 
             tmp3 = _mm256_permute4x64_epi64(tmp3, 0xd8);
             _mm256_storeu_si256((__m256i *)(_dst + k), tmp3);
         }
-        for (; k < (int32_t)width; k++) { _dst[k] = (uint8_t)(_src[k]); }
+        for (; k < (int32_t)width; k++) {
+            _dst[k] = (uint8_t)(_src[k]);
+        }
         _dst += dst_stride;
         _src += src_stride;
     }
@@ -1511,19 +1515,21 @@ void svt_unpack_and_2bcompress_avx2(uint16_t *in16b_buffer, uint32_t in16b_strid
         uint32_t offset2b_rem = offset_rem >> 2;
         uint32_t remainder    = width & 0x1f;
         for (; h < height - leftover_h4; h += 4) {
-            for (uint32_t w = 0; w < (width >> 5); w++)
+            for (uint32_t w = 0; w < (width >> 5); w++) {
                 unpack_and_2bcompress_32x4(in16b_buffer + h * in16b_stride + w * 32,
                                            out8b_buffer + h * out8b_stride + w * 32,
                                            out2b_buffer + h * out2b_stride + w * 8,
                                            in16b_stride,
                                            out8b_stride,
                                            out2b_stride);
+            }
             if (remainder) {
-                for (uint32_t hh = 0; hh < 4; hh++)
+                for (uint32_t hh = 0; hh < 4; hh++) {
                     svt_unpack_and_2bcompress_remainder(in16b_buffer + (h + hh) * in16b_stride + offset_rem,
                                                         out8b_buffer + (h + hh) * out8b_stride + offset_rem,
                                                         out2b_buffer + (h + hh) * out2b_stride + offset2b_rem,
                                                         remainder);
+                }
             }
         }
         for (; h < height; h++) {
@@ -1531,11 +1537,12 @@ void svt_unpack_and_2bcompress_avx2(uint16_t *in16b_buffer, uint32_t in16b_strid
                                      out8b_buffer + h * out8b_stride,
                                      out2b_buffer + h * out2b_stride,
                                      width >> 5);
-            if (remainder)
+            if (remainder) {
                 svt_unpack_and_2bcompress_remainder(in16b_buffer + h * in16b_stride + offset_rem,
                                                     out8b_buffer + h * out8b_stride + offset_rem,
                                                     out2b_buffer + h * out2b_stride + offset2b_rem,
                                                     remainder);
+            }
         }
     }
 }

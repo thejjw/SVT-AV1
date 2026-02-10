@@ -453,7 +453,9 @@ void svt_subtract_average_c(int16_t *pred_buf_q3, int32_t width, int32_t height,
     int16_t *pred_buf = pred_buf_q3;
     for (int32_t j = 0; j < height; j++) {
         // assert(pred_buf_q3 + tx_width <= cfl->pred_buf_q3 + CFL_BUF_SQUARE);
-        for (int32_t i = 0; i < width; i++) sum_q3 += pred_buf[i];
+        for (int32_t i = 0; i < width; i++) {
+            sum_q3 += pred_buf[i];
+        }
         pred_buf += CFL_BUF_LINE;
     }
     const int32_t avg_q3 = (sum_q3 + round_offset) >> num_pel_log2;
@@ -461,7 +463,9 @@ void svt_subtract_average_c(int16_t *pred_buf_q3, int32_t width, int32_t height,
     // assert(abs((avg_q3 * (1 << num_pel_log2)) - sum_q3) <= 1 << num_pel_log2 >>
     //       1);
     for (int32_t j = 0; j < height; j++) {
-        for (int32_t i = 0; i < width; i++) pred_buf_q3[i] -= (int16_t)(avg_q3);
+        for (int32_t i = 0; i < width; i++) {
+            pred_buf_q3[i] -= (int16_t)(avg_q3);
+        }
         pred_buf_q3 += CFL_BUF_LINE;
     }
 }
@@ -688,8 +692,9 @@ static const uint8_t *get_has_tr_table(PartitionType partition, BlockSize bsize)
     if (partition == PARTITION_VERT_A || partition == PARTITION_VERT_B) {
         assert(bsize < BlockSizeS);
         ret = has_tr_vert_tables[bsize];
-    } else
+    } else {
         ret = has_tr_tables[bsize];
+    }
     assert(ret);
     return ret;
 }
@@ -697,8 +702,9 @@ static const uint8_t *get_has_tr_table(PartitionType partition, BlockSize bsize)
 int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t mi_row, int32_t mi_col,
                                     int32_t top_available, int32_t right_available, PartitionType partition,
                                     TxSize txsz, int32_t row_off, int32_t col_off, int32_t ss_x, int32_t ss_y) {
-    if (!top_available || !right_available)
+    if (!top_available || !right_available) {
         return 0;
+    }
 
     const int32_t bw_unit              = block_size_wide[bsize] >> tx_size_wide_log2[0];
     const int32_t plane_bw_unit        = AOMMAX(bw_unit >> ss_x, 1);
@@ -720,8 +726,9 @@ int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t 
         return col_off + top_right_count_unit < plane_bw_unit;
     } else {
         // All top-right pixels are in the block above, which is already available.
-        if (col_off + top_right_count_unit < plane_bw_unit)
+        if (col_off + top_right_count_unit < plane_bw_unit) {
             return 1;
+        }
 
         const int32_t bw_in_mi_log2 = mi_size_wide_log2[bsize];
         const int32_t bh_in_mi_log2 = mi_size_high_log2[bsize];
@@ -731,13 +738,15 @@ int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t 
 
         // Top row of superblock: so top-right pixels are in the top and/or
         // top-right superblocks, both of which are already available.
-        if (blk_row_in_sb == 0)
+        if (blk_row_in_sb == 0) {
             return 1;
+        }
 
         // Rightmost column of superblock (and not the top row): so top-right pixels
         // fall in the right superblock, which is not available yet.
-        if (((blk_col_in_sb + 1) << bw_in_mi_log2) >= sb_mi_size)
+        if (((blk_col_in_sb + 1) << bw_in_mi_log2) >= sb_mi_size) {
             return 0;
+        }
         // General case (neither top row nor rightmost column): check if the
         // top-right block is coded before the current block.
         const int32_t this_blk_index = ((blk_row_in_sb + 0) << (MAX_MIB_SIZE_LOG2 - bw_in_mi_log2)) + blk_col_in_sb + 0;
@@ -943,8 +952,9 @@ static const uint8_t *get_has_bl_table(PartitionType partition, BlockSize bsize)
     if (partition == PARTITION_VERT_A || partition == PARTITION_VERT_B) {
         assert(bsize < BlockSizeS);
         ret = has_bl_vert_tables[bsize];
-    } else
+    } else {
         ret = has_bl_tables[bsize];
+    }
     assert(ret);
     return ret;
 }
@@ -952,8 +962,9 @@ static const uint8_t *get_has_bl_table(PartitionType partition, BlockSize bsize)
 int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_t mi_row, int32_t mi_col,
                                       int32_t bottom_available, int32_t left_available, PartitionType partition,
                                       TxSize txsz, int32_t row_off, int32_t col_off, int32_t ss_x, int32_t ss_y) {
-    if (!bottom_available || !left_available)
+    if (!bottom_available || !left_available) {
         return 0;
+    }
 
     // Special case for 128x* blocks, when col_off is half the block width.
     // This is needed because 128x* superblocks are divided into 64x* blocks in
@@ -981,8 +992,9 @@ int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_
         const int32_t bottom_left_count_unit = eb_tx_size_high_unit[txsz];
 
         // All bottom-left pixels are in the left block, which is already available.
-        if (row_off + bottom_left_count_unit < plane_bh_unit)
+        if (row_off + bottom_left_count_unit < plane_bh_unit) {
             return 1;
+        }
 
         const int32_t bw_in_mi_log2 = mi_size_wide_log2[bsize];
         const int32_t bh_in_mi_log2 = mi_size_high_log2[bsize];
@@ -1003,8 +1015,9 @@ int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_
 
         // Bottom row of superblock (and not the leftmost column): so bottom-left
         // pixels fall in the bottom superblock, which is not available yet.
-        if (((blk_row_in_sb + 1) << bh_in_mi_log2) >= sb_mi_size)
+        if (((blk_row_in_sb + 1) << bh_in_mi_log2) >= sb_mi_size) {
             return 0;
+        }
 
         // General case (neither leftmost column nor bottom row): check if the
         // bottom-left block is coded before the current block.
@@ -1038,7 +1051,9 @@ static INLINE void dc_left_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw,
     int32_t sum = 0;
     (void)above;
 
-    for (int32_t i = 0; i < bh; i++) sum += left[i];
+    for (int32_t i = 0; i < bh; i++) {
+        sum += left[i];
+    }
     int32_t expected_dc = (sum + (bh >> 1)) / bh;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1052,7 +1067,9 @@ static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
     int32_t sum = 0;
     (void)left;
 
-    for (int32_t i = 0; i < bw; i++) sum += above[i];
+    for (int32_t i = 0; i < bw; i++) {
+        sum += above[i];
+    }
     int32_t expected_dc = (sum + (bw >> 1)) / bw;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1066,8 +1083,12 @@ static INLINE void dc_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
     int32_t       sum   = 0;
     const int32_t count = bw + bh;
 
-    for (int32_t i = 0; i < bw; i++) sum += above[i];
-    for (int32_t i = 0; i < bh; i++) sum += left[i];
+    for (int32_t i = 0; i < bw; i++) {
+        sum += above[i];
+    }
+    for (int32_t i = 0; i < bh; i++) {
+        sum += left[i];
+    }
     int32_t expected_dc = (sum + (count >> 1)) / count;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1115,7 +1136,9 @@ static INLINE void smooth_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
                                        (uint8_t)(scale - sm_weights_w[c])};
             uint32_t      this_pred = 0;
             assert(scale >= sm_weights_h[r] && scale >= sm_weights_w[c]);
-            for (int i = 0; i < 4; ++i) this_pred += weights[i] * pixels[i];
+            for (int i = 0; i < 4; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint8_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1136,7 +1159,9 @@ static INLINE void smooth_v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw
             const uint8_t weights[] = {sm_weights[r], (uint8_t)(scale - sm_weights[r])};
             uint32_t      this_pred = 0;
             assert(scale >= sm_weights[r]);
-            for (unsigned i = 0; i < 2; ++i) this_pred += weights[i] * pixels[i];
+            for (unsigned i = 0; i < 2; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint8_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1157,7 +1182,9 @@ static INLINE void smooth_h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw
             const uint8_t weights[] = {sm_weights[c], (uint8_t)(scale - sm_weights[c])};
             uint32_t      this_pred = 0;
             assert(scale >= sm_weights[c]);
-            for (unsigned i = 0; i < 2; ++i) this_pred += weights[i] * pixels[i];
+            for (unsigned i = 0; i < 2; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint8_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1187,7 +1214,9 @@ static INLINE void highbd_h_predictor(uint16_t *dst, ptrdiff_t stride, int32_t b
     }
 }
 #endif
-static INLINE int abs_diff(int a, int b) { return (a > b) ? a - b : b - a; }
+static INLINE int abs_diff(int a, int b) {
+    return (a > b) ? a - b : b - a;
+}
 
 static INLINE uint16_t paeth_predictor_single(uint16_t left, uint16_t top, uint16_t top_left) {
     const int base       = top + left - top_left;
@@ -1203,8 +1232,11 @@ static INLINE void paeth_predictor(uint8_t *dst, ptrdiff_t stride, int bw, int b
                                    const uint8_t *left) {
     const uint8_t ytop_left = above[-1];
 
-    for (int r = 0; r < bh; ++r, dst += stride)
-        for (int c = 0; c < bw; ++c) dst[c] = (uint8_t)paeth_predictor_single(left[r], above[c], ytop_left);
+    for (int r = 0; r < bh; ++r, dst += stride) {
+        for (int c = 0; c < bw; ++c) {
+            dst[c] = (uint8_t)paeth_predictor_single(left[r], above[c], ytop_left);
+        }
+    }
 }
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
@@ -1213,8 +1245,11 @@ static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride, int b
     const uint16_t ytop_left = above[-1];
     (void)bd;
 
-    for (int r = 0; r < bh; ++r, dst += stride)
-        for (int c = 0; c < bw; ++c) dst[c] = paeth_predictor_single(left[r], above[c], ytop_left);
+    for (int r = 0; r < bh; ++r, dst += stride) {
+        for (int c = 0; c < bw; ++c) {
+            dst[c] = paeth_predictor_single(left[r], above[c], ytop_left);
+        }
+    }
 }
 
 static INLINE void highbd_smooth_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
@@ -1237,7 +1272,9 @@ static INLINE void highbd_smooth_predictor(uint16_t *dst, ptrdiff_t stride, int3
                                         (uint8_t)(scale - sm_weights_w[c])};
             uint32_t       this_pred = 0;
             assert(scale >= sm_weights_h[r] && scale >= sm_weights_w[c]);
-            for (int i = 0; i < 4; ++i) this_pred += weights[i] * pixels[i];
+            for (int i = 0; i < 4; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint16_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1259,7 +1296,9 @@ static INLINE void highbd_smooth_v_predictor(uint16_t *dst, ptrdiff_t stride, in
             const uint8_t  weights[] = {sm_weights[r], (uint8_t)(scale - sm_weights[r])};
             uint32_t       this_pred = 0;
             assert(scale >= sm_weights[r]);
-            for (int i = 0; i < 2; ++i) this_pred += weights[i] * pixels[i];
+            for (int i = 0; i < 2; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint16_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1281,7 +1320,9 @@ static INLINE void highbd_smooth_h_predictor(uint16_t *dst, ptrdiff_t stride, in
             const uint8_t  weights[] = {sm_weights[c], (uint8_t)(scale - sm_weights[c])};
             uint32_t       this_pred = 0;
             assert(scale >= sm_weights[c]);
-            for (int i = 0; i < 2; ++i) this_pred += weights[i] * pixels[i];
+            for (int i = 0; i < 2; ++i) {
+                this_pred += weights[i] * pixels[i];
+            }
             dst[c] = (uint16_t)divide_round(this_pred, log2_scale);
         }
     }
@@ -1304,7 +1345,9 @@ static INLINE void highbd_dc_left_predictor(uint16_t *dst, ptrdiff_t stride, int
     (void)above;
     (void)bd;
 
-    for (int32_t i = 0; i < bh; i++) sum += left[i];
+    for (int32_t i = 0; i < bh; i++) {
+        sum += left[i];
+    }
     int32_t expected_dc = (sum + (bh >> 1)) / bh;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1319,7 +1362,9 @@ static INLINE void highbd_dc_top_predictor(uint16_t *dst, ptrdiff_t stride, int3
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < bw; i++) sum += above[i];
+    for (int32_t i = 0; i < bw; i++) {
+        sum += above[i];
+    }
     int32_t expected_dc = (sum + (bw >> 1)) / bw;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1334,8 +1379,12 @@ static INLINE void highbd_dc_predictor(uint16_t *dst, ptrdiff_t stride, int32_t 
     const int32_t count = bw + bh;
     (void)bd;
 
-    for (int32_t i = 0; i < bw; i++) sum += above[i];
-    for (int32_t i = 0; i < bh; i++) sum += left[i];
+    for (int32_t i = 0; i < bw; i++) {
+        sum += above[i];
+    }
+    for (int32_t i = 0; i < bh; i++) {
+        sum += left[i];
+    }
     int32_t expected_dc = (sum + (count >> 1)) / count;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -2292,10 +2341,11 @@ void svt_aom_dr_predictor(uint8_t *dst, ptrdiff_t stride, TxSize tx_size, const 
         svt_av1_dr_prediction_z2(dst, stride, bw, bh, above, left, upsample_above, upsample_left, dx, dy);
     } else if (angle > 180 && angle < 270) {
         svt_av1_dr_prediction_z3(dst, stride, bw, bh, above, left, upsample_left, dx, dy);
-    } else if (angle == 90)
+    } else if (angle == 90) {
         svt_aom_eb_pred[V_PRED][tx_size](dst, stride, above, left);
-    else if (angle == 180)
+    } else if (angle == 180) {
         svt_aom_eb_pred[H_PRED][tx_size](dst, stride, above, left);
+    }
 }
 
 void filter_intra_edge_corner(uint8_t *p_above, uint8_t *p_left) {
@@ -2338,8 +2388,9 @@ void svt_av1_highbd_dr_prediction_z1_c(uint16_t *dst, ptrdiff_t stride, int32_t 
                 int32_t val = above[base] * (32 - shift) + above[base + 1] * shift;
                 val         = ROUND_POWER_OF_TWO(val, 5);
                 dst[c]      = (uint16_t)clip_pixel_highbd(val, bd);
-            } else
+            } else {
                 dst[c] = above[max_base_x];
+            }
         }
     }
 }
@@ -2393,15 +2444,17 @@ void svt_aom_highbd_dr_predictor(uint16_t *dst, ptrdiff_t stride, TxSize tx_size
         svt_av1_highbd_dr_prediction_z2(dst, stride, bw, bh, above, left, upsample_above, upsample_left, dx, dy, bd);
     } else if (angle > 180 && angle < 270) {
         svt_av1_highbd_dr_prediction_z3(dst, stride, bw, bh, above, left, upsample_left, dx, dy, bd);
-    } else if (angle == 90)
+    } else if (angle == 90) {
         svt_aom_pred_high[V_PRED][tx_size](dst, stride, above, left, bd);
-    else if (angle == 180)
+    } else if (angle == 180) {
         svt_aom_pred_high[H_PRED][tx_size](dst, stride, above, left, bd);
+    }
 }
 
 void svt_av1_filter_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t strength) {
-    if (!strength)
+    if (!strength) {
         return;
+    }
 
     const int32_t kernel[INTRA_EDGE_FILT][INTRA_EDGE_TAPS] = {{0, 4, 8, 4, 0}, {0, 5, 6, 5, 0}, {2, 4, 4, 4, 2}};
     const int32_t filt                                     = strength - 1;
@@ -2435,46 +2488,52 @@ void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left) {
     BlockSize bs = bsize;
     switch (bsize) {
     case BLOCK_4X4:
-        if (subsampling_x == 1 && subsampling_y == 1)
+        if (subsampling_x == 1 && subsampling_y == 1) {
             bs = BLOCK_8X8;
-        else if (subsampling_x == 1)
+        } else if (subsampling_x == 1) {
             bs = BLOCK_8X4;
-        else if (subsampling_y == 1)
+        } else if (subsampling_y == 1) {
             bs = BLOCK_4X8;
+        }
         break;
     case BLOCK_4X8:
-        if (subsampling_x == 1 && subsampling_y == 1)
+        if (subsampling_x == 1 && subsampling_y == 1) {
             bs = BLOCK_8X8;
-        else if (subsampling_x == 1)
+        } else if (subsampling_x == 1) {
             bs = BLOCK_8X8;
-        else if (subsampling_y == 1)
+        } else if (subsampling_y == 1) {
             bs = BLOCK_4X8;
+        }
         break;
     case BLOCK_8X4:
-        if (subsampling_x == 1 && subsampling_y == 1)
+        if (subsampling_x == 1 && subsampling_y == 1) {
             bs = BLOCK_8X8;
-        else if (subsampling_x == 1)
+        } else if (subsampling_x == 1) {
             bs = BLOCK_8X4;
-        else if (subsampling_y == 1)
+        } else if (subsampling_y == 1) {
             bs = BLOCK_8X8;
+        }
         break;
     case BLOCK_4X16:
-        if (subsampling_x == 1 && subsampling_y == 1)
+        if (subsampling_x == 1 && subsampling_y == 1) {
             bs = BLOCK_8X16;
-        else if (subsampling_x == 1)
+        } else if (subsampling_x == 1) {
             bs = BLOCK_8X16;
-        else if (subsampling_y == 1)
+        } else if (subsampling_y == 1) {
             bs = BLOCK_4X16;
+        }
         break;
     case BLOCK_16X4:
-        if (subsampling_x == 1 && subsampling_y == 1)
+        if (subsampling_x == 1 && subsampling_y == 1) {
             bs = BLOCK_16X8;
-        else if (subsampling_x == 1)
+        } else if (subsampling_x == 1) {
             bs = BLOCK_16X4;
-        else if (subsampling_y == 1)
+        } else if (subsampling_y == 1) {
             bs = BLOCK_16X8;
+        }
         break;
-    default: break;
+    default:
+        break;
     }
     return bs;
 }
@@ -2491,12 +2550,16 @@ void svt_aom_highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride, TxSi
     assert(bw <= 32 && bh <= 32);
 
     // The initialization is just for silencing Jenkins static analysis warnings
-    for (int r = 0; r < bh + 1; ++r) memset(buffer[r], 0, (bw + 1) * sizeof(buffer[0][0]));
+    for (int r = 0; r < bh + 1; ++r) {
+        memset(buffer[r], 0, (bw + 1) * sizeof(buffer[0][0]));
+    }
 
-    for (int r = 0; r < bh; ++r) buffer[r + 1][0] = left[r];
+    for (int r = 0; r < bh; ++r) {
+        buffer[r + 1][0] = left[r];
+    }
     svt_memcpy(buffer[0], &above[-1], (bw + 1) * sizeof(buffer[0][0]));
 
-    for (int r = 1; r < bh + 1; r += 2)
+    for (int r = 1; r < bh + 1; r += 2) {
         for (int c = 1; c < bw + 1; c += 4) {
             const uint16_t p0 = buffer[r - 1][c - 1];
             const uint16_t p1 = buffer[r - 1][c];
@@ -2518,6 +2581,7 @@ void svt_aom_highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride, TxSi
                     bd);
             }
         }
+    }
 
     for (int r = 0; r < bh; ++r) {
         svt_memcpy(dst, &buffer[r + 1][1], bw * sizeof(dst[0]));
@@ -2544,12 +2608,13 @@ void svt_aom_filter_intra_edge(uint8_t mode, uint16_t max_frame_width, uint16_t 
     int       n_left_px = cu_origin_x > 0 ? AOMMIN(txhpx, (mb_height * 16 - cu_origin_y + txhpx)) : 0;
 
     if (av1_is_directional_mode((PredictionMode)mode)) {
-        if (p_angle <= 90)
+        if (p_angle <= 90) {
             need_above = 1, need_left = 0, need_above_left = 1;
-        else if (p_angle < 180)
+        } else if (p_angle < 180) {
             need_above = 1, need_left = 1, need_above_left = 1;
-        else
+        } else {
             need_above = 0, need_left = 1, need_above_left = 1;
+        }
     }
 
     if (p_angle != 90 && p_angle != 180) {
@@ -2590,14 +2655,15 @@ EbErrorType svt_aom_intra_prediction_open_loop_mb(int32_t p_angle, uint8_t ois_i
     PredictionMode mode         = ois_intra_mode;
     const int32_t  is_dr_mode   = av1_is_directional_mode(mode);
 
-    if (is_dr_mode)
+    if (is_dr_mode) {
         svt_aom_dr_predictor(dst, dst_stride, tx_size, above_row, left_col, 0, 0, p_angle);
-    else {
+    } else {
         // predict
         if (mode == DC_PRED) {
             svt_aom_dc_pred[src_origin_x > 0][src_origin_y > 0][tx_size](dst, dst_stride, above_row, left_col);
-        } else
+        } else {
             svt_aom_eb_pred[mode][tx_size](dst, dst_stride, above_row, left_col);
+        }
     }
     return return_error;
 }

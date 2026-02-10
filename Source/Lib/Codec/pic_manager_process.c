@@ -51,8 +51,9 @@ static EbErrorType rtime_alloc_palette_tokens(SequenceControlSet *scs, PictureCo
             uint32_t     mb_rows = (mi_rows + 2) >> 2;
             unsigned int tokens  = get_token_alloc(mb_rows, mb_cols, MAX_SB_SIZE_LOG2, 2);
             EB_CALLOC_ARRAY(child_pcs->tile_tok[0][0], tokens);
-        } else
+        } else {
             child_pcs->tile_tok[0][0] = NULL;
+        }
     }
     return EB_ErrorNone;
 }
@@ -70,8 +71,9 @@ static inline void heap_swap(uint64_t *heap, int i, int j) {
 static void heap_sift_up(uint64_t *heap, int index) {
     while (index > 0) {
         int parent = (index - 1) >> 1;
-        if (heap[parent] <= heap[index])
+        if (heap[parent] <= heap[index]) {
             break;
+        }
         heap_swap(heap, parent, index);
         index = parent;
     }
@@ -84,13 +86,16 @@ static void heap_sift_down(uint64_t *heap, int count, int index) {
         int right = left + 1;
         int min   = index;
 
-        if (left < count && heap[left] < heap[min])
+        if (left < count && heap[left] < heap[min]) {
             min = left;
-        if (right < count && heap[right] < heap[min])
+        }
+        if (right < count && heap[right] < heap[min]) {
             min = right;
+        }
 
-        if (min == index)
+        if (min == index) {
             break;
+        }
 
         heap_swap(heap, index, min);
         index = min;
@@ -98,7 +103,9 @@ static void heap_sift_down(uint64_t *heap, int count, int index) {
 }
 
 // Get smallest element (top of heap) without removing it
-static inline uint64_t heap_min(const uint64_t *heap, int count) { return (count > 0) ? heap[0] : UINT64_MAX; }
+static inline uint64_t heap_min(const uint64_t *heap, int count) {
+    return (count > 0) ? heap[0] : UINT64_MAX;
+}
 
 // Remove and return smallest element (top of heap)
 static inline uint64_t heap_pop_min(uint64_t *heap, int *count_io) {
@@ -114,8 +121,9 @@ static inline uint64_t heap_pop_min(uint64_t *heap, int *count_io) {
 // Returns 1 on success, 0 if heap is full (no growth)
 static inline bool heap_push(uint64_t *heap, int *count_io, int capacity, uint64_t value) {
     int count = *count_io;
-    if (count == capacity)
+    if (count == capacity) {
         return false; // heap full, drop or handle overflow
+    }
     heap[count] = value;
     heap_sift_up(heap, count);
     *count_io = count + 1;
@@ -502,8 +510,9 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             }
             svt_release_mutex(enc_ctx->ref_pic_list_mutex);
             // Update the last decode order
-            if (input_pic_demux->decode_order == decode_order)
+            if (input_pic_demux->decode_order == decode_order) {
                 decode_order++;
+            }
             break;
         default:
             scs     = input_pic_demux->scs;
@@ -536,18 +545,22 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             input_entry  = enc_ctx->pic_mgr_input_pic_list[input_list_idx];
 
             // If list entry invalid/unavailable, check next entry
-            if (input_entry->input_object_ptr == NULL)
+            if (input_entry->input_object_ptr == NULL) {
                 continue;
+            }
 
             PictureParentControlSet *entry_ppcs = (PictureParentControlSet *)input_entry->input_object_ptr->object_ptr;
             SequenceControlSet      *entry_scs_ptr = entry_ppcs->scs;
-            if (entry_ppcs->decode_order != decode_order && (scs->enable_dec_order))
+            if (entry_ppcs->decode_order != decode_order && (scs->enable_dec_order)) {
                 continue;
+            }
 
             // pic mgr starts pictures in dec order (no need to wait for feedback)
-            if (entry_scs_ptr->enable_pic_mgr_dec_order)
-                if (entry_ppcs->picture_number > 0 && entry_ppcs->decode_order != context_ptr->pmgr_dec_order + 1)
+            if (entry_scs_ptr->enable_pic_mgr_dec_order) {
+                if (entry_ppcs->picture_number > 0 && entry_ppcs->decode_order != context_ptr->pmgr_dec_order + 1) {
                     continue;
+                }
+            }
             // Only start pictures that can be reached with the given number of reference
             // buffers. PA may have more ref buffers than PM, so can send pictures faster,
             // but PM can't start those pictures until it has sufficient buffers to reach
@@ -557,15 +570,17 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             // the ref buffers below REF_FRAMES for LD when aggressive MRP is used.
             if (!scs->enable_dec_order &&
                 entry_ppcs->decode_order >
-                    (context_ptr->consecutive_dec_order + scs->reference_picture_buffer_init_count - REF_FRAMES))
+                    (context_ptr->consecutive_dec_order + scs->reference_picture_buffer_init_count - REF_FRAMES)) {
                 continue;
+            }
 
             bool refs_available = true;
             // For INTER frames, check that all references are available before starting the pic
             if (entry_ppcs->slice_type == B_SLICE) {
                 for (REF_FRAME_MINUS1 ref = LAST; ref < ALT + 1; ref++) {
-                    if (!refs_available)
+                    if (!refs_available) {
                         break;
+                    }
                     // hardcode the reference for the overlay frame
                     uint64_t ref_poc = entry_ppcs->is_overlay ? entry_ppcs->picture_number
                                                               : entry_ppcs->av1_ref_signal.ref_poc_array[ref];
@@ -584,8 +599,9 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             }
 
             // If pic is not available to be started (e.g. refs not available or not in order), exit this pic
-            if (!refs_available)
+            if (!refs_available) {
                 continue;
+            }
 
             if (entry_ppcs->is_ref) {
                 EbObjectWrapper *ref_pic_wrapper;
@@ -597,8 +613,9 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                 EbReferenceObject *ref = (EbReferenceObject *)ref_pic_wrapper->object_ptr;
                 // if resolution has changed, and the ref_picsettings do not match scs settings, update ref_pic params
                 if (ref->reference_picture->max_width != entry_scs_ptr->max_input_luma_width ||
-                    ref->reference_picture->max_height != entry_scs_ptr->max_input_luma_height)
+                    ref->reference_picture->max_height != entry_scs_ptr->max_input_luma_height) {
                     svt_reference_param_update(ref, entry_scs_ptr);
+                }
                 svt_reference_object_reset(ref, entry_scs_ptr);
                 // Give the new Reference a nominal live_count of 1
                 svt_object_inc_live_count(entry_ppcs->ref_pic_wrapper, 1);
@@ -616,8 +633,9 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             EncDecSet *enc_dec_ptr = (EncDecSet *)enc_dec_wrapper->object_ptr;
             // if resolution has changed, and the recon pic settings do not match scs settings, update recon coeff params
             if (enc_dec_ptr->recon_pic->max_width != entry_scs_ptr->max_input_luma_width ||
-                enc_dec_ptr->recon_pic->max_height != entry_scs_ptr->max_input_luma_height)
+                enc_dec_ptr->recon_pic->max_height != entry_scs_ptr->max_input_luma_height) {
                 recon_coef_update_param(enc_dec_ptr, entry_scs_ptr);
+            }
             enc_dec_ptr->enc_dec_wrapper = enc_dec_wrapper;
 
             // 1.Link The Child PCS to its Parent
@@ -649,8 +667,9 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             child_pcs->scs = entry_ppcs->scs;
             // if resolution has changed, and the child_pcs settings do not match scs settings, update pcs params
             if (child_pcs->frame_width != child_pcs->scs->max_input_luma_width ||
-                child_pcs->frame_height != child_pcs->scs->max_input_luma_height)
+                child_pcs->frame_height != child_pcs->scs->max_input_luma_height) {
                 pcs_update_param(child_pcs);
+            }
             child_pcs->picture_qp           = entry_ppcs->picture_qp;
             child_pcs->picture_number       = entry_ppcs->picture_number;
             child_pcs->slice_type           = entry_ppcs->slice_type;
@@ -857,10 +876,11 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
             }
 
             if (entry_ppcs->frame_end_cdf_update_mode) {
-                if (entry_ppcs->slice_type != I_SLICE && entry_ppcs->frm_hdr.frame_type != S_FRAME)
+                if (entry_ppcs->slice_type != I_SLICE && entry_ppcs->frm_hdr.frame_type != S_FRAME) {
                     child_pcs->ppcs->frm_hdr.primary_ref_frame = ref_index;
-                else
+                } else {
                     child_pcs->ppcs->frm_hdr.primary_ref_frame = PRIMARY_REF_NONE;
+                }
                 child_pcs->ppcs->refresh_frame_context = REFRESH_FRAME_CONTEXT_BACKWARD;
 
             } else {

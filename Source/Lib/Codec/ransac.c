@@ -40,14 +40,18 @@ static int compare_motions(const void *arg_a, const void *arg_b) {
     const RANSAC_MOTION *motion_a = (RANSAC_MOTION *)arg_a;
     const RANSAC_MOTION *motion_b = (RANSAC_MOTION *)arg_b;
 
-    if (motion_a->num_inliers > motion_b->num_inliers)
+    if (motion_a->num_inliers > motion_b->num_inliers) {
         return -1;
-    if (motion_a->num_inliers < motion_b->num_inliers)
+    }
+    if (motion_a->num_inliers < motion_b->num_inliers) {
         return 1;
-    if (motion_a->sse < motion_b->sse)
+    }
+    if (motion_a->sse < motion_b->sse) {
         return -1;
-    if (motion_a->sse > motion_b->sse)
+    }
+    if (motion_a->sse > motion_b->sse) {
         return 1;
+    }
     return 0;
 }
 
@@ -280,7 +284,9 @@ static bool ransac_internal(const Correspondence *matched_points, int npoints, M
     // Once all our allocations are known-good, we can fill in our structures
     worst_kept_motion = motions;
 
-    for (i = 0; i < num_desired_motions; ++i) { motions[i].inlier_indices = inlier_buffer + i * npoints; }
+    for (i = 0; i < num_desired_motions; ++i) {
+        motions[i].inlier_indices = inlier_buffer + i * npoints;
+    }
     memset(&current_motion, 0, sizeof(current_motion));
     current_motion.inlier_indices = inlier_buffer + num_desired_motions * npoints;
 
@@ -385,8 +391,9 @@ static bool ransac_internal(const Correspondence *matched_points, int npoints, M
             }
         }
 
-        if (bad_model)
+        if (bad_model) {
             continue;
+        }
 
         // Fill in output struct
         memcpy(motion_models[i].params, params_this_motion, MAX_PARAMDIM * sizeof(*motion_models[i].params));

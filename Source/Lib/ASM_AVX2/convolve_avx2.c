@@ -1236,7 +1236,9 @@ void svt_av1_convolve_x_sr_avx2(const uint8_t *src, int32_t src_stride, uint8_t 
 
 // Loads and stores to do away with the tedium of casting the address
 // to the right type.
-static INLINE __m128i xx_load_128(const void *a) { return _mm_loadu_si128((const __m128i *)a); }
+static INLINE __m128i xx_load_128(const void *a) {
+    return _mm_loadu_si128((const __m128i *)a);
+}
 
 static INLINE __m256i calc_mask_avx2(const __m256i mask_base, const __m256i s0, const __m256i s1) {
     const __m256i diff = _mm256_abs_epi16(_mm256_sub_epi16(s0, s1));
@@ -1978,8 +1980,9 @@ static INLINE int32_t sum_to_int32(__m256i sum_256) {
 
 uint8_t svt_av1_compute_cul_level_avx2(const int16_t *const scan, const int32_t *const quant_coeff, uint16_t *eob) {
     if (*eob == 1) {
-        if (quant_coeff[0] > 0)
+        if (quant_coeff[0] > 0) {
             return (AOMMIN(COEFF_CONTEXT_MASK, quant_coeff[0]) + (2 << COEFF_CONTEXT_BITS));
+        }
         if (quant_coeff[0] < 0) {
             return (AOMMIN(COEFF_CONTEXT_MASK, ABS(quant_coeff[0])) | (1 << COEFF_CONTEXT_BITS));
         }
@@ -2001,15 +2004,19 @@ uint8_t svt_av1_compute_cul_level_avx2(const int16_t *const scan, const int32_t 
     int sum = 0;
     if (*eob % 8) {
         int eob_round = *eob & ~7;
-        for (int32_t c = 0; c < *eob % 8; c++) { sum += abs(quant_coeff[scan[eob_round + c]]); }
+        for (int32_t c = 0; c < *eob % 8; c++) {
+            sum += abs(quant_coeff[scan[eob_round + c]]);
+        }
     }
 
     int32_t cul_level = sum_to_int32(sum_256) + sum;
     cul_level         = AOMMIN(COEFF_CONTEXT_MASK, cul_level);
     // DC value, calculation from set_dc_sign()
-    if (quant_coeff[0] < 0)
+    if (quant_coeff[0] < 0) {
         return (cul_level | (1 << COEFF_CONTEXT_BITS));
-    if (quant_coeff[0] > 0)
+    }
+    if (quant_coeff[0] > 0) {
         return (cul_level + (2 << COEFF_CONTEXT_BITS));
+    }
     return (uint8_t)cul_level;
 }

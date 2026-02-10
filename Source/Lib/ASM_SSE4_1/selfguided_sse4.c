@@ -19,7 +19,9 @@
 
 // Load 4 bytes from the possibly-misaligned pointer p, extend each byte to
 // 32-bit precision and return them in an SSE register.
-static __m128i xx_load_extend_8_32(const void *p) { return _mm_cvtepu8_epi32(xx_loadl_32(p)); }
+static __m128i xx_load_extend_8_32(const void *p) {
+    return _mm_cvtepu8_epi32(xx_loadl_32(p));
+}
 
 // Compute the scan of an SSE register holding 4 32-bit integers. If the
 // register holds x0..x3 then the scan will hold x0, x0+x1, x0+x1+x2,
@@ -130,7 +132,9 @@ static INLINE __m128i boxsum_from_ii(const int32_t *ii, int stride, int r) {
     return _mm_sub_epi32(v, u);
 }
 
-static __m128i round_for_shift(unsigned shift) { return _mm_set1_epi32((1 << shift) >> 1); }
+static __m128i round_for_shift(unsigned shift) {
+    return _mm_set1_epi32((1 << shift) >> 1);
+}
 
 static __m128i compute_p(__m128i sum1, __m128i sum2, int bit_depth, int n) {
     __m128i an, bb;
@@ -493,10 +497,11 @@ void svt_av1_selfguided_restoration_sse4_1(const uint8_t *dgd8, int32_t width, i
 
     // Generate integral images from the input. C will contain sums of squares; D
     // will contain just sums
-    if (highbd)
+    if (highbd) {
         integral_images_highbd(CONVERT_TO_SHORTPTR(dgd0), dgd_stride, width_ext, height_ext, Ctl, Dtl, buf_stride);
-    else
+    } else {
         integral_images(dgd0, dgd_stride, width_ext, height_ext, Ctl, Dtl, buf_stride);
+    }
 
     const SgrParamsType *const params = &svt_aom_eb_sgr_params[sgr_params_idx];
     // Write to flt0 and flt1

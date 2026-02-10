@@ -91,7 +91,9 @@ static void av1_convolve_horiz_rs_c(const uint8_t *src, int src_stride, uint8_t 
             assert(x_filter_idx <= RS_SUBPEL_MASK);
             const int16_t *const x_filter = &x_filters[x_filter_idx * UPSCALE_NORMATIVE_TAPS];
             int                  sum      = 0;
-            for (int k = 0; k < UPSCALE_NORMATIVE_TAPS; ++k) sum += src_x[k] * x_filter[k];
+            for (int k = 0; k < UPSCALE_NORMATIVE_TAPS; ++k) {
+                sum += src_x[k] * x_filter[k];
+            }
             dst[x] = clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
             x_qn += x_step_qn;
         }
@@ -111,7 +113,9 @@ static void av1_highbd_convolve_horiz_rs_c(const uint16_t *src, int src_stride, 
             assert(x_filter_idx <= RS_SUBPEL_MASK);
             const int16_t *const x_filter = &x_filters[x_filter_idx * UPSCALE_NORMATIVE_TAPS];
             int                  sum      = 0;
-            for (int k = 0; k < UPSCALE_NORMATIVE_TAPS; ++k) sum += src_x[k] * x_filter[k];
+            for (int k = 0; k < UPSCALE_NORMATIVE_TAPS; ++k) {
+                sum += src_x[k] * x_filter[k];
+            }
             dst[x] = clip_pixel_highbd(ROUND_POWER_OF_TWO(sum, FILTER_BITS), bd);
             x_qn += x_step_qn;
         }
@@ -168,7 +172,9 @@ void upscale_normative_rect(const uint8_t *const input, int height, int width, i
 
     /* Restore the left/right border pixels */
     if (pad_left) {
-        for (int i = 0; i < height; i++) { svt_memcpy(in_tl + i * in_stride, tmp_left + i * border_cols, border_cols); }
+        for (int i = 0; i < height; i++) {
+            svt_memcpy(in_tl + i * in_stride, tmp_left + i * border_cols, border_cols);
+        }
         svt_aom_free(tmp_left);
     }
     if (pad_right) {
@@ -229,7 +235,9 @@ static void highbd_upscale_normative_rect(const uint8_t *const input, int height
 
     /*Restore the left/right border pixels*/
     if (pad_left) {
-        for (int i = 0; i < height; i++) { svt_memcpy(in_tl + i * in_stride, tmp_left + i * border_cols, border_size); }
+        for (int i = 0; i < height; i++) {
+            svt_memcpy(in_tl + i * in_stride, tmp_left + i * border_cols, border_size);
+        }
         svt_aom_free(tmp_left);
     }
     if (pad_right) {
@@ -269,8 +277,9 @@ void svt_av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int
             (downscaled_x1 * superres_denom) / SCALE_NUMERATOR may be less than
             upscaled_plane_width.*/
             upscaled_x1 = upscaled_plane_width;
-        } else
+        } else {
             upscaled_x1 = (downscaled_x1 * superres_denom) / SCALE_NUMERATOR;
+        }
 
         const uint8_t *const src_ptr   = src + (downscaled_x0 << high_bd);
         uint8_t *const       dst_ptr   = dst + (upscaled_x0 << high_bd);
@@ -279,7 +288,7 @@ void svt_av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int
         const int pad_left  = (j == 0);
         const int pad_right = (j == cm->tiles_info.tile_cols - 1);
 
-        if (high_bd)
+        if (high_bd) {
             highbd_upscale_normative_rect(src_ptr,
                                           rows,
                                           src_width,
@@ -293,7 +302,7 @@ void svt_av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int
                                           pad_left,
                                           pad_right,
                                           bd);
-        else
+        } else {
             upscale_normative_rect(src_ptr,
                                    rows,
                                    src_width,
@@ -306,6 +315,7 @@ void svt_av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int
                                    x0_qn,
                                    pad_left,
                                    pad_right);
+        }
 
         /*Update the fractional pixel offset to prepare for the next tile col*/
         x0_qn += (dst_width * x_step_qn) - (src_width << RS_SCALE_SUBPEL_BITS);

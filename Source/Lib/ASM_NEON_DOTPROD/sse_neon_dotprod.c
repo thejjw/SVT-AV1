@@ -190,13 +190,20 @@ static inline uint32_t sse_4xh_neon_dotprod(const uint8_t *src, int src_stride, 
 int64_t svt_aom_sse_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width,
                                  int height) {
     switch (width) {
-    case 4: return sse_4xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 8: return sse_8xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 16: return sse_16xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 32: return sse_32xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 64: return sse_64xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 128: return sse_128xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    default: return sse_wxh_neon_dotprod(src, src_stride, ref, ref_stride, width, height);
+    case 4:
+        return sse_4xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 8:
+        return sse_8xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 16:
+        return sse_16xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 32:
+        return sse_32xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 64:
+        return sse_64xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 128:
+        return sse_128xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    default:
+        return sse_wxh_neon_dotprod(src, src_stride, ref, ref_stride, width, height);
     }
 }
 
@@ -206,12 +213,19 @@ uint64_t svt_spatial_full_distortion_kernel_neon_dotprod(uint8_t *src, uint32_t 
     src += src_offset;
     ref += ref_offset;
     switch (width) {
-    case 4: return sse_4xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 8: return sse_8xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 16: return sse_16xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 32: return sse_32xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 64: return sse_64xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    case 128: return sse_128xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
-    default: return sse_wxh_neon_dotprod(src, src_stride, ref, ref_stride, width, height);
+    case 4:
+        return sse_4xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 8:
+        return sse_8xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 16:
+        return sse_16xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 32:
+        return sse_32xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 64:
+        return sse_64xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    case 128:
+        return sse_128xh_neon_dotprod(src, src_stride, ref, ref_stride, height);
+    default:
+        return sse_wxh_neon_dotprod(src, src_stride, ref, ref_stride, width, height);
     }
 }

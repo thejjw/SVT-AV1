@@ -173,8 +173,9 @@ void svt_av1_k_means_dim1_avx2(const int *data, int *centroids, uint8_t *indices
             svt_memcpy_intrin_sse(indices, pre_indices, sizeof(pre_indices[0]) * n);
             break;
         }
-        if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k))
+        if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k)) {
             break;
+        }
     }
 }
 
@@ -383,7 +384,8 @@ void svt_av1_k_means_dim2_avx2(const int *data, int *centroids, uint8_t *indices
             svt_memcpy_intrin_sse(indices, pre_indices, sizeof(pre_indices[0]) * n);
             break;
         }
-        if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * 2))
+        if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * 2)) {
             break;
+        }
     }
 }

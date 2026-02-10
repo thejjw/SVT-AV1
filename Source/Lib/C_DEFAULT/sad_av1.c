@@ -21,7 +21,9 @@ static INLINE unsigned int obmc_sad(const uint8_t *pre, int pre_stride, const in
     unsigned int sad = 0;
 
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) sad += ROUND_POWER_OF_TWO(abs(wsrc[x] - pre[x] * mask[x]), 12);
+        for (x = 0; x < width; x++) {
+            sad += ROUND_POWER_OF_TWO(abs(wsrc[x] - pre[x] * mask[x]), 12);
+        }
 
         pre += pre_stride;
         wsrc += width;

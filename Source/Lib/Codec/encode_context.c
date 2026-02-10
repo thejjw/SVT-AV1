@@ -23,8 +23,9 @@ static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer, STA
     // *frame_stats_buffer =
     //     (FIRSTPASS_STATS *)aom_calloc(size, sizeof(FIRSTPASS_STATS));
     EB_MALLOC_ARRAY((*frame_stats_buffer), size);
-    if (*frame_stats_buffer == NULL)
+    if (*frame_stats_buffer == NULL) {
         return EB_ErrorInsufficientResources;
+    }
 
     stats_buf_context->stats_in_start     = *frame_stats_buffer;
     stats_buf_context->stats_in_end_write = stats_buf_context->stats_in_start;
@@ -32,12 +33,14 @@ static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer, STA
     stats_buf_context->stats_in_buf_end   = stats_buf_context->stats_in_start + size;
 
     EB_MALLOC_ARRAY(stats_buf_context->total_left_stats, 1);
-    if (stats_buf_context->total_left_stats == NULL)
+    if (stats_buf_context->total_left_stats == NULL) {
         return EB_ErrorInsufficientResources;
+    }
     svt_av1_twopass_zero_stats(stats_buf_context->total_left_stats);
     EB_MALLOC_ARRAY(stats_buf_context->total_stats, 1);
-    if (stats_buf_context->total_stats == NULL)
+    if (stats_buf_context->total_stats == NULL) {
         return EB_ErrorInsufficientResources;
+    }
     svt_av1_twopass_zero_stats(stats_buf_context->total_stats);
     stats_buf_context->last_frame_accumulated = -1;
 
@@ -75,8 +78,9 @@ static void encode_context_dctor(EbPtr p) {
     destroy_stats_buffer(&obj->stats_buf_context, obj->frame_stats_buffer);
     EB_DELETE_PTR_ARRAY(obj->rc.coded_frames_stat_queue, CODED_FRAMES_STAT_QUEUE_MAX_DEPTH);
 
-    if (obj->rc_param_queue)
+    if (obj->rc_param_queue) {
         EB_FREE_2D(obj->rc_param_queue);
+    }
     EB_DESTROY_MUTEX(obj->rc_param_queue_mutex);
     EB_DESTROY_MUTEX(obj->rc.rc_mutex);
 }

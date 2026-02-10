@@ -23,8 +23,9 @@ static void free_scale_evts(SvtAv1FrameScaleEvts *evts) {
 
 static void svt_sequence_control_set_dctor(EbPtr p) {
     SequenceControlSet *obj = (SequenceControlSet *)p;
-    if (!obj)
+    if (!obj) {
         return;
+    }
     EB_FREE_ARRAY(obj->b64_geom);
     free_sb_geoms(obj->sb_geom);
     free_scale_evts(&obj->static_config.frame_scale_evts);
@@ -118,20 +119,21 @@ EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_dat
 
 EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution, uint32_t inputSize) {
     EbErrorType return_error = EB_ErrorNone;
-    if (inputSize < INPUT_SIZE_240p_TH)
+    if (inputSize < INPUT_SIZE_240p_TH) {
         *input_resolution = INPUT_SIZE_240p_RANGE;
-    else if (inputSize < INPUT_SIZE_360p_TH)
+    } else if (inputSize < INPUT_SIZE_360p_TH) {
         *input_resolution = INPUT_SIZE_360p_RANGE;
-    else if (inputSize < INPUT_SIZE_480p_TH)
+    } else if (inputSize < INPUT_SIZE_480p_TH) {
         *input_resolution = INPUT_SIZE_480p_RANGE;
-    else if (inputSize < INPUT_SIZE_720p_TH)
+    } else if (inputSize < INPUT_SIZE_720p_TH) {
         *input_resolution = INPUT_SIZE_720p_RANGE;
-    else if (inputSize < INPUT_SIZE_1080p_TH)
+    } else if (inputSize < INPUT_SIZE_1080p_TH) {
         *input_resolution = INPUT_SIZE_1080p_RANGE;
-    else if (inputSize < INPUT_SIZE_4K_TH)
+    } else if (inputSize < INPUT_SIZE_4K_TH) {
         *input_resolution = INPUT_SIZE_4K_RANGE;
-    else
+    } else {
         *input_resolution = INPUT_SIZE_8K_RANGE;
+    }
 
     return return_error;
 }
@@ -159,10 +161,12 @@ EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance 
  * Sequence Control Set Copy
  ************************************************/
 EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSet *src) {
-    if (dst->sb_geom != NULL)
+    if (dst->sb_geom != NULL) {
         free_sb_geoms(dst->sb_geom);
-    if (dst->b64_geom != NULL)
+    }
+    if (dst->b64_geom != NULL) {
         EB_FREE_ARRAY(dst->b64_geom);
+    }
     // Copy the non-pointer members
     *dst = *src;
 

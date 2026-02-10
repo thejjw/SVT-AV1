@@ -48,16 +48,22 @@ void log_error_output(FILE *error_log_file, uint32_t error_code) {
     switch (error_code) {
         // EB_ENC_AMVP_ERRORS:
 
-    case EB_ENC_CL_ERROR2: fprintf(error_log_file, "Error: Unknown coding mode!\n"); break;
+    case EB_ENC_CL_ERROR2:
+        fprintf(error_log_file, "Error: Unknown coding mode!\n");
+        break;
 
-    case EB_ENC_EC_ERROR2: fprintf(error_log_file, "Error: copy_payload: output buffer too small!\n"); break;
+    case EB_ENC_EC_ERROR2:
+        fprintf(error_log_file, "Error: copy_payload: output buffer too small!\n");
+        break;
 
     case EB_ENC_EC_ERROR29:
         fprintf(error_log_file, "Error: No more than 6 SAO types\n");
         break;
 
         // EB_ENC_ERRORS:
-    case EB_ENC_ROB_OF_ERROR: fprintf(error_log_file, "Error: Recon Output Buffer Overflow!\n"); break;
+    case EB_ENC_ROB_OF_ERROR:
+        fprintf(error_log_file, "Error: Recon Output Buffer Overflow!\n");
+        break;
 
     case EB_ENC_RC_ERROR2:
         fprintf(error_log_file, "Error: RateControlProcess: No RC interval found!\n");
@@ -68,9 +74,13 @@ void log_error_output(FILE *error_log_file, uint32_t error_code) {
         fprintf(error_log_file, "Error: svt_aom_picture_manager_kernel: ref_entry should never be null!\n");
         break;
 
-    case EB_ENC_PM_ERROR4: fprintf(error_log_file, "Error: PictureManagerProcess: Empty input queue!\n"); break;
+    case EB_ENC_PM_ERROR4:
+        fprintf(error_log_file, "Error: PictureManagerProcess: Empty input queue!\n");
+        break;
 
-    case EB_ENC_PM_ERROR5: fprintf(error_log_file, "Error: PictureManagerProcess: Empty reference queue!\n"); break;
+    case EB_ENC_PM_ERROR5:
+        fprintf(error_log_file, "Error: PictureManagerProcess: Empty reference queue!\n");
+        break;
 
     case EB_ENC_PM_ERROR6:
         fprintf(error_log_file,
@@ -97,7 +107,9 @@ void log_error_output(FILE *error_log_file, uint32_t error_code) {
         fprintf(error_log_file, "Error: PictureDecisionProcess: Picture Decision Reorder Queue overflow\n");
         break;
 
-    default: fprintf(error_log_file, "Error: Others!\n"); break;
+    default:
+        fprintf(error_log_file, "Error: Others!\n");
+        break;
     }
 
     return;
@@ -107,8 +119,9 @@ static void (*read_input)(EbConfig *app_cfg, uint8_t is_16bit, EbBufferHeaderTyp
 
 /* returns a RAM address from a memory mapped file  */
 static void *svt_mmap(MemMapFile *h, size_t offset, size_t size) {
-    if (offset + size > h->file_size)
+    if (offset + size > h->file_size) {
         return NULL;
+    }
 
     // align our mapping to the page size
     const size_t align = offset & h->align_mask;
@@ -119,12 +132,14 @@ static void *svt_mmap(MemMapFile *h, size_t offset, size_t size) {
     const DWORD offset_high = (DWORD)(offset >> 32);
     const DWORD offset_low  = (DWORD)(offset & 0xFFFFFFFF);
     uint8_t    *base        = MapViewOfFile(h->map_handle, FILE_MAP_READ, offset_high, offset_low, size);
-    if (base)
+    if (base) {
         return base + align;
+    }
 #else
     uint8_t *base = mmap(NULL, size, PROT_READ, MAP_PRIVATE, h->fd, offset);
-    if (base != MAP_FAILED)
+    if (base != MAP_FAILED) {
         return base + align;
+    }
 #endif
     return NULL;
 }
@@ -163,23 +178,30 @@ static long get_next_qp_from_qp_file(FILE *const qp_file, int *const qp_read_fro
     long qp = 0;
     char line[512], *pos = line;
     // Read single line until \n
-    if (!fgets(line, 512, qp_file))
+    if (!fgets(line, 512, qp_file)) {
         // eof
         return -1;
+    }
     // Clear out beginning spaces
-    while (isspace(*pos)) ++pos;
-    if (!*pos)
+    while (isspace(*pos)) {
+        ++pos;
+    }
+    if (!*pos) {
         // eol
         return -1;
+    }
     switch (*pos) {
     case '#':
     case '/':
-    case '-': return 0;
+    case '-':
+        return 0;
     }
-    if (isdigit(*pos))
+    if (isdigit(*pos)) {
         qp = strtol(pos, NULL, 0);
-    if (qp > 0)
+    }
+    if (qp > 0) {
         *qp_read_from_file = 1;
+    }
     return qp;
 }
 
@@ -187,9 +209,10 @@ static unsigned char send_qp_on_the_fly(FILE *const qp_file, bool *use_qp_file) 
     long tmp_qp            = 0;
     int  qp_read_from_file = 0;
 
-    while (tmp_qp == 0 || (tmp_qp == -1 && qp_read_from_file))
+    while (tmp_qp == 0 || (tmp_qp == -1 && qp_read_from_file)) {
         // get next qp
         tmp_qp = get_next_qp_from_qp_file(qp_file, &qp_read_from_file);
+    }
 
     if (tmp_qp == -1) {
         *use_qp_file = false;
@@ -216,18 +239,21 @@ static void injector(uint64_t processed_frame_count, uint32_t injector_frame_rat
         // case, 1.0/encodRate)
         const double predicted_time  = (processed_frame_count - buffer_frames) * injector_interval;
         const int    milli_sec_ahead = (int)(1000 * (predicted_time - elapsed_time));
-        if (milli_sec_ahead > 0)
+        if (milli_sec_ahead > 0) {
             app_svt_av1_sleep(milli_sec_ahead);
+        }
     }
 }
 
 static bool is_forced_keyframe(const EbConfig *app_cfg, uint64_t pts) {
     if (app_cfg->forced_keyframes.frames) {
         for (size_t i = 0; i < app_cfg->forced_keyframes.count; ++i) {
-            if (app_cfg->forced_keyframes.frames[i] == pts)
+            if (app_cfg->forced_keyframes.frames[i] == pts) {
                 return true;
-            if (app_cfg->forced_keyframes.frames[i] > pts)
+            }
+            if (app_cfg->forced_keyframes.frames[i] > pts) {
                 break;
+            }
         }
     }
     return false;
@@ -240,8 +266,9 @@ bool process_skip(EbConfig *app_cfg, EbBufferHeaderType *header_ptr) {
 
         if (header_ptr->n_filled_len) {
             app_cfg->mmap.file_frame_it++;
-            if (app_cfg->mmap.enable)
+            if (app_cfg->mmap.enable) {
                 release_memory_mapped_file(app_cfg, is_16bit, header_ptr);
+            }
         } else {
             return false;
         }
@@ -254,9 +281,9 @@ bool process_skip(EbConfig *app_cfg, EbBufferHeaderType *header_ptr) {
 static EbErrorType test_update_rate_info(uint64_t pic_num, EbBufferHeaderType *header_ptr) {
     SvtAv1RateInfo *data;
     int             interval = 180;
-    if (pic_num == 0)
+    if (pic_num == 0) {
         return EB_ErrorNone;
-    else if (pic_num % (5 * interval) == 0) {
+    } else if (pic_num % (5 * interval) == 0) {
         data = (SvtAv1RateInfo *)malloc(sizeof(SvtAv1RateInfo));
         memset(data, 0, sizeof(SvtAv1RateInfo));
         data->target_bit_rate = 2000;
@@ -291,7 +318,9 @@ static EbErrorType test_update_rate_info(uint64_t pic_num, EbBufferHeaderType *h
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -302,9 +331,9 @@ static EbErrorType test_update_rate_info(uint64_t pic_num, EbBufferHeaderType *h
 static EbErrorType test_update_qp_info(uint64_t pic_num, EbBufferHeaderType *header_ptr) {
     SvtAv1RateInfo *data;
     int             interval = 120;
-    if (pic_num == 0)
+    if (pic_num == 0) {
         return EB_ErrorNone;
-    else if (pic_num % (5 * interval) == 0) {
+    } else if (pic_num % (5 * interval) == 0) {
         data = (SvtAv1RateInfo *)malloc(sizeof(SvtAv1RateInfo));
         memset(data, 0, sizeof(SvtAv1RateInfo));
         data->seq_qp         = 20;
@@ -343,7 +372,9 @@ static EbErrorType test_update_qp_info(uint64_t pic_num, EbBufferHeaderType *hea
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -355,9 +386,9 @@ static EbErrorType test_update_qp_info(uint64_t pic_num, EbBufferHeaderType *hea
 static EbErrorType test_update_frame_rate_info(uint64_t pic_num, EbBufferHeaderType *header_ptr) {
     SvtAv1FrameRateInfo *data;
     int                  interval = 500;
-    if (pic_num == 0)
+    if (pic_num == 0) {
         return EB_ErrorNone;
-    else if (pic_num % (5 * interval) == 0) {
+    } else if (pic_num % (5 * interval) == 0) {
         data = (SvtAv1FrameRateInfo *)malloc(sizeof(SvtAv1FrameRateInfo));
         memset(data, 0, sizeof(SvtAv1FrameRateInfo));
         data->frame_rate_numerator   = 24000;
@@ -396,7 +427,9 @@ static EbErrorType test_update_frame_rate_info(uint64_t pic_num, EbBufferHeaderT
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -425,7 +458,9 @@ static EbErrorType test_update_psnr_per_frame_info(uint64_t pic_num, EbBufferHea
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -437,9 +472,9 @@ static EbErrorType test_update_psnr_per_frame_info(uint64_t pic_num, EbBufferHea
 static EbErrorType test_update_input_pic_def(uint64_t pic_num, EbBufferHeaderType *header_ptr, EbConfig *app_cfg) {
     SvtAv1InputPicDef *data;
     int                interval = 60;
-    if (pic_num == 0)
+    if (pic_num == 0) {
         return EB_ErrorNone;
-    else if (pic_num % (5 * interval) == 0) {
+    } else if (pic_num % (5 * interval) == 0) {
         data                    = (SvtAv1InputPicDef *)malloc(sizeof(SvtAv1InputPicDef));
         data->input_luma_height = 360;
         data->input_luma_width  = 640;
@@ -491,7 +526,9 @@ static EbErrorType test_update_input_pic_def(uint64_t pic_num, EbBufferHeaderTyp
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -529,7 +566,9 @@ static EbErrorType retrieve_roi_map_event(SvtAv1RoiMap *roi_map, uint64_t pic_nu
         header_ptr->p_app_private = new_node;
     } else {
         EbPrivDataNode *last = header_ptr->p_app_private;
-        while (last->next != NULL) { last = last->next; }
+        while (last->next != NULL) {
+            last = last->next;
+        }
         last->next = new_node;
     }
 
@@ -566,10 +605,12 @@ void process_input_buffer(EncChannel *channel) {
 
     const uint64_t frames_to_be_encoded = (uint64_t)app_cfg->frames_to_be_encoded;
 
-    if (channel->exit_cond_input != APP_ExitConditionNone)
+    if (channel->exit_cond_input != APP_ExitConditionNone) {
         return;
-    if (app_cfg->injector)
+    }
+    if (app_cfg->injector) {
         injector(app_cfg->processed_frame_count, app_cfg->injector_frame_rate);
+    }
 
     if (frames_to_be_encoded != app_cfg->processed_frame_count && app_cfg->stop_encoder == false) {
         header_ptr->p_app_private = NULL;
@@ -586,11 +627,13 @@ void process_input_buffer(EncChannel *channel) {
             app_cfg->frames_encoded = (int32_t)(++app_cfg->processed_frame_count);
 
             // Configuration parameters changed on the fly
-            if (app_cfg->config.use_qp_file && app_cfg->qp_file)
+            if (app_cfg->config.use_qp_file && app_cfg->qp_file) {
                 header_ptr->qp = send_qp_on_the_fly(app_cfg->qp_file, &app_cfg->config.use_qp_file);
+            }
 
-            if (keep_running == 0 && !app_cfg->stop_encoder)
+            if (keep_running == 0 && !app_cfg->stop_encoder) {
                 app_cfg->stop_encoder = true;
+            }
             // Fill in Buffers Header control data
             header_ptr->pts      = app_cfg->processed_frame_count - 1;
             header_ptr->pic_type = is_forced_keyframe(app_cfg, header_ptr->pts) ? EB_AV1_KEY_PICTURE
@@ -599,8 +642,9 @@ void process_input_buffer(EncChannel *channel) {
             header_ptr->metadata = NULL;
 #if FTR_KF_ON_FLY_SAMPLE
             int interval = 19;
-            if (header_ptr->pts % (interval) == 0)
+            if (header_ptr->pts % (interval) == 0) {
                 header_ptr->pic_type = EB_AV1_KEY_PICTURE;
+            }
 #endif
 #if FTR_RATE_ON_FLY_SAMPLE
             test_update_rate_info(header_ptr->pts, header_ptr);
@@ -614,13 +658,15 @@ void process_input_buffer(EncChannel *channel) {
 #endif
             retrieve_roi_map_event(app_cfg->roi_map, header_ptr->pts, header_ptr);
             // Send the picture
-            if (svt_av1_enc_send_picture(component_handle, header_ptr) != EB_ErrorNone)
+            if (svt_av1_enc_send_picture(component_handle, header_ptr) != EB_ErrorNone) {
                 return_value = APP_ExitConditionFinished;
+            }
             // p_app_private is deep copied so it's safe to free it now
             free_private_data_list(header_ptr->p_app_private);
 
-            if (app_cfg->mmap.enable)
+            if (app_cfg->mmap.enable) {
                 release_memory_mapped_file(app_cfg, is_16bit, header_ptr);
+            }
         }
         if ((app_cfg->processed_frame_count == (uint64_t)app_cfg->frames_to_be_encoded) || app_cfg->stop_encoder) {
             header_ptr->flags = EB_BUFFERFLAG_EOS;
@@ -640,10 +686,11 @@ void process_input_buffer(EncChannel *channel) {
 
 double get_psnr(double sse, double max) {
     double psnr;
-    if (sse == 0)
+    if (sse == 0) {
         psnr = 10 * log10(max / 0.1);
-    else
+    } else {
         psnr = 10 * log10(max / sse);
+    }
 
     return psnr;
 }
@@ -904,8 +951,9 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
     uint64_t finish_s_time = 0;
     uint64_t finish_u_time = 0;
     uint8_t  is_alt_ref    = 1;
-    if (channel->exit_cond_output != APP_ExitConditionNone)
+    if (channel->exit_cond_output != APP_ExitConditionNone) {
         return;
+    }
     uint8_t pic_send_done = (channel->exit_cond_input == APP_ExitConditionNone) ||
             (channel->exit_cond_recon == APP_ExitConditionNone)
         ? 0
@@ -947,8 +995,9 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
                 }
             } else {
                 is_alt_ref = (flags & EB_BUFFERFLAG_IS_ALT_REF);
-                if (!(flags & EB_BUFFERFLAG_IS_ALT_REF))
+                if (!(flags & EB_BUFFERFLAG_IS_ALT_REF)) {
                     ++(app_cfg->performance_context.frame_count);
+                }
                 *total_latency += (uint64_t)header_ptr->n_tick_count;
                 *max_latency = (header_ptr->n_tick_count > *max_latency) ? header_ptr->n_tick_count : *max_latency;
                 app_svt_av1_get_time(&finish_s_time, &finish_u_time);
@@ -979,8 +1028,9 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
 
                 app_cfg->performance_context.byte_count += header_ptr->n_filled_len;
 
-                if (app_cfg->config.stat_report && !(flags & EB_BUFFERFLAG_IS_ALT_REF))
+                if (app_cfg->config.stat_report && !(flags & EB_BUFFERFLAG_IS_ALT_REF)) {
                     process_output_statistics_buffer(header_ptr, app_cfg);
+                }
 
                 // Update Output Port Activity State
                 return_value = APP_ExitConditionNone;
@@ -995,10 +1045,12 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
                 (double)app_cfg->config.frame_rate_denominator;
 
             switch (app_cfg->progress) {
-            case 0: break;
+            case 0:
+                break;
             case 1:
-                if (!(flags & EB_BUFFERFLAG_IS_ALT_REF))
+                if (!(flags & EB_BUFFERFLAG_IS_ALT_REF)) {
                     fprintf(stderr, "\b\b\b\b\b\b\b\b\b%9d", *frame_count);
+                }
                 break;
             case 2: {
                 // Detailed progress variables
@@ -1053,7 +1105,8 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
                             eta_seconds);
                 }
             } break;
-            default: break;
+            default:
+                break;
             }
 
             fflush(stderr);
@@ -1062,10 +1115,11 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
             app_cfg->performance_context.average_latency = (double)app_cfg->performance_context.total_latency /
                 app_cfg->performance_context.frame_count;
 
-            if (app_cfg->progress == 1 && !(*frame_count % SPEED_MEASUREMENT_INTERVAL))
+            if (app_cfg->progress == 1 && !(*frame_count % SPEED_MEASUREMENT_INTERVAL)) {
                 fprintf(stderr,
                         "\nAverage System Encoding Speed:        %.2f\n",
                         (double)*frame_count / app_cfg->performance_context.total_encode_time);
+            }
         }
     }
     channel->exit_cond_output = return_value;

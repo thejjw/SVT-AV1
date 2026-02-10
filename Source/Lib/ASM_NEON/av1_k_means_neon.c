@@ -24,7 +24,9 @@ void svt_av1_calc_indices_dim1_neon(const int *data, const int *centroids, uint8
     int16x8_t cents[PALETTE_MAX_SIZE];
 
     int j = 0;
-    do { cents[j] = vdupq_n_s16((int16_t)centroids[j]); } while (++j != k);
+    do {
+        cents[j] = vdupq_n_s16((int16_t)centroids[j]);
+    } while (++j != k);
 
     do {
         const int16x8_t input0 = vcombine_s16(vmovn_s32(vld1q_s32(data)), vmovn_s32(vld1q_s32(data + 4)));

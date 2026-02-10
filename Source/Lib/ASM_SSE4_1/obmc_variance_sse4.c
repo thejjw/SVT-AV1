@@ -22,7 +22,9 @@ void svt_aom_var_filter_block2d_bil_second_pass_ssse3(const uint16_t *a, uint8_t
                                                       unsigned int pixel_step, unsigned int output_height,
                                                       unsigned int output_width, const uint8_t *filter);
 
-static INLINE __m128i xx_load_128(const void *a) { return _mm_loadu_si128((const __m128i *)a); }
+static INLINE __m128i xx_load_128(const void *a) {
+    return _mm_loadu_si128((const __m128i *)a);
+}
 
 static INLINE int32_t xx_hsum_epi32_si32(__m128i v_d) {
     v_d = _mm_hadd_epi32(v_d, v_d);
@@ -72,8 +74,9 @@ static INLINE void obmc_variance_w8n(const uint8_t *pre, const int pre_stride, c
 
         n += 8;
 
-        if (n % w == 0)
+        if (n % w == 0) {
             pre += pre_step;
+        }
     } while (n < w * h);
 
     *sum = xx_hsum_epi32_si32(v_sum_d);
@@ -110,8 +113,9 @@ static INLINE void obmc_variance_w4(const uint8_t *pre, const int pre_stride, co
 
         n += 4;
 
-        if (n % 4 == 0)
+        if (n % 4 == 0) {
             pre += pre_step;
+        }
     } while (n < 4 * h);
 
     *sum = xx_hsum_epi32_si32(v_sum_d);
@@ -252,9 +256,14 @@ uint32_t svt_aom_variance_highbd_sse4_1(const uint16_t *a, int a_stride, const u
     *sse    = 0;
 
     switch (w) {
-    case 16: aom_highbd_calc16x16var_sse4_1(a, a_stride, b, b_stride, sse, &sum); break;
-    case 32: variance_highbd_32x32_sse4_1(a, a_stride, b, b_stride, sse, &sum); break;
-    default: assert(0);
+    case 16:
+        aom_highbd_calc16x16var_sse4_1(a, a_stride, b, b_stride, sse, &sum);
+        break;
+    case 32:
+        variance_highbd_32x32_sse4_1(a, a_stride, b, b_stride, sse, &sum);
+        break;
+    default:
+        assert(0);
     }
 
     return *sse - ((int64_t)sum * sum) / (w * h);

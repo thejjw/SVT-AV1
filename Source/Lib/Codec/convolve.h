@@ -53,8 +53,9 @@ static INLINE ConvolveParams get_conv_params_no_round(int32_t ref, int32_t do_av
     ASSERT(IMPLIES(bd < 12, intbufrange <= 16));
     if (intbufrange > 16) {
         conv_params.round_0 += intbufrange - 16;
-        if (!is_compound)
+        if (!is_compound) {
             conv_params.round_1 -= intbufrange - 16;
+        }
     }
     conv_params.dst        = dst;
     conv_params.dst_stride = dst_stride;

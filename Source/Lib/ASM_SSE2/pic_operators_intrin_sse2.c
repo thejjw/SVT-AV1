@@ -233,7 +233,9 @@ void svt_memcpy_intrin_sse(void *dst_ptr, void const *src_ptr, size_t size) {
         i += 8;
     }
 
-    for (; i < size; ++i) dst[i] = src[i];
+    for (; i < size; ++i) {
+        dst[i] = src[i];
+    }
 }
 
 // Store 8 16 bit values. If the destination is 32 bits then sign extend the

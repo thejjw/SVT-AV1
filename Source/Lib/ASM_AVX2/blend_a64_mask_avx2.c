@@ -444,7 +444,8 @@ static INLINE void blend_a64_mask_avx2(uint8_t *dst, uint32_t dst_stride, const 
             mask += mask_stride;
         } while (--h);
         break;
-    default: blend_a64_mask_w32n_avx2(dst, dst_stride, src0, src0_stride, src1, src1_stride, mask, mask_stride, w, h);
+    default:
+        blend_a64_mask_w32n_avx2(dst, dst_stride, src0, src0_stride, src1, src1_stride, mask, mask_stride, w, h);
     }
 }
 
@@ -1369,7 +1370,9 @@ void svt_av1_blend_a64_hmask_avx2(uint8_t *dst, uint32_t dst_stride, const uint8
     } else if (dst == src1) {
         svt_dav1d_blend_v_8bpc_avx2(dst, dst_stride, src0, src0_stride, w, h);
     } else { //TODO: avx2 memcpy
-        for (int hh = 0; hh < h; hh++) memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w);
+        for (int hh = 0; hh < h; hh++) {
+            memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w);
+        }
         svt_dav1d_blend_v_8bpc_avx2(dst, dst_stride, src1, src1_stride, w, h);
     }
 };
@@ -1382,7 +1385,9 @@ void svt_av1_blend_a64_vmask_avx2(uint8_t *dst, uint32_t dst_stride, const uint8
     } else if (dst == src1) {
         svt_dav1d_blend_h_8bpc_avx2(dst, dst_stride, src0, src0_stride, w, h);
     } else { //TODO: avx2 memcpy
-        for (int hh = 0; hh < h; hh++) memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w);
+        for (int hh = 0; hh < h; hh++) {
+            memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w);
+        }
         svt_dav1d_blend_h_8bpc_avx2(dst, dst_stride, src1, src1_stride, w, h);
     }
 };
@@ -1398,7 +1403,9 @@ void svt_av1_highbd_blend_a64_hmask_16bit_avx2(uint16_t *dst, uint32_t dst_strid
     } else if (dst == src1) {
         svt_dav1d_blend_v_16bpc_avx2(dst, dst_stride * sizeof(uint16_t), src0, src0_stride * sizeof(uint16_t), w, h);
     } else { //TODO: avx2 memcpy
-        for (int hh = 0; hh < h; hh++) memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w * sizeof(uint16_t));
+        for (int hh = 0; hh < h; hh++) {
+            memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w * sizeof(uint16_t));
+        }
         svt_dav1d_blend_v_16bpc_avx2(dst, dst_stride * sizeof(uint16_t), src1, src1_stride * sizeof(uint16_t), w, h);
     }
 };
@@ -1413,7 +1420,9 @@ void svt_av1_highbd_blend_a64_vmask_16bit_avx2(uint16_t *dst, uint32_t dst_strid
     } else if (dst == src1) {
         svt_dav1d_blend_h_16bpc_avx2(dst, dst_stride * sizeof(uint16_t), src0, src0_stride * sizeof(uint16_t), w, h);
     } else { //TODO: avx2 memcpy
-        for (int hh = 0; hh < h; hh++) memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w * sizeof(uint16_t));
+        for (int hh = 0; hh < h; hh++) {
+            memcpy(dst + hh * dst_stride, src0 + hh * src0_stride, w * sizeof(uint16_t));
+        }
         svt_dav1d_blend_h_16bpc_avx2(dst, dst_stride * sizeof(uint16_t), src1, src1_stride * sizeof(uint16_t), w, h);
     }
 };

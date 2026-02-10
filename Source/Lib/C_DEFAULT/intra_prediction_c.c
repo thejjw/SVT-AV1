@@ -20,7 +20,9 @@ void svt_av1_upsample_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t bd) {
     // copy p[-1..(sz-1)] and extend first and last samples
     in[0] = p[-1];
     in[1] = p[-1];
-    for (int32_t i = 0; i < sz; i++) in[i + 2] = p[i];
+    for (int32_t i = 0; i < sz; i++) {
+        in[i + 2] = p[i];
+    }
     in[sz + 2] = p[sz - 1];
 
     // interpolate half-sample edge positions
@@ -42,7 +44,9 @@ void svt_av1_upsample_intra_edge_c(uint8_t *p, int32_t sz) {
     // copy p[-1..(sz-1)] and extend first and last samples
     in[0] = p[-1];
     in[1] = p[-1];
-    for (int32_t i = 0; i < sz; i++) in[i + 2] = p[i];
+    for (int32_t i = 0; i < sz; i++) {
+        in[i + 2] = p[i];
+    }
     in[sz + 2] = p[sz - 1];
 
     // interpolate half-sample edge positions
@@ -79,7 +83,9 @@ void svt_av1_highbd_dr_prediction_z3_c(uint16_t *dst, ptrdiff_t stride, int32_t 
                 val                 = ROUND_POWER_OF_TWO(val, 5);
                 dst[r * stride + c] = (uint16_t)clip_pixel_highbd(val, bd);
             } else {
-                for (; r < bh; ++r) dst[r * stride + c] = left[max_base_y];
+                for (; r < bh; ++r) {
+                    dst[r * stride + c] = left[max_base_y];
+                }
                 break;
             }
         }

@@ -128,11 +128,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
             "greater than 119 \n");
         return_error = EB_ErrorBadParameter;
     }
-    if (config->gop_constraint_rc)
+    if (config->gop_constraint_rc) {
         SVT_WARN(
             "The GoP constraint RC mode is a work-in-progress project, and is only "
             "available for demos, experimentation, and further development uses and should not be "
             "used for benchmarking until fully implemented.\n");
+    }
 
     if (config->force_key_frames &&
         (config->rate_control_mode == SVT_AV1_RC_MODE_CBR || config->pred_structure != RANDOM_ACCESS)) {
@@ -876,7 +877,9 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->chroma_v_dc_qindex_offset = 0;
     config_ptr->chroma_v_ac_qindex_offset = 0;
 
-    for (int i = 0; i < SVT_AV1_FRAME_UPDATE_TYPES; i++) config_ptr->lambda_scale_factors[i] = 128;
+    for (int i = 0; i < SVT_AV1_FRAME_UPDATE_TYPES; i++) {
+        config_ptr->lambda_scale_factors[i] = 128;
+    }
 
     config_ptr->scene_change_detection       = 0;
     config_ptr->rate_control_mode            = SVT_AV1_RC_MODE_CQP_OR_CRF;
@@ -1003,16 +1006,18 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
 }
 
 static const char *tier_to_str(unsigned in) {
-    if (!in)
+    if (!in) {
         return "(auto)";
+    }
     static char ret[11];
     snprintf(ret, 11, "%u", in);
     return ret;
 }
 
 static const char *level_to_str(unsigned in) {
-    if (!in)
+    if (!in) {
         return "(auto)";
+    }
     static char ret[313];
     snprintf(ret, 313, "%.1f", in / 10.0);
     return ret;
@@ -1140,11 +1145,15 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
 
         switch (config->enable_tf) {
         case 1:
-            if (config->tf_strength != 3)
+            if (config->tf_strength != 3) {
                 SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: %d\n", config->tf_strength);
+            }
             break;
-        case 2: SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: auto\n"); break;
-        default: break;
+        case 2:
+            SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: auto\n");
+            break;
+        default:
+            break;
         }
 
         SVT_INFO("SVT [config]: QP scale compress strength \t\t\t\t\t: %d\n", config->qp_scale_compress_strength);
@@ -1197,12 +1206,14 @@ static EbErrorType str_to_int64(const char *nptr, int64_t *out, char **nextptr) 
 
     val = strtoll(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1212,12 +1223,14 @@ static EbErrorType str_to_int(const char *nptr, int32_t *out, char **nextptr) {
 
     val = strtol(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1231,12 +1244,14 @@ static EbErrorType str_to_uint64(const char *nptr, uint64_t *out, char **nextptr
 
     val = strtoull(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1250,12 +1265,14 @@ static EbErrorType str_to_uint(const char *nptr, uint32_t *out, char **nextptr) 
 
     val = strtoul(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1265,16 +1282,19 @@ static EbErrorType str_to_int8(const char *nptr, int8_t *out, char **nextptr) {
 
     val = strtol(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     // check for the range
-    if (val < INT8_MIN || val > INT8_MAX)
+    if (val < INT8_MIN || val > INT8_MAX) {
         return EB_ErrorBadParameter;
+    }
 
     *out = (int8_t)val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1288,16 +1308,19 @@ static EbErrorType str_to_uint8(const char *nptr, uint8_t *out, char **nextptr) 
 
     val = strtoul(nptr, &endptr, 0);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     // check for the range
-    if (val > UINT8_MAX)
+    if (val > UINT8_MAX) {
         return EB_ErrorBadParameter;
+    }
 
     *out = (uint8_t)val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1310,12 +1333,14 @@ static EbErrorType str_to_double(const char *nptr, double *out, char **nextptr) 
 
     val = strtod(nptr, &endptr);
 
-    if (endptr == nptr || (!nextptr && *endptr))
+    if (endptr == nptr || (!nextptr && *endptr)) {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
-    if (nextptr)
+    if (nextptr) {
         *nextptr = endptr;
+    }
     return EB_ErrorNone;
 }
 
@@ -1380,12 +1405,13 @@ static uint32_t count_params(const char *nptr) {
 #endif
 static EbErrorType str_to_bool(const char *nptr, bool *out) {
     bool val;
-    if (!strcmp(nptr, "1") || !strcasecmp(nptr, "true") || !strcasecmp(nptr, "yes"))
+    if (!strcmp(nptr, "1") || !strcasecmp(nptr, "true") || !strcasecmp(nptr, "yes")) {
         val = true;
-    else if (!strcmp(nptr, "0") || !strcasecmp(nptr, "false") || !strcasecmp(nptr, "no"))
+    } else if (!strcmp(nptr, "0") || !strcasecmp(nptr, "false") || !strcasecmp(nptr, "no")) {
         val = false;
-    else
+    } else {
         return EB_ErrorBadParameter;
+    }
 
     *out = val;
     return EB_ErrorNone;
@@ -1397,10 +1423,12 @@ static EbErrorType str_to_crf(const char *nptr, EbSvtAv1EncConfiguration *config
 
     return_error = str_to_double(nptr, &crf, NULL);
 
-    if (return_error == EB_ErrorBadParameter)
+    if (return_error == EB_ErrorBadParameter) {
         return return_error;
-    if (crf < 0)
+    }
+    if (crf < 0) {
         return EB_ErrorBadParameter;
+    }
 
     uint32_t extended_q_index           = (uint32_t)(crf * 4);
     uint32_t qp                         = AOMMIN(MAX_QP_VALUE, (uint32_t)crf);
@@ -1418,8 +1446,9 @@ static EbErrorType str_to_keyint(const char *nptr, int32_t *out, bool *multi) {
     char      *suff;
     const long keyint = strtol(nptr, &suff, 0);
 
-    if (keyint > INT32_MAX || keyint < -2)
+    if (keyint > INT32_MAX || keyint < -2) {
         return EB_ErrorBadParameter;
+    }
 
     switch (*suff) {
     case 's':
@@ -1451,13 +1480,20 @@ static EbErrorType str_to_bitrate(const char *nptr, uint32_t *out) {
 
     switch (*suff) {
     case 'b':
-    case 'B': *out = (uint32_t)bitrate; break;
+    case 'B':
+        *out = (uint32_t)bitrate;
+        break;
     case '\0':
     case 'k':
-    case 'K': *out = (uint32_t)(1000 * bitrate); break;
+    case 'K':
+        *out = (uint32_t)(1000 * bitrate);
+        break;
     case 'm':
-    case 'M': *out = (uint32_t)(1000000 * bitrate); break;
-    default: return EB_ErrorBadParameter;
+    case 'M':
+        *out = (uint32_t)(1000000 * bitrate);
+        break;
+    default:
+        return EB_ErrorBadParameter;
     }
     if (*out > 100000000) {
         *out = 100000000;
@@ -1799,7 +1835,9 @@ static EbErrorType str_to_rc_mode(const char *nptr, uint8_t *out, uint8_t *aq_mo
     }
 
     switch (mode) {
-    case RC_MODE_ZERO: *out = 0; break;
+    case RC_MODE_ZERO:
+        *out = 0;
+        break;
     case RC_MODE_CQP:
         *out     = SVT_AV1_RC_MODE_CQP_OR_CRF;
         *aq_mode = 0;
@@ -1808,9 +1846,15 @@ static EbErrorType str_to_rc_mode(const char *nptr, uint8_t *out, uint8_t *aq_mo
         *out     = SVT_AV1_RC_MODE_CQP_OR_CRF;
         *aq_mode = 2;
         break;
-    case RC_MODE_VBR: *out = SVT_AV1_RC_MODE_VBR; break;
-    case RC_MODE_CBR: *out = SVT_AV1_RC_MODE_CBR; break;
-    default: SVT_ERROR("Invalid rc mode: %s\n", nptr); return EB_ErrorBadParameter;
+    case RC_MODE_VBR:
+        *out = SVT_AV1_RC_MODE_VBR;
+        break;
+    case RC_MODE_CBR:
+        *out = SVT_AV1_RC_MODE_CBR;
+        break;
+    default:
+        SVT_ERROR("Invalid rc mode: %s\n", nptr);
+        return EB_ErrorBadParameter;
     }
     return EB_ErrorNone;
 }
@@ -1821,8 +1865,9 @@ static EbErrorType str_to_frm_resz_evts(const char *nptr, SvtAv1FrameScaleEvts *
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "frame-resz-events", evts->evt_num);
         return EB_ErrorBadParameter;
     }
-    if (evts->start_frame_nums)
+    if (evts->start_frame_nums) {
         EB_FREE(evts->start_frame_nums);
+    }
     EB_MALLOC(evts->start_frame_nums, param_count * sizeof(uint64_t));
     evts->evt_num = param_count;
     return parse_list_uint64(nptr, evts->start_frame_nums, param_count);
@@ -1834,8 +1879,9 @@ static EbErrorType str_to_resz_kf_denoms(const char *nptr, SvtAv1FrameScaleEvts 
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "frame-resz-kf-denoms", evts->evt_num);
         return EB_ErrorBadParameter;
     }
-    if (evts->resize_kf_denoms)
+    if (evts->resize_kf_denoms) {
         EB_FREE(evts->resize_kf_denoms);
+    }
     EB_MALLOC(evts->resize_kf_denoms, param_count * sizeof(uint32_t));
     evts->evt_num = param_count;
     return parse_list_uint32(nptr, evts->resize_kf_denoms, param_count);
@@ -1847,8 +1893,9 @@ static EbErrorType str_to_resz_denoms(const char *nptr, SvtAv1FrameScaleEvts *ev
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "frame-resz-denoms", evts->evt_num);
         return EB_ErrorBadParameter;
     }
-    if (evts->resize_denoms)
+    if (evts->resize_denoms) {
         EB_FREE(evts->resize_denoms);
+    }
     EB_MALLOC(evts->resize_denoms, param_count * sizeof(uint32_t));
     evts->evt_num = param_count;
     return parse_list_uint32(nptr, evts->resize_denoms, param_count);
@@ -1860,8 +1907,9 @@ static EbErrorType str_to_sframe_posi(const char *nptr, SvtAv1SFramePositions *p
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "sframe-posi", posis->sframe_num);
         return EB_ErrorBadParameter;
     }
-    if (posis->sframe_posis)
+    if (posis->sframe_posis) {
         EB_FREE(posis->sframe_posis);
+    }
     EB_MALLOC(posis->sframe_posis, param_count * sizeof(uint64_t));
     posis->sframe_num = param_count;
     return parse_list_uint64(nptr, posis->sframe_posis, param_count);
@@ -1873,8 +1921,9 @@ static EbErrorType str_to_sframe_qp(const char *nptr, SvtAv1SFramePositions *pos
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "sframe-qp", posis->sframe_num);
         return EB_ErrorBadParameter;
     }
-    if (posis->sframe_qps)
+    if (posis->sframe_qps) {
         EB_FREE(posis->sframe_qps);
+    }
     EB_MALLOC(posis->sframe_qps, param_count * sizeof(uint8_t));
     posis->sframe_qp_num = param_count;
     EbErrorType err      = parse_list_uint8(nptr, posis->sframe_qps, param_count);
@@ -1900,8 +1949,9 @@ static EbErrorType str_to_sframe_qp_offset(const char *nptr, SvtAv1SFramePositio
         SVT_ERROR("Error: Size for the list passed to %s doesn't match %u\n", "sframe-qp-offset", posis->sframe_num);
         return EB_ErrorBadParameter;
     }
-    if (posis->sframe_qp_offsets)
+    if (posis->sframe_qp_offsets) {
         EB_FREE(posis->sframe_qp_offsets);
+    }
     EB_MALLOC(posis->sframe_qp_offsets, param_count * sizeof(int8_t));
     posis->sframe_qp_num = param_count;
     EbErrorType err      = parse_list_int8(nptr, posis->sframe_qp_offsets, param_count);
@@ -1943,50 +1993,61 @@ static EbErrorType str_to_sframe_qp_offset(const char *nptr, SvtAv1SFramePositio
 
 EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_struct, const char *name,
                                                const char *value) {
-    if (config_struct == NULL || name == NULL || value == NULL)
+    if (config_struct == NULL || name == NULL || value == NULL) {
         return EB_ErrorBadParameter;
+    }
 
     EbErrorType return_error = EB_ErrorBadParameter;
 
-    if (!strcmp(name, "keyint"))
+    if (!strcmp(name, "keyint")) {
         return str_to_keyint(value, &config_struct->intra_period_length, &config_struct->multiply_keyint);
+    }
 
-    if (!strcmp(name, "tbr"))
+    if (!strcmp(name, "tbr")) {
         return str_to_bitrate(value, &config_struct->target_bit_rate);
+    }
 
-    if (!strcmp(name, "mbr"))
+    if (!strcmp(name, "mbr")) {
         return str_to_bitrate(value, &config_struct->max_bit_rate);
+    }
 
     // options updating more than one field
-    if (!strcmp(name, "crf"))
+    if (!strcmp(name, "crf")) {
         return str_to_crf(value, config_struct);
+    }
 
-    if (!strcmp(name, "rc"))
+    if (!strcmp(name, "rc")) {
         return str_to_rc_mode(value, &config_struct->rate_control_mode, &config_struct->aq_mode);
+    }
 
     // custom enum fields
-    if (!strcmp(name, "profile"))
+    if (!strcmp(name, "profile")) {
         return str_to_profile(value, &config_struct->profile) == EB_ErrorBadParameter
             ? str_to_uint(value, (uint32_t *)&config_struct->profile, NULL)
             : EB_ErrorNone;
+    }
 
-    if (!strcmp(name, "color-format"))
+    if (!strcmp(name, "color-format")) {
         return str_to_color_fmt(value, &config_struct->encoder_color_format) == EB_ErrorBadParameter
             ? str_to_uint(value, (uint32_t *)&config_struct->encoder_color_format, NULL)
             : EB_ErrorNone;
+    }
 
-    if (!strcmp(name, "irefresh-type"))
+    if (!strcmp(name, "irefresh-type")) {
         return str_to_intra_rt(value, &config_struct->intra_refresh_type) == EB_ErrorBadParameter
             ? str_to_uint(value, (uint32_t *)&config_struct->intra_refresh_type, NULL)
             : EB_ErrorNone;
+    }
 
-    if (!strcmp(name, "sframe-mode"))
+    if (!strcmp(name, "sframe-mode")) {
         return str_to_sframe_mode(value, &config_struct->sframe_mode) == EB_ErrorBadParameter
             ? str_to_uint(value, (uint32_t *)&config_struct->sframe_mode, NULL)
             : EB_ErrorNone;
+    }
 
-    if (!strcmp(name, "asm"))
+    if (!strcmp(name, "asm")) {
         return str_to_asm(value, &config_struct->use_cpu_flags);
+    }
 
     COLOR_OPT("color-primaries", color_primaries);
     COLOR_OPT("transfer-characteristics", transfer_characteristics);
@@ -1999,32 +2060,41 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     COLOR_METADATA_OPT("content-light", content_light_level);
 
     // arrays
-    if (!strcmp(name, "qindex-offsets"))
+    if (!strcmp(name, "qindex-offsets")) {
         return parse_list_int32(value, config_struct->qindex_offsets, EB_MAX_TEMPORAL_LAYERS);
+    }
 
-    if (!strcmp(name, "chroma-qindex-offsets"))
+    if (!strcmp(name, "chroma-qindex-offsets")) {
         return parse_list_int32(value, config_struct->chroma_qindex_offsets, EB_MAX_TEMPORAL_LAYERS);
+    }
 
-    if (!strcmp(name, "lambda-scale-factors"))
+    if (!strcmp(name, "lambda-scale-factors")) {
         return parse_list_int32(value, config_struct->lambda_scale_factors, SVT_AV1_FRAME_UPDATE_TYPES);
+    }
 
-    if (!strcmp(name, "frame-resz-events"))
+    if (!strcmp(name, "frame-resz-events")) {
         return str_to_frm_resz_evts(value, &config_struct->frame_scale_evts);
+    }
 
-    if (!strcmp(name, "frame-resz-kf-denoms"))
+    if (!strcmp(name, "frame-resz-kf-denoms")) {
         return str_to_resz_kf_denoms(value, &config_struct->frame_scale_evts);
+    }
 
-    if (!strcmp(name, "frame-resz-denoms"))
+    if (!strcmp(name, "frame-resz-denoms")) {
         return str_to_resz_denoms(value, &config_struct->frame_scale_evts);
+    }
 
-    if (!strcmp(name, "sframe-posi"))
+    if (!strcmp(name, "sframe-posi")) {
         return str_to_sframe_posi(value, &config_struct->sframe_posi);
+    }
 
-    if (!strcmp(name, "sframe-qp"))
+    if (!strcmp(name, "sframe-qp")) {
         return str_to_sframe_qp(value, &config_struct->sframe_posi, &config_struct->sframe_qp);
+    }
 
-    if (!strcmp(name, "sframe-qp-offset"))
+    if (!strcmp(name, "sframe-qp-offset")) {
         return str_to_sframe_qp_offset(value, &config_struct->sframe_posi, &config_struct->sframe_qp_offset);
+    }
 
     // uint32_t fields
     const struct {
@@ -2112,8 +2182,9 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
             return_error = str_to_uint(value, &val, NULL);
             if (return_error == EB_ErrorNone) {
                 // add protection if the input param is roll-over
-                if (val > 255)
+                if (val > 255) {
                     return EB_ErrorBadParameter;
+                }
                 *uint8_opts[i].out = val;
             }
             return return_error;
@@ -2202,8 +2273,9 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
             return_error = str_to_int(value, &val, NULL);
             if (return_error == EB_ErrorNone) {
                 // add protection if the input param is roll-over
-                if (val > 127 || val < -128)
+                if (val > 127 || val < -128) {
                     return EB_ErrorBadParameter;
+                }
                 *int8_opts[i].out = val;
             }
             return return_error;

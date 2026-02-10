@@ -720,7 +720,9 @@ void svt_aom_neighbor_array_unit_mode_write(NeighborArrayUnit *na_unit_ptr, uint
 
         for (idx = 0; idx < count; ++idx) {
             /* svt_memcpy less that 10 bytes*/
-            for (j = 0; j < na_unit_size; ++j) dst_ptr[j] = value[j];
+            for (j = 0; j < na_unit_size; ++j) {
+                dst_ptr[j] = value[j];
+            }
 
             dst_ptr += na_unit_size;
         }
@@ -751,7 +753,9 @@ void svt_aom_neighbor_array_unit_mode_write(NeighborArrayUnit *na_unit_ptr, uint
 
         for (idx = 0; idx < count; ++idx) {
             /* svt_memcpy less that 10 bytes*/
-            for (j = 0; j < na_unit_size; ++j) dst_ptr[j] = value[j];
+            for (j = 0; j < na_unit_size; ++j) {
+                dst_ptr[j] = value[j];
+            }
 
             dst_ptr += na_unit_size;
         }
@@ -787,7 +791,9 @@ void svt_aom_neighbor_array_unit_mode_write(NeighborArrayUnit *na_unit_ptr, uint
 
         for (idx = 0; idx < count; ++idx) {
             /* svt_memcpy less that 10 bytes*/
-            for (j = 0; j < na_unit_size; ++j) dst_ptr[j] = value[j];
+            for (j = 0; j < na_unit_size; ++j) {
+                dst_ptr[j] = value[j];
+            }
 
             dst_ptr += na_unit_size;
         }

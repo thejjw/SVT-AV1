@@ -207,8 +207,9 @@ static inline uint64_t find_best_mse(const uint64_t *mse0, const uint64_t *mse1,
     uint64_t best_mse = (uint64_t)1 << 63;
     for (int i = 0; i < n; i++) {
         uint64_t curr = mse0[(uint32_t)lev0[i]] + mse1[(uint32_t)lev1[i]];
-        if (curr < best_mse)
+        if (curr < best_mse) {
             best_mse = curr;
+        }
     }
     return best_mse;
 }

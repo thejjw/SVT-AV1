@@ -646,11 +646,12 @@ void svt_unpack_and_2bcompress_sse4_1(uint16_t *in16b_buffer, uint32_t in16b_str
                                          out8b_buffer + h * out8b_stride,
                                          out2b_buffer + h * out2b_stride,
                                          width >> 4);
-            if (remainder)
+            if (remainder) {
                 svt_unpack_and_2bcompress_remainder(in16b_buffer + h * in16b_stride + offset_rem,
                                                     out8b_buffer + h * out8b_stride + offset_rem,
                                                     out2b_buffer + h * out2b_stride + offset2b_rem,
                                                     remainder);
+            }
         }
     }
 }

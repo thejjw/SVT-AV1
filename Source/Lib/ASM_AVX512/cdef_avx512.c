@@ -37,8 +37,9 @@ uint64_t svt_search_one_dual_avx512(int *lev0, int *lev1, int nb_strengths, uint
         for (gi = 0; gi < nb_strengths; gi++) {
             uint64_t curr = mse[0][i][lev0[gi]];
             curr += mse[1][i][lev1[gi]];
-            if (curr < best_mse)
+            if (curr < best_mse) {
                 best_mse = curr;
+            }
         }
 
         const __m512i best_mse_ = _mm512_set1_epi64(best_mse);

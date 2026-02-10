@@ -61,7 +61,9 @@ uint64_t svt_handle_transform64x16_neon(int32_t *output) {
     // top - right 32x16 area.
     const uint64_t three_quad_energy = energy_computation_wxh_neon(output + 32, 64, 32, 16);
     // Re-pack non-zero coeffs in the first 32x16 indices.
-    for (int32_t row = 1; row < 16; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 16; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -70,7 +72,9 @@ uint64_t svt_handle_transform64x32_neon(int32_t *output) {
     // top - right 32x32 area.
     const uint64_t three_quad_energy = energy_computation_wxh_neon(output + 32, 64, 32, 32);
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -83,7 +87,9 @@ uint64_t svt_handle_transform64x64_neon(int32_t *output) {
     //bottom 64x32 area.
     three_quad_energy += energy_computation_wxh_neon(output + 32 * 64, 64, 64, 32);
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -100,18 +106,24 @@ uint64_t svt_handle_transform32x64_N2_N4_neon(int32_t *output) {
 
 uint64_t svt_handle_transform64x16_N2_N4_neon(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x16 indices.
-    for (int32_t row = 1; row < 16; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 16; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
     return 0;
 }
 
 uint64_t svt_handle_transform64x32_N2_N4_neon(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
     return 0;
 }
 
 uint64_t svt_handle_transform64x64_N2_N4_neon(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        memcpy(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
     return 0;
 }

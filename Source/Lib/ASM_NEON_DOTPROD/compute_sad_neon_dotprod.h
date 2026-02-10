@@ -804,7 +804,9 @@ static inline uint32_t sad_anywxh_neon_dotprod(const uint8_t *src, uint32_t src_
             w -= 4;
         }
 
-        while (--w >= 0) { sum += EB_ABS_DIFF(src_ptr[w], ref_ptr[w]); }
+        while (--w >= 0) {
+            sum += EB_ABS_DIFF(src_ptr[w], ref_ptr[w]);
+        }
 
         src += src_stride;
         ref += ref_stride;

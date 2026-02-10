@@ -482,10 +482,12 @@ void svt_cdef_filter_block_8xn_16_avx2(const uint16_t *const in, const int32_t p
     const __m256i  pri_strength_256 = _mm256_set1_epi16(pri_strength);
     const __m256i  sec_strength_256 = _mm256_set1_epi16(sec_strength);
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
 
     for (i = 0; i < height; i += (2 * subsampling_factor)) {
         const __m256i row = loadu_u16_8x2_avx2(in + i * CDEF_BSTRIDE, subsampling_factor * CDEF_BSTRIDE);
@@ -574,10 +576,12 @@ static void svt_cdef_filter_block_4xn_16_avx2(uint16_t *dst, int32_t dstride, co
     __m256i        pri_strength_256 = _mm256_set1_epi16(pri_strength);
     __m256i        sec_strength_256 = _mm256_set1_epi16(sec_strength);
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
     for (uint32_t i = 0; i < height; i += (4 * subsampling_factor)) {
         sum = _mm256_setzero_si256();
         row = _mm256_set_epi64x(*(uint64_t *)(in + i * CDEF_BSTRIDE),
@@ -724,10 +728,12 @@ static void svt_cdef_filter_block_4xn_8_avx2(uint8_t *dst, int32_t dstride, cons
     __m256i        pri_strength_256 = _mm256_set1_epi16(pri_strength);
     __m256i        sec_strength_256 = _mm256_set1_epi16(sec_strength);
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
 
     for (uint32_t i = 0; i < height; i += (4 * subsampling_factor)) {
         sum = _mm256_setzero_si256();
@@ -885,10 +891,12 @@ static void svt_cdef_filter_block_8xn_8_avx2(uint8_t *dst, int32_t dstride, cons
     __m256i        pri_strength_256 = _mm256_set1_epi16(pri_strength);
     __m256i        sec_strength_256 = _mm256_set1_epi16(sec_strength);
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
 
     for (i = 0; i < height; i += (2 * subsampling_factor)) {
         sum = _mm256_setzero_si256();
@@ -1046,7 +1054,7 @@ void svt_cdef_filter_block_avx2(uint8_t *dst8, uint16_t *dst16, int32_t dstride,
     } else {
         if (bsize == BLOCK_8X8) {
             //When subsampling_factor is 4 then we cannot use AVX512 kernel because it load 4 lines(block height 16 in this case)
-            if (subsampling_factor == 4)
+            if (subsampling_factor == 4) {
                 svt_cdef_filter_block_8xn_16_avx2(in,
                                                   pri_strength,
                                                   sec_strength,
@@ -1058,7 +1066,7 @@ void svt_cdef_filter_block_avx2(uint8_t *dst8, uint16_t *dst16, int32_t dstride,
                                                   dstride,
                                                   8,
                                                   subsampling_factor);
-            else
+            } else {
                 svt_cdef_filter_block_8xn_16(in,
                                              pri_strength,
                                              sec_strength,
@@ -1070,6 +1078,7 @@ void svt_cdef_filter_block_avx2(uint8_t *dst8, uint16_t *dst16, int32_t dstride,
                                              dstride,
                                              8,
                                              subsampling_factor);
+            }
         } else if (bsize == BLOCK_4X8) {
             svt_cdef_filter_block_4xn_16_avx2(dst16,
                                               dstride,
@@ -1140,7 +1149,9 @@ void svt_aom_copy_rect8_8bit_to_16bit_avx2(uint16_t *dst, int32_t dstride, const
     // Process the remaining pixels.
     if (remaining_width) {
         for (i = 0; i < v; i++) {
-            for (int k = j; k < h; k++) { dst[i * dstride + k] = src[i * sstride + k]; }
+            for (int k = j; k < h; k++) {
+                dst[i * dstride + k] = src[i * sstride + k];
+            }
         }
     }
 }

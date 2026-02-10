@@ -98,7 +98,9 @@ static inline uint8_t find_average_neon(const uint8_t *src, int src_stride, int 
     int i = height;
     do {
         int j = 0;
-        do { sum += src[j]; } while (++j < width);
+        do {
+            sum += src[j];
+        } while (++j < width);
         src += src_stride;
     } while (--i != 0);
     return (uint8_t)(sum / (width * height));
@@ -133,7 +135,9 @@ static inline void compute_sub_avg(const uint8_t *buf, int buf_stride, int avg, 
     } else {
         // For width < 8, don't use Neon.
         for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) { buf_avg[j] = (int16_t)buf[j] - (int16_t)avg; }
+            for (int j = 0; j < width; j++) {
+                buf_avg[j] = (int16_t)buf[j] - (int16_t)avg;
+            }
             buf += buf_stride;
             buf_avg += buf_avg_stride;
         }

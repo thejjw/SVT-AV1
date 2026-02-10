@@ -380,8 +380,9 @@ void svt_object_wrapper_dctor(EbPtr p) {
     EbObjectWrapper *wrapper = (EbObjectWrapper *)p;
     if (wrapper->object_destroyer) {
         //customized destroyer
-        if (wrapper->object_ptr)
+        if (wrapper->object_ptr) {
             wrapper->object_destroyer(wrapper->object_ptr);
+        }
     } else {
         //hack....
         DctorAble *obj = (DctorAble *)wrapper->object_ptr;
@@ -399,8 +400,9 @@ static EbErrorType svt_object_wrapper_ctor(EbObjectWrapper *wrapper, EbSystemRes
     wrapper->system_resource_ptr = resource;
     wrapper->object_destroyer    = object_destroyer;
     ret                          = object_creator(&wrapper->object_ptr, object_init_data_ptr);
-    if (ret != EB_ErrorNone)
+    if (ret != EB_ErrorNone) {
         return ret;
+    }
     return EB_ErrorNone;
 }
 
@@ -499,8 +501,9 @@ EbFifo *svt_system_resource_get_consumer_fifo(const EbSystemResource *resource_p
 
 EbErrorType svt_shutdown_process(const EbSystemResource *resource_ptr) {
     //not fully constructed
-    if (!resource_ptr || !resource_ptr->full_queue)
+    if (!resource_ptr || !resource_ptr->full_queue) {
         return EB_ErrorNone;
+    }
 
     //notify all consumers we are shutting down
     for (unsigned int i = 0; i < resource_ptr->full_queue->process_total_count; i++) {
@@ -583,10 +586,11 @@ EbErrorType svt_release_object(EbObjectWrapper *object_ptr) {
         object_ptr->pic_number = 99999999;
         //increment the fullness
         object_ptr->system_resource_ptr->empty_queue->curr_count++;
-        if (object_ptr->system_resource_ptr->empty_queue->log)
+        if (object_ptr->system_resource_ptr->empty_queue->log) {
             SVT_LOG("SRM fullness+: %i/%i\n",
                     object_ptr->system_resource_ptr->empty_queue->curr_count,
                     object_ptr->system_resource_ptr->object_total_count);
+        }
 #endif
     }
 
@@ -614,8 +618,9 @@ EbErrorType svt_release_dual_object(EbObjectWrapper *object_ptr, EbObjectWrapper
 
 #if SRM_REPORT
 
-        if (object_ptr->system_resource_ptr->empty_queue->log)
+        if (object_ptr->system_resource_ptr->empty_queue->log) {
             SVT_LOG("SRM RELEASE: %lld\n", object_ptr->pic_number);
+        }
 
         object_ptr->pic_number = 99999999;
         //increment the fullness
@@ -677,10 +682,11 @@ EbErrorType svt_get_empty_object(EbFifo *empty_fifo_ptr, EbObjectWrapper **wrapp
 #if SRM_REPORT
     //decrement the fullness
     empty_fifo_ptr->queue_ptr->curr_count--;
-    if (empty_fifo_ptr->queue_ptr->log)
+    if (empty_fifo_ptr->queue_ptr->log) {
         printf("SRM fullness-: %i/%i\n",
                empty_fifo_ptr->queue_ptr->curr_count,
                (*wrapper_dbl_ptr)->system_resource_ptr->object_total_count);
+    }
 #endif
 
     svt_aom_assert_err(
@@ -744,10 +750,11 @@ EbErrorType svt_get_full_object(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper
 **************************************/
 static bool svt_fifo_peak_front(EbFifo *fifoPtr) {
     // Set wrapper_ptr to head of BufferPool
-    if (fifoPtr->first_ptr == NULL)
+    if (fifoPtr->first_ptr == NULL) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 EbErrorType svt_get_full_object_non_blocking(EbFifo *full_fifo_ptr, EbObjectWrapper **wrapper_dbl_ptr) {
@@ -760,18 +767,20 @@ EbErrorType svt_get_full_object_non_blocking(EbFifo *full_fifo_ptr, EbObjectWrap
     svt_block_on_mutex(full_fifo_ptr->lockout_mutex);
 
     //if the fifo is shutting down, we will not give any buffer to caller
-    if (!full_fifo_ptr->quit_signal)
+    if (!full_fifo_ptr->quit_signal) {
         fifo_empty = svt_fifo_peak_front(full_fifo_ptr);
-    else
+    } else {
         fifo_empty = true;
+    }
 
     // Release Mutex
     svt_release_mutex(full_fifo_ptr->lockout_mutex);
 
-    if (fifo_empty == false)
+    if (fifo_empty == false) {
         svt_get_full_object(full_fifo_ptr, wrapper_dbl_ptr);
-    else
+    } else {
         *wrapper_dbl_ptr = NULL;
+    }
 
     return return_error;
 }

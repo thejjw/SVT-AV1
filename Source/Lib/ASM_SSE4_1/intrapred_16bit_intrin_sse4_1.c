@@ -13,8 +13,9 @@
 #include <smmintrin.h>
 
 void svt_av1_filter_intra_edge_sse4_1(uint8_t *p, int32_t sz, int32_t strength) {
-    if (!strength)
+    if (!strength) {
         return;
+    }
 
     DECLARE_ALIGNED(16, static const int8_t, kern[3][16]) = {
         {4, 8, 4, 0, 4, 8, 4, 0, 4, 8, 4, 0, 4, 8, 4, 0}, // strength 1: 4,8,4
@@ -112,8 +113,9 @@ void svt_av1_filter_intra_edge_sse4_1(uint8_t *p, int32_t sz, int32_t strength) 
 }
 
 void svt_av1_filter_intra_edge_high_sse4_1(uint16_t *p, int32_t sz, int32_t strength) {
-    if (!strength)
+    if (!strength) {
         return;
+    }
 
     DECLARE_ALIGNED(16, static const int16_t, kern[3][8]) = {
         {4, 8, 4, 8, 4, 8, 4, 8}, // strength 1: 4,8,4

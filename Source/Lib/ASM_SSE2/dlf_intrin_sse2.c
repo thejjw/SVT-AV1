@@ -140,7 +140,9 @@ static INLINE void highbd_transpose8x8_low_sse2(__m128i *x0, __m128i *x1, __m128
 /***********************************************************************************/
 // loopfilter_sse2.c
 
-static INLINE __m128i abs_diff(__m128i a, __m128i b) { return _mm_or_si128(_mm_subs_epu8(a, b), _mm_subs_epu8(b, a)); }
+static INLINE __m128i abs_diff(__m128i a, __m128i b) {
+    return _mm_or_si128(_mm_subs_epu8(a, b), _mm_subs_epu8(b, a));
+}
 
 // filter_mask and hev_mask
 #define FILTER_HEV_MASK4                                                             \
@@ -1268,12 +1270,13 @@ static INLINE void flat_mask_internal(const __m128i *th, const __m128i *p, const
     }
 
     __m128i ft;
-    if (bd == 8)
+    if (bd == 8) {
         ft = _mm_subs_epu16(max, *th);
-    else if (bd == 10)
+    } else if (bd == 10) {
         ft = _mm_subs_epu16(max, _mm_slli_epi16(*th, 2));
-    else // bd == 12
+    } else { // bd == 12
         ft = _mm_subs_epu16(max, _mm_slli_epi16(*th, 4));
+    }
 
     const __m128i zero = _mm_setzero_si128();
     *flat              = _mm_cmpeq_epi16(ft, zero);
@@ -1370,7 +1373,9 @@ static AOM_FORCE_INLINE void highbd_lpf_internal_14_sse2(__m128i *p, __m128i *q,
     // filters - hev and filter4
     __m128i hevhev;
     __m128i abs_p1p0;
-    for (i = 0; i < 6; i++) pq[i] = _mm_unpacklo_epi64(p[i], q[i]);
+    for (i = 0; i < 6; i++) {
+        pq[i] = _mm_unpacklo_epi64(p[i], q[i]);
+    }
     highbd_hev_mask(&pq[0], &pq[1], &thresh, &abs_p1p0, &hevhev);
 
     p1p0 = _mm_unpacklo_epi64(p[0], p[1]);
@@ -1560,12 +1565,13 @@ static AOM_FORCE_INLINE void highbd_lpf_internal_6_sse2(__m128i *p2, __m128i *p1
     flat = _mm_max_epi16(abs_diff16(q2p2, q0p0), abs_p1p0);
     flat = _mm_max_epi16(flat, _mm_srli_si128(flat, 8));
 
-    if (bd == 8)
+    if (bd == 8) {
         flat = _mm_subs_epu16(flat, one);
-    else if (bd == 10)
+    } else if (bd == 10) {
         flat = _mm_subs_epu16(flat, _mm_slli_epi16(one, 2));
-    else // bd == 12
+    } else { // bd == 12
         flat = _mm_subs_epu16(flat, _mm_slli_epi16(one, 4));
+    }
 
     flat = _mm_cmpeq_epi16(flat, zero);
     flat = _mm_and_si128(flat, mask); // flat & mask
@@ -1697,12 +1703,13 @@ static AOM_FORCE_INLINE void highbd_lpf_internal_8_sse2(__m128i *p3, __m128i *q3
     flat = _mm_max_epi16(abs_p1p0, flat);
     flat = _mm_max_epi16(flat, _mm_srli_si128(flat, 8));
 
-    if (bd == 8)
+    if (bd == 8) {
         flat = _mm_subs_epu16(flat, one);
-    else if (bd == 10)
+    } else if (bd == 10) {
         flat = _mm_subs_epu16(flat, _mm_slli_epi16(one, 2));
-    else // bd == 12
+    } else { // bd == 12
         flat = _mm_subs_epu16(flat, _mm_slli_epi16(one, 4));
+    }
 
     flat = _mm_cmpeq_epi16(flat, zero);
     flat = _mm_and_si128(flat, mask); // flat & mask

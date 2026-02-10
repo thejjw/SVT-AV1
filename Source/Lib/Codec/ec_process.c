@@ -74,14 +74,19 @@ static void reset_entropy_coding_picture(EntropyCodingContext *ctx, PictureContr
     // Asuming cb and cr offset to be the same for chroma QP in both slice and pps for lambda computation
     const uint32_t entropy_coding_qp = frm_hdr->quantization_params.base_q_idx;
 
-    for (uint16_t tile_idx = 0; tile_idx < tile_cnt; tile_idx++) ppcs->prev_qindex[tile_idx] = entropy_coding_qp;
-    if (frm_hdr->allow_intrabc)
+    for (uint16_t tile_idx = 0; tile_idx < tile_cnt; tile_idx++) {
+        ppcs->prev_qindex[tile_idx] = entropy_coding_qp;
+    }
+    if (frm_hdr->allow_intrabc) {
         assert(frm_hdr->delta_lf_params.delta_lf_present == 0);
+    }
     if (frm_hdr->delta_lf_params.delta_lf_present) {
         ppcs->prev_delta_lf_from_base = 0;
 
         const int frame_lf_count = ppcs->monochrome == 0 ? FRAME_LF_COUNT : FRAME_LF_COUNT - 2;
-        for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id) ppcs->prev_delta_lf[lf_id] = 0;
+        for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id) {
+            ppcs->prev_delta_lf[lf_id] = 0;
+        }
     }
 
     // pass the ent
@@ -100,8 +105,9 @@ static void reset_entropy_coding_picture(EntropyCodingContext *ctx, PictureContr
             const uint8_t      ref_idx  = get_ref_frame_idx(primary_ref_frame + 1);
             EbReferenceObject *ref      = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
             svt_memcpy(ec->fc, &ref->frame_context, sizeof(FRAME_CONTEXT));
-        } else
+        } else {
             svt_aom_reset_entropy_coder(scs->enc_ctx, ec, entropy_coding_qp, pcs->slice_type);
+        }
 
         entropy_coding_reset_neighbor_arrays(pcs, tile_idx);
     }
@@ -232,15 +238,17 @@ void *svt_aom_entropy_coding_kernel(void *input_ptr) {
                 }
 
                 //free palette data
-                if (pcs->tile_tok[0][0])
+                if (pcs->tile_tok[0][0]) {
                     EB_FREE_ARRAY(pcs->tile_tok[0][0]);
+                }
             }
             frame_entropy_done = true;
         }
 
         if (frame_entropy_done) {
-            if (pcs->ppcs->valid_qindex_area)
+            if (pcs->ppcs->valid_qindex_area) {
                 pcs->ppcs->avg_qp = ((pcs->ppcs->tot_qindex / pcs->ppcs->valid_qindex_area) + 2) >> 2;
+            }
             // Get Empty Entropy Coding Results
             svt_get_empty_object(context_ptr->entropy_coding_output_fifo_ptr, &entropy_coding_results_wrapper_ptr);
             entropy_coding_results_ptr = (EntropyCodingResults *)entropy_coding_results_wrapper_ptr->object_ptr;

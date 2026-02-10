@@ -113,7 +113,9 @@ static AOM_FORCE_INLINE void load_filters_8(int16x8_t out[], int offset, int str
     out[7] = vld1q_s16((int16_t *)(svt_aom_warped_filter + ((offset + 7 * stride) >> WARPEDDIFF_PREC_BITS)));
 }
 
-static AOM_FORCE_INLINE int clamp_iy(int iy, int height) { return clamp(iy, 0, height - 1); }
+static AOM_FORCE_INLINE int clamp_iy(int iy, int height) {
+    return clamp(iy, 0, height - 1);
+}
 
 static inline bool warp_affine_special_case(const uint8_t *ref, int32_t ix4, int32_t iy4, int width, int height,
                                             int stride, const int height_limit, int16x8_t tmp[]) {

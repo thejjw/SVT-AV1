@@ -25,12 +25,13 @@
 // pixels[2]: right_pred vector
 static INLINE void load_pixel_w4(const uint8_t *above, const uint8_t *left, int32_t height, __m128i *pixels) {
     __m128i d = _mm_cvtsi32_si128(((const uint32_t *)above)[0]);
-    if (height == 4)
+    if (height == 4) {
         pixels[1] = _mm_cvtsi32_si128(((const uint32_t *)left)[0]);
-    else if (height == 8)
+    } else if (height == 8) {
         pixels[1] = _mm_loadl_epi64(((const __m128i *)left));
-    else
+    } else {
         pixels[1] = _mm_loadu_si128(((const __m128i *)left));
+    }
 
     pixels[2] = _mm_set1_epi16((uint16_t)above[3]);
 
@@ -148,13 +149,13 @@ static INLINE void load_pixel_w8(const uint8_t *above, const uint8_t *left, int3
 
     pixels[3] = _mm_set1_epi16((uint16_t)above[7]);
 
-    if (height == 4)
+    if (height == 4) {
         pixels[2] = _mm_cvtsi32_si128(((const uint32_t *)left)[0]);
-    else if (height == 8)
+    } else if (height == 8) {
         pixels[2] = _mm_loadl_epi64((const __m128i *)left);
-    else if (height == 16)
+    } else if (height == 16) {
         pixels[2] = _mm_loadu_si128((const __m128i *)left);
-    else {
+    } else {
         pixels[2] = _mm_loadu_si128((const __m128i *)left);
         pixels[4] = pixels[0];
         pixels[5] = pixels[1];
@@ -707,12 +708,13 @@ void svt_aom_smooth_v_predictor_16x64_ssse3(uint8_t *dst, ptrdiff_t stride, cons
 // pixels[0]: left vector
 // pixels[1]: right_pred vector
 static INLINE void load_pixel_h_w4(const uint8_t *above, const uint8_t *left, int32_t height, __m128i *pixels) {
-    if (height == 4)
+    if (height == 4) {
         pixels[0] = _mm_cvtsi32_si128(((const uint32_t *)left)[0]);
-    else if (height == 8)
+    } else if (height == 8) {
         pixels[0] = _mm_loadl_epi64(((const __m128i *)left));
-    else
+    } else {
         pixels[0] = _mm_loadu_si128(((const __m128i *)left));
+    }
     pixels[1] = _mm_set1_epi16((uint16_t)above[3]);
 }
 
@@ -792,13 +794,13 @@ void svt_aom_smooth_h_predictor_4x16_ssse3(uint8_t *dst, ptrdiff_t stride, const
 static INLINE void load_pixel_h_w8(const uint8_t *above, const uint8_t *left, int32_t height, __m128i *pixels) {
     pixels[1] = _mm_set1_epi16((uint16_t)above[7]);
 
-    if (height == 4)
+    if (height == 4) {
         pixels[0] = _mm_cvtsi32_si128(((const uint32_t *)left)[0]);
-    else if (height == 8)
+    } else if (height == 8) {
         pixels[0] = _mm_loadl_epi64((const __m128i *)left);
-    else if (height == 16)
+    } else if (height == 16) {
         pixels[0] = _mm_loadu_si128((const __m128i *)left);
-    else {
+    } else {
         pixels[0] = _mm_loadu_si128((const __m128i *)left);
         pixels[2] = _mm_loadu_si128((const __m128i *)(left + 16));
         pixels[3] = pixels[1];

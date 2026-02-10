@@ -717,8 +717,9 @@ static INLINE void store_vertical_filter_output_avx2(const __m256i *res_lo, cons
                 const __m256i wt_res_lo  = _mm256_madd_epi16(p_16_lo, *wt);
                 const __m256i shifted_32 = _mm256_srai_epi32(wt_res_lo, DIST_PRECISION_BITS);
                 res_lo_16                = _mm256_packus_epi32(shifted_32, shifted_32);
-            } else
+            } else {
                 res_lo_16 = _mm256_srai_epi16(_mm256_add_epi16(p_16, temp_lo_16), 1);
+            }
             res_lo_16                = _mm256_add_epi16(res_lo_16, *res_sub_const);
             res_lo_16                = _mm256_srai_epi16(_mm256_add_epi16(res_lo_16, *round_bits_const), round_bits);
             const __m256i res_8_lo   = _mm256_packus_epi16(res_lo_16, res_lo_16);
@@ -749,8 +750,9 @@ static INLINE void store_vertical_filter_output_avx2(const __m256i *res_lo, cons
                     const __m256i wt_res_hi  = _mm256_madd_epi16(p_16_hi, *wt);
                     const __m256i shifted_32 = _mm256_srai_epi32(wt_res_hi, DIST_PRECISION_BITS);
                     res_hi_16                = _mm256_packus_epi32(shifted_32, shifted_32);
-                } else
+                } else {
                     res_hi_16 = _mm256_srai_epi16(_mm256_add_epi16(p4_16, temp_hi_16), 1);
+                }
                 res_hi_16              = _mm256_add_epi16(res_hi_16, *res_sub_const);
                 res_hi_16              = _mm256_srai_epi16(_mm256_add_epi16(res_hi_16, *round_bits_const), round_bits);
                 __m256i       res_8_hi = _mm256_packus_epi16(res_hi_16, res_hi_16);
@@ -1010,7 +1012,7 @@ static INLINE void prepare_warp_vertical_filter_avx2(uint8_t *pred, __m256i *hor
                                                      const __m256i *res_add_const, const int round_bits,
                                                      const __m256i *res_sub_const, const __m256i *round_bits_const,
                                                      const __m256i *wt) {
-    if (gamma == 0 && delta == 0)
+    if (gamma == 0 && delta == 0) {
         warp_vertical_filter_gamma0_delta0_avx2(pred,
                                                 horz_out,
                                                 conv_params,
@@ -1028,7 +1030,7 @@ static INLINE void prepare_warp_vertical_filter_avx2(uint8_t *pred, __m256i *hor
                                                 res_sub_const,
                                                 round_bits_const,
                                                 wt);
-    else if (gamma == 0 && delta != 0)
+    } else if (gamma == 0 && delta != 0) {
         warp_vertical_filter_gamma0_avx2(pred,
                                          horz_out,
                                          conv_params,
@@ -1046,7 +1048,7 @@ static INLINE void prepare_warp_vertical_filter_avx2(uint8_t *pred, __m256i *hor
                                          res_sub_const,
                                          round_bits_const,
                                          wt);
-    else if (gamma != 0 && delta == 0)
+    } else if (gamma != 0 && delta == 0) {
         warp_vertical_filter_delta0_avx2(pred,
                                          horz_out,
                                          conv_params,
@@ -1064,7 +1066,7 @@ static INLINE void prepare_warp_vertical_filter_avx2(uint8_t *pred, __m256i *hor
                                          res_sub_const,
                                          round_bits_const,
                                          wt);
-    else
+    } else {
         warp_vertical_filter_avx2(pred,
                                   horz_out,
                                   conv_params,
@@ -1082,24 +1084,26 @@ static INLINE void prepare_warp_vertical_filter_avx2(uint8_t *pred, __m256i *hor
                                   res_sub_const,
                                   round_bits_const,
                                   wt);
+    }
 }
 
 static INLINE void prepare_warp_horizontal_filter_avx2(const uint8_t *ref, __m256i *horz_out, int stride, int32_t ix4,
                                                        int32_t iy4, int32_t sx4, int alpha, int beta, int p_height,
                                                        int height, int i, const __m256i *round_const,
                                                        const __m128i *shift, const __m256i *shuffle_src) {
-    if (alpha == 0 && beta == 0)
+    if (alpha == 0 && beta == 0) {
         warp_horizontal_filter_alpha0_beta0_avx2(
             ref, horz_out, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, round_const, shift, shuffle_src);
-    else if (alpha == 0 && beta != 0)
+    } else if (alpha == 0 && beta != 0) {
         warp_horizontal_filter_alpha0_avx2(
             ref, horz_out, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, round_const, shift, shuffle_src);
-    else if (alpha != 0 && beta == 0)
+    } else if (alpha != 0 && beta == 0) {
         warp_horizontal_filter_beta0_avx2(
             ref, horz_out, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, round_const, shift, shuffle_src);
-    else
+    } else {
         warp_horizontal_filter_avx2(
             ref, horz_out, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, round_const, shift, shuffle_src);
+    }
 }
 
 void svt_av1_warp_affine_avx2(const int32_t *mat, const uint8_t *ref, int width, int height, int stride, uint8_t *pred,
@@ -1129,10 +1133,11 @@ void svt_av1_warp_affine_avx2(const int32_t *mat, const uint8_t *ref, int width,
         conv_params, round_bits, offset_bits, &res_sub_const, &round_bits_const, &wt);
 
     __m256i res_add_const_1;
-    if (conv_params->is_compound == 1)
+    if (conv_params->is_compound == 1) {
         res_add_const_1 = _mm256_add_epi32(reduce_bits_vert_const, res_add_const);
-    else
+    } else {
         res_add_const_1 = _mm256_set1_epi32(-(1 << (bd + reduce_bits_vert - 1)) + ((1 << reduce_bits_vert) >> 1));
+    }
     const int32_t const1 = alpha * (-4) + beta * (-4) + (1 << (WARPEDDIFF_PREC_BITS - 1)) +
         (WARPEDPIXEL_PREC_SHIFTS << WARPEDDIFF_PREC_BITS);
     const int32_t const2 = gamma * (-4) + delta * (-4) + (1 << (WARPEDDIFF_PREC_BITS - 1)) +
@@ -1248,7 +1253,7 @@ void svt_av1_warp_affine_avx2(const int32_t *mat, const uint8_t *ref, int width,
                 __m256i       coeff[4];
                 prepare_horizontal_filter_coeff(alpha, sx, coeff);
                 filter_src_pixels_avx2(src_01, horz_out, coeff, shuffle_src, &round_const, &shift, row);
-            } else
+            } else {
                 prepare_warp_horizontal_filter_avx2(ref,
                                                     horz_out,
                                                     stride,
@@ -1263,6 +1268,7 @@ void svt_av1_warp_affine_avx2(const int32_t *mat, const uint8_t *ref, int width,
                                                     &round_const,
                                                     &shift,
                                                     shuffle_src);
+            }
 
             // Vertical filter
             prepare_warp_vertical_filter_avx2(pred,

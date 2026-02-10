@@ -39,13 +39,17 @@ void svt_aom_un_pack2d(uint16_t *in16_bit_buffer, uint32_t in_stride, uint8_t *o
 static INLINE void memset16bit(uint16_t *in_ptr, uint16_t value, uint64_t num_of_elements) {
     uint64_t i;
 
-    for (i = 0; i < num_of_elements; i++) in_ptr[i] = value;
+    for (i = 0; i < num_of_elements; i++) {
+        in_ptr[i] = value;
+    }
 }
 
 static INLINE void memset32bit(uint32_t *in_ptr, uint32_t value, uint64_t num_of_elements) {
     uint64_t i;
 
-    for (i = 0; i < num_of_elements; i++) in_ptr[i] = value;
+    for (i = 0; i < num_of_elements; i++) {
+        in_ptr[i] = value;
+    }
 }
 
 void svt_full_distortion_kernel_cbf_zero32_bits_c(int32_t *coeff, uint32_t coeff_stride,

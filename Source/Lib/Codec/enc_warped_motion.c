@@ -61,8 +61,9 @@ static int64_t warp_error(WarpedMotionParams *wm, const uint8_t *const ref, int 
 
             gm_sumerr += svt_nxm_sad_kernel(tmp, WARP_ERROR_BLOCK, dst + j + i * p_stride, p_stride, warp_h, warp_w);
 
-            if (gm_sumerr > best_error)
+            if (gm_sumerr > best_error) {
                 return gm_sumerr;
+            }
         }
 
         i_itr++;
@@ -76,9 +77,11 @@ static int64_t warp_error(WarpedMotionParams *wm, const uint8_t *const ref, int 
 int64_t svt_av1_warp_error(WarpedMotionParams *wm, const uint8_t *ref, int width, int height, int stride, uint8_t *dst,
                            int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x,
                            int subsampling_y, uint8_t chess_refn, int64_t best_error) {
-    if (wm->wmtype <= AFFINE)
-        if (!svt_get_shear_params(wm))
+    if (wm->wmtype <= AFFINE) {
+        if (!svt_get_shear_params(wm)) {
             return 1;
+        }
+    }
     return warp_error(wm,
                       ref,
                       width,

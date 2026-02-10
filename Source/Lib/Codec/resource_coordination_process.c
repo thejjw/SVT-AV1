@@ -139,11 +139,12 @@ void speed_buffer_control(ResourceCoordinationContext *context_ptr, PictureParen
     int64_t buffer_threshold_3 = MIN(target_fps * 3, SC_FRAMES_INTERVAL_T3);
     svt_block_on_mutex(scs->enc_ctx->sc_buffer_mutex);
 
-    if (scs->enc_ctx->sc_frame_in == 0)
+    if (scs->enc_ctx->sc_frame_in == 0) {
         svt_av1_get_time(&context_ptr->first_in_pic_arrived_time_seconds,
                          &context_ptr->first_in_pic_arrived_timeu_seconds);
-    else if (scs->enc_ctx->sc_frame_in == SC_FRAMES_TO_IGNORE)
+    } else if (scs->enc_ctx->sc_frame_in == SC_FRAMES_TO_IGNORE) {
         context_ptr->start_flag = true;
+    }
     // Compute duration since the start of the encode and since the previous checkpoint
     svt_av1_get_time(&curs_time_seconds, &curs_time_useconds);
 
@@ -244,12 +245,13 @@ void speed_buffer_control(ResourceCoordinationContext *context_ptr, PictureParen
     if (context_ptr->start_flag ||
         (scs->enc_ctx->sc_frame_in > context_ptr->previous_frame_in_check3 + SC_FRAMES_INTERVAL_SPEED &&
          scs->enc_ctx->sc_frame_in >= SC_FRAMES_TO_IGNORE)) {
-        if (context_ptr->start_flag)
+        if (context_ptr->start_flag) {
             context_ptr->cur_speed = (uint64_t)(scs->enc_ctx->sc_frame_out - 0) * 1000 / (uint64_t)(overall_duration);
-        else {
-            if (inst_duration != 0)
+        } else {
+            if (inst_duration != 0) {
                 context_ptr->cur_speed = (uint64_t)(scs->enc_ctx->sc_frame_out - context_ptr->prev_frame_out) * 1000 /
                     (uint64_t)(inst_duration);
+            }
         }
         context_ptr->start_flag = false;
 
@@ -258,15 +260,18 @@ void speed_buffer_control(ResourceCoordinationContext *context_ptr, PictureParen
         context_ptr->prevs_time_seconds       = curs_time_seconds;
         context_ptr->prevs_timeu_seconds      = curs_time_useconds;
         context_ptr->prev_frame_out           = scs->enc_ctx->sc_frame_out;
-    } else if (scs->enc_ctx->sc_frame_in < SC_FRAMES_TO_IGNORE && (overall_duration != 0))
+    } else if (scs->enc_ctx->sc_frame_in < SC_FRAMES_TO_IGNORE && (overall_duration != 0)) {
         context_ptr->cur_speed = (uint64_t)(scs->enc_ctx->sc_frame_out - 0) * 1000 / (uint64_t)(overall_duration);
-    if (change_cond)
+    }
+    if (change_cond) {
         context_ptr->prev_change_cond = change_cond;
+    }
     scs->enc_ctx->sc_frame_in++;
-    if (scs->enc_ctx->sc_frame_in >= SC_FRAMES_TO_IGNORE)
+    if (scs->enc_ctx->sc_frame_in >= SC_FRAMES_TO_IGNORE) {
         context_ptr->average_enc_mod += scs->enc_ctx->enc_mode;
-    else
+    } else {
         context_ptr->average_enc_mod = 0;
+    }
     // Set the encoder level
     pcs->enc_mode = scs->enc_ctx->enc_mode;
 
@@ -279,8 +284,9 @@ static void assign_film_grain_random_seed(PictureParentControlSet *pcs) {
     uint16_t *fgn_random_seed_ptr              = &pcs->scs->film_grain_random_seed;
     pcs->frm_hdr.film_grain_params.random_seed = *fgn_random_seed_ptr;
     *fgn_random_seed_ptr += 3381; // Changing random seed for film grain
-    if (!(*fgn_random_seed_ptr)) // Random seed should not be zero
+    if (!(*fgn_random_seed_ptr)) { // Random seed should not be zero
         *fgn_random_seed_ptr += 7391;
+    }
 }
 
 static uint8_t get_delta_q_res(uint8_t qp, bool enable_variance_boost) {
@@ -294,14 +300,15 @@ static uint8_t get_delta_q_res(uint8_t qp, bool enable_variance_boost) {
         // delta q overhead becomes proportionally bigger the higher the qindex,
         // and qstep jumps between qindexes become bigger the lower the qindex
         // so dynamically increase delta_q_res granularity as qindex decreases
-        if (qindex >= 160)
+        if (qindex >= 160) {
             res = 8;
-        else if (qindex >= 120)
+        } else if (qindex >= 120) {
             res = 4;
-        else if (qindex >= 80)
+        } else if (qindex >= 80) {
             res = 2;
-        else
+        } else {
             res = DEFAULT_DELTA_Q_RES;
+        }
     }
 
     return res;
@@ -381,13 +388,16 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet *pcs) {
     frm_hdr->reduced_tx_set = 0;
     frm_hdr->reference_mode = SINGLE_REFERENCE;
     pcs->frame_context_idx  = 0; /* Context to use/update */
-    for (int32_t i = 0; i < REF_FRAMES; i++) pcs->fb_of_context_type[i] = 0;
+    for (int32_t i = 0; i < REF_FRAMES; i++) {
+        pcs->fb_of_context_type[i] = 0;
+    }
     frm_hdr->primary_ref_frame = PRIMARY_REF_NONE;
     if (pcs->scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR &&
         pcs->scs->static_config.intra_period_length != -1) {
         pcs->frame_offset = pcs->picture_number % (pcs->scs->static_config.intra_period_length + 1);
-    } else
+    } else {
         pcs->frame_offset = pcs->picture_number;
+    }
     frm_hdr->error_resilient_mode            = 0;
     cm->tiles_info.uniform_tile_spacing_flag = 1;
     pcs->large_scale_tile                    = 0;
@@ -526,12 +536,14 @@ static void copy_input_buffer_overlay(SequenceControlSet *sequenceControlSet, Eb
     dst->pic_type     = src->pic_type;
 
     // Copy the metadata array
-    if (svt_aom_copy_metadata_buffer(dst, src->metadata) != EB_ErrorNone)
+    if (svt_aom_copy_metadata_buffer(dst, src->metadata) != EB_ErrorNone) {
         dst->metadata = NULL;
+    }
 
     // Copy the picture buffer
-    if (src->p_buffer != NULL)
+    if (src->p_buffer != NULL) {
         copy_frame_buffer_overlay(sequenceControlSet, dst->p_buffer, src->p_buffer);
+    }
 }
 
 /******************************************************
@@ -563,10 +575,11 @@ void svt_aom_setup_two_pass(SequenceControlSet *scs) {
             //less than 200 frames or gop_constraint_rc, used in VBR and set in multipass encode
             scs->is_short_clip = scs->twopass.stats_buf_ctx->total_stats->count < 200 ? 1 : scs->is_short_clip;
         }
-    } else if (scs->lap_rc)
+    } else if (scs->lap_rc) {
         svt_av1_init_single_pass_lap(scs);
-    else if (scs->static_config.pass == ENC_FIRST_PASS)
+    } else if (scs->static_config.pass == ENC_FIRST_PASS) {
         svt_aom_set_rc_param(scs);
+    }
 }
 
 static EbErrorType realloc_sb_param(SequenceControlSet *scs, PictureParentControlSet *pcs) {
@@ -582,12 +595,14 @@ static EbErrorType realloc_sb_param(SequenceControlSet *scs, PictureParentContro
 }
 
 static void retrieve_resize_event(SequenceControlSet *scs, uint64_t pic_num, bool *rc_reset_flag) {
-    if (scs->static_config.resize_mode != RESIZE_RANDOM_ACCESS)
+    if (scs->static_config.resize_mode != RESIZE_RANDOM_ACCESS) {
         return;
+    }
     const SvtAv1FrameScaleEvts *events = &scs->static_config.frame_scale_evts;
     for (uint32_t i = 0; i < events->evt_num; i++) {
-        if (!events->start_frame_nums || pic_num != events->start_frame_nums[i])
+        if (!events->start_frame_nums || pic_num != events->start_frame_nums[i]) {
             continue;
+        }
         EbRefFrameScale *target_evt = &scs->enc_ctx->resize_evt;
         // update scaling event for future pictures
         target_evt->scale_mode     = RESIZE_FIXED;
@@ -609,10 +624,11 @@ bool buffer_update_needed(EbBufferHeaderType *input_buffer, struct SequenceContr
         ? scs->max_input_luma_height
         : scs->max_input_luma_height + (scs->max_input_luma_height % 8);
     if (((EbPictureBufferDesc *)(input_buffer->p_buffer))->max_width != max_width ||
-        ((EbPictureBufferDesc *)(input_buffer->p_buffer))->max_height != max_height)
+        ((EbPictureBufferDesc *)(input_buffer->p_buffer))->max_height != max_height) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 /**************************************
@@ -731,10 +747,12 @@ static void update_rate_info(ResourceCoordinationContext *ctx, EbBufferHeaderTyp
             svt_aom_assert_err(node->size == sizeof(SvtAv1RateInfo) && node->data,
                                "invalid private data of type RATE_CHANGE_EVENT");
             SvtAv1RateInfo *input_pic_def = (SvtAv1RateInfo *)node->data;
-            if (input_pic_def->seq_qp != 0)
+            if (input_pic_def->seq_qp != 0) {
                 scs->static_config.qp = input_pic_def->seq_qp;
-            if (input_pic_def->target_bit_rate != 0)
+            }
+            if (input_pic_def->target_bit_rate != 0) {
                 scs->static_config.target_bit_rate = input_pic_def->target_bit_rate;
+            }
             ctx->seq_param_change = true;
         }
         node = node->next;
@@ -944,12 +962,14 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
                                                   scs->max_input_luma_height);
 
             if (scs->enc_ctx->initial_picture) {
-                if (scs->static_config.pass == ENC_SECOND_PASS)
+                if (scs->static_config.pass == ENC_SECOND_PASS) {
                     svt_aom_read_stat(scs);
-                if (scs->static_config.pass != ENC_SINGLE_PASS || scs->lap_rc)
+                }
+                if (scs->static_config.pass != ENC_SINGLE_PASS || scs->lap_rc) {
                     svt_aom_setup_two_pass(scs);
-                else
+                } else {
                     svt_aom_set_rc_param(scs);
+                }
             }
 
             // Copy previous Active SequenceControlSetPtr to a place holder
@@ -1022,9 +1042,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             pcs->p_pcs_wrapper_ptr = pcs_wrapper;
 
             // reallocate sb_param_array and sb_geom for super-res or reference scaling mode on
-            if (scs->static_config.superres_mode > SUPERRES_NONE || scs->static_config.resize_mode > RESIZE_NONE)
+            if (scs->static_config.superres_mode > SUPERRES_NONE || scs->static_config.resize_mode > RESIZE_NONE) {
                 realloc_sb_param(scs, pcs);
-            else {
+            } else {
                 pcs->b64_geom         = scs->b64_geom;
                 pcs->sb_geom          = scs->sb_geom;
                 pcs->is_pcs_sb_params = false;
@@ -1059,8 +1079,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             pcs->previous_picture_control_set_wrapper_ptr = (context_ptr->scs_instance->enc_ctx->initial_picture)
                 ? pcs_wrapper
                 : scs->enc_ctx->previous_picture_control_set_wrapper_ptr;
-            if (loop_index == 0)
+            if (loop_index == 0) {
                 scs->enc_ctx->previous_picture_control_set_wrapper_ptr = pcs_wrapper;
+            }
             // Copy data from the svt buffer to the input frame
             // *Note - Assumes 4:2:0 planar
             input_pic_wrapper = eb_input_wrapper_ptr;
@@ -1071,8 +1092,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             end_of_sequence_flag        = (pcs->input_ptr->flags & EB_BUFFERFLAG_EOS) ? true : false;
             // Check whether super-res is previously enabled in this recycled parent pcs and restore
             // to non-scale-down default if so.
-            if (pcs->frame_superres_enabled || pcs->frame_resize_enabled)
+            if (pcs->frame_superres_enabled || pcs->frame_resize_enabled) {
                 svt_aom_reset_resized_picture(scs, pcs, pcs->enhanced_pic);
+            }
             pcs->superres_total_recode_loop = 0;
             pcs->superres_recode_loop       = 0;
             svt_av1_get_time(&pcs->start_time_seconds, &pcs->start_time_u_seconds);
@@ -1100,9 +1122,10 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
                 // Get a new input picture for overlay.
                 svt_get_empty_object(scs->enc_ctx->overlay_input_picture_pool_fifo_ptr, &input_pic_wrapper_ptr);
                 // if resolution has changed, and the overlay_buffer_header settings do not match scs settings, update overlay_buffer_header settings
-                if (buffer_update_needed((EbBufferHeaderType *)input_pic_wrapper_ptr->object_ptr, scs))
+                if (buffer_update_needed((EbBufferHeaderType *)input_pic_wrapper_ptr->object_ptr, scs)) {
                     svt_overlay_buffer_header_update(
                         (EbBufferHeaderType *)input_pic_wrapper_ptr->object_ptr, scs, false);
+                }
 
                 // Copy from original picture (pcs->input_pic_wrapper), which is shared
                 // between overlay and alt_ref up to this point, to the new input picture.
@@ -1129,8 +1152,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             pcs->b64_total_count   = scs->b64_total_count;
             if (scs->speed_control_flag) {
                 speed_buffer_control(context_ptr, pcs, scs);
-            } else
+            } else {
                 pcs->enc_mode = (EncMode)scs->static_config.enc_mode;
+            }
             //  If the mode of the second pass is not set from CLI, it is set to enc_mode
 
             // Pre-Analysis Signal(s) derivation
@@ -1138,15 +1162,17 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             // Rate Control
 
             // Picture Stats
-            if (loop_index == has_overlay || end_of_sequence_flag)
+            if (loop_index == has_overlay || end_of_sequence_flag) {
                 pcs->picture_number = context_ptr->picture_number++;
-            else
+            } else {
                 pcs->picture_number = context_ptr->picture_number;
+            }
             if (scs->passes == 2 && !end_of_sequence_flag && scs->static_config.pass == ENC_SECOND_PASS &&
                 scs->static_config.rate_control_mode) {
                 pcs->stat_struct = (scs->twopass.stats_buf_ctx->stats_in_start + pcs->picture_number)->stat_struct;
-                if (pcs->stat_struct.poc != pcs->picture_number)
+                if (pcs->stat_struct.poc != pcs->picture_number) {
                     SVT_LOG("Error reading data in multi pass encoding\n");
+                }
             }
             if (scs->static_config.use_qp_file) {
                 pcs->qp_on_the_fly = true;
@@ -1176,8 +1202,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
             EbPaReferenceObject *pa_ref_obj = (EbPaReferenceObject *)pcs->pa_ref_pic_wrapper->object_ptr;
             // if resolution has changed, and the pa_ref settings do not match scs settings, update pa reference params
             if (pa_ref_obj->input_padded_pic->max_width != scs->max_input_luma_width ||
-                pa_ref_obj->input_padded_pic->max_height != scs->max_input_luma_height)
+                pa_ref_obj->input_padded_pic->max_height != scs->max_input_luma_height) {
                 svt_pa_reference_param_update(pa_ref_obj, scs);
+            }
             EbPictureBufferDesc *input_padded_pic = (EbPictureBufferDesc *)pa_ref_obj->input_padded_pic;
             input_padded_pic->buffer_y            = buff_y8b;
             svt_object_inc_live_count(pcs->pa_ref_pic_wrapper, 1);
@@ -1192,8 +1219,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
 
                 ppcs_out->end_of_sequence_flag = end_of_sequence_flag;
                 // since overlay frame has the end of sequence set properly, set the end of sequence to true in the alt ref picture
-                if (ppcs_out->is_overlay && end_of_sequence_flag)
+                if (ppcs_out->is_overlay && end_of_sequence_flag) {
                     ppcs_out->alt_ref_ppcs_ptr->end_of_sequence_flag = true;
+                }
 
                 reset_pcs_av1(ppcs_out);
                 if (!ppcs_out->end_of_sequence_flag) {
@@ -1222,8 +1250,9 @@ void *svt_aom_resource_coordination_kernel(void *input_ptr) {
 
                     ppcs_out->end_of_sequence_flag = end_of_sequence_flag;
                     // since overlay frame has the end of sequence set properly, set the end of sequence to true in the alt ref picture
-                    if (ppcs_out->is_overlay && end_of_sequence_flag)
+                    if (ppcs_out->is_overlay && end_of_sequence_flag) {
                         ppcs_out->alt_ref_ppcs_ptr->end_of_sequence_flag = true;
+                    }
 
                     reset_pcs_av1(ppcs_out);
 

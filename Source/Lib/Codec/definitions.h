@@ -600,20 +600,29 @@ static INLINE double fclamp(double value, double low, double high) {
     return value < low ? low : (value > high ? high : value);
 }
 
-static INLINE uint8_t clip_pixel(int32_t val) { return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val); }
+static INLINE uint8_t clip_pixel(int32_t val) {
+    return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val);
+}
 
 static INLINE uint16_t clip_pixel_highbd(int32_t val, int32_t bd) {
     switch (bd) {
     case 8:
-    default: return (uint16_t)clamp(val, 0, 255);
-    case 10: return (uint16_t)clamp(val, 0, 1023);
-    case 12: return (uint16_t)clamp(val, 0, 4095);
+    default:
+        return (uint16_t)clamp(val, 0, 255);
+    case 10:
+        return (uint16_t)clamp(val, 0, 1023);
+    case 12:
+        return (uint16_t)clamp(val, 0, 4095);
     }
 }
 
-static INLINE unsigned int negative_to_zero(int value) { return (value < 0) ? 0 : value; }
+static INLINE unsigned int negative_to_zero(int value) {
+    return (value < 0) ? 0 : value;
+}
 
-static INLINE int av1_num_planes(EbColorConfig *color_info) { return color_info->mono_chrome ? 1 : MAX_MB_PLANE; }
+static INLINE int av1_num_planes(EbColorConfig *color_info) {
+    return color_info->mono_chrome ? 1 : MAX_MB_PLANE;
+}
 
 typedef struct IntraSize {
     uint8_t top;
@@ -668,7 +677,9 @@ typedef enum MdStagingMode {
     MD_STAGING_MODE_TOTAL
 } MdStagingMode;
 
-static INLINE bool is_intra_class(CandClass c) { return (c == CAND_CLASS_0 || c == CAND_CLASS_3); }
+static INLINE bool is_intra_class(CandClass c) {
+    return (c == CAND_CLASS_0 || c == CAND_CLASS_3);
+}
 
 #define NICS_PIC_TYPE 3
 #define NICS_SCALING_LEVELS 16
@@ -1013,10 +1024,14 @@ static INLINE TxSize av1_get_adjusted_tx_size(TxSize tx_size) {
     switch (tx_size) {
     case TX_64X64:
     case TX_64X32:
-    case TX_32X64: return TX_32X32;
-    case TX_64X16: return TX_32X16;
-    case TX_16X64: return TX_16X32;
-    default: return tx_size;
+    case TX_32X64:
+        return TX_32X32;
+    case TX_64X16:
+        return TX_32X16;
+    case TX_16X64:
+        return TX_16X32;
+    default:
+        return tx_size;
     }
 }
 
@@ -1724,12 +1739,15 @@ extern const int32_t av1_ext_tx_used[EXT_TX_SET_TYPES][TX_TYPES];
 static INLINE TxSetType get_ext_tx_set_type(TxSize tx_size, int32_t is_inter, int32_t use_reduced_set) {
     const TxSize tx_size_sqr_up = txsize_sqr_up_map[tx_size];
 
-    if (tx_size_sqr_up > TX_32X32)
+    if (tx_size_sqr_up > TX_32X32) {
         return EXT_TX_SET_DCTONLY;
-    if (tx_size_sqr_up == TX_32X32)
+    }
+    if (tx_size_sqr_up == TX_32X32) {
         return is_inter ? EXT_TX_SET_DCT_IDTX : EXT_TX_SET_DCTONLY;
-    if (use_reduced_set)
+    }
+    if (use_reduced_set) {
         return is_inter ? EXT_TX_SET_DCT_IDTX : EXT_TX_SET_DTT4_IDTX;
+    }
     const TxSize tx_size_sqr = txsize_sqr_map[tx_size];
     if (is_inter) {
         return (tx_size_sqr == TX_16X16 ? EXT_TX_SET_DTT9_IDTX_1DDCT : EXT_TX_SET_ALL16);

@@ -335,10 +335,11 @@ static INLINE int32_t aom_stop_encode(AomWriter* w) {
         w->buffer      = w->buffer_parent->buffer_av1;
         w->buffer_size = bytes + 1;
     }
-    if (svt_memcpy != NULL)
+    if (svt_memcpy != NULL) {
         svt_memcpy(w->buffer, data, bytes);
-    else
+    } else {
         svt_memcpy_c(w->buffer, data, bytes);
+    }
 
     w->pos = bytes;
     svt_od_ec_enc_clear(&w->ec);
@@ -359,7 +360,9 @@ static INLINE void aom_write_bit(AomWriter* w, int bit) {
 }
 
 static INLINE void aom_write_literal(AomWriter* w, unsigned data, int bits) {
-    for (int bit = bits - 1; bit >= 0; bit--) aom_write_bit(w, 1 & (data >> bit));
+    for (int bit = bits - 1; bit >= 0; bit--) {
+        aom_write_bit(w, 1 & (data >> bit));
+    }
 }
 
 static INLINE void aom_write_cdf(AomWriter* w, int symb, const AomCdfProb* cdf, int nsymbs) {
@@ -371,8 +374,9 @@ static INLINE void aom_write_cdf(AomWriter* w, int symb, const AomCdfProb* cdf, 
 
 static INLINE void aom_write_symbol(AomWriter* w, int symb, AomCdfProb* cdf, int nsymbs) {
     aom_write_cdf(w, symb, cdf, nsymbs);
-    if (w->allow_update_cdf)
+    if (w->allow_update_cdf) {
         update_cdf(cdf, symb, nsymbs);
+    }
 }
 
 /********************************************************************************************************************************/

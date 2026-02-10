@@ -24,7 +24,9 @@
 
 static INLINE int RENAME(calc_dist)(const int *p1, const int *p2) {
     int dist = 0;
-    for (int i = 0; i < AV1_K_MEANS_DIM; ++i) { dist += SQR(p1[i] - p2[i]); }
+    for (int i = 0; i < AV1_K_MEANS_DIM; ++i) {
+        dist += SQR(p1[i] - p2[i]);
+    }
     return dist;
 }
 
@@ -117,8 +119,9 @@ void RENAME(svt_av1_k_means)(const int *data, int *centroids, uint8_t *indices, 
                 svt_memcpy(indices, pre_indices, sizeof(pre_indices[0]) * n);
                 break;
             }
-            if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * AV1_K_MEANS_DIM))
+            if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * AV1_K_MEANS_DIM)) {
                 break;
+            }
         }
     } else {
         for (int i = 0; i < max_itr; ++i) {
@@ -135,8 +138,9 @@ void RENAME(svt_av1_k_means)(const int *data, int *centroids, uint8_t *indices, 
                 svt_memcpy_c(indices, pre_indices, sizeof(pre_indices[0]) * n);
                 break;
             }
-            if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * AV1_K_MEANS_DIM))
+            if (!memcmp(centroids, pre_centroids, sizeof(pre_centroids[0]) * k * AV1_K_MEANS_DIM)) {
                 break;
+            }
         }
     }
 }

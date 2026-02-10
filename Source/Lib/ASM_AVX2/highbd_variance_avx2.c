@@ -170,8 +170,12 @@ uint32_t svt_aom_variance_highbd_avx2(const uint16_t *a, int a_stride, const uin
     *sse    = 0;
 
     switch (w) {
-    case 16: aom_highbd_calc16x16var_avx2(a, a_stride, b, b_stride, sse, &sum); break;
-    case 32: variance_highbd_32x32_avx2(a, a_stride, b, b_stride, sse, &sum); break;
+    case 16:
+        aom_highbd_calc16x16var_avx2(a, a_stride, b, b_stride, sse, &sum);
+        break;
+    case 32:
+        variance_highbd_32x32_avx2(a, a_stride, b, b_stride, sse, &sum);
+        break;
     }
 
     return *sse - ((int64_t)sum * sum) / (w * h);

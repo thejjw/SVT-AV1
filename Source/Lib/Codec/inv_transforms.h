@@ -127,10 +127,12 @@ EbErrorType svt_aom_inv_transform_recon8bit(int32_t *coeff_buffer, //1D buffer
                                             PlaneType component_type, uint32_t eob, uint8_t lossless);
 
 static INLINE int32_t av1_get_max_eob(TxSize tx_size) {
-    if (tx_size == TX_64X64 || tx_size == TX_64X32 || tx_size == TX_32X64)
+    if (tx_size == TX_64X64 || tx_size == TX_64X32 || tx_size == TX_32X64) {
         return 1024;
-    if (tx_size == TX_16X64 || tx_size == TX_64X16)
+    }
+    if (tx_size == TX_16X64 || tx_size == TX_64X16) {
         return 512;
+    }
     return tx_size_2d[tx_size];
 }
 
@@ -178,9 +180,13 @@ static INLINE void set_flip_cfg(TxType tx_type, Txfm2dFlipCfg *cfg) {
     get_flip_cfg(tx_type, &cfg->ud_flip, &cfg->lr_flip);
 }
 
-static INLINE int32_t get_txw_idx(TxSize tx_size) { return tx_size_wide_log2[tx_size] - tx_size_wide_log2[0]; }
+static INLINE int32_t get_txw_idx(TxSize tx_size) {
+    return tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
+}
 
-static INLINE int32_t get_txh_idx(TxSize tx_size) { return tx_size_high_log2[tx_size] - tx_size_high_log2[0]; }
+static INLINE int32_t get_txh_idx(TxSize tx_size) {
+    return tx_size_high_log2[tx_size] - tx_size_high_log2[0];
+}
 
 static const TxfmType av1_txfm_type_ls[5][TX_TYPES_1D] = {
     {TXFM_TYPE_DCT4, TXFM_TYPE_ADST4, TXFM_TYPE_ADST4, TXFM_TYPE_IDENTITY4},
@@ -236,9 +242,13 @@ extern const int8_t *svt_aom_inv_txfm_shift_ls[TX_SIZES_ALL];
 
 static const int32_t cos_bit_min = 10;
 
-static INLINE const int32_t *cospi_arr(int32_t n) { return svt_aom_eb_av1_cospi_arr_data[n - cos_bit_min]; }
+static INLINE const int32_t *cospi_arr(int32_t n) {
+    return svt_aom_eb_av1_cospi_arr_data[n - cos_bit_min];
+}
 
-static INLINE const int32_t *sinpi_arr(int32_t n) { return svt_aom_eb_av1_sinpi_arr_data[n - cos_bit_min]; }
+static INLINE const int32_t *sinpi_arr(int32_t n) {
+    return svt_aom_eb_av1_sinpi_arr_data[n - cos_bit_min];
+}
 
 #define new_sqrt2_bits ((int32_t)12)
 // 2^12 * sqrt(2)
@@ -281,19 +291,24 @@ static INLINE int32_t half_btf(int32_t w0, int32_t in0, int32_t w1, int32_t in1,
 }
 
 static INLINE int32_t get_rect_tx_log_ratio(int32_t col, int32_t row) {
-    if (col == row)
+    if (col == row) {
         return 0;
+    }
     if (col > row) {
-        if (col == row * 2)
+        if (col == row * 2) {
             return 1;
-        if (col == row * 4)
+        }
+        if (col == row * 4) {
             return 2;
+        }
         assert(0 && "Unsupported transform size");
     } else {
-        if (row == col * 2)
+        if (row == col * 2) {
             return -1;
-        if (row == col * 4)
+        }
+        if (row == col * 4) {
             return -2;
+        }
         assert(0 && "Unsupported transform size");
     }
     return 0; // Invalid

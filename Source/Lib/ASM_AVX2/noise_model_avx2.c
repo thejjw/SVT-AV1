@@ -66,7 +66,9 @@ void svt_av1_add_block_observations_internal_avx2(uint32_t n, const double val, 
             tmp_pd    = _mm256_add_pd(tmp_pd, buffer_pd);
             _mm256_storeu_pd(A + i * n + j + 4, tmp_pd);
         }
-        for (; j < n; ++j) { A[i * n + j] += (buffer_norm_i * buffer[j]); }
+        for (; j < n; ++j) {
+            A[i * n + j] += (buffer_norm_i * buffer[j]);
+        }
     }
 }
 
@@ -198,7 +200,9 @@ void svt_aom_flat_block_finder_extract_block_avx2(const AomFlatBlockFinder *bloc
                     data_pd = _mm256_mul_pd(data_pd, recp_norm_pd);
                     _mm256_storeu_pd(block + yi * block_size + xi + 4, data_pd);
                 }
-                for (; xi < block_size; ++xi) { block[yi * block_size + xi] = ((double)data16_ptr[xi]) * recp_norm; }
+                for (; xi < block_size; ++xi) {
+                    block[yi * block_size + xi] = ((double)data16_ptr[xi]) * recp_norm;
+                }
             }
         }
     } else {
@@ -227,7 +231,9 @@ void svt_aom_flat_block_finder_extract_block_avx2(const AomFlatBlockFinder *bloc
                     data_pd = _mm256_mul_pd(data_pd, recp_norm_pd);
                     _mm256_storeu_pd(block + yi * block_size + xi + 4, data_pd);
                 }
-                for (; xi < block_size; ++xi) { block[yi * block_size + xi] = ((double)data_ptr[xi]) * recp_norm; }
+                for (; xi < block_size; ++xi) {
+                    block[yi * block_size + xi] = ((double)data_ptr[xi]) * recp_norm;
+                }
             }
         }
     }
@@ -244,7 +250,9 @@ void svt_aom_flat_block_finder_extract_block_avx2(const AomFlatBlockFinder *bloc
         plane_pd = _mm256_loadu_pd(plane + i + 4);
         _mm256_storeu_pd(block + i + 4, _mm256_sub_pd(block_pd, plane_pd));
     }
-    for (; i < n; ++i) block[i] -= plane[i];
+    for (; i < n; ++i) {
+        block[i] -= plane[i];
+    }
 }
 
 #endif

@@ -1609,8 +1609,12 @@ void sad_loop_kernel_generalized_avx512(uint8_t  *src, // input parameter, sourc
     __m128i leftover_mask    = _mm_set1_epi32(-1);
     __m128i leftover_mask32b = _mm_set1_epi32(-1);
     if (leftover) {
-        for (k = 0; k < (uint32_t)(search_area_width & 7); k++) leftover_mask = _mm_slli_si128(leftover_mask, 2);
-        for (k = 0; k < (uint32_t)(search_area_width & 3); k++) leftover_mask32b = _mm_slli_si128(leftover_mask32b, 4);
+        for (k = 0; k < (uint32_t)(search_area_width & 7); k++) {
+            leftover_mask = _mm_slli_si128(leftover_mask, 2);
+        }
+        for (k = 0; k < (uint32_t)(search_area_width & 3); k++) {
+            leftover_mask32b = _mm_slli_si128(leftover_mask32b, 4);
+        }
     }
 
     for (i = 0; i < search_area_height; i++) {
@@ -1720,7 +1724,9 @@ void sad_loop_kernel_generalized_avx512(uint8_t  *src, // input parameter, sourc
                     DECLARE_ALIGNED(16, uint16_t, tsum[16]);
                     memset(tsum, 0, 16 * sizeof(uint16_t));
                     for (uint32_t search_area = 0; search_area < 16; search_area++) {
-                        for (l = 0; l < width_calc; l++) { tsum[search_area] += EB_ABS_DIFF(temp_src[l], temp_ref[l]); }
+                        for (l = 0; l < width_calc; l++) {
+                            tsum[search_area] += EB_ABS_DIFF(temp_src[l], temp_ref[l]);
+                        }
                         temp_ref += 1;
                     }
                     sum256 = _mm256_adds_epu16(sum256, _mm256_loadu_si256((__m256i *)tsum));
@@ -3205,7 +3211,9 @@ void svt_sad_loop_kernel_avx512_intrin(uint8_t  *src, // input parameter, source
         __m256i        mask256;
 
         mask128 = _mm_set1_epi32(-1);
-        for (x = 0; x < (int32_t)leftover; x++) { mask128 = _mm_slli_si128(mask128, 2); }
+        for (x = 0; x < (int32_t)leftover; x++) {
+            mask128 = _mm_slli_si128(mask128, 2);
+        }
         mask256 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask128), mask128, 1);
 
         switch (width) {
@@ -4717,17 +4725,38 @@ uint32_t svt_nxm_sad_kernel_helper_avx512(const uint8_t *src, uint32_t src_strid
     uint32_t nxm_sad = 0;
 
     switch (width) {
-    case 4: nxm_sad = svt_compute4x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 8: nxm_sad = svt_compute8x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 16: nxm_sad = svt_compute16x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 24: nxm_sad = svt_compute24x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 32: nxm_sad = svt_compute32x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 40: nxm_sad = svt_compute40x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 48: nxm_sad = svt_compute48x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 56: nxm_sad = svt_compute56x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 64: nxm_sad = compute64x_m_sad_avx512_intrin(src, src_stride, ref, ref_stride, height); break;
-    case 128: nxm_sad = compute128x_m_sad_avx512_intrin(src, src_stride, ref, ref_stride, height); break;
-    default: nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
+    case 4:
+        nxm_sad = svt_compute4x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 8:
+        nxm_sad = svt_compute8x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 16:
+        nxm_sad = svt_compute16x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 24:
+        nxm_sad = svt_compute24x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 32:
+        nxm_sad = svt_compute32x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 40:
+        nxm_sad = svt_compute40x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 48:
+        nxm_sad = svt_compute48x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 56:
+        nxm_sad = svt_compute56x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 64:
+        nxm_sad = compute64x_m_sad_avx512_intrin(src, src_stride, ref, ref_stride, height);
+        break;
+    case 128:
+        nxm_sad = compute128x_m_sad_avx512_intrin(src, src_stride, ref, ref_stride, height);
+        break;
+    default:
+        nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
     }
 
     return nxm_sad;

@@ -77,7 +77,9 @@ static inline void calc_ab_fast_internal_common(uint32x4_t s0, uint32x4_t s1, ui
         store_u32_4x4((uint32_t *)src1, buf_stride, p0, p1, p2, p3);
 
         for (x = 0; x < 4; x++) {
-            for (y = 0; y < 4; y++) { dst_A16[x * buf_stride + y] = svt_aom_eb_x_by_xplus1[src1[x * buf_stride + y]]; }
+            for (y = 0; y < 4; y++) {
+                dst_A16[x * buf_stride + y] = svt_aom_eb_x_by_xplus1[src1[x * buf_stride + y]];
+            }
         }
         load_u16_4x4(dst_A16, buf_stride, &d0, &d1, &d2, &d3);
     }
@@ -207,7 +209,9 @@ static inline void calc_ab_internal_common(uint32x4_t s0, uint32x4_t s1, uint32x
         store_u32_4x4((uint32_t *)src1 + 4, buf_stride, p4, p5, p6, p7);
 
         for (x = 0; x < 4; x++) {
-            for (y = 0; y < 8; y++) { dst_A16[x * buf_stride + y] = svt_aom_eb_x_by_xplus1[src1[x * buf_stride + y]]; }
+            for (y = 0; y < 8; y++) {
+                dst_A16[x * buf_stride + y] = svt_aom_eb_x_by_xplus1[src1[x * buf_stride + y]];
+            }
         }
         load_u16_8x4(dst_A16, buf_stride, &s16_4, &s16_5, &s16_6, &s16_7);
     }
@@ -1405,12 +1409,16 @@ static inline void src_convert_u8_to_u16(const uint8_t *src, const int src_strid
     src_ptr = src + (count << 2) * src_stride;
     dst_ptr = dst + (count << 2) * dst_stride;
     for (x = 0; x < h; x++) {
-        for (y = 0; y < width; y++) { dst_ptr[y + x * dst_stride] = src_ptr[y + x * src_stride]; }
+        for (y = 0; y < width; y++) {
+            dst_ptr[y + x * dst_stride] = src_ptr[y + x * src_stride];
+        }
     }
 
     // memset uninitialized rows of src buffer as they are needed for the
     // boxsum filter calculation.
-    for (x = height; x < height + 5; x++) memset(dst + x * dst_stride, 0, (width + 2) * sizeof(*dst));
+    for (x = height; x < height + 5; x++) {
+        memset(dst + x * dst_stride, 0, (width + 2) * sizeof(*dst));
+    }
 }
 
 static inline void src_convert_hbd_copy(const uint16_t *src, int src_stride, uint16_t *dst, const int dst_stride,
@@ -1452,7 +1460,9 @@ static inline void src_convert_hbd_copy(const uint16_t *src, int src_stride, uin
     }
     // memset uninitialized rows of src buffer as they are needed for the
     // boxsum filter calculation.
-    for (x = height; x < height + 5; x++) memset(dst + x * dst_stride, 0, (width + 2) * sizeof(*dst));
+    for (x = height; x < height + 5; x++) {
+        memset(dst + x * dst_stride, 0, (width + 2) * sizeof(*dst));
+    }
 }
 
 void svt_av1_selfguided_restoration_neon(const uint8_t *dat8, int32_t width, int32_t height, int32_t stride,
@@ -1485,10 +1495,12 @@ void svt_av1_selfguided_restoration_neon(const uint8_t *dat8, int32_t width, int
                               height_ext);
     }
 
-    if (params->r[0] > 0)
+    if (params->r[0] > 0) {
         restoration_fast_internal(dgd16, width, height, dgd16_stride, flt0, flt_stride, bit_depth, sgr_params_idx, 0);
-    if (params->r[1] > 0)
+    }
+    if (params->r[1] > 0) {
         restoration_internal(dgd16, width, height, dgd16_stride, flt1, flt_stride, bit_depth, sgr_params_idx, 1);
+    }
 }
 
 typedef struct {

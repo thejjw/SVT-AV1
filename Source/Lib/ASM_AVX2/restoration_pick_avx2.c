@@ -58,8 +58,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
                     f1_256 = _mm256_hadd_epi16(f1_256, f1_256_tmp);
                     f1_256 = _mm256_permute4x64_epi64(f1_256, 0xD8);
                     f1_256 = _mm256_sub_epi16(f1_256, u_256);
-                } else
+                } else {
                     f1_256 = _mm256_set1_epi16(0);
+                }
                 if (params->r[1] > 0) {
                     f2_256     = _mm256_loadu_si256((const __m256i *)(flt1 + i * flt1_stride + j));
                     f2_256_tmp = _mm256_loadu_si256((const __m256i *)(flt1 + i * flt1_stride + j + 8));
@@ -67,8 +68,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
                     f2_256 = _mm256_hadd_epi16(f2_256, f2_256_tmp);
                     f2_256 = _mm256_permute4x64_epi64(f2_256, 0xD8);
                     f2_256 = _mm256_sub_epi16(f2_256, u_256);
-                } else
+                } else {
                     f2_256 = _mm256_set1_epi16(0);
+                }
 
                 //    H[0][0] += f1 * f1;
                 h_00 = _mm256_add_epi32(h_00, _mm256_madd_epi16(f1_256, f1_256));
@@ -143,8 +145,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
                     f1_256 = _mm256_hadd_epi16(f1_256, f1_256_tmp);
                     f1_256 = _mm256_permute4x64_epi64(f1_256, 0xD8);
                     f1_256 = _mm256_sub_epi16(f1_256, u_256);
-                } else
+                } else {
                     f1_256 = _mm256_set1_epi16(0);
+                }
                 if (params->r[1] > 0) {
                     f2_256     = _mm256_loadu_si256((const __m256i *)(flt1 + i * flt1_stride + j));
                     f2_256_tmp = _mm256_loadu_si256((const __m256i *)(flt1 + i * flt1_stride + j + 8));
@@ -152,8 +155,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
                     f2_256 = _mm256_hadd_epi16(f2_256, f2_256_tmp);
                     f2_256 = _mm256_permute4x64_epi64(f2_256, 0xD8);
                     f2_256 = _mm256_sub_epi16(f2_256, u_256);
-                } else
+                } else {
                     f2_256 = _mm256_set1_epi16(0);
+                }
 
                 //    H[0][0] += f1 * f1;
                 h_00 = _mm256_add_epi32(h_00, _mm256_madd_epi16(f1_256, f1_256));
@@ -219,8 +223,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
         // H matrix is now only the scalar H[1][1]
         // C vector is now only the scalar C[1]
         det = H[1][1];
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = 0;
         x[1] = C[1] / det;
 
@@ -230,8 +235,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
         // H matrix is now only the scalar H[0][0]
         // C vector is now only the scalar C[0]
         det = H[0][0];
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = C[0] / det;
         x[1] = 0;
 
@@ -239,8 +245,9 @@ void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int 
         xq[1] = 0;
     } else {
         det = (H[0][0] * H[1][1] - H[0][1] * H[1][0]);
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = (H[1][1] * C[0] - H[0][1] * C[1]) / det;
         x[1] = (H[0][0] * C[1] - H[1][0] * C[0]) / det;
 

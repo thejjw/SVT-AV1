@@ -52,16 +52,22 @@ static INLINE int svt_mv_err_cost(const Mv *mv, const Mv *ref_mv, const int *mvj
                 RDDIV_BITS + AV1_PROB_COST_SHIFT - RD_EPB_SHIFT + PIXEL_TRANSFORM_ERROR_SCALE);
         }
         return 0;
-    case MV_COST_L1_LOWRES: return (SSE_LAMBDA_LOWRES * (abs_diff.y + abs_diff.x)) >> 3;
-    case MV_COST_L1_MIDRES: return (SSE_LAMBDA_MIDRES * (abs_diff.y + abs_diff.x)) >> 3;
-    case MV_COST_L1_HDRES: return (SSE_LAMBDA_HDRES * (abs_diff.y + abs_diff.x)) >> 3;
+    case MV_COST_L1_LOWRES:
+        return (SSE_LAMBDA_LOWRES * (abs_diff.y + abs_diff.x)) >> 3;
+    case MV_COST_L1_MIDRES:
+        return (SSE_LAMBDA_MIDRES * (abs_diff.y + abs_diff.x)) >> 3;
+    case MV_COST_L1_HDRES:
+        return (SSE_LAMBDA_HDRES * (abs_diff.y + abs_diff.x)) >> 3;
     case MV_COST_OPT: {
         return (int)ROUND_POWER_OF_TWO_64(
             (int64_t)((abs_diff.y + abs_diff.x) << 8) * error_per_bit,
             RDDIV_BITS + AV1_PROB_COST_SHIFT - RD_EPB_SHIFT + PIXEL_TRANSFORM_ERROR_SCALE);
     }
-    case MV_COST_NONE: return 0;
-    default: assert(0 && "Invalid rd_cost_type"); return 0;
+    case MV_COST_NONE:
+        return 0;
+    default:
+        assert(0 && "Invalid rd_cost_type");
+        return 0;
     }
 }
 
@@ -90,7 +96,9 @@ static INLINE int svt_mv_err_cost_(const Mv *mv, const svt_mv_cost_param *mv_cos
  */
 
 // Returns the subpel offset used by various subpel variance functions [m]sv[a]f
-static INLINE int svt_get_subpel_part(int x) { return x & 7; }
+static INLINE int svt_get_subpel_part(int x) {
+    return x & 7;
+}
 
 // Gets the address of the ref buffer at subpel location (r, c), rounded to the
 // nearest fullpel precision toward - \infty
@@ -178,8 +186,9 @@ static INLINE unsigned int svt_check_better_fast(MacroBlockD *xd, const struct A
         cost = svt_mv_err_cost_(this_mv, mv_cost_params);
         if (mv_cost_params->mv_cost_type == MV_COST_OPT) {
             int64_t bestcost = *distortion + cost;
-            if (bestcost > (((int64_t)*besterr * (int64_t)mv_cost_params->early_exit_th) / 1000))
+            if (bestcost > (((int64_t)*besterr * (int64_t)mv_cost_params->early_exit_th) / 1000)) {
                 return (uint32_t)bestcost;
+            }
         }
         // TODO: add estimated func
         if (is_scaled) {
@@ -189,8 +198,9 @@ static INLINE unsigned int svt_check_better_fast(MacroBlockD *xd, const struct A
         }
         cost += thismse;
         int weight = 100;
-        if (var_params->bias_fp && (*best_mv).x % 8 == 0 && (*best_mv).y % 8 == 0)
+        if (var_params->bias_fp && (*best_mv).x % 8 == 0 && (*best_mv).y % 8 == 0) {
             weight = var_params->bias_fp;
+        }
         if ((((uint64_t)cost * weight) / 100) < *besterr) {
             *besterr    = cost;
             *best_mv    = *this_mv;
@@ -219,8 +229,9 @@ static AOM_FORCE_INLINE unsigned int svt_check_better(MacroBlockD *xd, const str
         cost    = svt_mv_err_cost_(this_mv, mv_cost_params);
         cost += thismse;
         int weight = 100;
-        if (var_params->bias_fp && (*best_mv).x % 8 == 0 && (*best_mv).y % 8 == 0)
+        if (var_params->bias_fp && (*best_mv).x % 8 == 0 && (*best_mv).y % 8 == 0) {
             weight = var_params->bias_fp;
+        }
         if ((((uint64_t)cost * weight) / 100) < *besterr) {
             *besterr    = cost;
             *best_mv    = *this_mv;
@@ -396,8 +407,9 @@ static AOM_FORCE_INLINE Mv first_level_check_fast(MacroBlockD *xd, const struct 
 
     const Mv diag_step = get_best_diag_step(hstep, left, right, up, down);
     const Mv diag_mv   = {{this_mv.x + diag_step.x, this_mv.y + diag_step.y}};
-    if (*besterr >= orgerr)
+    if (*besterr >= orgerr) {
         return diag_step;
+    }
     // Check the diagonal direction with the best mv
     svt_check_better_fast(
         xd, cm, &diag_mv, best_mv, mv_limits, var_params, mv_cost_params, besterr, sse1, distortion, &dummy, is_scaled);
@@ -563,7 +575,7 @@ static AOM_FORCE_INLINE void two_level_checks_fast(MacroBlockD *xd, const struct
                                                 sse1,
                                                 distortion,
                                                 is_scaled);
-    if (*besterr < orgerr)
+    if (*besterr < orgerr) {
         if (iters > 1) {
             second_level_check_fast(xd,
                                     cm,
@@ -579,6 +591,7 @@ static AOM_FORCE_INLINE void two_level_checks_fast(MacroBlockD *xd, const struct
                                     distortion,
                                     is_scaled);
         }
+    }
 }
 
 extern const uint8_t svt_aom_eb_av1_var_offs[MAX_SB_SIZE];
@@ -608,19 +621,22 @@ int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const s
         ctx->fp_me_dist[ms_params->list_idx][ms_params->ref_idx] = besterr;
     }
 
-    if (early_neigh_check_exit)
+    if (early_neigh_check_exit) {
         return besterr;
+    }
     const uint64_t th_normalizer = (uint64_t)(((var_params->w * var_params->h) << 5) *
                                               (uint64_t)ms_params->abs_th_mult);
-    if ((uint64_t)qp * besterr < th_normalizer)
+    if ((uint64_t)qp * besterr < th_normalizer) {
         return besterr;
+    }
     // How many steps to take. A round of 0 means fullpel search only, 1 means
     // half-pel, and so on.
     const int round = AOMMIN(FULL_PEL - forced_stop, 3 - !allow_hp);
 
     // If forced_stop is FULL_PEL, return.
-    if (!round)
+    if (!round) {
         return besterr;
+    }
     // Exit subpel search if the variance of the full-pel predicted samples is low (i.e. where likely interpolation will not modify the integer samples)
     if (ms_params->pred_variance_th) {
         const MSBuffers   *ms_buffers = &var_params->ms_buffers;
@@ -629,8 +645,9 @@ int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const s
         const unsigned int var = var_params->vfp->vf(ref, ms_buffers->ref->stride, svt_aom_eb_av1_var_offs, 0, &sse);
         int                block_var = ROUND_POWER_OF_TWO(var, eb_num_pels_log2_lookup[bsize]);
 
-        if (block_var < ms_params->pred_variance_th)
+        if (block_var < ms_params->pred_variance_th) {
             return besterr;
+        }
     }
     if (ms_params->skip_diag_refinement >= 4) {
         org_error = 0;
@@ -658,12 +675,14 @@ int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const s
                               is_scaled);
         hstep >>= 1;
         start_mv = *bestmv;
-        if (ms_params->skip_diag_refinement && iter < QUARTER_PEL)
+        if (ms_params->skip_diag_refinement && iter < QUARTER_PEL) {
             org_error = MIN(org_error, besterr);
+        }
         int32_t deviation = (((int64_t)MAX(besterr, 1) - (int64_t)MAX(prev_besterr, 1)) * 100) /
             (int64_t)MAX(prev_besterr, 1);
-        if (deviation >= ms_params->round_dev_th)
+        if (deviation >= ms_params->round_dev_th) {
             return besterr;
+        }
     }
     return besterr;
 }
@@ -698,26 +717,29 @@ int svt_av1_find_best_sub_pixel_tree(void *ictx, MacroBlockD *xd, const struct A
             const int     mvp_err      = best_mvperr + 1;
             const int     me_err       = besterr + 1;
             const int32_t deviation    = ((me_err - mvp_err) * 100) / me_err;
-            if (deviation >= ctx->md_subpel_me_ctrls.mvp_th)
+            if (deviation >= ctx->md_subpel_me_ctrls.mvp_th) {
                 round = 1;
-            else if (ABS(bestmv->x - ctx->mvp_array[ms_params->list_idx][ms_params->ref_idx][best_mvp_idx].x) >
-                         ctx->md_subpel_me_ctrls.hp_mv_th ||
-                     ABS(bestmv->y - ctx->mvp_array[ms_params->list_idx][ms_params->ref_idx][best_mvp_idx].y) >
-                         ctx->md_subpel_me_ctrls.hp_mv_th) {
+            } else if (ABS(bestmv->x - ctx->mvp_array[ms_params->list_idx][ms_params->ref_idx][best_mvp_idx].x) >
+                           ctx->md_subpel_me_ctrls.hp_mv_th ||
+                       ABS(bestmv->y - ctx->mvp_array[ms_params->list_idx][ms_params->ref_idx][best_mvp_idx].y) >
+                           ctx->md_subpel_me_ctrls.hp_mv_th) {
                 round = MIN(round, 2);
             }
         }
     }
-    if (early_neigh_check_exit)
+    if (early_neigh_check_exit) {
         return besterr;
+    }
     const uint64_t th_normalizer = (uint64_t)(((var_params->w * var_params->h) << 5) *
                                               (uint64_t)ms_params->abs_th_mult);
-    if ((uint64_t)qp * besterr < th_normalizer)
+    if ((uint64_t)qp * besterr < th_normalizer) {
         return besterr;
+    }
 
     // If forced_stop is FULL_PEL, return.
-    if (!round)
+    if (!round) {
         return besterr;
+    }
     // Exit subpel search if the variance of the full-pel predicted samples is low (i.e. where likely interpolation will not modify the integer samples)
     if (ms_params->pred_variance_th) {
         const MSBuffers   *ms_buffers = &var_params->ms_buffers;
@@ -726,8 +748,9 @@ int svt_av1_find_best_sub_pixel_tree(void *ictx, MacroBlockD *xd, const struct A
         const unsigned int var = var_params->vfp->vf(ref, ms_buffers->ref->stride, svt_aom_eb_av1_var_offs, 0, &sse);
         int                block_var = ROUND_POWER_OF_TWO(var, eb_num_pels_log2_lookup[bsize]);
 
-        if (block_var < ms_params->pred_variance_th)
+        if (block_var < ms_params->pred_variance_th) {
             return besterr;
+        }
     }
     for (int iter = 0; iter < round; ++iter) {
         Mv iter_center_mv = *bestmv;

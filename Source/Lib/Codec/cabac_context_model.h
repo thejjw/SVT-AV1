@@ -551,7 +551,9 @@ typedef enum MvJointType {
     MV_JOINT_HNZVNZ = 3, /* Both components nonzero */
 } MvJointType;
 
-static INLINE int32_t mv_joint_vertical(MvJointType type) { return type == MV_JOINT_HZVNZ || type == MV_JOINT_HNZVNZ; }
+static INLINE int32_t mv_joint_vertical(MvJointType type) {
+    return type == MV_JOINT_HZVNZ || type == MV_JOINT_HNZVNZ;
+}
 
 static INLINE int32_t mv_joint_horizontal(MvJointType type) {
     return type == MV_JOINT_HNZVZ || type == MV_JOINT_HNZVNZ;
@@ -754,8 +756,9 @@ void av1_setup_frame_contexts(struct AV1Common *cm);
 void av1_setup_past_independence(struct AV1Common *cm);
 
 static INLINE int32_t av1_ceil_log2(int32_t n) {
-    if (n < 2)
+    if (n < 2) {
         return 0;
+    }
     return svt_log2f(n - 1) + 1;
 }
 
@@ -771,8 +774,9 @@ static INLINE void partition_gather_horz_alike(AomCdfProb *out, const AomCdfProb
     out[0] -= cdf_element_prob(in, PARTITION_HORZ_A);
     out[0] -= cdf_element_prob(in, PARTITION_HORZ_B);
     out[0] -= cdf_element_prob(in, PARTITION_VERT_A);
-    if (bsize != BLOCK_128X128)
+    if (bsize != BLOCK_128X128) {
         out[0] -= cdf_element_prob(in, PARTITION_HORZ_4);
+    }
     out[0] = AOM_ICDF(out[0]);
     out[1] = AOM_ICDF(CDF_PROB_TOP);
     out[2] = 0;
@@ -785,8 +789,9 @@ static INLINE void partition_gather_vert_alike(AomCdfProb *out, const AomCdfProb
     out[0] -= cdf_element_prob(in, PARTITION_HORZ_A);
     out[0] -= cdf_element_prob(in, PARTITION_VERT_A);
     out[0] -= cdf_element_prob(in, PARTITION_VERT_B);
-    if (bsize != BLOCK_128X128)
+    if (bsize != BLOCK_128X128) {
         out[0] -= cdf_element_prob(in, PARTITION_VERT_4);
+    }
     out[0] = AOM_ICDF(out[0]);
     out[1] = AOM_ICDF(CDF_PROB_TOP);
     out[2] = 0;

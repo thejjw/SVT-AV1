@@ -71,11 +71,13 @@ int32_t svt_aom_get_switchable_rate(BlockModeInfo *block_mi, const FrameHeader *
 static INLINE int32_t av1_is_interp_needed_md(BlockModeInfo *block_mi, PictureControlSet *pcs, BlockSize bsize) {
     /*Disable check on skip_mode_allowed (i.e. skip_mode).  If IFS is selected, skip_mode will be
      * disabled.*/
-    if (block_mi->motion_mode == WARPED_CAUSAL)
+    if (block_mi->motion_mode == WARPED_CAUSAL) {
         return 0;
+    }
 
-    if (svt_aom_is_nontrans_global_motion(block_mi, bsize, pcs->ppcs))
+    if (svt_aom_is_nontrans_global_motion(block_mi, bsize, pcs->ppcs)) {
         return 0;
+    }
 
     return 1;
 }

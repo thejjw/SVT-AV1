@@ -27,7 +27,9 @@ static uint16_t get_variance_for_cu(const BlockGeom *blk_geom, uint16_t *varianc
     case BLOCK_4X4:
     case BLOCK_4X8:
     case BLOCK_8X4:
-    case BLOCK_8X8: index0 = index1 = ME_TIER_ZERO_PU_8x8_0 + ((blk_geom->org_x >> 3) + blk_geom->org_y); break;
+    case BLOCK_8X8:
+        index0 = index1 = ME_TIER_ZERO_PU_8x8_0 + ((blk_geom->org_x >> 3) + blk_geom->org_y);
+        break;
 
     case BLOCK_8X16:
         index0 = ME_TIER_ZERO_PU_8x8_0 + ((blk_geom->org_x >> 3) + blk_geom->org_y);
@@ -74,7 +76,9 @@ static uint16_t get_variance_for_cu(const BlockGeom *blk_geom, uint16_t *varianc
     case BLOCK_64X64:
     case BLOCK_16X64:
     case BLOCK_64X16:
-    default: index0 = index1 = 0; break;
+    default:
+        index0 = index1 = 0;
+        break;
     }
     return (variance_ptr[index0] + variance_ptr[index1]) >> 1;
 }
@@ -227,7 +231,9 @@ void svt_aom_setup_segmentation(PictureControlSet *pcs, SequenceControlSet *scs)
         segmentation_params->segmentation_temporal_update =
             false; //!(pcs->ppcs->av1FrameType == KEY_FRAME || pcs->ppcs->av1FrameType == INTRA_ONLY_FRAME);
         find_segment_qps(segmentation_params, pcs);
-        for (int i = 0; i < MAX_SEGMENTS; i++) segmentation_params->feature_enabled[i][SEG_LVL_ALT_Q] = 1;
+        for (int i = 0; i < MAX_SEGMENTS; i++) {
+            segmentation_params->feature_enabled[i][SEG_LVL_ALT_Q] = 1;
+        }
 
         calculate_segmentation_data(segmentation_params);
     }

@@ -126,10 +126,11 @@ static const InterpFilterParams av1_interp_4tap[2] = {
 
 static INLINE InterpFilterParams av1_get_interp_filter_params_with_block_size(const InterpFilter interp_filter,
                                                                               const int32_t      w) {
-    if (w <= 4 && (interp_filter == MULTITAP_SHARP || interp_filter == EIGHTTAP_REGULAR))
+    if (w <= 4 && (interp_filter == MULTITAP_SHARP || interp_filter == EIGHTTAP_REGULAR)) {
         return av1_interp_4tap[0];
-    else if (w <= 4 && interp_filter == EIGHTTAP_SMOOTH)
+    } else if (w <= 4 && interp_filter == EIGHTTAP_SMOOTH) {
         return av1_interp_4tap[1];
+    }
 
     return av1_interp_filter_params_list[interp_filter];
 }
@@ -203,10 +204,11 @@ static INLINE void integer_mv_precision(Mv *mv) {
     if (mod != 0) {
         mv->y -= mod;
         if (abs(mod) > 4) {
-            if (mod > 0)
+            if (mod > 0) {
                 mv->y += 8;
-            else
+            } else {
                 mv->y -= 8;
+            }
         }
     }
 
@@ -214,23 +216,26 @@ static INLINE void integer_mv_precision(Mv *mv) {
     if (mod != 0) {
         mv->x -= mod;
         if (abs(mod) > 4) {
-            if (mod > 0)
+            if (mod > 0) {
                 mv->x += 8;
-            else
+            } else {
                 mv->x -= 8;
+            }
         }
     }
 }
 
 static INLINE void lower_mv_precision(Mv *mv, int allow_hp, int is_integer) {
-    if (is_integer)
+    if (is_integer) {
         integer_mv_precision(mv);
-    else {
+    } else {
         if (!allow_hp) {
-            if (mv->y & 1)
+            if (mv->y & 1) {
                 mv->y += (mv->y > 0 ? -1 : 1);
-            if (mv->x & 1)
+            }
+            if (mv->x & 1) {
                 mv->x += (mv->x > 0 ? -1 : 1);
+            }
         }
     }
 }
@@ -252,8 +257,9 @@ static INLINE int check_sb_border(const int mi_row, const int mi_col, const int 
     const int col        = mi_col & (sb_mi_size - 1);
 
     if (row + row_offset < 0 || row + row_offset >= sb_mi_size || col + col_offset < 0 ||
-        col + col_offset >= sb_mi_size)
+        col + col_offset >= sb_mi_size) {
         return 0;
+    }
 
     return 1;
 }
@@ -261,7 +267,9 @@ static INLINE int check_sb_border(const int mi_row, const int mi_col, const int 
 // AV1 spec 7.10.3
 // overlappable neighbours not relevant for intra frames (i.e. where intra_bc is allowed)
 // because no warp/obmc in intra frames.
-static INLINE int is_neighbor_overlappable(const MbModeInfo *mbmi) { return mbmi->block_mi.ref_frame[0] > INTRA_FRAME; }
+static INLINE int is_neighbor_overlappable(const MbModeInfo *mbmi) {
+    return mbmi->block_mi.ref_frame[0] > INTRA_FRAME;
+}
 
 static INLINE int32_t is_mv_valid(const Mv *mv) {
     return mv->y > MV_LOW && mv->y < MV_UPP && mv->x > MV_LOW && mv->x < MV_UPP;
@@ -281,21 +289,27 @@ static INLINE int is_interinter_compound_used(CompoundType type, BlockSize bsize
     switch (type) {
     case COMPOUND_AVERAGE:
     case COMPOUND_DISTWTD:
-    case COMPOUND_DIFFWTD: return comp_allowed;
-    case COMPOUND_WEDGE: return comp_allowed && svt_aom_get_wedge_params_bits(bsize) > 0;
-    default: assert(0); return 0;
+    case COMPOUND_DIFFWTD:
+        return comp_allowed;
+    case COMPOUND_WEDGE:
+        return comp_allowed && svt_aom_get_wedge_params_bits(bsize) > 0;
+    default:
+        assert(0);
+        return 0;
     }
 }
 
 static INLINE int is_any_masked_compound_used(BlockSize bsize) {
     CompoundType comp_type;
     int          i;
-    if (!is_comp_ref_allowed(bsize))
+    if (!is_comp_ref_allowed(bsize)) {
         return 0;
+    }
     for (i = 0; i < COMPOUND_TYPES; i++) {
         comp_type = (CompoundType)i;
-        if (svt_aom_is_masked_compound_type(comp_type) && is_interinter_compound_used(comp_type, bsize))
+        if (svt_aom_is_masked_compound_type(comp_type) && is_interinter_compound_used(comp_type, bsize)) {
             return 1;
+        }
     }
     return 0;
 }
@@ -438,16 +452,19 @@ static INLINE MvReferenceFrame comp_ref1(int32_t ref_idx) {
 
 static INLINE int8_t get_uni_comp_ref_idx(const MvReferenceFrame *const rf) {
     // Single ref pred
-    if (rf[1] <= INTRA_FRAME)
+    if (rf[1] <= INTRA_FRAME) {
         return -1;
+    }
 
     // Bi-directional comp ref pred
-    if ((rf[0] < BWDREF_FRAME) && (rf[1] >= BWDREF_FRAME))
+    if ((rf[0] < BWDREF_FRAME) && (rf[1] >= BWDREF_FRAME)) {
         return -1;
+    }
 
     for (int8_t ref_idx = 0; ref_idx < TOTAL_UNIDIR_COMP_REFS; ++ref_idx) {
-        if (rf[0] == comp_ref0(ref_idx) && rf[1] == comp_ref1(ref_idx))
+        if (rf[0] == comp_ref0(ref_idx) && rf[1] == comp_ref1(ref_idx)) {
             return ref_idx;
+        }
     }
     return -1;
 }
@@ -512,11 +529,15 @@ static INLINE void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type
 */
 static uint8_t ref_type_to_list_idx[REFS_PER_FRAME + 1] = {0, 0, 0, 0, 0, 1, 1, 1};
 
-static INLINE uint8_t get_list_idx(uint8_t ref_type) { return ref_type_to_list_idx[ref_type]; }
+static INLINE uint8_t get_list_idx(uint8_t ref_type) {
+    return ref_type_to_list_idx[ref_type];
+}
 
 static uint8_t ref_type_to_ref_idx[REFS_PER_FRAME + 1] = {0, 0, 1, 2, 3, 0, 1, 2};
 
-static INLINE uint8_t get_ref_frame_idx(uint8_t ref_type) { return ref_type_to_ref_idx[ref_type]; };
+static INLINE uint8_t get_ref_frame_idx(uint8_t ref_type) {
+    return ref_type_to_ref_idx[ref_type];
+};
 #if CONFIG_ENABLE_OBMC
 int svt_av1_skip_u4x4_pred_in_obmc(BlockSize bsize, int dir, int subsampling_x, int subsampling_y);
 #endif

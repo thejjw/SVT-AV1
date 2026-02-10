@@ -41,8 +41,10 @@ typedef void (*fwd_transform_1d_avx512)(const __m512i *in, __m512i *out, const i
 
 // out0 = in0*w0 + in1*w1
 // out1 = in1*w0 - in0*w1
-#define btf_32_type1_avx512_new(ww0, ww1, in0, in1, out0, out1, r, bit) \
-    do { btf_32_type0_avx512_new(ww1, ww0, in1, in0, out0, out1, r, bit); } while (0)
+#define btf_32_type1_avx512_new(ww0, ww1, in0, in1, out0, out1, r, bit)  \
+    do {                                                                 \
+        btf_32_type0_avx512_new(ww1, ww0, in1, in0, out0, out1, r, bit); \
+    } while (0)
 
 static INLINE void load_buffer_16x16_avx512(const int16_t *input, __m512i *out, int32_t stride, int32_t flipud,
                                             int32_t fliplr, const int8_t shift) {
@@ -70,7 +72,9 @@ static INLINE void load_buffer_16x16_avx512(const int16_t *input, __m512i *out, 
         uint32_t idx[] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         __m512i  index = _mm512_loadu_si512(idx);
 
-        for (int32_t i = 0; i < 16; i++) { out[i] = _mm512_permutexvar_epi32(index, out[i]); }
+        for (int32_t i = 0; i < 16; i++) {
+            out[i] = _mm512_permutexvar_epi32(index, out[i]);
+        }
     }
 }
 
@@ -694,7 +698,8 @@ void svt_av1_fwd_txfm2d_16x16_avx512(int16_t *input, int32_t *coeff, uint32_t st
         transpose_16x16_avx512(in, out);
         write_buffer_16x16(out, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -958,22 +963,31 @@ static INLINE void fdct32x32_avx512(const __m512i *input, __m512i *output, const
 
 void av1_idtx32_new_avx512(const __m512i *input, __m512i *output, const int8_t cos_bit, const int32_t col_num) {
     (void)cos_bit;
-    for (int32_t i = 0; i < 32; i++) { output[i * col_num] = _mm512_slli_epi32(input[i * col_num], (uint8_t)2); }
+    for (int32_t i = 0; i < 32; i++) {
+        output[i * col_num] = _mm512_slli_epi32(input[i * col_num], (uint8_t)2);
+    }
 }
 
 static void fidtx32x32_avx512(const __m512i *input, __m512i *output, const int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
 
-    for (int32_t i = 0; i < 2; i++) { av1_idtx32_new_avx512(&input[i * 32], &output[i * 32], cos_bit, 1); }
+    for (int32_t i = 0; i < 2; i++) {
+        av1_idtx32_new_avx512(&input[i * 32], &output[i * 32], cos_bit, 1);
+    }
 }
 
 typedef void (*TxfmFuncAVX512)(const __m512i *input, __m512i *output, const int8_t cos_bit, const int8_t *stage_range);
 
 static INLINE TxfmFuncAVX512 fwd_txfm_type_to_func_avx512(TxfmType txfmtype) {
     switch (txfmtype) {
-    case TXFM_TYPE_DCT32: return fdct32x32_avx512; break;
-    case TXFM_TYPE_IDENTITY32: return fidtx32x32_avx512; break;
-    default: assert(0);
+    case TXFM_TYPE_DCT32:
+        return fdct32x32_avx512;
+        break;
+    case TXFM_TYPE_IDENTITY32:
+        return fidtx32x32_avx512;
+        break;
+    default:
+        assert(0);
     }
     return NULL;
 }
@@ -998,10 +1012,14 @@ static INLINE void av1_round_shift_array_avx512(__m512i *input, __m512i *output,
     if (bit > 0) {
         __m512i round = _mm512_set1_epi32(1 << (bit - 1));
         int32_t i;
-        for (i = 0; i < size; i++) { output[i] = _mm512_srai_epi32(_mm512_add_epi32(input[i], round), (uint8_t)bit); }
+        for (i = 0; i < size; i++) {
+            output[i] = _mm512_srai_epi32(_mm512_add_epi32(input[i], round), (uint8_t)bit);
+        }
     } else {
         int32_t i;
-        for (i = 0; i < size; i++) { output[i] = _mm512_slli_epi32(input[i], (uint8_t)(-bit)); }
+        for (i = 0; i < size; i++) {
+            output[i] = _mm512_slli_epi32(input[i], (uint8_t)(-bit));
+        }
     }
 }
 
@@ -1674,7 +1692,8 @@ void svt_av1_fwd_txfm2d_64x64_avx512(int16_t *input, int32_t *output, uint32_t s
         av1_round_shift_array_avx512(out, in, 256, -shift[2]);
         transpose_16nx16n_avx512(64, in, out);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -1761,7 +1780,9 @@ void svt_av1_fwd_txfm2d_32x64_avx512(int16_t *input, int32_t *output, uint32_t s
     load_buffer_32x16n(input, in, stride, 0, 0, shift[0], txfm_size_row);
     av1_fdct64_new_avx512(in, in, bitcol, txfm_size_col, num_col);
 
-    for (int32_t i = 0; i < 8; i++) { col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]); }
+    for (int32_t i = 0; i < 8; i++) {
+        col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]);
+    }
     transpose_16nx16m_avx512(in, outcoef512, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -1793,7 +1814,9 @@ void svt_av1_fwd_txfm2d_64x32_avx512(int16_t *input, int32_t *output, uint32_t s
 
     av1_fdct32_new_avx512(in, in, bitcol, txfm_size_col, num_col);
 
-    for (int32_t i = 0; i < 8; i++) { col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]); }
+    for (int32_t i = 0; i < 8; i++) {
+        col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]);
+    }
     transpose_16nx16m_avx512(in, outcoef512, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -2034,12 +2057,18 @@ static AOM_FORCE_INLINE void clear_buffer_wxh_N2_avx512(__m512i *buff, int32_t w
     int32_t num_col = width >> 4;
 
     //top-right quarter
-    for (i = 0; i < height / 2; i++)
-        for (j = num_col / 2; j < num_col; j++) buff[i * num_col + j] = zero512;
+    for (i = 0; i < height / 2; i++) {
+        for (j = num_col / 2; j < num_col; j++) {
+            buff[i * num_col + j] = zero512;
+        }
+    }
 
     //bottom half
-    for (i = height / 2; i < height; i++)
-        for (j = 0; j < num_col; j++) buff[i * num_col + j] = zero512;
+    for (i = height / 2; i < height; i++) {
+        for (j = 0; j < num_col; j++) {
+            buff[i * num_col + j] = zero512;
+        }
+    }
 }
 
 static AOM_FORCE_INLINE void load_buffer_32x32_in_64x64_avx512(const int16_t *input, int32_t stride, __m512i *output) {
@@ -3140,7 +3169,8 @@ void av1_fwd_txfm2d_32x32_N2_avx512(int16_t *input, int32_t *output, uint32_t st
         transpose_16nx16n_N2_quad_avx512(txfm_size, buf_512, out_512);
         clear_buffer_wxh_N2_avx512(out_512, 32, 32);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -3177,7 +3207,8 @@ void av1_fwd_txfm2d_64x64_N2_avx512(int16_t *input, int32_t *output, uint32_t st
         transpose_16nx16n_N2_quad_avx512(64, in, out);
         clear_buffer_wxh_N2_avx512(out, 64, 64);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -3198,7 +3229,9 @@ void av1_fwd_txfm2d_32x64_N2_avx512(int16_t *input, int32_t *output, uint32_t st
     // column transform
     load_buffer_32x16n(input, in, stride, 0, 0, shift[0], txfm_size_row);
     av1_fdct64_new_N2_avx512(in, in, bitcol, txfm_size_col, num_col);
-    for (int32_t i = 0; i < 4; i++) { col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]); }
+    for (int32_t i = 0; i < 4; i++) {
+        col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]);
+    }
     transpose_16nx16m_N2_half_avx512(in, outcoef512, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -3229,7 +3262,9 @@ void av1_fwd_txfm2d_64x32_N2_avx512(int16_t *input, int32_t *output, uint32_t st
         load_buffer_32_avx512(input + 32 + i * stride, in + 2 + i * 4, 16, 0, 0, shift[0]);
     }
     av1_fdct32_new_N2_avx512(in, in, bitcol, txfm_size_col, num_col);
-    for (int32_t i = 0; i < 4; i++) { col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]); }
+    for (int32_t i = 0; i < 4; i++) {
+        col_txfm_16x16_rounding_avx512((in + i * 16), -shift[1]);
+    }
     transpose_16nx16m_N2_half_avx512(in, outcoef512, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -3271,7 +3306,9 @@ static AOM_FORCE_INLINE void av1_round_shift_array_64x64_N4_avx512(__m512i *inpu
         }
     } else {
         int32_t i;
-        for (i = 0; i < 16; i++) { output[i * 4] = _mm512_slli_epi32(input[i * 4], (uint8_t)(-bit)); }
+        for (i = 0; i < 16; i++) {
+            output[i * 4] = _mm512_slli_epi32(input[i * 4], (uint8_t)(-bit));
+        }
     }
 }
 
@@ -3881,7 +3918,8 @@ void av1_fwd_txfm2d_64x64_N4_avx512(int16_t *input, int32_t *output, uint32_t st
         transpose_16nx16n_N4_quad_avx512(64, in, out);
         clear_buffer_64x64_N4_avx512(out);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 

@@ -420,7 +420,9 @@ void svt_av1_inv_txfm2d_add_4x4_sse4_1(const int32_t *input, uint16_t *output_r,
         iadst4x4_sse4_1(in, in, inv_cos_bit_col[txw_idx][txh_idx], 1, bd, 0);
         write_buffer_4x4(in, output_r, stride_r, output_w, stride_w, 0, 1, -shift[1], bd);
         break;
-    default: svt_av1_inv_txfm2d_add_4x4_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd); break;
+    default:
+        svt_av1_inv_txfm2d_add_4x4_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
+        break;
     }
 }
 
@@ -1084,14 +1086,17 @@ void svt_av1_inv_txfm2d_add_8x8_sse4_1(const int32_t *input, uint16_t *output_r,
         round_shift_8x8(out, -shift[0]);
         write_buffer_8x8(out, output_r, stride_r, output_w, stride_w, 1, 0, -shift[1] - 1, bd);
         break;
-    default: svt_av1_inv_txfm2d_add_8x8_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
+    default:
+        svt_av1_inv_txfm2d_add_8x8_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
     }
 }
 
 // 16x16
 static void load_buffer_16x16(const int32_t *coeff, __m128i *in) {
     int32_t i;
-    for (i = 0; i < 64; ++i) in[i] = _mm_loadu_si128((const __m128i *)(coeff + (i << 2)));
+    for (i = 0; i < 64; ++i) {
+        in[i] = _mm_loadu_si128((const __m128i *)(coeff + (i << 2)));
+    }
 }
 
 static void assign_8x8_input_from_16x16(const __m128i *in, __m128i *in8x8, int32_t col) {
@@ -1887,7 +1892,8 @@ void svt_av1_inv_txfm2d_add_16x16_sse4_1(const int32_t *input, uint16_t *output_
         iidentity16_and_round_shift_sse4_1(out, -shift[1]);
         write_buffer_16x16(out, output_r, stride_r, output_w, stride_w, 1, 0, 0, bd);
         break;
-    default: svt_av1_inv_txfm2d_add_16x16_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
+    default:
+        svt_av1_inv_txfm2d_add_16x16_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
     }
 }
 
@@ -1903,7 +1909,9 @@ static void load_buffer_64x64_lower_32x32(const int32_t *coeff, __m128i *in) {
         }
     }
 
-    for (i = 0; i < 512; ++i) in[512 + i] = zero;
+    for (i = 0; i < 512; ++i) {
+        in[512 + i] = zero;
+    }
 }
 
 static void transpose_64x64(__m128i *in, __m128i *out, int32_t do_cols) {
@@ -2392,7 +2400,9 @@ static void idct64x64_sse4_1(__m128i *in, __m128i *out, int32_t bit, int32_t do_
         }
 
         // stage 8
-        for (i = 0; i < 4; ++i) addsub_sse4_1(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi);
+        for (i = 0; i < 4; ++i) {
+            addsub_sse4_1(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi);
+        }
         v[8]  = u[8];
         v[9]  = u[9];
         v[14] = u[14];
@@ -2433,7 +2443,9 @@ static void idct64x64_sse4_1(__m128i *in, __m128i *out, int32_t bit, int32_t do_
         v[59] = half_btf_sse4_1(&cospi48, &u[36], &cospi16, &u[59], &rnding, bit);
 
         // stage 9
-        for (i = 0; i < 8; ++i) addsub_sse4_1(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi);
+        for (i = 0; i < 8; ++i) {
+            addsub_sse4_1(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi);
+        }
         for (i = 16; i < 20; ++i) {
             u[i]      = v[i];
             u[i + 12] = v[i + 12];
@@ -2448,11 +2460,19 @@ static void idct64x64_sse4_1(__m128i *in, __m128i *out, int32_t bit, int32_t do_
         u[26] = half_btf_sse4_1(&cospi32, &v[21], &cospi32, &v[26], &rnding, bit);
         u[27] = half_btf_sse4_1(&cospi32, &v[20], &cospi32, &v[27], &rnding, bit);
 
-        for (i = 32; i < 40; i++) addsub_sse4_1(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi);
-        for (i = 48; i < 56; i++) addsub_sse4_1(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi);
+        for (i = 32; i < 40; i++) {
+            addsub_sse4_1(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi);
+        }
+        for (i = 48; i < 56; i++) {
+            addsub_sse4_1(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi);
+        }
         // stage 10
-        for (i = 0; i < 16; i++) addsub_sse4_1(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi);
-        for (i = 32; i < 40; i++) v[i] = u[i];
+        for (i = 0; i < 16; i++) {
+            addsub_sse4_1(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi);
+        }
+        for (i = 32; i < 40; i++) {
+            v[i] = u[i];
+        }
 
         v[40] = half_btf_sse4_1(&cospim32, &u[40], &cospi32, &u[55], &rnding, bit);
         v[41] = half_btf_sse4_1(&cospim32, &u[41], &cospi32, &u[54], &rnding, bit);
@@ -2471,7 +2491,9 @@ static void idct64x64_sse4_1(__m128i *in, __m128i *out, int32_t bit, int32_t do_
         v[54] = half_btf_sse4_1(&cospi32, &u[41], &cospi32, &u[54], &rnding, bit);
         v[55] = half_btf_sse4_1(&cospi32, &u[40], &cospi32, &u[55], &rnding, bit);
 
-        for (i = 56; i < 64; i++) v[i] = u[i];
+        for (i = 56; i < 64; i++) {
+            v[i] = u[i];
+        }
 
         // stage 11
         for (i = 0; i < 32; i++) {
@@ -2499,13 +2521,17 @@ void svt_av1_inv_txfm2d_add_64x64_sse4_1(const int32_t *input, uint16_t *output_
         write_buffer_64x64(in, output_r, stride_r, output_w, stride_w, 0, 0, -shift[1], bd);
         break;
 
-    default: svt_av1_inv_txfm2d_add_64x64_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd); break;
+    default:
+        svt_av1_inv_txfm2d_add_64x64_c(input, output_r, stride_r, output_w, stride_w, tx_type, bd);
+        break;
     }
 }
 
 //4x8
 static INLINE void load_buffer_32bit_input(const int32_t *in, int32_t stride, __m128i *out, int32_t out_size) {
-    for (int32_t i = 0; i < out_size; ++i) out[i] = _mm_loadu_si128((const __m128i *)(in + i * stride));
+    for (int32_t i = 0; i < out_size; ++i) {
+        out[i] = _mm_loadu_si128((const __m128i *)(in + i * stride));
+    }
 }
 
 static void neg_shift_sse4_1(const __m128i in0, const __m128i in1, __m128i *out0, __m128i *out1,
@@ -2537,10 +2563,14 @@ static INLINE void av1_round_shift_array_32_sse4_1(__m128i *input, __m128i *outp
                                                    const int32_t bit) {
     if (bit > 0) {
         int32_t i;
-        for (i = 0; i < size; i++) output[i] = av1_round_shift_32_sse4_1(input[i], bit);
+        for (i = 0; i < size; i++) {
+            output[i] = av1_round_shift_32_sse4_1(input[i], bit);
+        }
     } else {
         int32_t i;
-        for (i = 0; i < size; i++) output[i] = _mm_slli_epi32(input[i], -bit);
+        for (i = 0; i < size; i++) {
+            output[i] = _mm_slli_epi32(input[i], -bit);
+        }
     }
 }
 
@@ -4526,7 +4556,9 @@ static INLINE void idct64_stage9_sse4_1(__m128i *u, const __m128i *cospim32, con
                                         int bit) {
     int     i;
     __m128i temp1, temp2, temp3, temp4;
-    for (i = 0; i < 8; ++i) { addsub_sse4_1(u[i], u[15 - i], &u[i], &u[15 - i], clamp_lo, clamp_hi); }
+    for (i = 0; i < 8; ++i) {
+        addsub_sse4_1(u[i], u[15 - i], &u[i], &u[15 - i], clamp_lo, clamp_hi);
+    }
 
     temp1 = half_btf_sse4_1(cospim32, &u[20], cospi32, &u[27], rnding, bit);
     temp2 = half_btf_sse4_1(cospim32, &u[21], cospi32, &u[26], rnding, bit);
@@ -4540,16 +4572,22 @@ static INLINE void idct64_stage9_sse4_1(__m128i *u, const __m128i *cospim32, con
     u[21] = temp2;
     u[22] = temp3;
     u[23] = temp4;
-    for (i = 32; i < 40; i++) { addsub_sse4_1(u[i], u[i ^ 15], &u[i], &u[i ^ 15], clamp_lo, clamp_hi); }
+    for (i = 32; i < 40; i++) {
+        addsub_sse4_1(u[i], u[i ^ 15], &u[i], &u[i ^ 15], clamp_lo, clamp_hi);
+    }
 
-    for (i = 48; i < 56; i++) { addsub_sse4_1(u[i ^ 15], u[i], &u[i ^ 15], &u[i], clamp_lo, clamp_hi); }
+    for (i = 48; i < 56; i++) {
+        addsub_sse4_1(u[i ^ 15], u[i], &u[i ^ 15], &u[i], clamp_lo, clamp_hi);
+    }
 }
 
 static INLINE void idct64_stage10_sse4_1(__m128i *u, const __m128i *cospim32, const __m128i *cospi32,
                                          const __m128i *clamp_lo, const __m128i *clamp_hi, const __m128i *rnding,
                                          int bit) {
     __m128i temp1, temp2, temp3, temp4;
-    for (int i = 0; i < 16; i++) { addsub_sse4_1(u[i], u[31 - i], &u[i], &u[31 - i], clamp_lo, clamp_hi); }
+    for (int i = 0; i < 16; i++) {
+        addsub_sse4_1(u[i], u[31 - i], &u[i], &u[31 - i], clamp_lo, clamp_hi);
+    }
 
     temp1 = half_btf_sse4_1(cospim32, &u[40], cospi32, &u[55], rnding, bit);
     temp2 = half_btf_sse4_1(cospim32, &u[41], cospi32, &u[54], rnding, bit);
@@ -4580,7 +4618,9 @@ static INLINE void idct64_stage10_sse4_1(__m128i *u, const __m128i *cospim32, co
 
 static INLINE void idct64_stage11_sse4_1(__m128i *u, __m128i *out, int do_cols, int bd, int out_shift,
                                          const __m128i *clamp_lo, const __m128i *clamp_hi) {
-    for (int i = 0; i < 32; i++) { addsub_sse4_1(u[i], u[63 - i], out + i, out + 63 - i, clamp_lo, clamp_hi); }
+    for (int i = 0; i < 32; i++) {
+        addsub_sse4_1(u[i], u[63 - i], out + i, out + 63 - i, clamp_lo, clamp_hi);
+    }
 
     if (!do_cols) {
         const int     log_range_out = AOMMAX(16, bd + 6);
@@ -5870,7 +5910,9 @@ static void idct64x64_low16_sse4_1(__m128i *in, __m128i *out, int bit, int do_co
         }
 
         // stage 8
-        for (int i = 0; i < 4; ++i) { addsub_sse4_1(u[i], u[7 - i], &u[i], &u[7 - i], &clamp_lo, &clamp_hi); }
+        for (int i = 0; i < 4; ++i) {
+            addsub_sse4_1(u[i], u[7 - i], &u[i], &u[7 - i], &clamp_lo, &clamp_hi);
+        }
 
         idct64_stage8_sse4_1(
             u, &cospim32, &cospi32, &cospim16, &cospi48, &cospi16, &cospim48, &clamp_lo, &clamp_hi, &rnding, bit);
@@ -6230,7 +6272,9 @@ static void idct64x64_general_sse4_1(__m128i *in, __m128i *out, int bit, int do_
         }
 
         // stage 8
-        for (int i = 0; i < 4; ++i) { addsub_sse4_1(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi); }
+        for (int i = 0; i < 4; ++i) {
+            addsub_sse4_1(u[i], u[7 - i], &v[i], &v[7 - i], &clamp_lo, &clamp_hi);
+        }
 
         v[8]  = u[8];
         v[9]  = u[9];
@@ -6272,7 +6316,9 @@ static void idct64x64_general_sse4_1(__m128i *in, __m128i *out, int bit, int do_
         v[59] = half_btf_sse4_1(&cospi48, &u[36], &cospi16, &u[59], &rnding, bit);
 
         // stage 9
-        for (int i = 0; i < 8; ++i) { addsub_sse4_1(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi); }
+        for (int i = 0; i < 8; ++i) {
+            addsub_sse4_1(v[i], v[15 - i], &u[i], &u[15 - i], &clamp_lo, &clamp_hi);
+        }
 
         for (int i = 16; i < 20; ++i) {
             u[i]      = v[i];
@@ -6288,14 +6334,22 @@ static void idct64x64_general_sse4_1(__m128i *in, __m128i *out, int bit, int do_
         u[26] = half_btf_sse4_1(&cospi32, &v[21], &cospi32, &v[26], &rnding, bit);
         u[27] = half_btf_sse4_1(&cospi32, &v[20], &cospi32, &v[27], &rnding, bit);
 
-        for (int i = 32; i < 40; i++) { addsub_sse4_1(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi); }
+        for (int i = 32; i < 40; i++) {
+            addsub_sse4_1(v[i], v[i ^ 15], &u[i], &u[i ^ 15], &clamp_lo, &clamp_hi);
+        }
 
-        for (int i = 48; i < 56; i++) { addsub_sse4_1(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi); }
+        for (int i = 48; i < 56; i++) {
+            addsub_sse4_1(v[i ^ 15], v[i], &u[i ^ 15], &u[i], &clamp_lo, &clamp_hi);
+        }
 
         // stage 10
-        for (int i = 0; i < 16; i++) { addsub_sse4_1(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi); }
+        for (int i = 0; i < 16; i++) {
+            addsub_sse4_1(u[i], u[31 - i], &v[i], &v[31 - i], &clamp_lo, &clamp_hi);
+        }
 
-        for (int i = 32; i < 40; i++) v[i] = u[i];
+        for (int i = 32; i < 40; i++) {
+            v[i] = u[i];
+        }
 
         v[40] = half_btf_sse4_1(&cospim32, &u[40], &cospi32, &u[55], &rnding, bit);
         v[41] = half_btf_sse4_1(&cospim32, &u[41], &cospi32, &u[54], &rnding, bit);
@@ -6314,7 +6368,9 @@ static void idct64x64_general_sse4_1(__m128i *in, __m128i *out, int bit, int do_
         v[54] = half_btf_sse4_1(&cospi32, &u[41], &cospi32, &u[54], &rnding, bit);
         v[55] = half_btf_sse4_1(&cospi32, &u[40], &cospi32, &u[55], &rnding, bit);
 
-        for (int i = 56; i < 64; i++) v[i] = u[i];
+        for (int i = 56; i < 64; i++) {
+            v[i] = u[i];
+        }
 
         // stage 11
         for (int i = 0; i < 32; i++) {
@@ -6767,7 +6823,9 @@ void svt_av1_inv_txfm2d_add_4x8_sse4_1(const int32_t *input, uint16_t *output_r,
 
 //8x4
 static INLINE void flip_buf_sse2(__m128i *in, __m128i *out, int32_t size) {
-    for (int32_t i = 0; i < size; ++i) out[size - i - 1] = in[i];
+    for (int32_t i = 0; i < size; ++i) {
+        out[size - i - 1] = in[i];
+    }
 }
 
 static INLINE __m128i highbd_get_recon_8x8_sse4_1(const __m128i pred, __m128i res0, __m128i res1, const int32_t bd) {
@@ -6828,8 +6886,9 @@ void svt_av1_inv_txfm2d_add_8x4_sse4_1(const int32_t *input, uint16_t *output_r,
     if (lr_flip) {
         flip_buf_sse2(buf0, buf1, txfm_size_col);
         buf1_ptr = buf1;
-    } else
+    } else {
         buf1_ptr = buf0;
+    }
     // 2nd stage: column transform
     for (int32_t i = 0; i < 2; i++) {
         col_txfm(
@@ -6940,8 +6999,9 @@ void svt_av1_inv_txfm2d_add_16x4_sse4_1(const int32_t *input, uint16_t *output_r
     if (lr_flip) {
         flip_buf_sse2(buf0, buf1, txfm_size_col);
         buf1_ptr = buf1;
-    } else
+    } else {
         buf1_ptr = buf0;
+    }
     // 2nd stage: column transform
     for (int32_t i = 0; i < buf_size_w_div8; i++) {
         col_txfm(
@@ -7286,7 +7346,9 @@ void svt_av1_highbd_inv_txfm2d_add_universe_sse4_1(const int32_t *input, uint16_
     case IDTX:
         svt_highbd_inv_txfm2d_add_idtx_ssse41(input, output_r, stride_r, output_w, stride_w, tx_type, tx_size, eob, bd);
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 }
 
@@ -7342,6 +7404,7 @@ void svt_av1_inv_txfm2d_add_32x32_sse4_1(const int32_t *input, uint16_t *output_
         load_buffer_32x32(input, in);
         write_buffer_32x32(in, output_r, stride_r, output_w, stride_w, 0, 0, (-shift[0] - shift[1] - 4), bd);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }

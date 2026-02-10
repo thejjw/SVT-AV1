@@ -21,7 +21,9 @@ typedef int64_t TranHigh;
 
 static INLINE void update_qp(__m256i *qp) {
     int32_t i;
-    for (i = 0; i < 5; ++i) qp[i] = _mm256_permute2x128_si256(qp[i], qp[i], 0x11);
+    for (i = 0; i < 5; ++i) {
+        qp[i] = _mm256_permute2x128_si256(qp[i], qp[i], 0x11);
+    }
 }
 
 static INLINE void init_qp_add_shift(const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr,

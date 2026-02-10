@@ -201,7 +201,9 @@ uint64_t svt_compute_mean_c(uint8_t *input_samples, /**< input parameter, input 
     assert(input_area_height > 0);
 
     for (vi = 0; vi < input_area_height; vi++) {
-        for (hi = 0; hi < input_area_width; hi++) { block_mean += input_samples[hi]; }
+        for (hi = 0; hi < input_area_width; hi++) {
+            block_mean += input_samples[hi];
+        }
         input_samples += input_stride;
     }
 
@@ -225,7 +227,9 @@ uint64_t svt_compute_mean_squared_values_c(uint8_t *input_samples, /**< input pa
     assert(input_area_height > 0);
 
     for (vi = 0; vi < input_area_height; vi++) {
-        for (hi = 0; hi < input_area_width; hi++) { block_mean += input_samples[hi] * input_samples[hi]; }
+        for (hi = 0; hi < input_area_width; hi++) {
+            block_mean += input_samples[hi] * input_samples[hi];
+        }
         input_samples += input_stride;
     }
 
@@ -242,7 +246,9 @@ uint64_t svt_compute_sub_mean_8x8_c(uint8_t *input_samples, /**< input parameter
     uint16_t skip       = 0;
 
     for (vi = 0; skip < 8; skip = vi + vi) {
-        for (hi = 0; hi < 8; hi++) { block_mean += input_samples[hi]; }
+        for (hi = 0; hi < 8; hi++) {
+            block_mean += input_samples[hi];
+        }
         input_samples += 2 * input_stride;
         vi++;
     }
@@ -264,7 +270,9 @@ uint64_t svt_aom_compute_sub_mean_squared_values_c(
     uint16_t skip       = 0;
 
     for (vi = 0; skip < input_area_height; skip = vi + vi) {
-        for (hi = 0; hi < input_area_width; hi++) { block_mean += input_samples[hi] * input_samples[hi]; }
+        for (hi = 0; hi < input_area_width; hi++) {
+            block_mean += input_samples[hi] * input_samples[hi];
+        }
         input_samples += 2 * input_stride;
         vi++;
     }
@@ -468,8 +476,9 @@ static EbErrorType denoise_estimate_film_grain(SequenceControlSet *scs, PictureP
     frm_hdr->film_grain_params.apply_grain = 0;
 
     if (scs->static_config.film_grain_denoise_strength) {
-        if (apply_denoise_2d(scs, pcs, input_pic) < 0)
+        if (apply_denoise_2d(scs, pcs, input_pic) < 0) {
             return 1;
+        }
     }
 
     return return_error; //todo: add proper error handling
@@ -629,10 +638,11 @@ void svt_aom_gathering_picture_statistics(SequenceControlSet *scs, PictureParent
             scs, pcs, sixteenth_decimated_picture_ptr, &pcs->avg_luma);
     }
 
-    if (scs->calculate_variance)
+    if (scs->calculate_variance) {
         compute_picture_spatial_statistics(scs, pcs, input_padded_pic);
-    else
+    } else {
         pcs->pic_avg_variance = 0;
+    }
 
     return;
 }
@@ -753,7 +763,7 @@ void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlS
                       scs->pad_right,
                       scs->pad_bottom);
 
-    if (input_pic->buffer_cb)
+    if (input_pic->buffer_cb) {
         pad_input_picture(&input_pic->buffer_cb[(input_pic->org_x >> subsampling_x) +
                                                 ((input_pic->org_y >> subsampling_y) * input_pic->stride_cb)],
                           input_pic->stride_cb,
@@ -761,8 +771,9 @@ void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlS
                           (input_pic->height + subsampling_y - scs->pad_bottom) >> subsampling_y,
                           scs->pad_right >> subsampling_x,
                           scs->pad_bottom >> subsampling_y);
+    }
 
-    if (input_pic->buffer_cr)
+    if (input_pic->buffer_cr) {
         pad_input_picture(&input_pic->buffer_cr[(input_pic->org_x >> subsampling_x) +
                                                 ((input_pic->org_y >> subsampling_y) * input_pic->stride_cb)],
                           input_pic->stride_cr,
@@ -770,6 +781,7 @@ void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlS
                           (input_pic->height + subsampling_y - scs->pad_bottom) >> subsampling_y,
                           scs->pad_right >> subsampling_x,
                           scs->pad_bottom >> subsampling_y);
+    }
 
     if (is16_bit_input) {
         uint32_t comp_stride_y           = input_pic->stride_y / 4;
@@ -778,29 +790,32 @@ void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlS
         uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
         uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
 
-        if (input_pic->buffer_bit_inc_y)
+        if (input_pic->buffer_bit_inc_y) {
             pad_2b_compressed_input_picture(&input_pic->buffer_bit_inc_y[comp_luma_buffer_offset],
                                             comp_stride_y,
                                             (input_pic->width - scs->pad_right),
                                             (input_pic->height - scs->pad_bottom),
                                             scs->pad_right,
                                             scs->pad_bottom);
+        }
 
-        if (input_pic->buffer_bit_inc_cb)
+        if (input_pic->buffer_bit_inc_cb) {
             pad_2b_compressed_input_picture(&input_pic->buffer_bit_inc_cb[comp_chroma_buffer_offset],
                                             comp_stride_uv,
                                             (input_pic->width + subsampling_x - scs->pad_right) >> subsampling_x,
                                             (input_pic->height + subsampling_y - scs->pad_bottom) >> subsampling_y,
                                             scs->pad_right >> subsampling_x,
                                             scs->pad_bottom >> subsampling_y);
+        }
 
-        if (input_pic->buffer_bit_inc_cr)
+        if (input_pic->buffer_bit_inc_cr) {
             pad_2b_compressed_input_picture(&input_pic->buffer_bit_inc_cr[comp_chroma_buffer_offset],
                                             comp_stride_uv,
                                             (input_pic->width + subsampling_x - scs->pad_right) >> subsampling_x,
                                             (input_pic->height + subsampling_y - scs->pad_bottom) >> subsampling_y,
                                             scs->pad_right >> subsampling_x,
                                             scs->pad_bottom >> subsampling_y);
+        }
     }
 
     return;
@@ -875,15 +890,17 @@ int svt_av1_count_colors_highbd(uint16_t *src, int stride, int rows, int cols, i
         for (int c = 0; c < cols; ++c) {
             const int this_val = src[r * stride + c];
             assert(this_val < max_pix_val);
-            if (this_val >= max_pix_val)
+            if (this_val >= max_pix_val) {
                 return 0;
+            }
             ++val_count[this_val];
         }
     }
     int n = 0;
     for (int i = 0; i < max_pix_val; ++i) {
-        if (val_count[i])
+        if (val_count[i]) {
             ++n;
+        }
     }
     return n;
 }
@@ -899,9 +916,11 @@ int svt_av1_count_colors(const uint8_t *src, int stride, int rows, int cols, int
         }
     }
     int n = 0;
-    for (int i = 0; i < max_pix_val; ++i)
-        if (val_count[i])
+    for (int i = 0; i < max_pix_val; ++i) {
+        if (val_count[i]) {
             ++n;
+        }
+    }
     return n;
 }
 
@@ -961,13 +980,15 @@ static bool is_valid_palette_nb_colors(const uint8_t *src, int stride, int rows,
             if (has_color[this_val] == 0) {
                 has_color[this_val] = 1;
                 nb_colors++;
-                if (nb_colors > nb_colors_threshold)
+                if (nb_colors > nb_colors_threshold) {
                     return false;
+                }
             }
         }
     }
-    if (nb_colors <= 1)
+    if (nb_colors <= 1) {
         return false;
+    }
 
     return true;
 }
@@ -1288,8 +1309,9 @@ void svt_aom_is_screen_content(PictureParentControlSet *pcs) {
                 if (is_valid_palette_nb_colors(src, input_pic->stride_y, blk_w, blk_h, color_thresh)) {
                     ++counts_1;
                     int var = svt_av1_get_sby_perpixel_variance(fn_ptr, src, input_pic->stride_y, BLOCK_16X16);
-                    if (var > var_thresh)
+                    if (var > var_thresh) {
                         ++counts_2;
+                    }
                 }
             }
         }
@@ -1329,8 +1351,9 @@ void svt_aom_is_screen_content(PictureParentControlSet *pcs) {
                 if (is_valid_palette_nb_colors(src, input_pic->stride_y, blk_w, blk_h, color_thresh)) {
                     ++counts_1;
                     int var = svt_av1_get_sby_perpixel_variance(fn_ptr, src, input_pic->stride_y, BLOCK_8X8);
-                    if (var > var_thresh)
+                    if (var > var_thresh) {
                         ++counts_2;
+                    }
                 }
             }
         }
@@ -1370,7 +1393,7 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet *pcs, Eb
 
         if (pcs->enable_hme_level0_flag || pcs->tf_enable_hme_level0_flag) {
             // Sixteenth Input Picture Downsampling
-            if (pcs->enable_hme_level1_flag || pcs->tf_enable_hme_level1_flag)
+            if (pcs->enable_hme_level1_flag || pcs->tf_enable_hme_level1_flag) {
                 downsample_2d(
                     &quarter_picture_ptr->buffer_y[quarter_picture_ptr->org_x +
                                                    quarter_picture_ptr->org_y * quarter_picture_ptr->stride_y],
@@ -1381,7 +1404,7 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet *pcs, Eb
                                                      sixteenth_picture_ptr->org_x * sixteenth_picture_ptr->stride_y],
                     sixteenth_picture_ptr->stride_y,
                     2);
-            else
+            } else {
                 downsample_2d(
                     &input_padded_pic
                          ->buffer_y[input_padded_pic->org_x + input_padded_pic->org_y * input_padded_pic->stride_y],
@@ -1392,6 +1415,7 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet *pcs, Eb
                                                      sixteenth_picture_ptr->org_x * sixteenth_picture_ptr->stride_y],
                     sixteenth_picture_ptr->stride_y,
                     4);
+            }
 
             svt_aom_generate_padding(&sixteenth_picture_ptr->buffer_y[0],
                                      sixteenth_picture_ptr->stride_y,
@@ -1418,50 +1442,56 @@ void svt_aom_pad_input_pictures(SequenceControlSet *scs, EbPictureBufferDesc *in
     uint32_t comp_stride_y  = input_pic->stride_y / 4;
     uint32_t comp_stride_uv = input_pic->stride_cb / 4;
 
-    if (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT)
-        if (input_pic->buffer_bit_inc_y)
+    if (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT) {
+        if (input_pic->buffer_bit_inc_y) {
             svt_aom_generate_padding_compressed_10bit(input_pic->buffer_bit_inc_y,
                                                       comp_stride_y,
                                                       input_pic->width,
                                                       input_pic->height,
                                                       input_pic->org_x,
                                                       input_pic->org_y);
+        }
+    }
 
     // Safe to divide by 2 (input_pic->width >> scs->subsampling_x), with no risk of off-of-one issues
     // from chroma subsampling as picture is already 8px aligned
-    if (input_pic->buffer_cb)
+    if (input_pic->buffer_cb) {
         svt_aom_generate_padding(input_pic->buffer_cb,
                                  input_pic->stride_cb,
                                  input_pic->width >> scs->subsampling_x,
                                  input_pic->height >> scs->subsampling_y,
                                  input_pic->org_x >> scs->subsampling_x,
                                  input_pic->org_y >> scs->subsampling_y);
+    }
 
-    if (input_pic->buffer_cr)
+    if (input_pic->buffer_cr) {
         svt_aom_generate_padding(input_pic->buffer_cr,
                                  input_pic->stride_cr,
                                  input_pic->width >> scs->subsampling_x,
                                  input_pic->height >> scs->subsampling_y,
                                  input_pic->org_x >> scs->subsampling_x,
                                  input_pic->org_y >> scs->subsampling_y);
+    }
 
     // PAD the bit inc buffer in 10bit
     if (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT) {
-        if (input_pic->buffer_bit_inc_cb)
+        if (input_pic->buffer_bit_inc_cb) {
             svt_aom_generate_padding_compressed_10bit(input_pic->buffer_bit_inc_cb,
                                                       comp_stride_uv,
                                                       input_pic->width >> scs->subsampling_x,
                                                       input_pic->height >> scs->subsampling_y,
                                                       input_pic->org_x >> scs->subsampling_x,
                                                       input_pic->org_y >> scs->subsampling_y);
+        }
 
-        if (input_pic->buffer_bit_inc_cr)
+        if (input_pic->buffer_bit_inc_cr) {
             svt_aom_generate_padding_compressed_10bit(input_pic->buffer_bit_inc_cr,
                                                       comp_stride_uv,
                                                       input_pic->width >> scs->subsampling_x,
                                                       input_pic->height >> scs->subsampling_y,
                                                       input_pic->org_x >> scs->subsampling_x,
                                                       input_pic->org_y >> scs->subsampling_y);
+        }
     }
 }
 
@@ -1534,8 +1564,9 @@ void *svt_aom_picture_analysis_kernel(void *input_ptr) {
                     //       NOTE: since denoise may change the src, so this part is after svt_aom_picture_pre_processing_operations()
                     pcs->chroma_downsampled_pic->buffer_y = input_pic->buffer_y;
                     svt_aom_down_sample_chroma(input_pic, pcs->chroma_downsampled_pic);
-                } else
+                } else {
                     pcs->chroma_downsampled_pic = input_pic;
+                }
 
                 //not passing through the DS pool, so 1/4 and 1/16 are not used
                 pcs->ds_pics.picture_ptr           = input_pic;
@@ -1570,14 +1601,21 @@ void *svt_aom_picture_analysis_kernel(void *input_ptr) {
             // If running multi-threaded mode, perform SC detection in svt_aom_picture_analysis_kernel, else in svt_aom_picture_decision_kernel
             if (scs->static_config.level_of_parallelism != 1) {
                 switch (scs->static_config.screen_content_mode) {
-                case 0: pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 0; break;
-                case 1: pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 1; break;
+                case 0:
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 0;
+                    break;
+                case 1:
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 1;
+                    break;
                 case 2:
                     // SC Detection is OFF for 4K and higher
-                    if (scs->input_resolution <= INPUT_SIZE_1080p_RANGE)
+                    if (scs->input_resolution <= INPUT_SIZE_1080p_RANGE) {
                         svt_aom_is_screen_content(pcs);
+                    }
                     break;
-                case 3: svt_aom_is_screen_content_antialiasing_aware(pcs); break;
+                case 3:
+                    svt_aom_is_screen_content_antialiasing_aware(pcs);
+                    break;
                 }
             }
         }

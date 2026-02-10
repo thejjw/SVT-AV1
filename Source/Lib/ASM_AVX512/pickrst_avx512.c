@@ -2573,7 +2573,9 @@ void svt_av1_compute_stats_highbd_avx512(int32_t wiener_win, const uint8_t *dgd8
 
         H[k * wiener_win2 + k] /= 4;
 
-        for (; k < wiener_win2; ++k) { M[k] /= 4; }
+        for (; k < wiener_win2; ++k) {
+            M[k] /= 4;
+        }
 
         div4_diagonal_copy_stats_avx2(wiener_win2, H);
     } else {
@@ -2589,7 +2591,9 @@ void svt_av1_compute_stats_highbd_avx512(int32_t wiener_win, const uint8_t *dgd8
 
         H[k * wiener_win2 + k] /= 16;
 
-        for (; k < wiener_win2; ++k) { M[k] /= 16; }
+        for (; k < wiener_win2; ++k) {
+            M[k] /= 16;
+        }
 
         div16_diagonal_copy_stats_avx2(wiener_win2, H);
     }

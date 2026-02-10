@@ -33,7 +33,9 @@ extern "C" {
 
 static INLINE void round_shift_avx2(const __m256i *input, __m256i *output, int32_t size) {
     const __m256i scale = _mm256_set1_epi16(new_inv_sqrt2 * 8);
-    for (int32_t i = 0; i < size; ++i) output[i] = _mm256_mulhrs_epi16(input[i], scale);
+    for (int32_t i = 0; i < size; ++i) {
+        output[i] = _mm256_mulhrs_epi16(input[i], scale);
+    }
 }
 
 static INLINE void write_recon_w16_avx2(__m256i res, uint8_t *output_r, uint8_t *output_w) {
@@ -47,8 +49,9 @@ static INLINE void lowbd_write_buffer_16xn_avx2(__m256i *in, uint8_t *output_r, 
                                                 int32_t stride_w, int32_t flipud, int32_t height) {
     int32_t       j    = flipud ? (height - 1) : 0;
     const int32_t step = flipud ? -1 : 1;
-    for (int32_t i = 0; i < height; ++i, j += step)
+    for (int32_t i = 0; i < height; ++i, j += step) {
         write_recon_w16_avx2(in[j], output_r + i * stride_r, output_w + i * stride_w);
+    }
 }
 
 #ifdef __cplusplus

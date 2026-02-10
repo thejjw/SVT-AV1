@@ -22,7 +22,9 @@ static inline uint32_t variance(const uint8_t *a, int32_t a_stride, const uint8_
     uint32_t sse = 0;
 
     for (i = 0; i < h; ++i) {
-        for (j = 0; j < w; ++j) { sse += SQR(a[j] - b[j]); }
+        for (j = 0; j < w; ++j) {
+            sse += SQR(a[j] - b[j]);
+        }
 
         a += a_stride;
         b += b_stride;
@@ -79,7 +81,9 @@ static inline int64_t highbd_variance(const uint8_t *a8, int32_t a_stride, const
     const uint16_t *b   = CONVERT_TO_SHORTPTR(b8);
     int64_t         sse = 0;
     for (int32_t i = 0; i < h; ++i) {
-        for (int32_t j = 0; j < w; ++j) { sse += (uint32_t)(SQR(a[j] - b[j])); }
+        for (int32_t j = 0; j < w; ++j) {
+            sse += (uint32_t)(SQR(a[j] - b[j]));
+        }
         a += a_stride;
         b += b_stride;
     }

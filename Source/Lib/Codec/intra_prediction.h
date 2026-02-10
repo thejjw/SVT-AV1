@@ -132,8 +132,9 @@ void svt_cfl_predict_hbd_c(const int16_t *pred_buf_q3,
 
 static INLINE int32_t cfl_idx_to_alpha(int32_t alpha_idx, int32_t joint_sign, CflPredType pred_type) {
     const int32_t alpha_sign = (pred_type == CFL_PRED_U) ? CFL_SIGN_U(joint_sign) : CFL_SIGN_V(joint_sign);
-    if (alpha_sign == CFL_SIGN_ZERO)
+    if (alpha_sign == CFL_SIGN_ZERO) {
         return 0;
+    }
     const int32_t abs_alpha_q3 = (pred_type == CFL_PRED_U) ? CFL_IDX_U(alpha_idx) : CFL_IDX_V(alpha_idx);
     return (alpha_sign == CFL_SIGN_POS) ? abs_alpha_q3 + 1 : -abs_alpha_q3 - 1;
 }
@@ -201,13 +202,17 @@ CflSubtractAverageFn svt_get_subtract_average_fn_c(TxSize tx_size);
         return sub_avg[tx_size % TX_SIZES_ALL];                               \
     }
 
-static INLINE int32_t av1_is_directional_mode(PredictionMode mode) { return mode >= V_PRED && mode <= D67_PRED; }
+static INLINE int32_t av1_is_directional_mode(PredictionMode mode) {
+    return mode >= V_PRED && mode <= D67_PRED;
+}
 
 static INLINE int get_palette_bsize_ctx(BlockSize bsize) {
     return eb_num_pels_log2_lookup[bsize] - eb_num_pels_log2_lookup[BLOCK_8X8];
 }
 
-static INLINE bool av1_use_angle_delta(BlockSize bsize) { return bsize >= BLOCK_8X8; }
+static INLINE bool av1_use_angle_delta(BlockSize bsize) {
+    return bsize >= BLOCK_8X8;
+}
 
 #ifdef __cplusplus
 }

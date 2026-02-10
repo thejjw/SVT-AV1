@@ -40,8 +40,9 @@ static inline void dr_prediction_z1_WxH_internal_neon_small(int W, int H, uint8x
             return;
         }
 
-        if (base_max_diff > W)
+        if (base_max_diff > W) {
             base_max_diff = W;
+        }
 
         uint8x8x2_t a01_128;
         uint16x8_t  shift;
@@ -70,7 +71,9 @@ static inline void dr_prediction_z1_4xH_neon(int H, uint8_t *dst, ptrdiff_t stri
     uint8x8_t dstvec[16];
 
     dr_prediction_z1_WxH_internal_neon_small(4, H, dstvec, above, upsample_above, dx);
-    for (int i = 0; i < H; i++) { vst1_lane_u32((uint32_t *)(dst + stride * i), vreinterpret_u32_u8(dstvec[i]), 0); }
+    for (int i = 0; i < H; i++) {
+        vst1_lane_u32((uint32_t *)(dst + stride * i), vreinterpret_u32_u8(dstvec[i]), 0);
+    }
 }
 
 static inline void dr_prediction_z1_8xH_neon(int H, uint8_t *dst, ptrdiff_t stride, const uint8_t *above,
@@ -78,7 +81,9 @@ static inline void dr_prediction_z1_8xH_neon(int H, uint8_t *dst, ptrdiff_t stri
     uint8x8_t dstvec[32];
 
     dr_prediction_z1_WxH_internal_neon_small(8, H, dstvec, above, upsample_above, dx);
-    for (int i = 0; i < H; i++) { vst1_u8(dst + stride * i, dstvec[i]); }
+    for (int i = 0; i < H; i++) {
+        vst1_u8(dst + stride * i, dstvec[i]);
+    }
 }
 
 static inline void dr_prediction_z1_WxH_internal_neon_large(int W, int H, uint8x16_t *dst, const uint8_t *above,
@@ -105,8 +110,9 @@ static inline void dr_prediction_z1_WxH_internal_neon_large(int W, int H, uint8x
             return;
         }
 
-        if (base_max_diff > W)
+        if (base_max_diff > W) {
             base_max_diff = W;
+        }
 
         uint8x16_t a0_128 = vld1q_u8(above + base);
         uint8x16_t a1_128 = vld1q_u8(above + base + 1);
@@ -132,7 +138,9 @@ static inline void dr_prediction_z1_16xH_neon(int H, uint8_t *dst, ptrdiff_t str
     uint8x16_t dstvec[64];
 
     dr_prediction_z1_WxH_internal_neon_large(16, H, dstvec, above, dx);
-    for (int i = 0; i < H; i++) { vst1q_u8(dst + stride * i, dstvec[i]); }
+    for (int i = 0; i < H; i++) {
+        vst1q_u8(dst + stride * i, dstvec[i]);
+    }
 }
 
 static inline void dr_prediction_z1_32xH_internal_neon(int H, uint8x16x2_t *dstvec, const uint8_t *above, int dx) {
@@ -159,8 +167,9 @@ static inline void dr_prediction_z1_32xH_internal_neon(int H, uint8x16x2_t *dstv
             }
             return;
         }
-        if (base_max_diff > 32)
+        if (base_max_diff > 32) {
             base_max_diff = 32;
+        }
 
         uint16x8_t shift = vdupq_n_u16((x & 0x3f) >> 1);
 
@@ -326,8 +335,9 @@ static inline void dr_prediction_z2_4xH_neon(int H, uint8_t *dst, ptrdiff_t stri
         if (base_min_diff > 4) {
             base_min_diff = 4;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         uint16x8_t a0_x, a1_x;
@@ -428,8 +438,9 @@ static inline void dr_prediction_z2_8xH_neon(int H, uint8_t *dst, ptrdiff_t stri
         if (base_min_diff > 8) {
             base_min_diff = 8;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift <= 8) {
@@ -537,8 +548,9 @@ static inline void dr_prediction_z2_WxH_neon(int W, int H, uint8_t *dst, ptrdiff
             if (base_min_diff > 16) {
                 base_min_diff = 16;
             } else {
-                if (base_min_diff < 0)
+                if (base_min_diff < 0) {
                     base_min_diff = 0;
+                }
             }
 
             if (base_shift < 16) {
@@ -949,9 +961,13 @@ static inline void transpose16x32_neon(uint8x16x2_t *x, uint64x2x2_t *d) {
 static inline void transpose_TX_16X16(const uint8_t *src, ptrdiff_t pitchSrc, uint8_t *dst, ptrdiff_t pitchDst) {
     uint8x16_t r[16];
     uint64x2_t d[16];
-    for (int i = 0; i < 16; i++) { r[i] = vld1q_u8(src + i * pitchSrc); }
+    for (int i = 0; i < 16; i++) {
+        r[i] = vld1q_u8(src + i * pitchSrc);
+    }
     transpose16x16_neon(r, d);
-    for (int i = 0; i < 16; i++) { vst1q_u8(dst + i * pitchDst, vreinterpretq_u8_u64(d[i])); }
+    for (int i = 0; i < 16; i++) {
+        vst1q_u8(dst + i * pitchDst, vreinterpretq_u8_u64(d[i]));
+    }
 }
 
 static inline void transpose(const uint8_t *src, ptrdiff_t pitchSrc, uint8_t *dst, ptrdiff_t pitchDst, int width,
@@ -1042,7 +1058,9 @@ static inline void dr_prediction_z3_16x8_neon(uint8_t *dst, ptrdiff_t stride, co
 
     dr_prediction_z1_WxH_internal_neon_small(8, 16, dstvec, left, upsample_left, dy);
     transpose16x8_8x16_neon(dstvec, d);
-    for (int i = 0; i < 8; i++) { vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i])); }
+    for (int i = 0; i < 8; i++) {
+        vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i]));
+    }
 }
 
 static inline void dr_prediction_z3_4x16_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int dy) {
@@ -1079,7 +1097,9 @@ static inline void dr_prediction_z3_16x4_neon(uint8_t *dst, ptrdiff_t stride, co
 
     dr_prediction_z1_WxH_internal_neon_small(4, 16, dstvec, left, upsample_left, dy);
     transpose16x8_8x16_neon(dstvec, d);
-    for (int i = 0; i < 4; i++) { vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i])); }
+    for (int i = 0; i < 4; i++) {
+        vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i]));
+    }
 }
 
 static inline void dr_prediction_z3_8x32_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int dy) {
@@ -1118,7 +1138,9 @@ static inline void dr_prediction_z3_16x16_neon(uint8_t *dst, ptrdiff_t stride, c
 
     dr_prediction_z1_WxH_internal_neon_large(16, 16, dstvec, left, dy);
     transpose16x16_neon(dstvec, d);
-    for (int i = 0; i < 16; i++) { vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i])); }
+    for (int i = 0; i < 16; i++) {
+        vst1q_u8(dst + i * stride, vreinterpretq_u8_u64(d[i]));
+    }
 }
 
 static inline void dr_prediction_z3_32x32_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int dy) {
@@ -1160,7 +1182,9 @@ static inline void dr_prediction_z3_32x16_neon(uint8_t *dst, ptrdiff_t stride, c
     dr_prediction_z1_WxH_internal_neon_large(16, 32, dstvec, left, dy);
     for (int i = 0; i < 32; i += 16) {
         transpose16x16_neon((dstvec + i), d);
-        for (int j = 0; j < 16; j++) { vst1q_u8(dst + j * stride + i, vreinterpretq_u8_u64(d[j])); }
+        for (int j = 0; j < 16; j++) {
+            vst1q_u8(dst + j * stride + i, vreinterpretq_u8_u64(d[j]));
+        }
     }
 }
 
@@ -1192,7 +1216,9 @@ static inline void dr_prediction_z3_64x16_neon(uint8_t *dst, ptrdiff_t stride, c
     dr_prediction_z1_WxH_internal_neon_large(16, 64, dstvec, left, dy);
     for (int i = 0; i < 64; i += 16) {
         transpose16x16_neon((dstvec + i), d);
-        for (int j = 0; j < 16; j++) { vst1q_u8(dst + j * stride + i, vreinterpretq_u8_u64(d[j])); }
+        for (int j = 0; j < 16; j++) {
+            vst1q_u8(dst + j * stride + i, vreinterpretq_u8_u64(d[j]));
+        }
     }
 }
 
@@ -1529,7 +1555,9 @@ static inline uint16x8_t dc_load_sum_4(const uint8_t *in) {
 }
 
 static inline void dc_store_4xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x8_t dc) {
-    for (int i = 0; i < h; ++i) { store_u8_4x1(dst + i * stride, dc); }
+    for (int i = 0; i < h; ++i) {
+        store_u8_4x1(dst + i * stride, dc);
+    }
 }
 
 void svt_aom_dc_predictor_4x4_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
@@ -1579,7 +1607,9 @@ static inline uint16x8_t horizontal_add_and_broadcast_u16x8(uint16x8_t a) {
 }
 
 static inline void dc_store_8xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x8_t dc) {
-    for (int i = 0; i < h; ++i) { vst1_u8(dst + i * stride, dc); }
+    for (int i = 0; i < h; ++i) {
+        vst1_u8(dst + i * stride, dc);
+    }
 }
 
 void svt_aom_dc_predictor_8x8_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
@@ -1623,7 +1653,9 @@ static inline uint16x8_t dc_load_sum_16(const uint8_t *in) {
 }
 
 static inline void dc_store_16xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x16_t dc) {
-    for (int i = 0; i < h; ++i) { vst1q_u8(dst + i * stride, dc); }
+    for (int i = 0; i < h; ++i) {
+        vst1q_u8(dst + i * stride, dc);
+    }
 }
 
 void svt_aom_dc_predictor_16x16_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
@@ -1967,7 +1999,9 @@ DC_PREDICTOR_TOP(64, 32, 6, q)
 
 /* ---------------------SMOOTH PREDICTOR--------------------------- */
 /* 256 - v = vneg_s8(v) */
-static inline uint8x8_t negate_s8(const uint8x8_t v) { return vreinterpret_u8_s8(vneg_s8(vreinterpret_s8_u8(v))); }
+static inline uint8x8_t negate_s8(const uint8x8_t v) {
+    return vreinterpret_u8_s8(vneg_s8(vreinterpret_s8_u8(v)));
+}
 
 static inline void smooth_4xh_neon(uint8_t *dst, ptrdiff_t stride, const uint8_t *const top_row,
                                    const uint8_t *const left_column, const int height) {
@@ -2472,15 +2506,21 @@ SMOOTH_V_NXM_WIDE(64, 64)
 
 /* ---------------------V PREDICTOR--------------------------- */
 static inline void v_store_4xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x8_t d0) {
-    for (int i = 0; i < h; ++i) { store_u8_4x1(dst + i * stride, d0); }
+    for (int i = 0; i < h; ++i) {
+        store_u8_4x1(dst + i * stride, d0);
+    }
 }
 
 static inline void v_store_8xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x8_t d0) {
-    for (int i = 0; i < h; ++i) { vst1_u8(dst + i * stride, d0); }
+    for (int i = 0; i < h; ++i) {
+        vst1_u8(dst + i * stride, d0);
+    }
 }
 
 static inline void v_store_16xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x16_t d0) {
-    for (int i = 0; i < h; ++i) { vst1q_u8(dst + i * stride, d0); }
+    for (int i = 0; i < h; ++i) {
+        vst1q_u8(dst + i * stride, d0);
+    }
 }
 
 static inline void v_store_32xh(uint8_t *dst, ptrdiff_t stride, int h, uint8x16_t d0, uint8x16_t d1) {
@@ -3060,8 +3100,9 @@ PAETH_NXM_WIDE(32, 8)
 PAETH_NXM_WIDE(64, 16)
 
 void svt_av1_filter_intra_edge_neon(uint8_t *p, int sz, int strength) {
-    if (!strength)
+    if (!strength) {
         return;
+    }
     assert(sz >= 0 && sz <= 129);
 
     uint8_t edge[160]; // Max value of sz + enough padding for vector accesses.

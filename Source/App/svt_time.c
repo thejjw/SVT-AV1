@@ -29,8 +29,9 @@
 #include "svt_time.h"
 
 void app_svt_av1_sleep(const unsigned milliseconds) {
-    if (!milliseconds)
+    if (!milliseconds) {
         return;
+    }
 #ifdef _WIN32
     Sleep(milliseconds);
 #else

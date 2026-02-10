@@ -242,7 +242,9 @@ static INLINE __m256i boxsum_from_ii(const int32_t *ii, int32_t stride, int32_t 
     return _mm256_sub_epi32(v, u);
 }
 
-static INLINE __m256i round_for_shift(unsigned shift) { return _mm256_set1_epi32((1 << shift) >> 1); }
+static INLINE __m256i round_for_shift(unsigned shift) {
+    return _mm256_set1_epi32((1 << shift) >> 1);
+}
 
 static INLINE __m256i compute_p(__m256i sum1, __m256i sum2, int32_t n) {
     const __m256i bb = _mm256_madd_epi16(sum1, sum1);
@@ -714,10 +716,11 @@ void svt_av1_selfguided_restoration_avx2(const uint8_t *dgd8, int32_t width, int
 
     // Generate integral images from the input. C will contain sums of squares; D
     // will contain just sums
-    if (highbd)
+    if (highbd) {
         integral_images_highbd(CONVERT_TO_SHORTPTR(dgd0), dgd_stride, width_ext, height_ext, ctl, dtl, buf_stride);
-    else
+    } else {
         integral_images(dgd0, dgd_stride, width_ext, height_ext, ctl, dtl, buf_stride);
+    }
 
     const SgrParamsType *const params = &svt_aom_eb_sgr_params[sgr_params_idx];
     // Write to flt0 and flt1

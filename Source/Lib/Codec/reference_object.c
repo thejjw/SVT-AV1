@@ -34,10 +34,14 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
 
     // 3. zero out the left column
     recon_samples_ptr = recon_samples_buffer_ptr + top_padding * stride + left_padding - 1;
-    for (sample_count = 0; sample_count < recon_height; sample_count++) recon_samples_ptr[sample_count * stride] = 0;
+    for (sample_count = 0; sample_count < recon_height; sample_count++) {
+        recon_samples_ptr[sample_count * stride] = 0;
+    }
     // 4. zero out the right column
     recon_samples_ptr = recon_samples_buffer_ptr + top_padding * stride + left_padding + recon_width;
-    for (sample_count = 0; sample_count < recon_height; sample_count++) recon_samples_ptr[sample_count * stride] = 0;
+    for (sample_count = 0; sample_count < recon_height; sample_count++) {
+        recon_samples_ptr[sample_count * stride] = 0;
+    }
 }
 
 static void initialize_samples_neighboring_reference_picture(
@@ -119,8 +123,9 @@ EbErrorType svt_reference_param_update(EbReferenceObject *ref_object, SequenceCo
     picture_buffer_desc_init_data_ptr.is_16bit_pipeline = scs->is_16bit_pipeline;
 
     picture_buffer_desc_init_data_ptr.split_mode = false;
-    if (is_16bit)
+    if (is_16bit) {
         picture_buffer_desc_init_data_ptr.bit_depth = EB_TEN_BIT;
+    }
 
     EbPictureBufferDescInitData picture_buffer_desc_init_data_16bit_ptr = picture_buffer_desc_init_data_ptr;
     //TODO:12bit
@@ -221,8 +226,9 @@ EbErrorType svt_reference_object_reset(EbReferenceObject *ref_object, SequenceCo
 
 static void svt_pa_reference_object_dctor(EbPtr p) {
     EbPaReferenceObject *obj = (EbPaReferenceObject *)p;
-    if (obj->dummy_obj)
+    if (obj->dummy_obj) {
         return;
+    }
     EB_DELETE(obj->input_padded_pic);
     EB_DELETE(obj->quarter_downsampled_picture_ptr);
     EB_DELETE(obj->sixteenth_downsampled_picture_ptr);
@@ -321,14 +327,16 @@ EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_, EbPtr
     // Reference picture constructor
     EB_NEW(pa_ref_obj_->input_padded_pic, svt_picture_buffer_desc_ctor, (EbPtr)picture_buffer_desc_init_data_ptr);
     // Downsampled reference picture constructor
-    if (picture_buffer_desc_init_data_ptr[1].buffer_enable_mask)
+    if (picture_buffer_desc_init_data_ptr[1].buffer_enable_mask) {
         EB_NEW(pa_ref_obj_->quarter_downsampled_picture_ptr,
                svt_picture_buffer_desc_ctor,
                (EbPtr)(picture_buffer_desc_init_data_ptr + 1));
-    if (picture_buffer_desc_init_data_ptr[2].buffer_enable_mask)
+    }
+    if (picture_buffer_desc_init_data_ptr[2].buffer_enable_mask) {
         EB_NEW(pa_ref_obj_->sixteenth_downsampled_picture_ptr,
                svt_picture_buffer_desc_ctor,
                (EbPtr)(picture_buffer_desc_init_data_ptr + 2));
+    }
     // set all supplemental downscaled reference picture pointers to NULL
     for (uint8_t sr_down_idx = 0; sr_down_idx < NUM_SR_SCALES + 1; sr_down_idx++) {
         for (uint8_t resize_down_idx = 0; resize_down_idx < NUM_RESIZE_SCALES + 1; resize_down_idx++) {

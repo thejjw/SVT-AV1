@@ -518,8 +518,9 @@ void svt_get_proj_subspace_neon(const uint8_t *src8, int32_t width, int32_t heig
 
     if (params->r[0] > 0 && params->r[1] > 0) {
         det = (H[0][0] * H[1][1] - H[0][1] * H[1][0]);
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = (H[1][1] * C[0] - H[0][1] * C[1]) / det;
         x[1] = (H[0][0] * C[1] - H[1][0] * C[0]) / det;
 
@@ -529,8 +530,9 @@ void svt_get_proj_subspace_neon(const uint8_t *src8, int32_t width, int32_t heig
         // H matrix is now only the scalar H[0][0]
         // C vector is now only the scalar C[0]
         det = H[0][0];
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = C[0] / det;
         x[1] = 0;
 
@@ -540,8 +542,9 @@ void svt_get_proj_subspace_neon(const uint8_t *src8, int32_t width, int32_t heig
         // H matrix is now only the scalar H[1][1]
         // C vector is now only the scalar C[1]
         det = H[1][1];
-        if (det < 1e-8)
+        if (det < 1e-8) {
             return; // ill-posed, return default values
+        }
         x[0] = 0;
         x[1] = C[1] / det;
 

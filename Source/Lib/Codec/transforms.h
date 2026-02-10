@@ -34,7 +34,9 @@ extern const int8_t *fwd_txfm_shift_ls[TX_SIZES_ALL];
 
 #define BLOCK_SIZES_ALL 22
 
-static INLINE int is_rect_tx(TxSize tx_size) { return tx_size >= TX_SIZES; }
+static INLINE int is_rect_tx(TxSize tx_size) {
+    return tx_size >= TX_SIZES;
+}
 
 static INLINE int is_rect_tx_allowed_bsize(BlockSize bsize) {
     static const char lut[BLOCK_SIZES_ALL] = {

@@ -192,7 +192,9 @@ static inline uint8x16_t load_8bit_8x2_to_1_reg(const uint8_t *const src, const 
     return vreinterpretq_u8_u64(v_data);
 }
 
-static inline uint8x16_t load_8bit_16x1_to_1_reg(const uint8_t *const src) { return vld1q_u8(src); }
+static inline uint8x16_t load_8bit_16x1_to_1_reg(const uint8_t *const src) {
+    return vld1q_u8(src);
+}
 
 static inline void load_levels_4x4x5(const uint8_t *const src, const int stride, const ptrdiff_t *const offsets,
                                      uint8x16_t *const level) {

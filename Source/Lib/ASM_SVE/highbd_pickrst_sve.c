@@ -145,7 +145,9 @@ void svt_av1_compute_stats_highbd_sve(int32_t wiener_win, const uint8_t *dgd8, c
 
         H[k * wiener_win2 + k] /= 4;
 
-        for (; k < wiener_win2; ++k) { M[k] /= 4; }
+        for (; k < wiener_win2; ++k) {
+            M[k] /= 4;
+        }
 
         div4_diagonal_copy_stats_neon(wiener_win2, H);
     }

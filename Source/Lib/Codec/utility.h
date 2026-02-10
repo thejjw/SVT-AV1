@@ -114,16 +114,18 @@ static const BlockSize ss_size_lookup[BlockSizeS_ALL][2][2] = {
     {{BLOCK_64X16, BLOCK_INVALID}, {BLOCK_32X16, BLOCK_32X8}}};
 
 static INLINE BlockSize get_plane_block_size(BlockSize bsize, int32_t subsampling_x, int32_t subsampling_y) {
-    if (bsize == BLOCK_INVALID)
+    if (bsize == BLOCK_INVALID) {
         return BLOCK_INVALID;
+    }
     return ss_size_lookup[bsize][subsampling_x][subsampling_y];
 }
 
 static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_x, int32_t subsampling_y) {
     const BlockSize plane_bsize = get_plane_block_size(bsize, subsampling_x, subsampling_y);
     TxSize          uv_tx       = TX_INVALID;
-    if (plane_bsize < BlockSizeS_ALL)
+    if (plane_bsize < BlockSizeS_ALL) {
         uv_tx = eb_max_txsize_rect_lookup[plane_bsize];
+    }
     return av1_get_adjusted_tx_size(uv_tx);
 }
 
@@ -344,21 +346,26 @@ typedef enum MinigopIndex {
 // Right shift that replicates gcc's implementation
 
 static inline int gcc_right_shift(int a, unsigned shift) {
-    if (!a)
+    if (!a) {
         return 0;
-    if (a > 0)
+    }
+    if (a > 0) {
         return a >> shift;
+    }
     static const unsigned sbit = 1u << (sizeof(sbit) * CHAR_BIT - 1);
     a                          = (unsigned)a >> shift;
-    while (shift) a |= sbit >> shift--;
+    while (shift) {
+        a |= sbit >> shift--;
+    }
     return a ^ sbit;
 }
 
 static INLINE int convert_to_trans_prec(int allow_hp, int coor) {
-    if (allow_hp)
+    if (allow_hp) {
         return ROUND_POWER_OF_TWO_SIGNED(coor, WARPEDMODEL_PREC_BITS - 3);
-    else
+    } else {
         return ROUND_POWER_OF_TWO_SIGNED(coor, WARPEDMODEL_PREC_BITS - 2) * 2;
+    }
 }
 
 /* Convert Floating Point to Fixed Point example: int32_t val_fp8 = FLOAT2FP(val_float, 8, int32_t) */

@@ -60,9 +60,9 @@ void svt_ext_sad_calculation_8x8_16x16_avx2_intrin(uint8_t *src, uint32_t src_st
                                 _mm_loadu_si128((__m128i const *)(ref + 14 * ref_stride)));
     sad8x8_0_3_256 = _mm256_add_epi32(_mm256_sad_epu8(src_256, ref_256), sad8x8_0_3_256);
 
-    if (sub_sad)
+    if (sub_sad) {
         sad8x8_0_3_256 = _mm256_slli_epi32(sad8x8_0_3_256, 1);
-    else {
+    } else {
         src_256        = _mm256_setr_m128i(_mm_loadu_si128((__m128i const *)(src + 1 * src_stride)),
                                     _mm_loadu_si128((__m128i const *)(src + 9 * src_stride)));
         ref_256        = _mm256_setr_m128i(_mm_loadu_si128((__m128i const *)(ref + 1 * ref_stride)),
@@ -137,7 +137,9 @@ void sad_loop_kernel_generalized_avx2(uint8_t  *src, // input parameter, source 
 
     __m128i leftover_mask32b = _mm_set1_epi32(-1);
     if (leftover) {
-        for (k = 0; k < (uint32_t)(search_area_width & 3); k++) leftover_mask32b = _mm_slli_si128(leftover_mask32b, 4);
+        for (k = 0; k < (uint32_t)(search_area_width & 3); k++) {
+            leftover_mask32b = _mm_slli_si128(leftover_mask32b, 4);
+        }
     }
 
     for (i = 0; i < search_area_height; i++) {
@@ -298,7 +300,9 @@ void sad_loop_kernel_generalized_avx2(uint8_t  *src, // input parameter, source 
                     DECLARE_ALIGNED(16, uint16_t, tsum[8]);
                     memset(tsum, 0, 8 * sizeof(uint16_t));
                     for (uint32_t search_area = 0; search_area < 8; search_area++) {
-                        for (l = 0; l < width_calc; l++) { tsum[search_area] += EB_ABS_DIFF(temp_src[l], temp_ref[l]); }
+                        for (l = 0; l < width_calc; l++) {
+                            tsum[search_area] += EB_ABS_DIFF(temp_src[l], temp_ref[l]);
+                        }
                         temp_ref += 1;
                     }
                     s4   = _mm_loadu_si128((__m128i *)tsum);
@@ -407,7 +411,9 @@ void svt_sad_loop_kernel_avx2_intrin(uint8_t  *src, // input parameter, source s
     __m256i        ss0, ss1, ss2, ss3, ss4, ss5, ss6, ss7, ss8;
 
     if (leftover) {
-        for (k = 0; k < leftover; k++) s8 = _mm_slli_si128(s8, 2);
+        for (k = 0; k < leftover; k++) {
+            s8 = _mm_slli_si128(s8, 2);
+        }
     }
 
     switch (block_width) {
@@ -4420,17 +4426,38 @@ uint32_t svt_nxm_sad_kernel_helper_avx2(const uint8_t *src, uint32_t src_stride,
     uint32_t nxm_sad = 0;
 
     switch (width) {
-    case 4: nxm_sad = svt_compute4x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 8: nxm_sad = svt_compute8x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 16: nxm_sad = svt_compute16x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 24: nxm_sad = svt_compute24x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 32: nxm_sad = svt_compute32x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 40: nxm_sad = svt_compute40x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 48: nxm_sad = svt_compute48x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 56: nxm_sad = svt_compute56x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 64: nxm_sad = svt_compute64x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 128: nxm_sad = svt_compute128x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    default: nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
+    case 4:
+        nxm_sad = svt_compute4x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 8:
+        nxm_sad = svt_compute8x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 16:
+        nxm_sad = svt_compute16x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 24:
+        nxm_sad = svt_compute24x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 32:
+        nxm_sad = svt_compute32x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 40:
+        nxm_sad = svt_compute40x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 48:
+        nxm_sad = svt_compute48x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 56:
+        nxm_sad = svt_compute56x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 64:
+        nxm_sad = svt_compute64x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 128:
+        nxm_sad = svt_compute128x_m_sad_avx2_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    default:
+        nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
     }
 
     return nxm_sad;
@@ -4626,8 +4653,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 0x1);
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_ref = ref + j;
                     ss3 = ss5 = _mm256_setzero_si256();
                     ss0       = _mm256_insertf128_si256(_mm256_castsi128_si256(_mm_loadu_si128((__m128i *)p_ref)),
@@ -4672,8 +4700,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 0x1);
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_ref = ref + j;
                     ss3 = ss5 = _mm256_setzero_si256();
                     ss0       = _mm256_insertf128_si256(_mm256_castsi128_si256(_mm_loadu_si128((__m128i *)p_ref)),
@@ -4742,8 +4771,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 0x1);
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_ref = ref + j;
                     ss3 = ss5 = _mm256_setzero_si256();
                     ss0       = _mm256_insertf128_si256(_mm256_castsi128_si256(_mm_loadu_si128((__m128i *)p_ref)),
@@ -4804,8 +4834,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
             uint32_t ref_stride_t = 3 * ref_stride;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss5 = _mm256_setzero_si256();
@@ -4845,8 +4876,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3    = _mm_setzero_si128();
@@ -4887,8 +4919,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 0x1);
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
                     ss0 = _mm256_insertf128_si256(_mm256_castsi128_si256(_mm_loadu_si128((__m128i *)p_ref)),
@@ -4935,8 +4968,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 0x1);
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
                     ss0 = _mm256_insertf128_si256(_mm256_castsi128_si256(_mm_loadu_si128((__m128i *)p_ref)),
@@ -4980,8 +5014,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
             uint32_t ref_stride_t = 3 * ref_stride;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5022,8 +5057,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = _mm_setzero_si128();
@@ -5058,8 +5094,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 16) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = ss7 = _mm256_setzero_si256();
@@ -5111,8 +5148,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5161,8 +5199,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
     case 24:
         for (i = 0; i < search_area_height; i += search_step) {
             for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                if ((search_area_width - j) < 8)
+                if ((search_area_width - j) < 8) {
                     continue;
+                }
                 p_src = src;
                 p_ref = ref + j;
                 ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5208,8 +5247,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 32) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + (search_step - 1))) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5249,8 +5289,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5296,8 +5337,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 32) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -5351,8 +5393,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -5414,8 +5457,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 32) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = _mm256_setzero_si256();
@@ -5464,8 +5508,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         } else if (block_height <= 64) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = ss7 = ss8 = ss9 = ss10 = _mm256_setzero_si256();
@@ -5523,8 +5568,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
             __m256i ssa1, ssa2, ssa3, ssa4, ssa5, ssa6, ssa7, ssa8;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = ss7 = ss8 = ss9 = ss10 = _mm256_setzero_si256();
@@ -5614,8 +5660,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 64) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = ss7 = ss8 = ss9 = ss10 = ss11 = ss12 = ss13 = ss14 = ss15 = ss16 = ss17 =
@@ -5709,8 +5756,9 @@ void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                 ssa16;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     ss3 = ss4 = ss5 = ss6 = ss7 = ss8 = ss9 = ss10 = ss11 = ss12 = ss13 = ss14 = ss15 = ss16 = ss17 =

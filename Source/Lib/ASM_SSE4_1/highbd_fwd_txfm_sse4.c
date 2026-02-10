@@ -311,7 +311,8 @@ void svt_av1_fwd_txfm2d_4x4_sse4_1(int16_t *input, int32_t *coeff, uint32_t stri
         fadst4x4_sse4_1(in, in, fwd_cos_bit_row[txw_idx][txh_idx], 1);
         write_buffer_4x4(in, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -535,7 +536,8 @@ void svt_av1_fwd_txfm2d_4x4_N2_sse4_1(int16_t *input, int32_t *coeff, uint32_t s
         fadst4x4_N2_sse4_1(in, in, fwd_cos_bit_row[txw_idx][txh_idx], 1);
         write_buffer_4x4(in, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -736,7 +738,8 @@ void svt_av1_fwd_txfm2d_4x4_N4_sse4_1(int16_t *input, int32_t *coeff, uint32_t s
         fadst4x4_N4_sse4_1(in, in, fwd_cos_bit_row[txw_idx][txh_idx], 1);
         write_buffer_4x4(in, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -2089,7 +2092,9 @@ static void fdct32_sse4_1(__m128i *input, __m128i *output, const int8_t cos_bit,
     int       col_num     = txfm_size / num_per_128;
     int       col;
     (void)stage_range;
-    for (col = 0; col < col_num; col++) { svt_av1_fdct32_sse4_1((input + col), (output + col), cos_bit, col_num); }
+    for (col = 0; col < col_num; col++) {
+        svt_av1_fdct32_sse4_1((input + col), (output + col), cos_bit, col_num);
+    }
 }
 
 static void fdct16x16_sse4_1(__m128i *in, __m128i *out, int bit, const int col_num) {
@@ -2389,13 +2394,17 @@ static void fdct64_new_sse4_1(__m128i *input, __m128i *output, const int8_t cos_
 
 void svt_av1_idtx32_sse4_1(__m128i *input, __m128i *output, int cos_bit, const int col_num) {
     (void)cos_bit;
-    for (int i = 0; i < 32; i++) { output[i * col_num] = _mm_slli_epi32(input[i * col_num], 2); }
+    for (int i = 0; i < 32; i++) {
+        output[i * col_num] = _mm_slli_epi32(input[i * col_num], 2);
+    }
 }
 
 static void idtx32x32_sse4_1(__m128i *input, __m128i *output, const int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
 
-    for (int i = 0; i < 8; i++) { svt_av1_idtx32_sse4_1(&input[i * 32], &output[i * 32], cos_bit, 1); }
+    for (int i = 0; i < 8; i++) {
+        svt_av1_idtx32_sse4_1(&input[i * 32], &output[i * 32], cos_bit, 1);
+    }
 }
 
 static void idtx16x16_sse4_1(__m128i *in, __m128i *out, int bit, int col_num) {
@@ -2889,11 +2898,20 @@ static void fadst8x8_sse4_1(__m128i *in, __m128i *out, int bit, const int col_nu
 
 static INLINE TxfmFuncSSE2 fwd_txfm_type_to_func_sse4(TxfmType txfm_type) {
     switch (txfm_type) {
-    case TXFM_TYPE_DCT32: return fdct32_sse4_1; break;
-    case TXFM_TYPE_DCT64: return fdct64_new_sse4_1; break;
-    case TXFM_TYPE_IDENTITY32: return idtx32x32_sse4_1; break;
-    case TXFM_TYPE_IDENTITY64: return fidtx64x64_sse4_1; break;
-    default: assert(0);
+    case TXFM_TYPE_DCT32:
+        return fdct32_sse4_1;
+        break;
+    case TXFM_TYPE_DCT64:
+        return fdct64_new_sse4_1;
+        break;
+    case TXFM_TYPE_IDENTITY32:
+        return idtx32x32_sse4_1;
+        break;
+    case TXFM_TYPE_IDENTITY64:
+        return fidtx64x64_sse4_1;
+        break;
+    default:
+        assert(0);
     }
     return NULL;
 }
@@ -2903,7 +2921,9 @@ static INLINE void int16_array_with_stride_to_int32_array_without_stride(const i
                                                                          int32_t *output, int txfm1d_size) {
     int r, c;
     for (r = 0; r < txfm1d_size; r++) {
-        for (c = 0; c < txfm1d_size; c++) { output[r * txfm1d_size + c] = (int32_t)input[r * stride + c]; }
+        for (c = 0; c < txfm1d_size; c++) {
+            output[r * txfm1d_size + c] = (int32_t)input[r * stride + c];
+        }
     }
 }
 
@@ -2934,8 +2954,12 @@ static INLINE void load_buffer_64x64_sse4_1(const int16_t *input, int32_t stride
 }
 
 static INLINE void flip_buf_sse4_1(__m128i *in, __m128i *out, int size) {
-    for (int i = 0; i < size; i += 2) in[30 - i] = out[i];
-    for (int i = 1; i < size; i += 2) in[size - i] = out[i];
+    for (int i = 0; i < size; i += 2) {
+        in[30 - i] = out[i];
+    }
+    for (int i = 1; i < size; i += 2) {
+        in[size - i] = out[i];
+    }
 }
 
 static INLINE void convert_8x8_to_16x16(const __m128i *in, __m128i *out) {
@@ -3603,7 +3627,8 @@ void svt_av1_fwd_txfm2d_64x64_sse4_1(int16_t *input, int32_t *output, uint32_t s
 
         av1_round_shift_array_32_sse4_1(buf_128, out_128, txfm2d_size_128, -shift[2]);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -3623,12 +3648,18 @@ void svt_av1_fwd_txfm2d_32x64_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
 
     // column transform
     load_buffer_32x8n(input, in, stride, 0, 0, shift[0], txfm_size_row);
-    for (int i = 0; i < num_col; i++) { svt_av1_fdct64_sse4_1((in + i), (in + i), bitcol, num_col, num_col); }
-    for (int i = 0; i < num_col; i++) { col_txfm_16x16_rounding((in + i * txfm_size_row), -shift[1]); }
+    for (int i = 0; i < num_col; i++) {
+        svt_av1_fdct64_sse4_1((in + i), (in + i), bitcol, num_col, num_col);
+    }
+    for (int i = 0; i < num_col; i++) {
+        col_txfm_16x16_rounding((in + i * txfm_size_row), -shift[1]);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
-    for (int i = 0; i < num_row; i++) { svt_av1_fdct32_sse4_1((outcoef128 + i), (in + i), bitrow, num_row); }
+    for (int i = 0; i < num_row; i++) {
+        svt_av1_fdct32_sse4_1((outcoef128 + i), (in + i), bitrow, num_row);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_row, txfm_size_col);
     av1_round_shift_rect_array_32_sse4_1(outcoef128, outcoef128, 512, -shift[2]);
     (void)bd;
@@ -3656,13 +3687,19 @@ void svt_av1_fwd_txfm2d_64x32_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
         load_buffer_4x4(input + 48 + i * stride, in + 12 + i * 16, 4, 0, 0, shift[0]);
     }
 
-    for (int i = 0; i < num_col; i++) { svt_av1_fdct32_sse4_1((in + i), (in + i), bitcol, num_col); }
+    for (int i = 0; i < num_col; i++) {
+        svt_av1_fdct32_sse4_1((in + i), (in + i), bitcol, num_col);
+    }
 
-    for (int i = 0; i < num_row; i++) { col_txfm_16x16_rounding((in + i * txfm_size_col), -shift[1]); }
+    for (int i = 0; i < num_row; i++) {
+        col_txfm_16x16_rounding((in + i * txfm_size_col), -shift[1]);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
-    for (int i = 0; i < num_row; i++) { svt_av1_fdct64_sse4_1((outcoef128 + i), (in + i), bitrow, num_row, num_row); }
+    for (int i = 0; i < num_row; i++) {
+        svt_av1_fdct64_sse4_1((outcoef128 + i), (in + i), bitrow, num_row, num_row);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_row, txfm_size_col);
     av1_round_shift_rect_array_32_sse4_1(outcoef128, outcoef128, 512, -shift[2]);
     (void)bd;
@@ -3695,7 +3732,9 @@ void svt_av1_fwd_txfm2d_64x16_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
     col_txfm_16x16_rounding(outcoeff128 + 192, -shift[1]);
 
     transpose_8nx8n(outcoeff128, in, txfm_size_col, txfm_size_row);
-    for (int i = 0; i < 4; i++) { svt_av1_fdct64_sse4_1(in + i, in + i, bitrow, 4, 4); }
+    for (int i = 0; i < 4; i++) {
+        svt_av1_fdct64_sse4_1(in + i, in + i, bitrow, 4, 4);
+    }
     transpose_8nx8n(in, outcoeff128, txfm_size_row, 64);
     (void)bd;
 }
@@ -3727,7 +3766,9 @@ void svt_av1_fwd_txfm2d_32x16_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
     transpose_8nx8n(in, outcoef128, 32, 16);
 
     // row transform
-    for (int i = 0; i < 4; i++) { row_txfm((outcoef128 + i), (in + i), bitrow, 4); }
+    for (int i = 0; i < 4; i++) {
+        row_txfm((outcoef128 + i), (in + i), bitrow, 4);
+    }
     transpose_8nx8n(in, outcoef128, 16, 32);
     av1_round_shift_rect_array_32_sse4_1(outcoef128, outcoef128, 128, -shift[2]);
     (void)bd;
@@ -3750,13 +3791,17 @@ void svt_av1_fwd_txfm2d_32x8_sse4_1(int16_t *input, int32_t *coeff, uint32_t str
 
     // column transform
     load_buffer_32x8n(input, in, stride, 0, 0, shift[0], 8);
-    for (int i = 0; i < txfm_size_row; i += 2) { col_txfm((in + i), (in + i), bitcol, txfm_size_row); }
+    for (int i = 0; i < txfm_size_row; i += 2) {
+        col_txfm((in + i), (in + i), bitcol, txfm_size_row);
+    }
 
     col_txfm_16x16_rounding(&in[0], -shift[1]);
     transpose_8nx8n(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
-    for (int i = 0; i < num_col; i++) { row_txfm((outcoef128 + i), (in + i), bitrow, num_col); }
+    for (int i = 0; i < num_col; i++) {
+        row_txfm((outcoef128 + i), (in + i), bitrow, num_col);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_row, txfm_size_col);
     (void)bd;
 }
@@ -3782,7 +3827,9 @@ void svt_av1_fwd_txfm2d_16x64_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
         load_buffer_4x4(input + (i + 3) * stride, in + (i + 3) * num_col, num_col, ud_flip, lr_flip, shift[0]);
     }
 
-    for (int i = 0; i < num_col; i++) { svt_av1_fdct64_sse4_1(in + i, outcoeff128 + i, bitcol, num_col, num_col); }
+    for (int i = 0; i < num_col; i++) {
+        svt_av1_fdct64_sse4_1(in + i, outcoeff128 + i, bitcol, num_col, num_col);
+    }
 
     col_txfm_16x16_rounding(outcoeff128, -shift[1]);
     col_txfm_16x16_rounding(outcoeff128 + 64, -shift[1]);
@@ -3810,7 +3857,9 @@ void svt_av1_fwd_txfm2d_16x32_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
     load_buffer_16x16(input, in, stride, 0, 0, shift[0]);
     load_buffer_16x16(input + 16 * stride, in + 64, stride, 0, 0, shift[0]);
 
-    for (int i = 0; i < 4; i++) { col_txfm((in + i), (in + i), bitcol, 4); }
+    for (int i = 0; i < 4; i++) {
+        col_txfm((in + i), (in + i), bitcol, 4);
+    }
     col_txfm_16x16_rounding(&in[0], -shift[1]);
     col_txfm_16x16_rounding(&in[64], -shift[1]);
     transpose_8nx8n(in, outcoef128, 16, 32);
@@ -3973,7 +4022,8 @@ void svt_av1_fwd_txfm2d_16x16_sse4_1(int16_t *input, int32_t *coeff, uint32_t st
         transpose_16x16(out, in);
         write_buffer_16x16(in, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -4060,12 +4110,16 @@ void svt_av1_fwd_txfm2d_8x32_sse4_1(int16_t *input, int32_t *coeff, uint32_t str
     load_buffer_8x16(input, in, stride, 0, 0, shift[0]);
     load_buffer_8x16(input + (txfm_size_row >> 1) * stride, in + txfm_size_row, stride, 0, 0, shift[0]);
 
-    for (int i = 0; i < num_col; i++) { col_txfm((in + i), (in + i), bitcol, num_col); }
+    for (int i = 0; i < num_col; i++) {
+        col_txfm((in + i), (in + i), bitcol, num_col);
+    }
     col_txfm_16x16_rounding(in, -shift[1]);
     transpose_8nx8n(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
-    for (int i = 0; i < txfm_size_col; i += 2) { row_txfm((outcoef128 + i), (in + i), bitrow, txfm_size_col); }
+    for (int i = 0; i < txfm_size_col; i += 2) {
+        row_txfm((outcoef128 + i), (in + i), bitrow, txfm_size_col);
+    }
     transpose_8nx8n(in, outcoef128, txfm_size_row, txfm_size_col);
     (void)bd;
 }
@@ -4248,7 +4302,8 @@ void svt_av1_fwd_txfm2d_8x8_sse4_1(int16_t *input, int32_t *coeff, uint32_t stri
         transpose_8x8(out, in);
         write_buffer_8x8(in, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -4269,7 +4324,9 @@ void svt_av1_fwd_txfm2d_8x4_sse4_1(int16_t *input, int32_t *coeff, uint32_t stri
     get_flip_cfg(tx_type, &ud_flip, &lr_flip);
     // col tranform
     load_buffer_8x4(input, in, stride, ud_flip, lr_flip, shift[0]);
-    for (int i = 0; i < 2; i++) { col_txfm(in + i * txfm_size_row, in + i * txfm_size_row, bitcol, 1); }
+    for (int i = 0; i < 2; i++) {
+        col_txfm(in + i * txfm_size_row, in + i * txfm_size_row, bitcol, 1);
+    }
     col_txfm_4x8_rounding(in, -shift[1]);
 
     // row tranform
@@ -4328,7 +4385,9 @@ void svt_av1_fwd_txfm2d_4x8_sse4_1(int16_t *input, int32_t *coeff, uint32_t stri
     col_txfm_4x8_rounding(in, -shift[1]);
     transpose_8nx8n(in, outcoeff128, txfm_size_col, txfm_size_row);
 
-    for (int i = 0; i < 2; i++) { row_txfm(outcoeff128 + i, in + i * txfm_size_col, bitrow, 2); }
+    for (int i = 0; i < 2; i++) {
+        row_txfm(outcoeff128 + i, in + i * txfm_size_col, bitrow, 2);
+    }
     av1_round_shift_rect_array_32_sse4_1(in, outcoeff128, txfm_size_row, -shift[2]);
     (void)bd;
 }
@@ -6350,20 +6409,24 @@ static AOM_FORCE_INLINE void clear_buffer_wxh_N2(__m128i *buff, int32_t num_col,
 
     //clear top-right quarter
     if (num_col == 1) { //clear top-right quarter
-        for (int i = 0; i < num_row / 2; i++) buff[i * 2 + 1] = zero;
+        for (int i = 0; i < num_row / 2; i++) {
+            buff[i * 2 + 1] = zero;
+        }
     } else {
-        for (int i = 0; i < num_row / 2; i++)
+        for (int i = 0; i < num_row / 2; i++) {
             for (int j = num_col / 2; j < num_col; j++) {
                 buff[2 * (i * num_col + j)]     = zero;
                 buff[2 * (i * num_col + j) + 1] = zero;
             }
+        }
     }
     //clear bottom half
-    for (int i = num_row / 2; i < num_row; i++)
+    for (int i = num_row / 2; i < num_row; i++) {
         for (int j = 0; j < num_col; j++) {
             buff[2 * (i * num_col + j)]     = zero;
             buff[2 * (i * num_col + j) + 1] = zero;
         }
+    }
 }
 
 static void fidtx32x32_N2_col_sse4_1(const __m128i *input, __m128i *output, const int8_t cos_bit) {
@@ -8793,7 +8856,8 @@ void svt_av1_fwd_txfm2d_8x8_N2_sse4_1(int16_t *input, int32_t *coeff, uint32_t s
         transpose_8x8_N2_sse4_1(in, out);
         write_buffer_8x8_N2(out, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -8953,7 +9017,8 @@ void svt_av1_fwd_txfm2d_16x16_N2_sse4_1(int16_t *input, int32_t *coeff, uint32_t
         transpose_8x8_in_16x16_sse4_1(in, out);
         write_buffer_16x16_N2(out, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -8988,7 +9053,8 @@ void svt_av1_fwd_txfm2d_64x64_N2_sse4_1(int16_t *input, int32_t *output, uint32_
         transpose_32x32_in_64x64_sse4_1(in, out); //top-left
         clear_buffer_wxh_N2(out, 8, 64);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -9046,7 +9112,8 @@ void svt_av1_fwd_txfm2d_32x32_N2_sse4_1(int16_t *input, int32_t *output, uint32_
         transpose_16x16_in_32x32_sse4_1(buf_128, out_128); //transpose nonzer output
         clear_buffer_wxh_N2(out_128, 4, 32);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -9076,7 +9143,9 @@ void svt_av1_fwd_txfm2d_16x32_N2_sse4_1(int16_t *input, int32_t *output, uint32_
     case DCT_DCT:
         load_buffer_16x16(input, in, stride, 0, 0, shift[0]);
         load_buffer_16x16(input + 16 * stride, in + 64, stride, 0, 0, shift[0]);
-        for (int32_t i = 0; i < num_col; i++) av1_fdct32_new_N2_sse4_1((in + 2 * i), (in + 2 * i), bitcol, 8, num_col);
+        for (int32_t i = 0; i < num_col; i++) {
+            av1_fdct32_new_N2_sse4_1((in + 2 * i), (in + 2 * i), bitcol, 8, num_col);
+        }
         col_txfm_16x16_rounding(&in[0], -shift[1]);
         transpose_8nx8n_N2_half_sse4_1(in, outcoef128, txfm_size_col, txfm_size_row);
         fdct16x16_N2_sse4_1(outcoef128, in, bitrow, num_row, num_row / 2);
@@ -9084,7 +9153,8 @@ void svt_av1_fwd_txfm2d_16x32_N2_sse4_1(int16_t *input, int32_t *output, uint32_
         av1_round_shift_rect_array_wxh_sse4_1(outcoef128, outcoef128, -shift[2], new_sqrt2, num_col, txfm_size_row);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     (void)bd;
@@ -9124,7 +9194,8 @@ void svt_av1_fwd_txfm2d_32x16_N2_sse4_1(int16_t *input, int32_t *output, uint32_
         av1_round_shift_rect_array_wxh_sse4_1(outcoef128, outcoef128, -shift[2], new_sqrt2, num_col, txfm_size_row);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     (void)bd;
@@ -9166,7 +9237,8 @@ void svt_av1_fwd_txfm2d_8x32_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8nx8n_N2_quad_sse4_1(in, outcoef128, txfm_size_row, txfm_size_col);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     (void)bd;
@@ -9201,7 +9273,9 @@ void svt_av1_fwd_txfm2d_32x8_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         break;
     case DCT_DCT:
         load_buffer_32x8n(input, in, stride, 0, 0, shift[0], txfm_size_row);
-        for (int32_t i = 0; i < num_col; i++) fdct8x8_N2_sse4_1((in + 2 * i), (in + 2 * i), bitcol, num_col);
+        for (int32_t i = 0; i < num_col; i++) {
+            fdct8x8_N2_sse4_1((in + 2 * i), (in + 2 * i), bitcol, num_col);
+        }
         col_txfm_16x16_N2_rounding(&in[0], -shift[1]);
         transpose_8nx8n_N2_half_sse4_1(in, outcoef128, txfm_size_col, txfm_size_row);
         // row transform
@@ -9209,7 +9283,8 @@ void svt_av1_fwd_txfm2d_32x8_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8nx8n_N2_quad_sse4_1(in, outcoef128, txfm_size_row, txfm_size_col);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -9387,7 +9462,8 @@ void svt_av1_fwd_txfm2d_8x16_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8x8_half_sse4_1(out, outcoef128);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     (void)bd;
@@ -9617,7 +9693,8 @@ void svt_av1_fwd_txfm2d_16x8_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         write_buffer_16x8_N2_sse4_1(out, outcoef128);
         clear_buffer_wxh_N2(outcoef128, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     (void)bd;
@@ -9774,7 +9851,8 @@ void svt_av1_fwd_txfm2d_4x8_N2_sse4_1(int16_t *input, int32_t *output, uint32_t 
         av1_round_shift_rect_array_32_sse4_1(in, outcoeff128, 4, -shift[2]);
         write_buffer_4x8_N2(outcoeff128, output);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -9917,7 +9995,8 @@ void svt_av1_fwd_txfm2d_8x4_N2_sse4_1(int16_t *input, int32_t *output, uint32_t 
         av1_round_shift_rect_array_32_sse4_1(in, outcoeff128, 4, -shift[2]);
         clear_buffer_wxh_N2(outcoeff128, 1, 4);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -10056,7 +10135,8 @@ void svt_av1_fwd_txfm2d_4x16_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         fadst4x8_col_N2_sse4_1(in, outcoeff128, bitrow, 2);
         clear_buffer_4x16_N2(outcoeff128);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -10195,7 +10275,8 @@ void svt_av1_fwd_txfm2d_16x4_N2_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_4x8_in_4x16_half_sse4_1(in, outcoeff128);
         clear_buffer_wxh_N2(outcoeff128, 2, 4);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -10218,7 +10299,9 @@ void svt_av1_fwd_txfm2d_32x64_N2_sse4_1(int16_t *input, int32_t *output, uint32_
     load_buffer_32x8n(input, in, stride, 0, 0, shift[0], txfm_size_row);
     av1_fdct64_new_N2_sse4_1(in, in, bitcol, txfm_size_col, num_col);
 
-    for (int32_t i = 0; i < num_row / 2; i++) col_txfm_16x16_rounding((in + 2 * i * txfm_size_col), -shift[1]);
+    for (int32_t i = 0; i < num_row / 2; i++) {
+        col_txfm_16x16_rounding((in + 2 * i * txfm_size_col), -shift[1]);
+    }
     transpose_8nx8n_N2_half_sse4_1(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -10251,7 +10334,9 @@ void svt_av1_fwd_txfm2d_64x32_N2_sse4_1(int16_t *input, int32_t *output, uint32_
 
     av1_fdct32_new_N2_sse4_1(in, in, bitcol, txfm_size_col, num_col);
 
-    for (int32_t i = 0; i < num_col / 2; i++) col_txfm_16x16_rounding(in + 2 * (i * txfm_size_row), -shift[1]);
+    for (int32_t i = 0; i < num_col / 2; i++) {
+        col_txfm_16x16_rounding(in + 2 * (i * txfm_size_row), -shift[1]);
+    }
     transpose_8nx8n_N2_half_sse4_1(in, outcoef128, txfm_size_col, txfm_size_row);
 
     // row transform
@@ -10593,8 +10678,9 @@ static INLINE void av1_round_shift_rect_wxh_N4(__m128i *input, __m128i *output, 
     const __m128i sqrt2       = _mm_set1_epi32(val);
     const __m128i round2      = _mm_set1_epi32(1 << (new_sqrt2_bits - 1));
     int32_t       calc_numcol = num_col >> 2;
-    if (!calc_numcol)
+    if (!calc_numcol) {
         calc_numcol = 1;
+    }
     int32_t i;
 
     if (bit > 0) {
@@ -10709,10 +10795,11 @@ static INLINE void load_buffer_16x16_in_64x64_sse4_1(const int16_t *input, int32
 
 static AOM_FORCE_INLINE void load_buffer_8x16_N4(const int16_t *input, __m128i *out, int32_t stride, int32_t flipud,
                                                  int32_t fliplr, int32_t shift) {
-    if (flipud)
+    if (flipud) {
         load_buffer_8x8(input + 8 * stride, out, stride, flipud, fliplr, shift);
-    else
+    } else {
         load_buffer_8x8(input, out, stride, flipud, fliplr, shift);
+    }
 }
 
 static INLINE void clear_buffer_wxh_N4(__m128i *buff, int32_t num_col, int32_t num_row) {
@@ -10732,18 +10819,20 @@ static INLINE void clear_buffer_wxh_N4(__m128i *buff, int32_t num_col, int32_t n
             buff[i * 4 + 3] = zero;
         }
     } else {
-        for (int i = 0; i < num_row / 4; i++)
+        for (int i = 0; i < num_row / 4; i++) {
             for (int j = num_col / 4; j < num_col; j++) {
                 buff[2 * (i * num_col + j)]     = zero;
                 buff[2 * (i * num_col + j) + 1] = zero;
             }
+        }
     }
     //clear bottom
-    for (int i = num_row / 4; i < num_row; i++)
+    for (int i = num_row / 4; i < num_row; i++) {
         for (int j = 0; j < num_col; j++) {
             buff[2 * (i * num_col + j)]     = zero;
             buff[2 * (i * num_col + j) + 1] = zero;
         }
+    }
 }
 
 static AOM_FORCE_INLINE void clear_buffer_4x16_N4(__m128i *buff) {
@@ -13206,7 +13295,8 @@ void svt_av1_fwd_txfm2d_8x8_N4_sse4_1(int16_t *input, int32_t *coeff, uint32_t s
         transpose_8x8_N2_sse4_1(in, out);
         write_buffer_8x8_N4(out, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13366,7 +13456,8 @@ void svt_av1_fwd_txfm2d_16x16_N4_sse4_1(int16_t *input, int32_t *coeff, uint32_t
         transpose_4x4_in_16x16_sse4_1(in, out);
         write_buffer_16x16_N4(out, coeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13403,7 +13494,8 @@ void svt_av1_fwd_txfm2d_64x64_N4_sse4_1(int16_t *input, int32_t *output, uint32_
         transpose_16x16_in_64x64_sse4_1(in, out); //top-left
         clear_buffer_wxh_N4(out, 8, 64);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -13467,7 +13559,8 @@ void svt_av1_fwd_txfm2d_32x32_N4_sse4_1(int16_t *input, int32_t *output, uint32_
         transpose_8x8_in_32x32_sse4_1(out, buf);
         write_buffer_32x32_N4(buf, output);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }
 
@@ -13496,8 +13589,9 @@ void svt_av1_fwd_txfm2d_16x32_N4_sse4_1(int16_t *input, int32_t *output, uint32_
     case DCT_DCT:
         load_buffer_16x16(input, in, stride, 0, 0, shift[0]);
         load_buffer_16x16(input + 16 * stride, in + 64, stride, 0, 0, shift[0]);
-        for (int32_t i = 0; i < num_col; i++)
+        for (int32_t i = 0; i < num_col; i++) {
             av1_fdct32_new_N4_sse4_1((in + 2 * i), (outcoef + 2 * i), bitcol, 8, num_col);
+        }
         col_txfm_16x16_N2_rounding(&outcoef[0], -shift[1]);
         transpose_8nx8n_N4_half_sse4_1(outcoef, in, txfm_size_col, txfm_size_row);
         fdct16x16_N4_sse4_1(in, outcoef, bitrow, 2 * num_row, num_row);
@@ -13505,7 +13599,8 @@ void svt_av1_fwd_txfm2d_16x32_N4_sse4_1(int16_t *input, int32_t *output, uint32_
         av1_round_shift_rect_wxh_N4(in, outcoef, -shift[2], new_sqrt2, num_col, txfm_size_row);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13544,7 +13639,8 @@ void svt_av1_fwd_txfm2d_32x16_N4_sse4_1(int16_t *input, int32_t *output, uint32_
         av1_round_shift_rect_wxh_N4(in, outcoef, -shift[2], new_sqrt2, num_col, txfm_size_row);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13584,7 +13680,8 @@ void svt_av1_fwd_txfm2d_8x32_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8nx8n_N4_quad_sse4_1(in, outcoef, txfm_size_row, txfm_size_col);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13615,7 +13712,9 @@ void svt_av1_fwd_txfm2d_32x8_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         break;
     case DCT_DCT:
         load_buffer_32x8n(input, in, stride, 0, 0, shift[0], txfm_size_row);
-        for (int32_t i = 0; i < num_col; i++) fdct8x8_N4_sse4_1((in + 2 * i), (in + 2 * i), bitcol, num_col);
+        for (int32_t i = 0; i < num_col; i++) {
+            fdct8x8_N4_sse4_1((in + 2 * i), (in + 2 * i), bitcol, num_col);
+        }
         col_txfm_16x16_N4_rounding(&in[0], -shift[1]);
         transpose_8nx8n_N4_half_sse4_1(in, outcoef, txfm_size_col, txfm_size_row);
         // row transform
@@ -13623,7 +13722,8 @@ void svt_av1_fwd_txfm2d_32x8_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8nx8n_N4_quad_sse4_1(in, outcoef, txfm_size_row, txfm_size_col);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -13794,7 +13894,8 @@ void svt_av1_fwd_txfm2d_8x16_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_8x8_N2_sse4_1(out, outcoef);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -14023,7 +14124,8 @@ void svt_av1_fwd_txfm2d_16x8_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         write_buffer_16x8_N4_sse4_1(out, outcoef);
         clear_buffer_wxh_N4(outcoef, num_col, txfm_size_row);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -14179,7 +14281,8 @@ void svt_av1_fwd_txfm2d_4x8_N4_sse4_1(int16_t *input, int32_t *output, uint32_t 
         av1_round_shift_rect_array_32_sse4_1(in, outcoeff, 2, -shift[2]);
         write_buffer_4x8_N4(outcoeff, output);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -14322,7 +14425,8 @@ void svt_av1_fwd_txfm2d_8x4_N4_sse4_1(int16_t *input, int32_t *output, uint32_t 
         av1_round_shift_rect_array_32_sse4_1(in, outcoeff, 2, -shift[2]);
         clear_buffer_wxh_N4(outcoeff, 1, 4);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -14461,7 +14565,8 @@ void svt_av1_fwd_txfm2d_4x16_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         fadst4x8_col_N4_sse4_1(in, outcoeff, bitrow, 2);
         clear_buffer_4x16_N4(outcoeff);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }
@@ -14604,7 +14709,8 @@ void svt_av1_fwd_txfm2d_16x4_N4_sse4_1(int16_t *input, int32_t *output, uint32_t
         transpose_4x8_in_4x16_quad_sse4_1(in, outcoeff);
         clear_buffer_wxh_N4(outcoeff, 2, 4);
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
     (void)bd;
 }

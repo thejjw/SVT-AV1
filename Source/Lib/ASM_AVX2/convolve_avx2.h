@@ -76,14 +76,15 @@ static INLINE bool is_convolve_6tap(const int16_t *const filter) {
 }
 
 static INLINE int32_t get_convolve_tap(const int16_t *const filter) {
-    if (is_convolve_2tap(filter))
+    if (is_convolve_2tap(filter)) {
         return 2;
-    else if (is_convolve_4tap(filter))
+    } else if (is_convolve_4tap(filter)) {
         return 4;
-    else if (is_convolve_6tap(filter))
+    } else if (is_convolve_6tap(filter)) {
         return 6;
-    else
+    } else {
         return 8;
+    }
 }
 
 static INLINE void populate_coeffs_4tap_avx2(const __m128i coeffs_128, __m256i coeffs[2]) {

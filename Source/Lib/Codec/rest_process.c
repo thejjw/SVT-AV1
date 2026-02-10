@@ -58,8 +58,9 @@ static void rest_context_dctor(EbPtr p) {
     EB_DELETE(obj->trial_frame_rst);
     // buffer only malloc'd if boundaries are used in rest. search.
     // see scs->seq_header.use_boundaries_in_rest_search
-    if (obj->org_rec_frame)
+    if (obj->org_rec_frame) {
         EB_DELETE(obj->org_rec_frame);
+    }
     EB_FREE_ALIGNED(obj->rst_tmpbuf);
     EB_FREE_ARRAY(obj);
 }
@@ -107,18 +108,21 @@ EbErrorType svt_aom_rest_context_ctor(EbThreadContext *thread_ctx, const EbEncHa
         init_data.is_16bit_pipeline  = is_16bit;
 
         EB_NEW(context_ptr->trial_frame_rst, svt_picture_buffer_desc_ctor, (EbPtr)&init_data);
-        if (scs->use_boundaries_in_rest_search)
+        if (scs->use_boundaries_in_rest_search) {
             EB_NEW(context_ptr->org_rec_frame, svt_picture_buffer_desc_ctor, (EbPtr)&init_data);
-        else
+        } else {
             context_ptr->org_rec_frame = NULL;
+        }
         if (!is_16bit) {
             context_ptr->trial_frame_rst->bit_depth = EB_EIGHT_BIT;
-            if (scs->use_boundaries_in_rest_search)
+            if (scs->use_boundaries_in_rest_search) {
                 context_ptr->org_rec_frame->bit_depth = EB_EIGHT_BIT;
+            }
         }
         context_ptr->rst_tmpbuf = NULL;
-        if (svt_aom_get_enable_sg(config->enc_mode, scs->input_resolution, config->fast_decode, allintra))
+        if (svt_aom_get_enable_sg(config->enc_mode, scs->input_resolution, config->fast_decode, allintra)) {
             EB_MALLOC_ALIGNED(context_ptr->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
+        }
     }
 
     return EB_ErrorNone;
@@ -170,8 +174,9 @@ static EbPictureBufferDesc *get_own_recon(SequenceControlSet *scs, PictureContro
 
     int rec_width = recon_pic->width << is_16bit;
 
-    for (int r = 0; r < recon_pic->height; ++r)
+    for (int r = 0; r < recon_pic->height; ++r) {
         svt_memcpy(org_ptr + r * org_stride_y, rec_ptr + r * rec_stride_y, rec_width);
+    }
 
     for (int r = 0; r < (recon_pic->height >> ss_y); ++r) {
         svt_memcpy(org_ptr_cb + r * org_stride_cb, rec_ptr_cb + r * rec_stride_cb, rec_width >> ss_x);
@@ -189,8 +194,9 @@ static void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs, SequenceContr
     pcs->skip_coded_area  = (100 * pcs->skip_coded_area) / (ppcs->aligned_width * ppcs->aligned_height);
     pcs->hp_coded_area    = (100 * pcs->hp_coded_area) / (ppcs->aligned_width * ppcs->aligned_height);
     pcs->avg_cnt_zeromv   = (100 * pcs->avg_cnt_zeromv) / (ppcs->aligned_width * ppcs->aligned_height);
-    if (pcs->slice_type == I_SLICE)
+    if (pcs->slice_type == I_SLICE) {
         pcs->intra_coded_area = 0;
+    }
     obj->intra_coded_area = (uint8_t)pcs->intra_coded_area;
     obj->skip_coded_area  = (uint8_t)pcs->skip_coded_area;
     obj->hp_coded_area    = (uint8_t)pcs->hp_coded_area;
@@ -233,8 +239,9 @@ static void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs, SequenceContr
             int32_t ntiles = pcs->rst_info[plane].units_per_tile;
             for (int32_t u = 0; u < ntiles; ++u) {
                 obj->unit_info[plane][u].restoration_type = pcs->rst_info[plane].unit_info[u].restoration_type;
-                if (pcs->rst_info[plane].unit_info[u].restoration_type == RESTORE_WIENER)
+                if (pcs->rst_info[plane].unit_info[u].restoration_type == RESTORE_WIENER) {
                     obj->unit_info[plane][u].wiener_info = pcs->rst_info[plane].unit_info[u].wiener_info;
+                }
             }
         }
     }
@@ -308,8 +315,9 @@ void *svt_aom_rest_kernel(void *input_ptr) {
                     for (int32_t u = 0; u < ntiles; ++u) {
                         pcs->rst_info[plane].unit_info[u].restoration_type =
                             ref_obj_l0->unit_info[plane][u].restoration_type;
-                        if (ref_obj_l0->unit_info[plane][u].restoration_type == RESTORE_WIENER)
+                        if (ref_obj_l0->unit_info[plane][u].restoration_type == RESTORE_WIENER) {
                             pcs->rst_info[plane].unit_info[u].wiener_info = ref_obj_l0->unit_info[plane][u].wiener_info;
+                        }
                     }
                 }
             }
@@ -351,9 +359,9 @@ void *svt_aom_rest_kernel(void *input_ptr) {
 
             // Pad the reference picture and set ref POC
             {
-                if (ppcs->is_ref == true)
+                if (ppcs->is_ref == true) {
                     pad_ref_and_set_flags(pcs, scs);
-                else {
+                } else {
                     // convert non-reference frame buffer from 16-bit to 8-bit, to export recon and
                     // psnr/ssim calculation
                     if (is_16bit && scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {

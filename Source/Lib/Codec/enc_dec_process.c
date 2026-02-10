@@ -90,7 +90,7 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEn
 
     // Prediction Buffer
     ed_ctx->input_sample16bit_buffer = NULL;
-    if (ed_ctx->is_16bit)
+    if (ed_ctx->is_16bit) {
         EB_NEW(ed_ctx->input_sample16bit_buffer,
                svt_picture_buffer_desc_ctor,
                &(EbPictureBufferDescInitData){
@@ -105,6 +105,7 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEn
                    .split_mode         = false,
                    .color_format       = color_format,
                });
+    }
     // Mode Decision Context
     EB_NEW(ed_ctx->md_ctx,
            svt_aom_mode_decision_context_ctor,
@@ -119,8 +120,9 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEn
            enable_hbd_mode_decision == DEFAULT ? 2 : enable_hbd_mode_decision,
            scs->seq_qp_mod);
 
-    if (enable_hbd_mode_decision)
+    if (enable_hbd_mode_decision) {
         ed_ctx->md_ctx->input_sample16bit_buffer = ed_ctx->input_sample16bit_buffer;
+    }
 
     ed_ctx->md_ctx->ed_ctx = ed_ctx;
 
@@ -131,8 +133,9 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEn
  * Reset Segmentation Map
  *************************************************/
 static void reset_segmentation_map(SegmentationNeighborMap *segmentation_map) {
-    if (segmentation_map->data != NULL)
+    if (segmentation_map->data != NULL) {
         EB_MEMSET(segmentation_map->data, ~0, segmentation_map->map_size);
+    }
 }
 
 /**************************************************
@@ -308,9 +311,9 @@ static bool assign_enc_dec_segments(EncDecSegments *segmentPtr, uint16_t *segmen
             --segmentPtr->dep_map.dependency_map[bottom_left_segment_index];
 
             if (segmentPtr->dep_map.dependency_map[bottom_left_segment_index] == 0) {
-                if (self_assigned == true)
+                if (self_assigned == true) {
                     feedback_row_index = (int16_t)row_segment_index + 1;
-                else {
+                } else {
                     *segmentInOutIndex = segmentPtr->row_array[row_segment_index + 1].current_seg_index;
                     ++segmentPtr->row_array[row_segment_index + 1].current_seg_index;
                     continue_processing_flag = true;
@@ -332,7 +335,8 @@ static bool assign_enc_dec_segments(EncDecSegments *segmentPtr, uint16_t *segmen
 
         break;
 
-    default: break;
+    default:
+        break;
     }
 
     return continue_processing_flag;
@@ -449,8 +453,9 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
         output_recon_ptr->flags              = 0;
 
         // START READ/WRITE PROTECTED SECTION
-        if (enc_ctx->total_number_of_recon_frames == enc_ctx->terminating_picture_number)
+        if (enc_ctx->total_number_of_recon_frames == enc_ctx->terminating_picture_number) {
             output_recon_ptr->flags = EB_BUFFERFLAG_EOS;
+        }
 
         enc_ctx->total_number_of_recon_frames++;
 
@@ -497,10 +502,11 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
                 EB_NO_THROW_NEW(
                     intermediate_buffer_ptr, svt_recon_picture_buffer_desc_ctor, (EbPtr)&temp_recon_desc_init_data);
 
-                if (pcs->ppcs->is_ref == true)
+                if (pcs->ppcs->is_ref == true) {
                     film_grain_ptr = &((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->film_grain_params;
-                else
+                } else {
                     film_grain_ptr = &pcs->ppcs->frm_hdr.film_grain_params;
+                }
 
                 if (intermediate_buffer_ptr) {
                     svt_av1_add_film_grain(recon_ptr, intermediate_buffer_ptr, film_grain_ptr);
@@ -725,8 +731,9 @@ static double aom_ssim2(const uint8_t *img1, int stride_img1, const uint8_t *img
     double ssim_total = 0;
 
     // region too small to compute meaningful SSIM score
-    if (width <= 8 || height <= 8)
+    if (width <= 8 || height <= 8) {
         return NAN;
+    }
 
     // sample point start with each 4x4 location
     for (i = 0; i <= height - 8; i += 4, img1 += stride_img1 * 4, img2 += stride_img2 * 4) {
@@ -749,8 +756,9 @@ static double aom_highbd_ssim2(const uint8_t *img1, int stride_img1, const uint8
     double ssim_total = 0;
 
     // region too small to compute meaningful SSIM score
-    if (width <= 8 || height <= 8)
+    if (width <= 8 || height <= 8) {
         return NAN;
+    }
 
     // sample point start with each 4x4 location
     for (i = 0; i <= height - 8;
@@ -989,7 +997,9 @@ static int64_t get_sse_10bit(const uint8_t *a_hi, int32_t a_hi_stride, const uin
     int64_t sse = 0;
 
     for (int j = 0; j < height; ++j) {
-        for (int i = 0; i < width; ++i) { sse += SQR(((a_hi[i] << 2) | (a_lo[i] >> 6)) - b[i]); }
+        for (int i = 0; i < width; ++i) {
+            sse += SQR(((a_hi[i] << 2) | (a_lo[i] >> 6)) - b[i]);
+        }
 
         a_hi += a_hi_stride;
         a_lo += a_lo_stride;
@@ -1526,13 +1536,16 @@ static void set_blocks_to_test(PictureControlSet *pcs, ModeDecisionContext *ctx,
             if ((has_cols && part != PART_H) || (has_rows && part != PART_V))
                 continue;
         }
-        if ((part == PART_H4 || part == PART_V4) && sq_size == 128)
+        if ((part == PART_H4 || part == PART_V4) && sq_size == 128) {
             continue;
+        }
         if (!ctx->nsq_geom_ctrls.allow_HVA_HVB &&
-            (part == PART_HA || part == PART_HB || part == PART_VA || part == PART_VB))
+            (part == PART_HA || part == PART_HB || part == PART_VA || part == PART_VB)) {
             continue;
-        if (!ctx->nsq_geom_ctrls.allow_HV4 && (part == PART_H4 || part == PART_V4))
+        }
+        if (!ctx->nsq_geom_ctrls.allow_HV4 && (part == PART_H4 || part == PART_V4)) {
             continue;
+        }
         shapes[shapes_idx++] = part;
     }
     *tot_shapes = shapes_idx;
@@ -1681,6 +1694,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
             const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
             if (split_cost * 10000 < ctx->md_blk_arr_nsq[parent_depth_idx_mds].default_cost * lower_depth_split_cost_th)
                 *s_depth = 0;
+            }
         }
     }
 
@@ -1707,8 +1721,9 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
                                                                 ctx->blk_ptr->above_part_ctx);
         const uint64_t split_cost  = RDCOST(full_lambda, split_rate, 0);
 
-        if (split_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * split_cost_th)
+        if (split_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * split_cost_th) {
             *e_depth = 0;
+        }
     }
 
     // Use info from ref. frames (if available)
@@ -1784,17 +1799,19 @@ static void is_parent_to_current_deviation_small(PictureControlSet *pcs, ModeDec
             (int64_t)MAX((ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * 4), 1);
 
         if (parent_to_current_deviation >= s1_parent_to_current_th &&
-            ctx->md_blk_arr_nsq[parent_depth_idx_mds].default_cost >= max_cost)
+            ctx->md_blk_arr_nsq[parent_depth_idx_mds].default_cost >= max_cost) {
             *s_depth = 0;
-        else if (parent_to_current_deviation >= s2_parent_to_current_th)
+        } else if (parent_to_current_deviation >= s2_parent_to_current_th) {
             *s_depth = -1;
-        else
+        } else {
             *s_depth = MAX(*s_depth, -2);
+        }
     } else {
-        if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 0)
+        if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 0) {
             *s_depth = 0;
-        else if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 1)
+        } else if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 1) {
             *s_depth = MAX(*s_depth, -1);
+        }
     }
 }
 
@@ -1872,17 +1889,19 @@ static void is_child_to_current_deviation_small(PictureControlSet *pcs, ModeDeci
                                                100) /
             (int64_t)(MAX(ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost, 1));
 
-        if (child_to_current_deviation >= e1_sub_to_current_th)
+        if (child_to_current_deviation >= e1_sub_to_current_th) {
             *e_depth = 0;
-        else if (child_to_current_deviation >= e2_sub_to_current_th)
+        } else if (child_to_current_deviation >= e2_sub_to_current_th) {
             *e_depth = 1;
-        else
+        } else {
             *e_depth = MIN(*e_depth, 2);
+        }
     } else {
-        if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 0)
+        if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 0) {
             *e_depth = 0;
-        else if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 1)
+        } else if (ctx->depth_refinement_ctrls.pd0_unavail_mode_depth == 1) {
             *e_depth = MIN(*e_depth, 1);
+        }
     }
 }
 
@@ -2171,8 +2190,9 @@ static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSe
         }
 
         // 2pass QPM with tpl_la
-        if (scs->static_config.aq_mode == 2 && ppcs->tpl_ctrls.enable && ppcs->r0 != 0)
+        if (scs->static_config.aq_mode == 2 && ppcs->tpl_ctrls.enable && ppcs->r0 != 0) {
             svt_aom_sb_qp_derivation_tpl_la(pcs);
+        }
 
         if (pcs->ppcs->frm_hdr.delta_q_params.delta_q_present && pcs->ppcs->frm_hdr.delta_q_params.delta_q_res != 1) {
             // adjust delta q res and normalize superblock delta q values to reduce signaling overhead
@@ -2217,8 +2237,9 @@ static void exaustive_light_pd1_features(ModeDecisionContext *md_ctx, PicturePar
 not performed, a separate detector (lpd1_detector_skip_pd0) is used. */
 static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *md_ctx) {
     for (int pd1_lvl = LPD1_LEVELS - 1; pd1_lvl > REGULAR_PD1; pd1_lvl--) {
-        if (pd1_lvl <= (md_ctx->pd1_lvl_refinement - 1))
+        if (pd1_lvl <= (md_ctx->pd1_lvl_refinement - 1)) {
             break;
+        }
         if (md_ctx->lpd1_ctrls.pd1_level == pd1_lvl) {
             if (md_ctx->lpd1_ctrls.use_lpd1_detector[pd1_lvl]) {
                 // Use info from ref frames (if available)
@@ -2292,11 +2313,13 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     const uint16_t max_mv_length = md_ctx->lpd1_ctrls.max_mv_length[pd1_lvl];
 
                     // unipred MVs always stored in idx0
-                    if (blk_ptr->block_mi.mv[0].x > max_mv_length || blk_ptr->block_mi.mv[0].y > max_mv_length)
+                    if (blk_ptr->block_mi.mv[0].x > max_mv_length || blk_ptr->block_mi.mv[0].y > max_mv_length) {
                         md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
+                    }
                     if (has_second_ref(&blk_ptr->block_mi)) {
-                        if (blk_ptr->block_mi.mv[1].x > max_mv_length || blk_ptr->block_mi.mv[1].y > max_mv_length)
+                        if (blk_ptr->block_mi.mv[1].x > max_mv_length || blk_ptr->block_mi.mv[1].y > max_mv_length) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
+                        }
                     }
                 }
 
@@ -2305,8 +2328,9 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
                         (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                     if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                         pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp))
+                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
                         md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
+                    }
                 }
             }
         }
@@ -2320,8 +2344,9 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
     const uint16_t top_sb_index  = md_ctx->sb_index - (uint16_t)pic_width_in_sb;
 
     for (int pd1_lvl = LPD1_LEVELS - 1; pd1_lvl > REGULAR_PD1; pd1_lvl--) {
-        if (pd1_lvl <= (md_ctx->pd1_lvl_refinement - 1))
+        if (pd1_lvl <= (md_ctx->pd1_lvl_refinement - 1)) {
             break;
+        }
         if (md_ctx->lpd1_ctrls.pd1_level == pd1_lvl) {
             if (md_ctx->lpd1_ctrls.use_lpd1_detector[pd1_lvl]) {
                 // Use info from ref. frames (if available)
@@ -2342,16 +2367,20 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l0->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             if (ref_obj_l0->slice_type != I_SLICE) {
-                                if (ref_obj_l0->sb_intra[md_ctx->sb_index])
+                                if (ref_obj_l0->sb_intra[md_ctx->sb_index]) {
                                     score += 5;
-                                if (!ref_obj_l0->sb_skip[md_ctx->sb_index])
+                                }
+                                if (!ref_obj_l0->sb_skip[md_ctx->sb_index]) {
                                     score += 5;
+                                }
                                 if (pcs->ppcs->me_64x64_distortion[md_ctx->sb_index] >
-                                    (ref_obj_l0->sb_me_64x64_dist[md_ctx->sb_index] * 3))
+                                    (ref_obj_l0->sb_me_64x64_dist[md_ctx->sb_index] * 3)) {
                                     score += 5;
+                                }
                                 if (pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                    (ref_obj_l0->sb_me_8x8_cost_var[md_ctx->sb_index] * 3))
+                                    (ref_obj_l0->sb_me_8x8_cost_var[md_ctx->sb_index] * 3)) {
                                     score += 5;
+                                }
                             } else {
                                 score += 10;
                             }
@@ -2368,16 +2397,20 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l1->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             if (ref_obj_l1->slice_type != I_SLICE) {
-                                if (ref_obj_l1->sb_intra[md_ctx->sb_index])
+                                if (ref_obj_l1->sb_intra[md_ctx->sb_index]) {
                                     score += 5;
-                                if (!ref_obj_l1->sb_skip[md_ctx->sb_index])
+                                }
+                                if (!ref_obj_l1->sb_skip[md_ctx->sb_index]) {
                                     score += 5;
+                                }
                                 if (pcs->ppcs->me_64x64_distortion[md_ctx->sb_index] >
-                                    (ref_obj_l1->sb_me_64x64_dist[md_ctx->sb_index] * 3))
+                                    (ref_obj_l1->sb_me_64x64_dist[md_ctx->sb_index] * 3)) {
                                     score += 5;
+                                }
                                 if (pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                    (ref_obj_l1->sb_me_8x8_cost_var[md_ctx->sb_index] * 3))
+                                    (ref_obj_l1->sb_me_8x8_cost_var[md_ctx->sb_index] * 3)) {
                                     score += 5;
+                                }
                             } else {
                                 score += 10;
                             }
@@ -2397,27 +2430,29 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     // If the SB origin of one dimension is zero, then this SB is the first block in a row/column, so won't have neighbours
                     if (md_ctx->sb_origin_x == 0 || md_ctx->sb_origin_y == 0) {
                         if (pcs->ppcs->me_64x64_distortion[md_ctx->sb_index] >
-                            md_ctx->lpd1_ctrls.skip_pd0_edge_dist_th[pd1_lvl])
+                            md_ctx->lpd1_ctrls.skip_pd0_edge_dist_th[pd1_lvl]) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
+                        }
 
                         /* me_8x8_cost_variance_th is shifted by 5 then mulitplied by 73 minus pic_qp.  Therefore, the TH must be less than
                             (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                         if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                             pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp))
+                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
+                        }
                     } else {
                         if (md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl] != (uint16_t)~0 &&
                             pcs->ppcs->me_64x64_distortion[md_ctx->sb_index] >
                                 ((pcs->ppcs->me_64x64_distortion[left_sb_index] +
                                   pcs->ppcs->me_64x64_distortion[top_sb_index])
-                                 << md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl]))
+                                 << md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl])) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
-                        else if (md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl] != (uint16_t)~0 &&
-                                 pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                     ((pcs->ppcs->me_8x8_cost_variance[left_sb_index] +
-                                       pcs->ppcs->me_8x8_cost_variance[top_sb_index])
-                                      << md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl])) {
+                        } else if (md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl] != (uint16_t)~0 &&
+                                   pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
+                                       ((pcs->ppcs->me_8x8_cost_variance[left_sb_index] +
+                                         pcs->ppcs->me_8x8_cost_variance[top_sb_index])
+                                        << md_ctx->lpd1_ctrls.skip_pd0_me_shift[pd1_lvl])) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
                         } else if (md_ctx->lpd1_ctrls.use_ref_info[pd1_lvl]) {
                             // Use info from neighbouring SBs
@@ -2520,18 +2555,19 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
                     const uint16_t left_sb_index = sb_index - 1;
                     const uint16_t top_sb_index  = sb_index - (uint16_t)pic_width_in_sb;
                     if (md_ctx->sb_origin_x == 0 || md_ctx->sb_origin_y == 0) {
-                        if (me_64x64_distortion > lpd0_ctrls->edge_dist_th[pd0_lvl])
+                        if (me_64x64_distortion > lpd0_ctrls->edge_dist_th[pd0_lvl]) {
                             lpd0_ctrls->pd0_level = pd0_lvl - 1;
+                        }
                     } else {
                         if (lpd0_ctrls->neigh_me_dist_shift[pd0_lvl] != (uint16_t)~0 &&
                             me_64x64_distortion >
                                 ((ppcs->me_64x64_distortion[left_sb_index] + ppcs->me_64x64_distortion[top_sb_index])
-                                 << lpd0_ctrls->neigh_me_dist_shift[pd0_lvl]))
+                                 << lpd0_ctrls->neigh_me_dist_shift[pd0_lvl])) {
                             lpd0_ctrls->pd0_level = pd0_lvl - 1;
-                        else if (lpd0_ctrls->neigh_me_dist_shift[pd0_lvl] != (uint16_t)~0 &&
-                                 me_8x8_cost_variance > ((ppcs->me_8x8_cost_variance[left_sb_index] +
-                                                          ppcs->me_8x8_cost_variance[top_sb_index])
-                                                         << lpd0_ctrls->neigh_me_dist_shift[pd0_lvl])) {
+                        } else if (lpd0_ctrls->neigh_me_dist_shift[pd0_lvl] != (uint16_t)~0 &&
+                                   me_8x8_cost_variance > ((ppcs->me_8x8_cost_variance[left_sb_index] +
+                                                            ppcs->me_8x8_cost_variance[top_sb_index])
+                                                           << lpd0_ctrls->neigh_me_dist_shift[pd0_lvl])) {
                             lpd0_ctrls->pd0_level = pd0_lvl - 1;
                         } else if (lpd0_ctrls->use_ref_info[pd0_lvl]) {
                             // Use info from neighbouring SBs
@@ -2551,17 +2587,20 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
 }
 
 static EbErrorType rtime_alloc_palette_search_buffers(ModeDecisionContext *ctx) {
-    if (!ctx->palette_buffer)
+    if (!ctx->palette_buffer) {
         EB_MALLOC_OBJECT(ctx->palette_buffer);
+    }
 
     if (!ctx->palette_cand_array) {
         EB_MALLOC_ARRAY(ctx->palette_cand_array, MAX_PAL_CAND);
-        for (int cd = 0; cd < MAX_PAL_CAND; cd++)
+        for (int cd = 0; cd < MAX_PAL_CAND; cd++) {
             EB_MALLOC_ARRAY(ctx->palette_cand_array[cd].color_idx_map, MAX_PALETTE_SQUARE);
+        }
     }
 
-    if (!ctx->palette_size_array_0)
+    if (!ctx->palette_size_array_0) {
         EB_MALLOC_ARRAY(ctx->palette_size_array_0, MAX_PAL_CAND);
+    }
 
     return EB_ErrorNone;
 }
@@ -2845,10 +2884,10 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
             }
 
             if (pcs->cdf_ctrl.enabled) {
-                if (!pcs->cdf_ctrl.update_mv)
+                if (!pcs->cdf_ctrl.update_mv) {
                     copy_mv_rate(pcs, ed_ctx->md_ctx->rate_est_table);
-                if (!pcs->cdf_ctrl.update_se)
-
+                }
+                if (!pcs->cdf_ctrl.update_se) {
                     svt_aom_estimate_syntax_rate(ed_ctx->md_ctx->rate_est_table,
                                                  pcs->slice_type == I_SLICE ? true : false,
                                                  scs->seq_header.filter_intra_level,
@@ -2856,8 +2895,10 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                  pcs->ppcs->enable_restoration,
                                                  pcs->ppcs->frm_hdr.allow_intrabc,
                                                  &pcs->md_frame_context);
-                if (!pcs->cdf_ctrl.update_coef)
+                }
+                if (!pcs->cdf_ctrl.update_coef) {
                     svt_aom_estimate_coefficients_rate(ed_ctx->md_ctx->rate_est_table, &pcs->md_frame_context);
+                }
             }
             // Segment-loop
             while (assign_enc_dec_segments(
@@ -2908,10 +2949,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         if (pcs->cdf_ctrl.enabled) {
                             if (scs->pic_based_rate_est && scs->enc_dec_segment_row_count_array == 1 &&
                                 scs->enc_dec_segment_col_count_array == 1) {
-                                if (sb_index == 0)
+                                if (sb_index == 0) {
                                     pcs->ec_ctx_array[sb_index] = pcs->md_frame_context;
-                                else
+                                } else {
                                     pcs->ec_ctx_array[sb_index] = pcs->ec_ctx_array[sb_index - 1];
+                                }
                             } else {
                                 // Use the latest available CDF for the current SB
                                 // Use the weighted average of left (3x) and top right (1x) if available.
@@ -2923,13 +2965,13 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 int8_t left_available = ((int32_t)(sb_origin_x >> MI_SIZE_LOG2) >
                                                          sb_ptr->tile_info.mi_col_start);
 
-                                if (!left_available && !top_right_available)
+                                if (!left_available && !top_right_available) {
                                     pcs->ec_ctx_array[sb_index] = pcs->md_frame_context;
-                                else if (!left_available)
+                                } else if (!left_available) {
                                     pcs->ec_ctx_array[sb_index] = pcs->ec_ctx_array[sb_index - pic_width_in_sb + 1];
-                                else if (!top_right_available)
+                                } else if (!top_right_available) {
                                     pcs->ec_ctx_array[sb_index] = pcs->ec_ctx_array[sb_index - 1];
-                                else {
+                                } else {
                                     pcs->ec_ctx_array[sb_index] = pcs->ec_ctx_array[sb_index - 1];
                                     avg_cdf_symbols(&pcs->ec_ctx_array[sb_index],
                                                     &pcs->ec_ctx_array[sb_index - pic_width_in_sb + 1],
@@ -2938,7 +2980,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 }
                             }
                             // Initial Rate Estimation of the syntax elements
-                            if (pcs->cdf_ctrl.update_se)
+                            if (pcs->cdf_ctrl.update_se) {
                                 svt_aom_estimate_syntax_rate(ed_ctx->md_ctx->rate_est_table,
                                                              pcs->slice_type == I_SLICE,
                                                              scs->seq_header.filter_intra_level,
@@ -2946,14 +2988,17 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                              pcs->ppcs->enable_restoration,
                                                              pcs->ppcs->frm_hdr.allow_intrabc,
                                                              &pcs->ec_ctx_array[sb_index]);
+                            }
                             // Initial Rate Estimation of the Motion vectors
-                            if (pcs->cdf_ctrl.update_mv)
+                            if (pcs->cdf_ctrl.update_mv) {
                                 svt_aom_estimate_mv_rate(
                                     pcs, ed_ctx->md_ctx->rate_est_table, &pcs->ec_ctx_array[sb_index]);
+                            }
 
-                            if (pcs->cdf_ctrl.update_coef)
+                            if (pcs->cdf_ctrl.update_coef) {
                                 svt_aom_estimate_coefficients_rate(ed_ctx->md_ctx->rate_est_table,
                                                                    &pcs->ec_ctx_array[sb_index]);
+                            }
                             ed_ctx->md_ctx->md_rate_est_ctx = ed_ctx->md_ctx->rate_est_table;
                         }
 
@@ -2969,8 +3014,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         if (pcs->ppcs->palette_level) {
                             rtime_alloc_palette_search_buffers(md_ctx);
                             // Status of palette info alloc
-                            for (int i = 0; i < scs->max_block_cnt; ++i)
+                            for (int i = 0; i < scs->max_block_cnt; ++i) {
                                 ed_ctx->md_ctx->md_blk_arr_nsq[i].palette_mem = 0;
+                            }
                         }
 
                         // Initialize is_subres_safe
@@ -2990,8 +3036,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         }
 
                         // PD0 is only skipped if there is a single depth to test
-                        if (skip_pd_pass_0)
+                        if (skip_pd_pass_0) {
                             md_ctx->pred_depth_only = 1;
+                        }
 
                         // Multi-Pass PD
                         if (!skip_pd_pass_0 && pcs->ppcs->multi_pass_pd_level == MULTI_PASS_PD_ON) {
@@ -3007,13 +3054,14 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                 // [PD_PASS_0] Signal(s) derivation
                                 svt_aom_sig_deriv_enc_dec_light_pd0(scs, pcs, ed_ctx->md_ctx);
                                 // Save a clean copy of the neighbor arrays
-                                if (!ed_ctx->md_ctx->skip_intra)
+                                if (!ed_ctx->md_ctx->skip_intra) {
                                     copy_neighbour_arrays_light_pd0(pcs,
                                                                     ed_ctx->md_ctx,
                                                                     MD_NEIGHBOR_ARRAY_INDEX,
                                                                     MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX,
                                                                     sb_origin_x,
                                                                     sb_origin_y);
+                                }
 
                                 set_blocks_to_be_tested(scs, pcs, md_ctx, md_ctx->mds, 0);
                                 svt_aom_init_sb_data(scs, pcs, md_ctx);
@@ -3026,13 +3074,14 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                                                             md_ctx->sb_origin_x >> 2);
                                 // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
                                 // Reset neighbor information to current SB @ position (0,0)
-                                if (!ed_ctx->md_ctx->skip_intra)
+                                if (!ed_ctx->md_ctx->skip_intra) {
                                     copy_neighbour_arrays_light_pd0(pcs,
                                                                     ed_ctx->md_ctx,
                                                                     MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX,
                                                                     MD_NEIGHBOR_ARRAY_INDEX,
                                                                     sb_origin_x,
                                                                     sb_origin_y);
+                                }
                             } else {
                                 // [PD_PASS_0] Signal(s) derivation
                                 svt_aom_sig_deriv_enc_dec(scs, pcs, ed_ctx->md_ctx);
@@ -3065,8 +3114,9 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             }
                             // This classifier is used for only pd0_level 0 and pd0_level 1
                             // where the cnt_nz_coeff is derived @ PD0
-                            if (md_ctx->lpd0_ctrls.pd0_level < VERY_LIGHT_PD0)
+                            if (md_ctx->lpd0_ctrls.pd0_level < VERY_LIGHT_PD0) {
                                 lpd1_detector_post_pd0(pcs, md_ctx);
+                            }
                             // Force pred depth only for modes where that is not the default
                             if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1) {
                                 ed_ctx->md_ctx->depth_refinement_ctrls.mode = PD0_DEPTH_PRED_PART_ONLY;
@@ -3094,10 +3144,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             md_ctx->lpd1_ctrls.pd1_level = REGULAR_PD1;
                         }
                         exaustive_light_pd1_features(md_ctx, ppcs, md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1, 0);
-                        if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1)
+                        if (md_ctx->lpd1_ctrls.pd1_level > REGULAR_PD1) {
                             svt_aom_sig_deriv_enc_dec_light_pd1(pcs, ed_ctx->md_ctx);
-                        else
+                        } else {
                             svt_aom_sig_deriv_enc_dec(scs, pcs, ed_ctx->md_ctx);
+                        }
                         // If there is only one depth and no NSQ search at PD1, then the partition structure
                         // is fixed.
                         md_ctx->fixed_partition = md_ctx->pred_depth_only && md_ctx->md_disallow_nsq_search;
@@ -3272,10 +3323,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                     // even if the current frame did not use it.  This enables REF frames to
                     // have the feature off, while NREF frames can have it on.  Used for
                     // multi-threading.
-                    if (pcs->ppcs->is_ref == true && pcs->ppcs->ref_pic_wrapper)
-                        for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame)
+                    if (pcs->ppcs->is_ref == true && pcs->ppcs->ref_pic_wrapper) {
+                        for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame) {
                             ((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->global_motion[frame] =
                                 pcs->ppcs->global_motion[frame];
+                        }
+                    }
                     svt_memcpy(pcs->ppcs->av1x->sgrproj_restore_cost,
                                pcs->md_rate_est_ctx->sgrproj_restore_fac_bits,
                                2 * sizeof(int32_t));

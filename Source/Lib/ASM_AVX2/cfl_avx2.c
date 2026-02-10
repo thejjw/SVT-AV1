@@ -49,10 +49,11 @@ void svt_cfl_predict_lbd_avx2(const int16_t *pred_buf_q3, uint8_t *pred, int32_t
             __m128i res = predict_unclipped_ssse3(row, alpha_q12, alpha_sign, dc_q0);
             if (width < 16) {
                 res = _mm_packus_epi16(res, res);
-                if (width == 4)
+                if (width == 4) {
                     _mm_storeh_epi32((__m128i *)dst, res);
-                else
+                } else {
                     _mm_storel_epi64((__m128i *)dst, res);
+                }
             } else {
                 __m128i next = predict_unclipped_ssse3(row + 1, alpha_q12, alpha_sign, dc_q0);
                 res          = _mm_packus_epi16(res, next);
@@ -116,10 +117,11 @@ void svt_cfl_predict_hbd_avx2(const int16_t *pred_buf_q3,
         do {
             __m128i res = predict_unclipped_ssse3(row, alpha_q12, alpha_sign, dc_q0);
             res         = highbd_clamp_epi16_ssse3(res, zeros, max);
-            if (width == 4)
+            if (width == 4) {
                 _mm_storel_epi64((__m128i *)dst, res);
-            else
+            } else {
                 _mm_storeu_si128((__m128i *)dst, res);
+            }
             dst += dst_stride;
         } while ((row += CFL_BUF_LINE_I128) < row_end);
     } else {
@@ -208,9 +210,9 @@ static INLINE __m256i _mm256_addl_epi16(__m256i a) {
         src          = (__m128i *)pred_buf_q3;
         __m128i *dst = (__m128i *)pred_buf_q3;
         do {
-            if (width == 4)
+            if (width == 4) {
                 _mm_storel_epi64(dst, _mm_sub_epi16(_mm_loadl_epi64(src), avg_epi16));
-            else {
+            } else {
                 _mm_storeu_si128(dst, _mm_sub_epi16(_mm_loadu_si128(src), avg_epi16));
             }
             src += CFL_BUF_LINE_I128;
@@ -227,8 +229,9 @@ static INLINE __m256i _mm256_addl_epi16(__m256i a) {
         // For width 32, we use a second sum accumulator to reduce accumulator
         // dependencies in the loop.
         __m256i sum2;
-        if (width == 32)
+        if (width == 32) {
             sum2 = _mm256_setzero_si256();
+        }
 
         do {
             // Add top row to the bottom row
@@ -243,8 +246,9 @@ static INLINE __m256i _mm256_addl_epi16(__m256i a) {
             src += step;
         } while (src < end);
         // Combine both sum accumulators
-        if (width == 32)
+        if (width == 32) {
             sum = _mm256_add_epi32(sum, sum2);
+        }
 
         __m256i fill = fill_sum_epi32(sum);
 

@@ -53,8 +53,9 @@ static INLINE void obmc_variance_w4(const uint8_t *pre, const int pre_stride, co
 
         n += 4;
 
-        if (n % 4 == 0)
+        if (n % 4 == 0) {
             pre += pre_step;
+        }
     } while (n < 4 * h);
 
     *sum = xx_hsum_epi32_si32(v_sum_d);

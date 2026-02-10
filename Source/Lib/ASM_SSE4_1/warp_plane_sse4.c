@@ -150,10 +150,11 @@ static INLINE void svt_warp_horizontal_filter(const uint8_t *ref, __m128i *tmp, 
     int k;
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
         int sx = sx4 + beta * (k + 4);
 
         // Load source pixels
@@ -170,10 +171,11 @@ static INLINE void svt_warp_horizontal_filter_alpha0(const uint8_t *ref, __m128i
     int k;
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
         int sx = sx4 + beta * (k + 4);
 
         // Load source pixels
@@ -196,10 +198,11 @@ static INLINE void svt_warp_horizontal_filter_beta0(const uint8_t *ref, __m128i 
 
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
 
         // Load source pixels
         const __m128i src = _mm_loadu_si128((__m128i *)(ref + iy * stride + ix4 - 7));
@@ -220,10 +223,11 @@ static INLINE void svt_warp_horizontal_filter_alpha0_beta0(const uint8_t *ref, _
 
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
 
         // Load source pixels
         const __m128i src = _mm_loadu_si128((__m128i *)(ref + iy * stride + ix4 - 7));
@@ -578,7 +582,7 @@ static INLINE void svt_prepare_warp_vertical_filter(uint8_t *pred, __m128i *tmp,
                                                     int p_width, int i, int j, int sy4, const int reduce_bits_vert,
                                                     const __m128i *res_add_const, const int round_bits,
                                                     const int offset_bits) {
-    if (gamma == 0 && delta == 0)
+    if (gamma == 0 && delta == 0) {
         svt_warp_vertical_filter_gamma0_delta0(pred,
                                                tmp,
                                                conv_params,
@@ -594,7 +598,7 @@ static INLINE void svt_prepare_warp_vertical_filter(uint8_t *pred, __m128i *tmp,
                                                res_add_const,
                                                round_bits,
                                                offset_bits);
-    else if (gamma == 0 && delta != 0)
+    } else if (gamma == 0 && delta != 0) {
         svt_warp_vertical_filter_gamma0(pred,
                                         tmp,
                                         conv_params,
@@ -610,7 +614,7 @@ static INLINE void svt_prepare_warp_vertical_filter(uint8_t *pred, __m128i *tmp,
                                         res_add_const,
                                         round_bits,
                                         offset_bits);
-    else if (gamma != 0 && delta == 0)
+    } else if (gamma != 0 && delta == 0) {
         svt_warp_vertical_filter_delta0(pred,
                                         tmp,
                                         conv_params,
@@ -626,7 +630,7 @@ static INLINE void svt_prepare_warp_vertical_filter(uint8_t *pred, __m128i *tmp,
                                         res_add_const,
                                         round_bits,
                                         offset_bits);
-    else
+    } else {
         svt_warp_vertical_filter(pred,
                                  tmp,
                                  conv_params,
@@ -642,24 +646,26 @@ static INLINE void svt_prepare_warp_vertical_filter(uint8_t *pred, __m128i *tmp,
                                  res_add_const,
                                  round_bits,
                                  offset_bits);
+    }
 }
 
 static INLINE void svt_prepare_warp_horizontal_filter(const uint8_t *ref, __m128i *tmp, int stride, int32_t ix4,
                                                       int32_t iy4, int32_t sx4, int alpha, int beta, int p_height,
                                                       int height, int i, const int offset_bits_horiz,
                                                       const int reduce_bits_horiz) {
-    if (alpha == 0 && beta == 0)
+    if (alpha == 0 && beta == 0) {
         svt_warp_horizontal_filter_alpha0_beta0(
             ref, tmp, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, offset_bits_horiz, reduce_bits_horiz);
-    else if (alpha == 0 && beta != 0)
+    } else if (alpha == 0 && beta != 0) {
         svt_warp_horizontal_filter_alpha0(
             ref, tmp, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, offset_bits_horiz, reduce_bits_horiz);
-    else if (alpha != 0 && beta == 0)
+    } else if (alpha != 0 && beta == 0) {
         svt_warp_horizontal_filter_beta0(
             ref, tmp, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, offset_bits_horiz, reduce_bits_horiz);
-    else
+    } else {
         svt_warp_horizontal_filter(
             ref, tmp, stride, ix4, iy4, sx4, alpha, beta, p_height, height, i, offset_bits_horiz, reduce_bits_horiz);
+    }
 }
 
 void svt_av1_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref, int width, int height, int stride,
@@ -729,20 +735,22 @@ void svt_av1_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref, int widt
             if (ix4 <= -7) {
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     tmp[k + 7] = _mm_set1_epi16((1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
                                                 ref[iy * stride] * (1 << (FILTER_BITS - reduce_bits_horiz)));
                 }
             } else if (ix4 >= width + 6) {
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     tmp[k + 7] = _mm_set1_epi16((1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
                                                 ref[iy * stride + (width - 1)] *
                                                     (1 << (FILTER_BITS - reduce_bits_horiz)));
@@ -752,10 +760,11 @@ void svt_av1_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref, int widt
                 const int out_of_boundary_right = (ix4 + 8) - width;
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     int sx = sx4 + beta * (k + 4);
 
                     // Load source pixels
@@ -931,10 +940,11 @@ static INLINE void svt_highbd_warp_horizontal_filter_alpha0_beta0(const uint8_t 
 
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
 
         // Load source pixels
         //const __m128i src  = _mm_loadu_si128((__m128i *)(ref + iy * stride + ix4 - 7));
@@ -954,10 +964,11 @@ static INLINE void svt_highbd_warp_horizontal_filter_alpha0(const uint8_t *ref8b
     int k;
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
         int sx = sx4 + beta * (k + 4);
 
         // Load source pixels
@@ -984,10 +995,11 @@ static INLINE void svt_highbd_warp_horizontal_filter_beta0(const uint8_t *ref8b,
 
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
 
         // Load source pixels
         //const __m128i src  = _mm_loadu_si128((__m128i *)(ref + iy * stride + ix4 - 7));
@@ -1006,10 +1018,11 @@ static INLINE void svt_highbd_warp_horizontal_filter(const uint8_t *ref8b, const
     int k;
     for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
         int iy = iy4 + k;
-        if (iy < 0)
+        if (iy < 0) {
             iy = 0;
-        else if (iy > height - 1)
+        } else if (iy > height - 1) {
             iy = height - 1;
+        }
         int sx = sx4 + beta * (k + 4);
 
         // Load source pixels
@@ -1027,7 +1040,7 @@ static INLINE void svt_highbd_prepare_warp_horizontal_filter(const uint8_t *ref8
                                                              int32_t sx4, int alpha, int beta, int p_height, int height,
                                                              int i, const int offset_bits_horiz,
                                                              const int reduce_bits_horiz) {
-    if (alpha == 0 && beta == 0)
+    if (alpha == 0 && beta == 0) {
         svt_highbd_warp_horizontal_filter_alpha0_beta0(ref8b,
                                                        ref2b,
                                                        tmp,
@@ -1043,8 +1056,9 @@ static INLINE void svt_highbd_prepare_warp_horizontal_filter(const uint8_t *ref8
                                                        i,
                                                        offset_bits_horiz,
                                                        reduce_bits_horiz);
+    }
 
-    else if (alpha == 0 && beta != 0)
+    else if (alpha == 0 && beta != 0) {
         svt_highbd_warp_horizontal_filter_alpha0(ref8b,
                                                  ref2b,
                                                  tmp,
@@ -1060,8 +1074,9 @@ static INLINE void svt_highbd_prepare_warp_horizontal_filter(const uint8_t *ref8
                                                  i,
                                                  offset_bits_horiz,
                                                  reduce_bits_horiz);
+    }
 
-    else if (alpha != 0 && beta == 0)
+    else if (alpha != 0 && beta == 0) {
         svt_highbd_warp_horizontal_filter_beta0(ref8b,
                                                 ref2b,
                                                 tmp,
@@ -1077,7 +1092,7 @@ static INLINE void svt_highbd_prepare_warp_horizontal_filter(const uint8_t *ref8
                                                 i,
                                                 offset_bits_horiz,
                                                 reduce_bits_horiz);
-    else
+    } else {
         svt_highbd_warp_horizontal_filter(ref8b,
                                           ref2b,
                                           tmp,
@@ -1093,6 +1108,7 @@ static INLINE void svt_highbd_prepare_warp_horizontal_filter(const uint8_t *ref8
                                           i,
                                           offset_bits_horiz,
                                           reduce_bits_horiz);
+    }
 }
 
 void svt_av1_highbd_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref8b, const uint8_t *ref2b, int width,
@@ -1168,10 +1184,11 @@ void svt_av1_highbd_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref8b,
             if (ix4 <= -7) {
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     uint16_t ref_val = (ref8b[iy * stride8b] << 2) | ((ref2b[iy * stride2b] >> 6) & 3);
                     tmp[k + 7]       = _mm_set1_epi16((1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
                                                 ref_val * (1 << (FILTER_BITS - reduce_bits_horiz)));
@@ -1179,10 +1196,11 @@ void svt_av1_highbd_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref8b,
             } else if (ix4 >= width + 6) {
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     uint16_t ref_val = (ref8b[iy * stride8b + (width - 1)] << 2) |
                         ((ref2b[iy * stride2b + (width - 1)] >> 6) & 3);
                     tmp[k + 7] = _mm_set1_epi16((1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
@@ -1194,10 +1212,11 @@ void svt_av1_highbd_warp_affine_sse4_1(const int32_t *mat, const uint8_t *ref8b,
 
                 for (k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     int sx = sx4 + beta * (k + 4);
 
                     // Load source pixels

@@ -33,7 +33,9 @@ SIMD_INLINE v256 v256_dup_16(uint16_t x) {
     return v256_from_v128(t, t);
 }
 
-SIMD_INLINE v256 v256_zero(void) { return v256_from_v128(_mm_setzero_si128(), _mm_setzero_si128()); }
+SIMD_INLINE v256 v256_zero(void) {
+    return v256_from_v128(_mm_setzero_si128(), _mm_setzero_si128());
+}
 
 SIMD_INLINE v256 v256_max_s16(v256 a, v256 b) {
     return v256_from_v128(_mm_max_epi16(a.val[1], b.val[1]), _mm_max_epi16(a.val[0], b.val[0]));
@@ -84,7 +86,9 @@ SIMD_INLINE v256 v256_mullo_s16(v256 a, v256 b) {
     return v256_from_v128(_mm_mullo_epi16(a.val[1], b.val[1]), _mm_mullo_epi16(a.val[0], b.val[0]));
 }
 
-SIMD_INLINE v256 v256_abs_s16(v256 a) { return v256_from_v128(_mm_abs_epi16(a.val[1]), _mm_abs_epi16(a.val[0])); }
+SIMD_INLINE v256 v256_abs_s16(v256 a) {
+    return v256_from_v128(_mm_abs_epi16(a.val[1]), _mm_abs_epi16(a.val[0]));
+}
 
 SIMD_INLINE v256 v256_ssub_u16(v256 a, v256 b) {
     return v256_from_v128(_mm_subs_epu16(a.val[1], b.val[1]), _mm_subs_epu16(a.val[0], b.val[0]));
@@ -137,10 +141,12 @@ void svt_av1_cdef_filter_block_8xn_8_sse4_1(uint8_t *dst, int dstride, const uin
     const int *pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int *sec_taps = svt_aom_eb_cdef_sec_taps[0];
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
     for (i = 0; i < height; i += (2 * subsampling_factor)) {
         sum = v256_zero();
         row = v256_from_v128(_mm_loadu_si128((__m128i *)(in + i * CDEF_BSTRIDE)),
@@ -269,10 +275,12 @@ void svt_av1_cdef_filter_block_4xn_8_sse4_1(uint8_t *dst, int dstride, const uin
     const int *pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int *sec_taps = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
 
     for (uint32_t i = 0; i < height; i += (4 * subsampling_factor)) {
         sum = v256_zero();
@@ -443,10 +451,12 @@ void svt_av1_cdef_filter_block_8xn_16_sse4_1(uint16_t *dst, int dstride, const u
     const int *pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int *sec_taps = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
 
     for (i = 0; i < height; i += (2 * subsampling_factor)) {
         sum = v256_zero();
@@ -556,10 +566,12 @@ void svt_av1_cdef_filter_block_4xn_16_sse4_1(uint16_t *dst, int dstride, const u
     const int *pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int *sec_taps = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
 
-    if (pri_strength)
+    if (pri_strength) {
         pri_damping = AOMMAX(0, pri_damping - get_msb(pri_strength));
-    if (sec_strength)
+    }
+    if (sec_strength) {
         sec_damping = AOMMAX(0, sec_damping - get_msb(sec_strength));
+    }
     for (i = 0; i < height; i += (4 * subsampling_factor)) {
         sum = v256_zero();
         row = v256_from_v64(_mm_loadl_epi64((__m128i *)(in + i * CDEF_BSTRIDE)),
@@ -957,6 +969,8 @@ void svt_aom_copy_rect8_8bit_to_16bit_sse4_1(uint16_t *dst, int32_t dstride, con
             __m128i row = _mm_loadl_epi64((__m128i *)&src[i * sstride + j]);
             _mm_storeu_si128((__m128i *)&dst[i * dstride + j], _mm_unpacklo_epi8(row, _mm_setzero_si128()));
         }
-        for (; j < h; j++) dst[i * dstride + j] = src[i * sstride + j];
+        for (; j < h; j++) {
+            dst[i * dstride + j] = src[i * sstride + j];
+        }
     }
 }

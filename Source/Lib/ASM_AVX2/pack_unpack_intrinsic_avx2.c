@@ -216,8 +216,9 @@ void svt_enc_msb_un_pack2d_avx2_intrin(uint16_t *in16_bit_buffer, uint32_t in_st
                     in16_bit_buffer += 64;
                 }
                 in16_bit_buffer += in_stride_diff64;
-                if (outn_bit_buffer)
+                if (outn_bit_buffer) {
                     outn_bit_buffer += out_n_stride_diff64;
+                }
                 out8_bit_buffer += out8_stride_diff64;
             }
         } else if (!(width & 31)) {
@@ -257,8 +258,9 @@ void svt_enc_msb_un_pack2d_avx2_intrin(uint16_t *in16_bit_buffer, uint32_t in_st
                     in16_bit_buffer += 32;
                 }
                 in16_bit_buffer += in_stride_diff;
-                if (outn_bit_buffer)
+                if (outn_bit_buffer) {
                     outn_bit_buffer += out_n_stride_diff;
+                }
                 out8_bit_buffer += out8_stride_diff;
             }
         } else if (!(width & 15)) {
@@ -291,8 +293,9 @@ void svt_enc_msb_un_pack2d_avx2_intrin(uint16_t *in16_bit_buffer, uint32_t in_st
                     in16_bit_buffer += 16;
                 }
                 in16_bit_buffer += in_stride_diff;
-                if (outn_bit_buffer)
+                if (outn_bit_buffer) {
                     outn_bit_buffer += out_n_stride_diff;
+                }
                 out8_bit_buffer += out8_stride_diff;
             }
         } else if (!(width & 7)) {
@@ -323,8 +326,9 @@ void svt_enc_msb_un_pack2d_avx2_intrin(uint16_t *in16_bit_buffer, uint32_t in_st
                     in16_bit_buffer += 8;
                 }
                 in16_bit_buffer += in_stride_diff;
-                if (outn_bit_buffer)
+                if (outn_bit_buffer) {
                     outn_bit_buffer += out_n_stride_diff;
+                }
                 out8_bit_buffer += out8_stride_diff;
             }
         } else {
@@ -354,8 +358,9 @@ void svt_enc_msb_un_pack2d_avx2_intrin(uint16_t *in16_bit_buffer, uint32_t in_st
                     in16_bit_buffer += 4;
                 }
                 in16_bit_buffer += in_stride_diff;
-                if (outn_bit_buffer)
+                if (outn_bit_buffer) {
                     outn_bit_buffer += out_n_stride_diff;
+                }
                 out8_bit_buffer += out8_stride_diff;
             }
         }

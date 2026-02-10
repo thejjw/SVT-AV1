@@ -23,14 +23,19 @@ static int svt_aom_seg_feature_active(SegmentationParams *seg, int segment_id, S
     return seg->segmentation_enabled && seg->feature_enabled[segment_id][feature_id];
 }
 
-static INLINE int8_t signed_char_clamp(int32_t t) { return (int8_t)clamp(t, -128, 127); }
+static INLINE int8_t signed_char_clamp(int32_t t) {
+    return (int8_t)clamp(t, -128, 127);
+}
 
 static INLINE int16_t signed_char_clamp_high(int32_t t, int32_t bd) {
     switch (bd) {
-    case 10: return (int16_t)clamp(t, -128 * 4, 128 * 4 - 1);
-    case 12: return (int16_t)clamp(t, -128 * 16, 128 * 16 - 1);
+    case 10:
+        return (int16_t)clamp(t, -128 * 4, 128 * 4 - 1);
+    case 12:
+        return (int16_t)clamp(t, -128 * 16, 128 * 16 - 1);
     case 8:
-    default: return (int16_t)clamp(t, -128, 128 - 1);
+    default:
+        return (int16_t)clamp(t, -128, 128 - 1);
     }
 }
 
@@ -45,12 +50,13 @@ uint8_t svt_aom_get_filter_level_delta_lf(FrameHeader *frm_hdr, const int32_t di
         delta_lf = sb_delta_lf[0];
     }
     int32_t base_level;
-    if (plane == 0)
+    if (plane == 0) {
         base_level = frm_hdr->loop_filter_params.filter_level[dir_idx];
-    else if (plane == 1)
+    } else if (plane == 1) {
         base_level = frm_hdr->loop_filter_params.filter_level_u;
-    else
+    } else {
         base_level = frm_hdr->loop_filter_params.filter_level_v;
+    }
     int32_t lvl_seg = clamp(delta_lf + base_level, 0, MAX_LOOP_FILTER);
     assert(plane >= 0 && plane <= 2);
     const int32_t seg_lf_feature_id = seg_lvl_lf_lut[plane][dir_idx];
@@ -62,8 +68,9 @@ uint8_t svt_aom_get_filter_level_delta_lf(FrameHeader *frm_hdr, const int32_t di
     if (frm_hdr->loop_filter_params.mode_ref_delta_enabled) {
         const int32_t scale = 1 << (lvl_seg >> 5);
         lvl_seg += frm_hdr->loop_filter_params.ref_deltas[ref_frame_0] * scale;
-        if (ref_frame_0 > INTRA_FRAME)
+        if (ref_frame_0 > INTRA_FRAME) {
             lvl_seg += frm_hdr->loop_filter_params.mode_deltas[mode_lf_lut[pred_mode]] * scale;
+        }
         lvl_seg = clamp(lvl_seg, 0, MAX_LOOP_FILTER);
     }
     return lvl_seg;
@@ -96,12 +103,13 @@ void svt_av1_loop_filter_frame_init(FrameHeader *frm_hdr, LoopFilterInfoN *lfi, 
     filt_lvl_r[2] = frm_hdr->loop_filter_params.filter_level_v;
 
     for (plane = plane_start; plane < plane_end; plane++) {
-        if (plane == 0 && !filt_lvl[0] && !filt_lvl_r[0])
+        if (plane == 0 && !filt_lvl[0] && !filt_lvl_r[0]) {
             break;
-        else if (plane == 1 && !filt_lvl[1])
+        } else if (plane == 1 && !filt_lvl[1]) {
             continue;
-        else if (plane == 2 && !filt_lvl[2])
+        } else if (plane == 2 && !filt_lvl[2]) {
             continue;
+        }
 
         for (seg_id = 0; seg_id < MAX_SEGMENTS; seg_id++) {
             for (int32_t dir = 0; dir < 2; ++dir) {
@@ -281,8 +289,9 @@ static INLINE void filter6(int8_t mask, uint8_t thresh, int8_t flat, uint8_t *op
         *op0 = ROUND_POWER_OF_TWO(p2 + p1 * 2 + p0 * 2 + q0 * 2 + q1, 3);
         *oq0 = ROUND_POWER_OF_TWO(p1 + p0 * 2 + q0 * 2 + q1 * 2 + q2, 3);
         *oq1 = ROUND_POWER_OF_TWO(p0 + q0 * 2 + q1 * 2 + q2 * 3, 3);
-    } else
+    } else {
         filter4(mask, thresh, op1, op0, oq0, oq1);
+    }
 }
 
 static INLINE void filter8(int8_t mask, uint8_t thresh, int8_t flat, uint8_t *op3, uint8_t *op2, uint8_t *op1,
@@ -298,8 +307,9 @@ static INLINE void filter8(int8_t mask, uint8_t thresh, int8_t flat, uint8_t *op
         *oq0 = ROUND_POWER_OF_TWO(p2 + p1 + p0 + 2 * q0 + q1 + q2 + q3, 3);
         *oq1 = ROUND_POWER_OF_TWO(p1 + p0 + q0 + 2 * q1 + q2 + q3 + q3, 3);
         *oq2 = ROUND_POWER_OF_TWO(p0 + q0 + q1 + 2 * q2 + q3 + q3 + q3, 3);
-    } else
+    } else {
         filter4(mask, thresh, op1, op0, oq0, oq1);
+    }
 }
 
 void svt_aom_lpf_horizontal_6_c(uint8_t *s, int32_t p, const uint8_t *blimit, const uint8_t *limit,
@@ -504,8 +514,9 @@ static INLINE void highbd_filter8(int8_t mask, uint8_t thresh, int8_t flat, uint
         *oq0 = ROUND_POWER_OF_TWO(p2 + p1 + p0 + 2 * q0 + q1 + q2 + q3, 3);
         *oq1 = ROUND_POWER_OF_TWO(p1 + p0 + q0 + 2 * q1 + q2 + q3 + q3, 3);
         *oq2 = ROUND_POWER_OF_TWO(p0 + q0 + q1 + 2 * q2 + q3 + q3 + q3, 3);
-    } else
+    } else {
         highbd_filter4(mask, thresh, op1, op0, oq0, oq1, bd);
+    }
 }
 
 void svt_aom_highbd_lpf_horizontal_8_c(uint16_t *s, int32_t p, const uint8_t *blimit, const uint8_t *limit,
@@ -559,12 +570,14 @@ void svt_aom_update_sharpness(LoopFilterInfoN *lfi, int32_t sharpness_lvl) {
         int32_t block_inside_limit = lvl >> ((sharpness_lvl > 0) + (sharpness_lvl > 4));
 
         if (sharpness_lvl > 0) {
-            if (block_inside_limit > (9 - sharpness_lvl))
+            if (block_inside_limit > (9 - sharpness_lvl)) {
                 block_inside_limit = (9 - sharpness_lvl);
+            }
         }
 
-        if (block_inside_limit < 1)
+        if (block_inside_limit < 1) {
             block_inside_limit = 1;
+        }
 
         memset(lfi->lfthr[lvl].lim, block_inside_limit, SIMD_WIDTH);
         memset(lfi->lfthr[lvl].mblim, (2 * (lvl + 2) + block_inside_limit), SIMD_WIDTH);

@@ -27,12 +27,13 @@ static int32_t compute_variance(unsigned char *im, int stride, int x, int y, uin
     int           sumsq        = 0;
     int           var;
     int           i, j;
-    for (i = 0; i < match_sz; ++i)
+    for (i = 0; i < match_sz; ++i) {
         for (j = 0; j < match_sz; ++j) {
             sum += im[(i + y - match_sz_by2) * stride + (j + x - match_sz_by2)];
             sumsq += im[(i + y - match_sz_by2) * stride + (j + x - match_sz_by2)] *
                 im[(i + y - match_sz_by2) * stride + (j + x - match_sz_by2)];
         }
+    }
     var = sumsq * match_sz_sq - sum * sum;
 
     return var;
@@ -54,7 +55,7 @@ double svt_av1_compute_cross_correlation_c(unsigned char *im1, int stride1, int 
     int cross  = 0;
     int var2, cov;
     int i, j;
-    for (i = 0; i < match_sz; ++i)
+    for (i = 0; i < match_sz; ++i) {
         for (j = 0; j < match_sz; ++j) {
             v1 = im1[(i + y1 - match_sz_by2) * stride1 + (j + x1 - match_sz_by2)];
             v2 = im2[(i + y2 - match_sz_by2) * stride2 + (j + x2 - match_sz_by2)];
@@ -63,6 +64,7 @@ double svt_av1_compute_cross_correlation_c(unsigned char *im1, int stride1, int 
             sumsq2 += v2 * v2;
             cross += v1 * v2;
         }
+    }
     var2 = sumsq2 * match_sz_sq - sum2 * sum2;
     cov  = cross * match_sz_sq - sum1 * sum2;
     if (cov < 0) {
@@ -96,14 +98,16 @@ static void improve_correspondence(unsigned char *frm, unsigned char *ref, int w
         for (y = -SEARCH_SZ_BY2; y <= SEARCH_SZ_BY2; ++y) {
             for (x = -SEARCH_SZ_BY2; x <= SEARCH_SZ_BY2; ++x) {
                 double match_ncc;
-                if (!is_eligible_point(correspondences[i].rx + x, correspondences[i].ry + y, width, height, match_sz))
+                if (!is_eligible_point(correspondences[i].rx + x, correspondences[i].ry + y, width, height, match_sz)) {
                     continue;
+                }
                 if (!is_eligible_distance(correspondences[i].x,
                                           correspondences[i].y,
                                           correspondences[i].rx + x,
                                           correspondences[i].ry + y,
-                                          threshSqr))
+                                          threshSqr)) {
                     continue;
+                }
                 match_ncc = svt_av1_compute_cross_correlation(frm,
                                                               frm_stride,
                                                               correspondences[i].x,
@@ -126,17 +130,19 @@ static void improve_correspondence(unsigned char *frm, unsigned char *ref, int w
     for (i = 0; i < num_correspondences; ++i) {
         int    x, y, best_x = 0, best_y = 0;
         double best_match_ncc = 0.0;
-        for (y = -SEARCH_SZ_BY2; y <= SEARCH_SZ_BY2; ++y)
+        for (y = -SEARCH_SZ_BY2; y <= SEARCH_SZ_BY2; ++y) {
             for (x = -SEARCH_SZ_BY2; x <= SEARCH_SZ_BY2; ++x) {
                 double match_ncc;
-                if (!is_eligible_point(correspondences[i].x + x, correspondences[i].y + y, width, height, match_sz))
+                if (!is_eligible_point(correspondences[i].x + x, correspondences[i].y + y, width, height, match_sz)) {
                     continue;
+                }
                 if (!is_eligible_distance(correspondences[i].x + x,
                                           correspondences[i].y + y,
                                           correspondences[i].rx,
                                           correspondences[i].ry,
-                                          threshSqr))
+                                          threshSqr)) {
                     continue;
+                }
                 match_ncc = svt_av1_compute_cross_correlation(ref,
                                                               ref_stride,
                                                               correspondences[i].rx,
@@ -152,6 +158,7 @@ static void improve_correspondence(unsigned char *frm, unsigned char *ref, int w
                     best_x         = x;
                 }
             }
+        }
         correspondences[i].x += best_x;
         correspondences[i].y += best_y;
     }
@@ -168,15 +175,21 @@ int svt_av1_determine_correspondence(uint8_t *frm, int *frm_corners, int num_frm
         double  best_match_ncc = 0.0;
         int32_t template_norm;
         int     best_match_j = -1;
-        if (!is_eligible_point(frm_corners[2 * i], frm_corners[2 * i + 1], width, height, match_sz))
+        if (!is_eligible_point(frm_corners[2 * i], frm_corners[2 * i + 1], width, height, match_sz)) {
             continue;
+        }
         for (j = 0; j < num_ref_corners; ++j) {
             double match_ncc;
-            if (!is_eligible_point(ref_corners[2 * j], ref_corners[2 * j + 1], width, height, match_sz))
+            if (!is_eligible_point(ref_corners[2 * j], ref_corners[2 * j + 1], width, height, match_sz)) {
                 continue;
-            if (!is_eligible_distance(
-                    frm_corners[2 * i], frm_corners[2 * i + 1], ref_corners[2 * j], ref_corners[2 * j + 1], threshSqr))
+            }
+            if (!is_eligible_distance(frm_corners[2 * i],
+                                      frm_corners[2 * i + 1],
+                                      ref_corners[2 * j],
+                                      ref_corners[2 * j + 1],
+                                      threshSqr)) {
                 continue;
+            }
             match_ncc = svt_av1_compute_cross_correlation(frm,
                                                           frm_stride,
                                                           frm_corners[2 * i],

@@ -531,7 +531,9 @@ void svt_aom_dc_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8
 
 // only define these intrinsics if immintrin.h doesn't have them
 #if defined(_MSC_VER) && _MSC_VER < 1910
-static inline int32_t _mm256_extract_epi32(__m256i a, const int32_t i) { return a.m256i_i32[i & 7]; }
+static inline int32_t _mm256_extract_epi32(__m256i a, const int32_t i) {
+    return a.m256i_i32[i & 7];
+}
 
 static inline __m256i _mm256_insert_epi32(__m256i a, int32_t b, const int32_t i) {
     __m256i c          = a;
@@ -605,8 +607,9 @@ static AOM_FORCE_INLINE void dr_prediction_z1_hxw_internal_avx2(int H, int W, __
             }
             return;
         }
-        if (base_max_diff > H)
+        if (base_max_diff > H) {
             base_max_diff = H;
+        }
         a0_128 = _mm_loadu_si128((__m128i *)(above + base));
         a1_128 = _mm_loadu_si128((__m128i *)(above + base + 1));
 
@@ -643,7 +646,9 @@ static void dr_prediction_z1_4xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride,
     __m128i dstvec[16];
     dr_prediction_z1_hxw_internal_avx2(4, N, dstvec, above, upsample_above, dx);
 
-    for (int32_t i = 0; i < N; i++) { *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(dstvec[i]);
+    }
 }
 
 static void dr_prediction_z1_8xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride, const uint8_t *above,
@@ -651,7 +656,9 @@ static void dr_prediction_z1_8xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride,
     __m128i dstvec[32];
 
     dr_prediction_z1_hxw_internal_avx2(8, N, dstvec, above, upsample_above, dx);
-    for (int32_t i = 0; i < N; i++) { _mm_storel_epi64((__m128i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm_storel_epi64((__m128i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static void dr_prediction_z1_16xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride, const uint8_t *above,
@@ -660,7 +667,9 @@ static void dr_prediction_z1_16xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride
 
     dr_prediction_z1_hxw_internal_avx2(16, N, dstvec, above, upsample_above, dx);
 
-    for (int32_t i = 0; i < N; i++) { _mm_storeu_si128((__m128i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm_storeu_si128((__m128i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static AOM_FORCE_INLINE void dr_prediction_z1_32xn_internal_avx2(int32_t N, __m256i *dstvec, const uint8_t *above,
@@ -697,8 +706,9 @@ static AOM_FORCE_INLINE void dr_prediction_z1_32xn_internal_avx2(int32_t N, __m2
             }
             return;
         }
-        if (base_max_diff > 32)
+        if (base_max_diff > 32) {
             base_max_diff = 32;
+        }
         __m256i shift = _mm256_srli_epi16(_mm256_and_si256(_mm256_set1_epi16(x), c3f), 1);
 
         for (int32_t j = 0, jj = 0; j < 32; j += 16, jj++) {
@@ -735,7 +745,9 @@ static void dr_prediction_z1_32xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride
                                        int32_t upsample_above, int32_t dx) {
     __m256i dstvec[64];
     dr_prediction_z1_32xn_internal_avx2(N, dstvec, above, upsample_above, dx);
-    for (int32_t i = 0; i < N; i++) { _mm256_storeu_si256((__m256i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm256_storeu_si256((__m256i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static void dr_prediction_z1_64xn_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride, const uint8_t *above,
@@ -831,12 +843,23 @@ void svt_av1_dr_prediction_z1_avx2(uint8_t *dst, ptrdiff_t stride, int32_t bw, i
     (void)left;
     (void)dy;
     switch (bw) {
-    case 4: dr_prediction_z1_4xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 8: dr_prediction_z1_8xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 16: dr_prediction_z1_16xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 32: dr_prediction_z1_32xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 64: dr_prediction_z1_64xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    default: break;
+    case 4:
+        dr_prediction_z1_4xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 8:
+        dr_prediction_z1_8xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 16:
+        dr_prediction_z1_16xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 32:
+        dr_prediction_z1_32xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 64:
+        dr_prediction_z1_64xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    default:
+        break;
     }
     return;
 }
@@ -911,7 +934,9 @@ static void highbd_dr_prediction_z1_4xn_avx2(int32_t N, uint16_t *dst, ptrdiff_t
     __m128i dstvec[16];
 
     highbd_dr_prediction_z1_4xn_internal_avx2(N, dstvec, above, upsample_above, dx);
-    for (int32_t i = 0; i < N; i++) { _mm_storel_epi64((__m128i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm_storel_epi64((__m128i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static AOM_FORCE_INLINE void highbd_dr_prediction_z1_8xn_internal_avx2(int32_t N, __m128i *dst, const uint16_t *above,
@@ -992,7 +1017,9 @@ static void highbd_dr_prediction_z1_8xn_avx2(int32_t N, uint16_t *dst, ptrdiff_t
     __m128i dstvec[32];
 
     highbd_dr_prediction_z1_8xn_internal_avx2(N, dstvec, above, upsample_above, dx);
-    for (int32_t i = 0; i < N; i++) { _mm_storeu_si128((__m128i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm_storeu_si128((__m128i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static AOM_FORCE_INLINE void highbd_dr_prediction_z1_16xn_internal_avx2(int32_t N, __m256i *dstvec,
@@ -1087,7 +1114,9 @@ static void highbd_dr_prediction_z1_16xn_avx2(int32_t N, uint16_t *dst, ptrdiff_
                                               int32_t upsample_above, int32_t dx) {
     __m256i dstvec[64];
     highbd_dr_prediction_z1_16xn_internal_avx2(N, dstvec, above, upsample_above, dx);
-    for (int32_t i = 0; i < N; i++) { _mm256_storeu_si256((__m256i *)(dst + stride * i), dstvec[i]); }
+    for (int32_t i = 0; i < N; i++) {
+        _mm256_storeu_si256((__m256i *)(dst + stride * i), dstvec[i]);
+    }
 }
 
 static AOM_FORCE_INLINE void highbd_dr_prediction_z1_32xn_internal_avx2(int32_t N, __m256i *dstvec,
@@ -1180,10 +1209,11 @@ static AOM_FORCE_INLINE void highbd_dr_prediction_z1_32xn_internal_avx2(int32_t 
                 mask256 = _mm256_cmpgt_epi16(max_base_x256, base_inc256);
                 res1    = _mm256_blendv_epi8(a_mbase_x, res1, mask256);
             }
-            if (!j)
+            if (!j) {
                 dstvec[r] = res1;
-            else
+            } else {
                 dstvec[r + N] = res1;
+            }
         }
         x += dx;
     }
@@ -1313,12 +1343,23 @@ void svt_av1_highbd_dr_prediction_z1_avx2(uint16_t *dst, ptrdiff_t stride, int32
     (void)bd;
 
     switch (bw) {
-    case 4: highbd_dr_prediction_z1_4xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 8: highbd_dr_prediction_z1_8xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 16: highbd_dr_prediction_z1_16xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 32: highbd_dr_prediction_z1_32xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    case 64: highbd_dr_prediction_z1_64xn_avx2(bh, dst, stride, above, upsample_above, dx); break;
-    default: break;
+    case 4:
+        highbd_dr_prediction_z1_4xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 8:
+        highbd_dr_prediction_z1_8xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 16:
+        highbd_dr_prediction_z1_16xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 32:
+        highbd_dr_prediction_z1_32xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    case 64:
+        highbd_dr_prediction_z1_64xn_avx2(bh, dst, stride, above, upsample_above, dx);
+        break;
+    default:
+        break;
     }
     return;
 }
@@ -1361,8 +1402,9 @@ static void dr_prediction_z2_nx4_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride,
         if (base_min_diff > 4) {
             base_min_diff = 4;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 3) {
@@ -1474,8 +1516,9 @@ static void dr_prediction_z2_nx8_avx2(int32_t N, uint8_t *dst, ptrdiff_t stride,
         if (base_min_diff > 8) {
             base_min_diff = 8;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 7) {
@@ -1607,8 +1650,9 @@ static void dr_prediction_z2_hxw_avx2(int32_t H, int32_t W, uint8_t *dst, ptrdif
             if (base_min_diff > 16) {
                 base_min_diff = 16;
             } else {
-                if (base_min_diff < 0)
+                if (base_min_diff < 0) {
                     base_min_diff = 0;
+                }
             }
 
             if (base_shift < 16) {
@@ -1735,9 +1779,15 @@ void svt_av1_dr_prediction_z2_avx2(uint8_t *dst, ptrdiff_t stride, int32_t bw, i
     assert(dx > 0);
     assert(dy > 0);
     switch (bw) {
-    case 4: dr_prediction_z2_nx4_avx2(bh, dst, stride, above, left, upsample_above, upsample_left, dx, dy); break;
-    case 8: dr_prediction_z2_nx8_avx2(bh, dst, stride, above, left, upsample_above, upsample_left, dx, dy); break;
-    default: dr_prediction_z2_hxw_avx2(bh, bw, dst, stride, above, left, upsample_above, upsample_left, dx, dy); break;
+    case 4:
+        dr_prediction_z2_nx4_avx2(bh, dst, stride, above, left, upsample_above, upsample_left, dx, dy);
+        break;
+    case 8:
+        dr_prediction_z2_nx8_avx2(bh, dst, stride, above, left, upsample_above, upsample_left, dx, dy);
+        break;
+    default:
+        dr_prediction_z2_hxw_avx2(bh, bw, dst, stride, above, left, upsample_above, upsample_left, dx, dy);
+        break;
     }
     return;
 }
@@ -1874,16 +1924,22 @@ static INLINE void transpose16x32_avx2(__m256i *x, __m256i *d) {
 static void transpose_tx_16x16(const uint8_t *src, ptrdiff_t pitchSrc, uint8_t *dst, ptrdiff_t pitchDst) {
     __m128i r[16];
     __m128i d[16];
-    for (int j = 0; j < 16; j++) { r[j] = _mm_loadu_si128((__m128i *)(src + j * pitchSrc)); }
+    for (int j = 0; j < 16; j++) {
+        r[j] = _mm_loadu_si128((__m128i *)(src + j * pitchSrc));
+    }
     transpose16x16_sse2(r, d);
-    for (int j = 0; j < 16; j++) { _mm_storeu_si128((__m128i *)(dst + j * pitchDst), d[j]); }
+    for (int j = 0; j < 16; j++) {
+        _mm_storeu_si128((__m128i *)(dst + j * pitchDst), d[j]);
+    }
 }
 
 static void transpose(const uint8_t *src, ptrdiff_t pitchSrc, uint8_t *dst, ptrdiff_t pitchDst, int32_t width,
                       int32_t height) {
-    for (int j = 0; j < height; j += 16)
-        for (int i = 0; i < width; i += 16)
+    for (int j = 0; j < height; j += 16) {
+        for (int i = 0; i < width; i += 16) {
             transpose_tx_16x16(src + i * pitchSrc + j, pitchSrc, dst + j * pitchDst + i, pitchDst);
+        }
+    }
 }
 
 static void dr_prediction_z3_4x4_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -1936,7 +1992,9 @@ static void dr_prediction_z3_4x8_avx2(uint8_t *dst, ptrdiff_t stride, const uint
 
     transpose4x8_8x4_sse2(
         &dstvec[0], &dstvec[1], &dstvec[2], &dstvec[3], &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7]);
-    for (int32_t i = 0; i < 8; i++) { *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(d[i]); }
+    for (int32_t i = 0; i < 8; i++) {
+        *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(d[i]);
+    }
 }
 
 static void dr_prediction_z3_8x4_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -2021,7 +2079,9 @@ static void dr_prediction_z3_16x8_avx2(uint8_t *dst, ptrdiff_t stride, const uin
                             &d[6],
                             &d[7]);
 
-    for (int32_t i = 0; i < 8; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 8; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void dr_prediction_z3_4x16_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -2031,7 +2091,9 @@ static void dr_prediction_z3_4x16_avx2(uint8_t *dst, ptrdiff_t stride, const uin
     dr_prediction_z1_hxw_internal_avx2(16, 4, dstvec, left, upsample_left, dy);
 
     transpose4x16_sse2(dstvec, d);
-    for (int32_t i = 0; i < 16; i++) { *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(d[i]); }
+    for (int32_t i = 0; i < 16; i++) {
+        *(uint32_t *)(dst + stride * i) = _mm_cvtsi128_si32(d[i]);
+    }
 }
 
 static void dr_prediction_z3_16x4_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -2039,7 +2101,9 @@ static void dr_prediction_z3_16x4_avx2(uint8_t *dst, ptrdiff_t stride, const uin
     __m128i dstvec[16], d[8];
     dr_prediction_z1_hxw_internal_avx2(4, 16, dstvec, left, upsample_left, dy);
 
-    for (int32_t i = 4; i < 8; i++) { d[i] = _mm_setzero_si128(); }
+    for (int32_t i = 4; i < 8; i++) {
+        d[i] = _mm_setzero_si128();
+    }
     transpose16x8_8x16_sse2(&dstvec[0],
                             &dstvec[1],
                             &dstvec[2],
@@ -2065,7 +2129,9 @@ static void dr_prediction_z3_16x4_avx2(uint8_t *dst, ptrdiff_t stride, const uin
                             &d[6],
                             &d[7]);
 
-    for (int32_t i = 0; i < 4; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 4; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void dr_prediction_z3_8x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -2073,10 +2139,14 @@ static void dr_prediction_z3_8x32_avx2(uint8_t *dst, ptrdiff_t stride, const uin
     __m256i dstvec[16], d[16];
 
     dr_prediction_z1_32xn_internal_avx2(8, dstvec, left, upsample_left, dy);
-    for (int32_t i = 8; i < 16; i++) { dstvec[i] = _mm256_setzero_si256(); }
+    for (int32_t i = 8; i < 16; i++) {
+        dstvec[i] = _mm256_setzero_si256();
+    }
     transpose16x32_avx2(dstvec, d);
 
-    for (int32_t i = 0; i < 16; i++) { _mm_storel_epi64((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i])); }
+    for (int32_t i = 0; i < 16; i++) {
+        _mm_storel_epi64((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i]));
+    }
     for (int32_t i = 0; i < 16; i++) {
         _mm_storel_epi64((__m128i *)(dst + (i + 16) * stride), _mm256_extracti128_si256(d[i], 1));
     }
@@ -2150,7 +2220,9 @@ static void dr_prediction_z3_16x16_avx2(uint8_t *dst, ptrdiff_t stride, const ui
     dr_prediction_z1_hxw_internal_avx2(16, 16, dstvec, left, upsample_left, dy);
     transpose16x16_sse2(dstvec, d);
 
-    for (int32_t i = 0; i < 16; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 16; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void dr_prediction_z3_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *left, int32_t upsample_left,
@@ -2198,7 +2270,9 @@ static void dr_prediction_z3_32x16_avx2(uint8_t *dst, ptrdiff_t stride, const ui
 
     for (int32_t i = 0; i < 32; i += 16) {
         transpose16x16_sse2((dstvec + i), d);
-        for (int32_t j = 0; j < 16; j++) { _mm_storeu_si128((__m128i *)(dst + j * stride + i), d[j]); }
+        for (int32_t j = 0; j < 16; j++) {
+            _mm_storeu_si128((__m128i *)(dst + j * stride + i), d[j]);
+        }
     }
 }
 
@@ -2232,7 +2306,9 @@ static void dr_prediction_z3_64x16_avx2(uint8_t *dst, ptrdiff_t stride, const ui
 
     for (int32_t i = 0; i < 64; i += 16) {
         transpose16x16_sse2((dstvec + i), d);
-        for (int32_t j = 0; j < 16; j++) { _mm_storeu_si128((__m128i *)(dst + j * stride + i), d[j]); }
+        for (int32_t j = 0; j < 16; j++) {
+            _mm_storeu_si128((__m128i *)(dst + j * stride + i), d[j]);
+        }
     }
 }
 
@@ -2245,41 +2321,79 @@ void svt_av1_dr_prediction_z3_avx2(uint8_t *dst, ptrdiff_t stride, int32_t bw, i
 
     if (bw == bh) {
         switch (bw) {
-        case 4: dr_prediction_z3_4x4_avx2(dst, stride, left, upsample_left, dy); break;
-        case 8: dr_prediction_z3_8x8_avx2(dst, stride, left, upsample_left, dy); break;
-        case 16: dr_prediction_z3_16x16_avx2(dst, stride, left, upsample_left, dy); break;
-        case 32: dr_prediction_z3_32x32_avx2(dst, stride, left, upsample_left, dy); break;
-        case 64: dr_prediction_z3_64x64_avx2(dst, stride, left, upsample_left, dy); break;
+        case 4:
+            dr_prediction_z3_4x4_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 8:
+            dr_prediction_z3_8x8_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 16:
+            dr_prediction_z3_16x16_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 32:
+            dr_prediction_z3_32x32_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 64:
+            dr_prediction_z3_64x64_avx2(dst, stride, left, upsample_left, dy);
+            break;
         }
     } else {
         if (bw < bh) {
             if (bw + bw == bh) {
                 switch (bw) {
-                case 4: dr_prediction_z3_4x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: dr_prediction_z3_8x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: dr_prediction_z3_16x32_avx2(dst, stride, left, upsample_left, dy); break;
-                case 32: dr_prediction_z3_32x64_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    dr_prediction_z3_4x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    dr_prediction_z3_8x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    dr_prediction_z3_16x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 32:
+                    dr_prediction_z3_32x64_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             } else {
                 switch (bw) {
-                case 4: dr_prediction_z3_4x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: dr_prediction_z3_8x32_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: dr_prediction_z3_16x64_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    dr_prediction_z3_4x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    dr_prediction_z3_8x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    dr_prediction_z3_16x64_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             }
         } else {
             if (bh + bh == bw) {
                 switch (bh) {
-                case 4: dr_prediction_z3_8x4_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: dr_prediction_z3_16x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: dr_prediction_z3_32x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 32: dr_prediction_z3_64x32_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    dr_prediction_z3_8x4_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    dr_prediction_z3_16x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    dr_prediction_z3_32x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 32:
+                    dr_prediction_z3_64x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             } else {
                 switch (bh) {
-                case 4: dr_prediction_z3_16x4_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: dr_prediction_z3_32x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: dr_prediction_z3_64x16_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    dr_prediction_z3_16x4_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    dr_prediction_z3_32x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    dr_prediction_z3_64x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             }
         }
@@ -2417,8 +2531,9 @@ static void highbd_dr_prediction_z2_nx4_avx2(int32_t N, uint16_t *dst, ptrdiff_t
         if (base_min_diff > 4) {
             base_min_diff = 4;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 3) {
@@ -2533,8 +2648,9 @@ static void highbd_dr_prediction_z2_nx4_32bit_avx2(int N, uint16_t *dst, ptrdiff
         if (base_min_diff > 4) {
             base_min_diff = 4;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 3) {
@@ -2648,8 +2764,9 @@ static void highbd_dr_prediction_z2_nx8_avx2(int32_t N, uint16_t *dst, ptrdiff_t
         if (base_min_diff > 8) {
             base_min_diff = 8;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 7) {
@@ -2795,8 +2912,9 @@ static void highbd_dr_prediction_z2_nx8_32bit_avx2(int32_t N, uint16_t *dst, ptr
         if (base_min_diff > 8) {
             base_min_diff = 8;
         } else {
-            if (base_min_diff < 0)
+            if (base_min_diff < 0) {
                 base_min_diff = 0;
+            }
         }
 
         if (base_shift > 7) {
@@ -2959,8 +3077,9 @@ static void highbd_dr_prediction_z2_hxw_avx2(int32_t H, int32_t W, uint16_t *dst
             if (base_min_diff > 16) {
                 base_min_diff = 16;
             } else {
-                if (base_min_diff < 0)
+                if (base_min_diff < 0) {
                     base_min_diff = 0;
+                }
             }
 
             if (base_shift < 8) {
@@ -3117,8 +3236,9 @@ static void highbd_dr_prediction_z2_hxw_32bit_avx2(int32_t H, int32_t W, uint16_
             if (base_min_diff > 16) {
                 base_min_diff = 16;
             } else {
-                if (base_min_diff < 0)
+                if (base_min_diff < 0) {
                     base_min_diff = 0;
+                }
             }
 
             if (base_shift > 7) {
@@ -3297,16 +3417,22 @@ void svt_av1_highbd_dr_prediction_z2_avx2(uint16_t *dst, ptrdiff_t stride, int32
 static void highbd_transpose_tx_16x16(const uint16_t *src, ptrdiff_t pitchSrc, uint16_t *dst, ptrdiff_t pitchDst) {
     __m256i r[16];
     __m256i d[16];
-    for (int j = 0; j < 16; j++) { r[j] = _mm256_loadu_si256((__m256i *)(src + j * pitchSrc)); }
+    for (int j = 0; j < 16; j++) {
+        r[j] = _mm256_loadu_si256((__m256i *)(src + j * pitchSrc));
+    }
     transpose_16bit_16x16_avx2(r, d);
-    for (int j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + j * pitchDst), d[j]); }
+    for (int j = 0; j < 16; j++) {
+        _mm256_storeu_si256((__m256i *)(dst + j * pitchDst), d[j]);
+    }
 }
 
 static void highbd_transpose(const uint16_t *src, ptrdiff_t pitchSrc, uint16_t *dst, ptrdiff_t pitchDst, int32_t width,
                              int32_t height) {
-    for (int j = 0; j < height; j += 16)
-        for (int i = 0; i < width; i += 16)
+    for (int j = 0; j < height; j += 16) {
+        for (int i = 0; i < width; i += 16) {
             highbd_transpose_tx_16x16(src + i * pitchSrc + j, pitchSrc, dst + j * pitchDst + i, pitchDst);
+        }
+    }
 }
 
 static void highbd_dr_prediction_z3_4x4_avx2(uint16_t *dst, ptrdiff_t stride, const uint16_t *left,
@@ -3343,7 +3469,9 @@ static void highbd_dr_prediction_z3_8x8_avx2(uint16_t *dst, ptrdiff_t stride, co
                              &d[5],
                              &d[6],
                              &d[7]);
-    for (int32_t i = 0; i < 8; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 8; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void highbd_dr_prediction_z3_4x8_avx2(uint16_t *dst, ptrdiff_t stride, const uint16_t *left,
@@ -3353,7 +3481,9 @@ static void highbd_dr_prediction_z3_4x8_avx2(uint16_t *dst, ptrdiff_t stride, co
     highbd_dr_prediction_z1_8xn_internal_avx2(4, dstvec, left, upsample_left, dy);
     highbd_transpose4x8_8x4_sse2(
         &dstvec[0], &dstvec[1], &dstvec[2], &dstvec[3], &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7]);
-    for (int32_t i = 0; i < 8; i++) { _mm_storel_epi64((__m128i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 8; i++) {
+        _mm_storel_epi64((__m128i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void highbd_dr_prediction_z3_8x4_avx2(uint16_t *dst, ptrdiff_t stride, const uint16_t *left,
@@ -3385,7 +3515,9 @@ static void highbd_dr_prediction_z3_8x16_avx2(uint16_t *dst, ptrdiff_t stride, c
 
     highbd_dr_prediction_z1_16xn_internal_avx2(8, dstvec, left, upsample_left, dy);
     highbd_transpose8x16_16x8_avx2(dstvec, d);
-    for (int32_t i = 0; i < 8; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i])); }
+    for (int32_t i = 0; i < 8; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i]));
+    }
     for (int32_t i = 8; i < 16; i++) {
         _mm_storeu_si128((__m128i *)(dst + i * stride), _mm256_extracti128_si256(d[i - 8], 1));
     }
@@ -3457,9 +3589,13 @@ static void highbd_dr_prediction_z3_8x32_avx2(uint16_t *dst, ptrdiff_t stride, c
     __m256i dstvec[16], d[16];
 
     highbd_dr_prediction_z1_32xn_internal_avx2(8, dstvec, left, upsample_left, dy);
-    for (int32_t i = 0; i < 16; i += 8) { highbd_transpose8x16_16x8_avx2(dstvec + i, d + i); }
+    for (int32_t i = 0; i < 16; i += 8) {
+        highbd_transpose8x16_16x8_avx2(dstvec + i, d + i);
+    }
 
-    for (int32_t i = 0; i < 8; i++) { _mm_storeu_si128((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i])); }
+    for (int32_t i = 0; i < 8; i++) {
+        _mm_storeu_si128((__m128i *)(dst + i * stride), _mm256_castsi256_si128(d[i]));
+    }
     for (int32_t i = 0; i < 8; i++) {
         _mm_storeu_si128((__m128i *)(dst + (i + 8) * stride), _mm256_extracti128_si256(d[i], 1));
     }
@@ -3509,7 +3645,9 @@ static void highbd_dr_prediction_z3_16x16_avx2(uint16_t *dst, ptrdiff_t stride, 
     highbd_dr_prediction_z1_16xn_internal_avx2(16, dstvec, left, upsample_left, dy);
     transpose_16bit_16x16_avx2(dstvec, d);
 
-    for (int32_t i = 0; i < 16; i++) { _mm256_storeu_si256((__m256i *)(dst + i * stride), d[i]); }
+    for (int32_t i = 0; i < 16; i++) {
+        _mm256_storeu_si256((__m256i *)(dst + i * stride), d[i]);
+    }
 }
 
 static void highbd_dr_prediction_z3_32x32_avx2(uint16_t *dst, ptrdiff_t stride, const uint16_t *left,
@@ -3519,13 +3657,21 @@ static void highbd_dr_prediction_z3_32x32_avx2(uint16_t *dst, ptrdiff_t stride, 
     highbd_dr_prediction_z1_32xn_internal_avx2(32, dstvec, left, upsample_left, dy);
 
     transpose_16bit_16x16_avx2(dstvec, d);
-    for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + j * stride), d[j]); }
+    for (int32_t j = 0; j < 16; j++) {
+        _mm256_storeu_si256((__m256i *)(dst + j * stride), d[j]);
+    }
     transpose_16bit_16x16_avx2(dstvec + 16, d);
-    for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + j * stride + 16), d[j]); }
+    for (int32_t j = 0; j < 16; j++) {
+        _mm256_storeu_si256((__m256i *)(dst + j * stride + 16), d[j]);
+    }
     transpose_16bit_16x16_avx2(dstvec + 32, d);
-    for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + (j + 16) * stride), d[j]); }
+    for (int32_t j = 0; j < 16; j++) {
+        _mm256_storeu_si256((__m256i *)(dst + (j + 16) * stride), d[j]);
+    }
     transpose_16bit_16x16_avx2(dstvec + 48, d);
-    for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + (j + 16) * stride + 16), d[j]); }
+    for (int32_t j = 0; j < 16; j++) {
+        _mm256_storeu_si256((__m256i *)(dst + (j + 16) * stride + 16), d[j]);
+    }
 }
 
 static void highbd_dr_prediction_z3_64x64_avx2(uint16_t *dst, ptrdiff_t stride, const uint16_t *left,
@@ -3540,7 +3686,9 @@ static void highbd_dr_prediction_z3_16x32_avx2(uint16_t *dst, ptrdiff_t stride, 
     __m256i dstvec[32], d[32];
 
     highbd_dr_prediction_z1_32xn_internal_avx2(16, dstvec, left, upsample_left, dy);
-    for (int32_t i = 0; i < 32; i += 8) { highbd_transpose8x16_16x8_avx2(dstvec + i, d + i); }
+    for (int32_t i = 0; i < 32; i += 8) {
+        highbd_transpose8x16_16x8_avx2(dstvec + i, d + i);
+    }
     // store
     for (int32_t j = 0; j < 32; j += 16) {
         for (int32_t i = 0; i < 8; i++) {
@@ -3562,7 +3710,9 @@ static void highbd_dr_prediction_z3_32x16_avx2(uint16_t *dst, ptrdiff_t stride, 
     highbd_dr_prediction_z1_16xn_internal_avx2(32, dstvec, left, upsample_left, dy);
     for (int32_t i = 0; i < 32; i += 16) {
         transpose_16bit_16x16_avx2((dstvec + i), d);
-        for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + j * stride + i), d[j]); }
+        for (int32_t j = 0; j < 16; j++) {
+            _mm256_storeu_si256((__m256i *)(dst + j * stride + i), d[j]);
+        }
     }
 }
 
@@ -3595,7 +3745,9 @@ static void highbd_dr_prediction_z3_64x16_avx2(uint16_t *dst, ptrdiff_t stride, 
     highbd_dr_prediction_z1_16xn_internal_avx2(64, dstvec, left, upsample_left, dy);
     for (int32_t i = 0; i < 64; i += 16) {
         transpose_16bit_16x16_avx2((dstvec + i), d);
-        for (int32_t j = 0; j < 16; j++) { _mm256_storeu_si256((__m256i *)(dst + j * stride + i), d[j]); }
+        for (int32_t j = 0; j < 16; j++) {
+            _mm256_storeu_si256((__m256i *)(dst + j * stride + i), d[j]);
+        }
     }
 }
 
@@ -3609,41 +3761,79 @@ void svt_av1_highbd_dr_prediction_z3_avx2(uint16_t *dst, ptrdiff_t stride, int32
     assert(dy > 0);
     if (bw == bh) {
         switch (bw) {
-        case 4: highbd_dr_prediction_z3_4x4_avx2(dst, stride, left, upsample_left, dy); break;
-        case 8: highbd_dr_prediction_z3_8x8_avx2(dst, stride, left, upsample_left, dy); break;
-        case 16: highbd_dr_prediction_z3_16x16_avx2(dst, stride, left, upsample_left, dy); break;
-        case 32: highbd_dr_prediction_z3_32x32_avx2(dst, stride, left, upsample_left, dy); break;
-        case 64: highbd_dr_prediction_z3_64x64_avx2(dst, stride, left, upsample_left, dy); break;
+        case 4:
+            highbd_dr_prediction_z3_4x4_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 8:
+            highbd_dr_prediction_z3_8x8_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 16:
+            highbd_dr_prediction_z3_16x16_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 32:
+            highbd_dr_prediction_z3_32x32_avx2(dst, stride, left, upsample_left, dy);
+            break;
+        case 64:
+            highbd_dr_prediction_z3_64x64_avx2(dst, stride, left, upsample_left, dy);
+            break;
         }
     } else {
         if (bw < bh) {
             if (bw + bw == bh) {
                 switch (bw) {
-                case 4: highbd_dr_prediction_z3_4x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: highbd_dr_prediction_z3_8x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: highbd_dr_prediction_z3_16x32_avx2(dst, stride, left, upsample_left, dy); break;
-                case 32: highbd_dr_prediction_z3_32x64_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    highbd_dr_prediction_z3_4x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    highbd_dr_prediction_z3_8x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    highbd_dr_prediction_z3_16x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 32:
+                    highbd_dr_prediction_z3_32x64_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             } else {
                 switch (bw) {
-                case 4: highbd_dr_prediction_z3_4x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: highbd_dr_prediction_z3_8x32_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: highbd_dr_prediction_z3_16x64_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    highbd_dr_prediction_z3_4x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    highbd_dr_prediction_z3_8x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    highbd_dr_prediction_z3_16x64_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             }
         } else {
             if (bh + bh == bw) {
                 switch (bh) {
-                case 4: highbd_dr_prediction_z3_8x4_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: highbd_dr_prediction_z3_16x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: highbd_dr_prediction_z3_32x16_avx2(dst, stride, left, upsample_left, dy); break;
-                case 32: highbd_dr_prediction_z3_64x32_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    highbd_dr_prediction_z3_8x4_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    highbd_dr_prediction_z3_16x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    highbd_dr_prediction_z3_32x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 32:
+                    highbd_dr_prediction_z3_64x32_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             } else {
                 switch (bh) {
-                case 4: highbd_dr_prediction_z3_16x4_avx2(dst, stride, left, upsample_left, dy); break;
-                case 8: highbd_dr_prediction_z3_32x8_avx2(dst, stride, left, upsample_left, dy); break;
-                case 16: highbd_dr_prediction_z3_64x16_avx2(dst, stride, left, upsample_left, dy); break;
+                case 4:
+                    highbd_dr_prediction_z3_16x4_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 8:
+                    highbd_dr_prediction_z3_32x8_avx2(dst, stride, left, upsample_left, dy);
+                    break;
+                case 16:
+                    highbd_dr_prediction_z3_64x16_avx2(dst, stride, left, upsample_left, dy);
+                    break;
                 }
             }
         }

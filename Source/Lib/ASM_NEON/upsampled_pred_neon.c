@@ -21,10 +21,15 @@ static inline const InterpFilterParams *av1_get_filter(int subpel_search) {
     assert(subpel_search >= USE_2_TAPS);
 
     switch (subpel_search) {
-    case USE_2_TAPS: return &av1_interp_filter_params_list[BILINEAR];
-    case USE_4_TAPS: return &av1_interp_4tap[EIGHTTAP_REGULAR];
-    case USE_8_TAPS: return &av1_interp_filter_params_list[EIGHTTAP_REGULAR];
-    default: assert(0); return NULL;
+    case USE_2_TAPS:
+        return &av1_interp_filter_params_list[BILINEAR];
+    case USE_4_TAPS:
+        return &av1_interp_4tap[EIGHTTAP_REGULAR];
+    case USE_8_TAPS:
+        return &av1_interp_filter_params_list[EIGHTTAP_REGULAR];
+    default:
+        assert(0);
+        return NULL;
     }
 }
 

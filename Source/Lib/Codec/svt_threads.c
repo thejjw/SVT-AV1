@@ -84,8 +84,9 @@ static void check_set_prio(void) {
      * the thread priority will __always__ fail the thread sanitizer.
      * https://github.com/google/sanitizers/issues/1088
      */
-    if (EB_THREAD_SANITIZER_ENABLED || geteuid() != 0)
+    if (EB_THREAD_SANITIZER_ENABLED || geteuid() != 0) {
         return;
+    }
     pthread_attr_t attr;
     int            ret;
     if ((ret = pthread_attr_init(&attr))) {
@@ -215,10 +216,11 @@ EbHandle svt_create_semaphore(uint32_t initial_count, uint32_t max_count) {
     UNUSED(max_count);
 
     semaphore_handle = (sem_t *)malloc(sizeof(sem_t));
-    if (semaphore_handle != NULL)
+    if (semaphore_handle != NULL) {
         sem_init((sem_t *)semaphore_handle, // semaphore handle
                  0, // shared semaphore (not local)
                  initial_count); // initial count
+    }
 #endif
 
     return semaphore_handle;
@@ -261,7 +263,9 @@ EbErrorType svt_block_on_semaphore(EbHandle semaphore_handle) {
         : EB_ErrorNone;
 #else
     int ret;
-    do { ret = sem_wait((sem_t *)semaphore_handle); } while (ret == -1 && errno == EINTR);
+    do {
+        ret = sem_wait((sem_t *)semaphore_handle);
+    } while (ret == -1 && errno == EINTR);
     return_error = ret ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
 #endif
 
@@ -421,12 +425,16 @@ EbErrorType svt_wait_cond_var(CondVar *cond_var, int32_t input) {
 #ifdef _WIN32
 
     EnterCriticalSection(&cond_var->cs);
-    while (cond_var->val == input) SleepConditionVariableCS(&cond_var->cv, &cond_var->cs, INFINITE);
+    while (cond_var->val == input) {
+        SleepConditionVariableCS(&cond_var->cv, &cond_var->cs, INFINITE);
+    }
     LeaveCriticalSection(&cond_var->cs);
     return_error = EB_ErrorNone;
 #else
     return_error = pthread_mutex_lock(&cond_var->m_mutex);
-    while (cond_var->val == input) return_error = pthread_cond_wait(&cond_var->m_cond, &cond_var->m_mutex);
+    while (cond_var->val == input) {
+        return_error = pthread_cond_wait(&cond_var->m_cond, &cond_var->m_mutex);
+    }
     return_error = pthread_mutex_unlock(&cond_var->m_mutex);
 #endif
     return return_error;

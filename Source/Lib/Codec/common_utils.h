@@ -85,28 +85,35 @@ static AOM_FORCE_INLINE int get_br_ctx(const uint8_t *const levels,
     case TX_CLASS_2D:
         mag += levels[pos + stride + 1];
         mag = AOMMIN((mag + 1) >> 1, 6);
-        if (c == 0)
+        if (c == 0) {
             return mag;
-        if ((row < 2) && (col < 2))
+        }
+        if ((row < 2) && (col < 2)) {
             return mag + 7;
+        }
         break;
     case TX_CLASS_HORIZ:
         mag += levels[pos + 2];
         mag = AOMMIN((mag + 1) >> 1, 6);
-        if (c == 0)
+        if (c == 0) {
             return mag;
-        if (col == 0)
+        }
+        if (col == 0) {
             return mag + 7;
+        }
         break;
     case TX_CLASS_VERT:
         mag += levels[pos + (stride << 1)];
         mag = AOMMIN((mag + 1) >> 1, 6);
-        if (c == 0)
+        if (c == 0) {
             return mag;
-        if (row == 0)
+        }
+        if (row == 0) {
             return mag + 7;
+        }
         break;
-    default: break;
+    default:
+        break;
     }
     return mag + 14;
 }

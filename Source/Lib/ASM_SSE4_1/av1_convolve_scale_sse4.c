@@ -81,7 +81,9 @@ static void hfilter8(const uint8_t *src, int src_stride, int16_t *dst, int w, in
             const uint8_t *const src_row = src_col + y * src_stride;
 
             int32_t sum = (1 << (bd + FILTER_BITS - 1));
-            for (int k = 0; k < ntaps; ++k) { sum += filter[k] * src_row[k]; }
+            for (int k = 0; k < ntaps; ++k) {
+                sum += filter[k] * src_row[k];
+            }
 
             dst[y + x * h] = ROUND_POWER_OF_TWO(sum, round);
         }
@@ -186,7 +188,9 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst, int dst_s
         for (; x < w; ++x) {
             const int16_t *src_x = src_y + x * src_stride;
             int32_t        sum   = 1 << offset_bits;
-            for (int k = 0; k < ntaps; ++k) sum += filter[k] * src_x[k];
+            for (int k = 0; k < ntaps; ++k) {
+                sum += filter[k] * src_x[k];
+            }
             CONV_BUF_TYPE res = ROUND_POWER_OF_TWO(sum, conv_params->round_1);
 
             if (conv_params->is_compound) {
@@ -303,7 +307,9 @@ static void highbd_hfilter8(const uint16_t *src, int src_stride, int16_t *dst, i
             const uint16_t *const src_row = src_col + y * src_stride;
 
             int32_t sum = (1 << (bd + FILTER_BITS - 1));
-            for (int k = 0; k < ntaps; ++k) { sum += filter[k] * src_row[k]; }
+            for (int k = 0; k < ntaps; ++k) {
+                sum += filter[k] * src_row[k];
+            }
 
             dst[y + x * h] = ROUND_POWER_OF_TWO(sum, round);
         }
@@ -410,7 +416,9 @@ static void highbd_vfilter8(const int16_t *src, int src_stride, uint16_t *dst, i
         for (; x < w; ++x) {
             const int16_t *src_x = src_y + x * src_stride;
             int32_t        sum   = 1 << offset_bits;
-            for (int k = 0; k < ntaps; ++k) sum += filter[k] * src_x[k];
+            for (int k = 0; k < ntaps; ++k) {
+                sum += filter[k] * src_x[k];
+            }
             CONV_BUF_TYPE res = ROUND_POWER_OF_TWO(sum, conv_params->round_1);
             if (conv_params->is_compound) {
                 if (conv_params->do_average) {

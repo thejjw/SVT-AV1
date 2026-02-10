@@ -68,7 +68,9 @@ void svt_aom_subtract_block_neon(int rows, int cols, int16_t *diff, ptrdiff_t di
         r = rows;
         do {
             c = 0;
-            do { diff[c] = src[c] - pred[c]; } while (++c < cols);
+            do {
+                diff[c] = src[c] - pred[c];
+            } while (++c < cols);
             diff += diff_stride;
             pred += pred_stride;
             src += src_stride;

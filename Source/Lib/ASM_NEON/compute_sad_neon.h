@@ -200,7 +200,9 @@ static inline uint32_t sad128xh_neon(const uint8_t *src_ptr, uint32_t src_stride
     uint32x4_t sum_u32;
     uint32_t   i;
 
-    for (i = 0; i < 8; i++) { sum[i] = vdupq_n_u16(0); }
+    for (i = 0; i < 8; i++) {
+        sum[i] = vdupq_n_u16(0);
+    }
 
     i = h;
     do {

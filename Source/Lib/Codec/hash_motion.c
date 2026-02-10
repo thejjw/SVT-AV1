@@ -18,8 +18,9 @@ static const int block_size_bits                = 3;
 static const int max_candidates_per_hash_bucket = 256;
 
 static void hash_table_clear_all(HashTable *p_hash_table) {
-    if (p_hash_table->p_lookup_table == NULL)
+    if (p_hash_table->p_lookup_table == NULL) {
         return;
+    }
     int max_addr = 1 << (crc_bits + block_size_bits);
     for (int i = 0; i < max_addr; i++) {
         if (p_hash_table->p_lookup_table[i] != NULL) {
@@ -34,7 +35,9 @@ static void get_pixels_in_1d_char_array_by_block_2x2(uint8_t *y_src, int stride,
     uint8_t *p_pel = y_src;
     int      index = 0;
     for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) p_pixels_in1D[index++] = p_pel[j];
+        for (int j = 0; j < 2; j++) {
+            p_pixels_in1D[index++] = p_pel[j];
+        }
         p_pel += stride;
     }
 }
@@ -43,7 +46,9 @@ static void get_pixels_in_1d_short_array_by_block_2x2(uint16_t *y_src, int strid
     uint16_t *p_pel = y_src;
     int       index = 0;
     for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) p_pixels_in1D[index++] = p_pel[j];
+        for (int j = 0; j < 2; j++) {
+            p_pixels_in1D[index++] = p_pel[j];
+        }
         p_pel += stride;
     }
 }
@@ -53,13 +58,20 @@ static void get_pixels_in_1d_short_array_by_block_2x2(uint16_t *y_src, int strid
 // is used to get the first 3 bits.
 static int hash_block_size_to_index(int block_size) {
     switch (block_size) {
-    case 4: return 0;
-    case 8: return 1;
-    case 16: return 2;
-    case 32: return 3;
-    case 64: return 4;
-    case 128: return 5;
-    default: return -1;
+    case 4:
+        return 0;
+    case 8:
+        return 1;
+    case 16:
+        return 2;
+    case 32:
+        return 3;
+    case 64:
+        return 4;
+    case 128:
+        return 5;
+    default:
+        return -1;
     }
 }
 
@@ -107,16 +119,19 @@ static bool hash_table_add_to_table(HashTable *p_hash_table, uint32_t hash_value
             return false;
         }
         if (svt_aom_vector_setup(p_hash_table->p_lookup_table[hash_value], 10, sizeof(*curr_block_hash)) ==
-            VECTOR_ERROR)
+            VECTOR_ERROR) {
             return false;
+        }
     }
     // Place an upper bound each hash table bucket to up to 256 intrabc
     // block candidates, and ignore subsequent ones. Considering more can
     // unnecessarily slow down encoding for virtually no efficiency gain.
     if (svt_aom_vector_byte_size(p_hash_table->p_lookup_table[hash_value]) <
         max_candidates_per_hash_bucket * sizeof(*curr_block_hash)) {
-        if (svt_aom_vector_push_back(p_hash_table->p_lookup_table[hash_value], (void *)curr_block_hash) == VECTOR_ERROR)
+        if (svt_aom_vector_push_back(p_hash_table->p_lookup_table[hash_value], (void *)curr_block_hash) ==
+            VECTOR_ERROR) {
             return false;
+        }
     }
     return true;
 }
@@ -124,8 +139,9 @@ static bool hash_table_add_to_table(HashTable *p_hash_table, uint32_t hash_value
 int32_t svt_av1_hash_table_count(const HashTable *p_hash_table, uint32_t hash_value) {
     if (p_hash_table->p_lookup_table[hash_value] == NULL) {
         return 0;
-    } else
+    } else {
         return (int32_t)(p_hash_table->p_lookup_table[hash_value]->size);
+    }
 }
 
 Iterator svt_av1_hash_get_first_iterator(HashTable *p_hash_table, uint32_t hash_value) {

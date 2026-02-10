@@ -111,7 +111,9 @@ static inline void residual_kernel128xh_neon(const uint8_t *restrict input, cons
                                              const uint8_t *restrict pred, const uint32_t  pred_stride,
                                              int16_t *residual, const uint32_t residual_stride, uint32_t area_height) {
     do {
-        for (int i = 0; i < 128; i += 32) { residual_kernel32x1_neon(input + i, pred + i, residual + i); }
+        for (int i = 0; i < 128; i += 32) {
+            residual_kernel32x1_neon(input + i, pred + i, residual + i);
+        }
 
         input += input_stride;
         pred += pred_stride;
@@ -329,11 +331,12 @@ void svt_unpack_and_2bcompress_neon(uint16_t *in16b_buffer, uint32_t in16b_strid
                                           out8b_buffer + h * out8b_stride,
                                           out2b_buffer + h * out2b_stride,
                                           width >> 4);
-            if (remainder)
+            if (remainder) {
                 svt_unpack_and_2bcompress_remainder(in16b_buffer + h * in16b_stride + offset_rem,
                                                     out8b_buffer + h * out8b_stride + offset_rem,
                                                     out2b_buffer + h * out2b_stride + offset2b_rem,
                                                     remainder);
+            }
         }
     }
 }

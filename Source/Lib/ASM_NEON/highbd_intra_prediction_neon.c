@@ -21,8 +21,9 @@
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
 void svt_av1_filter_intra_edge_high_neon(uint16_t *p, int sz, int strength) {
-    if (!strength)
+    if (!strength) {
         return;
+    }
     assert(sz >= 0 && sz <= 129);
 
     DECLARE_ALIGNED(16, static const uint16_t, idx[8]) = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -310,7 +311,9 @@ HIGHBD_SMOOTH_V_NXM_WIDE(64, 64)
 #undef HIGHBD_SMOOTH_V_NXM_WIDE
 
 // 256 - v = vneg_s8(v)
-static inline uint16x4_t negate_s8(const uint16x4_t v) { return vreinterpret_u16_s8(vneg_s8(vreinterpret_s8_u16(v))); }
+static inline uint16x4_t negate_s8(const uint16x4_t v) {
+    return vreinterpret_u16_s8(vneg_s8(vreinterpret_s8_u16(v)));
+}
 
 static inline void highbd_smooth_h_4xh_neon(uint16_t *dst, ptrdiff_t stride, const uint16_t *const top_row,
                                             const uint16_t *left_column, int height) {
@@ -1056,11 +1059,15 @@ HIGHBD_PAETH_NXM_WIDE(64, 64)
 // DC
 
 static inline void highbd_dc_store_4xh(uint16_t *dst, ptrdiff_t stride, int h, uint16x4_t dc) {
-    for (int i = 0; i < h; ++i) { vst1_u16(dst + i * stride, dc); }
+    for (int i = 0; i < h; ++i) {
+        vst1_u16(dst + i * stride, dc);
+    }
 }
 
 static inline void highbd_dc_store_8xh(uint16_t *dst, ptrdiff_t stride, int h, uint16x8_t dc) {
-    for (int i = 0; i < h; ++i) { vst1q_u16(dst + i * stride, dc); }
+    for (int i = 0; i < h; ++i) {
+        vst1q_u16(dst + i * stride, dc);
+    }
 }
 
 static inline void highbd_dc_store_16xh(uint16_t *dst, ptrdiff_t stride, int h, uint16x8_t dc) {
@@ -2457,7 +2464,9 @@ static inline void highbd_dr_prediction_z3_upsample0_neon(uint16_t *dst, ptrdiff
                 HIGHBD_DR_PREDICTOR_Z3_STEP_X4(&out[3], iota1x4, base3, l30, l31, shifts0, shifts1, 3, 6);
             }
             transpose_array_inplace_u16_4x4(out);
-            for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + r2 * stride + c, out[r2]); }
+            for (int r2 = 0; r2 < 4; ++r2) {
+                vst1_u16(dst + r2 * stride + c, out[r2]);
+            }
             y += 4 * dy;
             c += 4;
         } while (c < bw);
@@ -2505,8 +2514,12 @@ static inline void highbd_dr_prediction_z3_upsample0_neon(uint16_t *dst, ptrdiff
                         &out[3], iota1x8, base3, l3.val[0], l3.val[1], shifts0, shifts1, 3, 6);
                 }
                 transpose_array_inplace_u16_4x8(out);
-                for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + (r + r2) * stride + c, vget_low_u16(out[r2])); }
-                for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + (r + r2 + 4) * stride + c, vget_high_u16(out[r2])); }
+                for (int r2 = 0; r2 < 4; ++r2) {
+                    vst1_u16(dst + (r + r2) * stride + c, vget_low_u16(out[r2]));
+                }
+                for (int r2 = 0; r2 < 4; ++r2) {
+                    vst1_u16(dst + (r + r2 + 4) * stride + c, vget_high_u16(out[r2]));
+                }
                 r += 8;
             } while (r < bh);
             y += 4 * dy;
@@ -2558,7 +2571,9 @@ static inline void highbd_dr_prediction_z3_upsample1_neon(uint16_t *dst, ptrdiff
             HIGHBD_DR_PREDICTOR_Z3_STEP_X4(&out[2], iota2x4, base2, l2.val[0], l2.val[1], shifts0, shifts1, 2, 5);
             HIGHBD_DR_PREDICTOR_Z3_STEP_X4(&out[3], iota2x4, base3, l3.val[0], l3.val[1], shifts0, shifts1, 3, 5);
             transpose_array_inplace_u16_4x4(out);
-            for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + r2 * stride + c, out[r2]); }
+            for (int r2 = 0; r2 < 4; ++r2) {
+                vst1_u16(dst + r2 * stride + c, out[r2]);
+            }
             y += 4 * dy;
             c += 4;
         } while (c < bw);
@@ -2588,8 +2603,12 @@ static inline void highbd_dr_prediction_z3_upsample1_neon(uint16_t *dst, ptrdiff
                 HIGHBD_DR_PREDICTOR_Z3_STEP_X8(&out[2], iota2x8, base2, l2.val[0], l2.val[1], shifts0, shifts1, 2, 5);
                 HIGHBD_DR_PREDICTOR_Z3_STEP_X8(&out[3], iota2x8, base3, l3.val[0], l3.val[1], shifts0, shifts1, 3, 5);
                 transpose_array_inplace_u16_4x8(out);
-                for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + (r + r2) * stride + c, vget_low_u16(out[r2])); }
-                for (int r2 = 0; r2 < 4; ++r2) { vst1_u16(dst + (r + r2 + 4) * stride + c, vget_high_u16(out[r2])); }
+                for (int r2 = 0; r2 < 4; ++r2) {
+                    vst1_u16(dst + (r + r2) * stride + c, vget_low_u16(out[r2]));
+                }
+                for (int r2 = 0; r2 < 4; ++r2) {
+                    vst1_u16(dst + (r + r2 + 4) * stride + c, vget_high_u16(out[r2]));
+                }
                 r += 8;
             } while (r < bh);
             y += 4 * dy;

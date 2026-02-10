@@ -74,18 +74,20 @@ EbErrorType svt_destroy_mutex(EbHandle mutex_handle);
         }                                            \
     } while (0);
 
-#define EB_CREATE_THREAD_ARRAY(pa, count, thread_function, thread_contexts)                                \
-    do {                                                                                                   \
-        EB_ALLOC_PTR_ARRAY(pa, count);                                                                     \
-        for (uint32_t i = 0; i < count; i++) EB_CREATE_THREAD(pa[i], thread_function, thread_contexts[i]); \
+#define EB_CREATE_THREAD_ARRAY(pa, count, thread_function, thread_contexts) \
+    do {                                                                    \
+        EB_ALLOC_PTR_ARRAY(pa, count);                                      \
+        for (uint32_t i = 0; i < count; i++)                                \
+            EB_CREATE_THREAD(pa[i], thread_function, thread_contexts[i]);   \
     } while (0)
 
-#define EB_DESTROY_THREAD_ARRAY(pa, count)                                 \
-    do {                                                                   \
-        if (pa) {                                                          \
-            for (uint32_t i = 0; i < count; i++) EB_DESTROY_THREAD(pa[i]); \
-            EB_FREE_PTR_ARRAY(pa, count);                                  \
-        }                                                                  \
+#define EB_DESTROY_THREAD_ARRAY(pa, count)       \
+    do {                                         \
+        if (pa) {                                \
+            for (uint32_t i = 0; i < count; i++) \
+                EB_DESTROY_THREAD(pa[i]);        \
+            EB_FREE_PTR_ARRAY(pa, count);        \
+        }                                        \
     } while (0)
 
 void svt_aom_atomic_set_u32(AtomicVarU32 *var, uint32_t in);
@@ -114,14 +116,18 @@ typedef INIT_ONCE OnceType;
 #define ONCE_INIT INIT_ONCE_STATIC_INIT
 #define ONCE_ROUTINE(name) BOOL CALLBACK name(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)
 #define ONCE_ROUTINE_EPILOG \
-    do { return TRUE; } while (0)
+    do {                    \
+        return TRUE;        \
+    } while (0)
 typedef PINIT_ONCE_FN OnceFn;
 #else
 typedef pthread_once_t OnceType;
 #define ONCE_INIT PTHREAD_ONCE_INIT
 #define ONCE_ROUTINE(name) void name(void)
 #define ONCE_ROUTINE_EPILOG \
-    do { return; } while (0)
+    do {                    \
+        return;             \
+    } while (0)
 typedef void (*OnceFn)(void);
 #endif
 #define DEFINE_ONCE(once_control) static OnceType once_control = ONCE_INIT

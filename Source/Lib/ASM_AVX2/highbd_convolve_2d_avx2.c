@@ -60,8 +60,9 @@ void svt_av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
             for (i = 0; i < im_h; i += 2) {
                 const __m256i row0 = _mm256_loadu_si256((__m256i *)&src_ptr[i * src_stride + j]);
                 __m256i       row1 = _mm256_set1_epi16(0);
-                if (i + 1 < im_h)
+                if (i + 1 < im_h) {
                     row1 = _mm256_loadu_si256((__m256i *)&src_ptr[(i + 1) * src_stride + j]);
+                }
 
                 const __m256i r0 = yy_unpacklo_epi128(row0, row1);
                 const __m256i r1 = yy_unpackhi_epi128(row0, row1);

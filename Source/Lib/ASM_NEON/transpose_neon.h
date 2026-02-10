@@ -959,9 +959,13 @@ static inline void transpose_elems_inplace_s32_4x4(int32x4_t *a0, int32x4_t *a1,
     transpose_elems_s32_4x4(*a0, *a1, *a2, *a3, a0, a1, a2, a3);
 }
 
-static inline int64x2_t aom_vtrn1q_s64(int64x2_t a, int64x2_t b) { return vtrn1q_s64(a, b); }
+static inline int64x2_t aom_vtrn1q_s64(int64x2_t a, int64x2_t b) {
+    return vtrn1q_s64(a, b);
+}
 
-static inline int64x2_t aom_vtrn2q_s64(int64x2_t a, int64x2_t b) { return vtrn2q_s64(a, b); }
+static inline int64x2_t aom_vtrn2q_s64(int64x2_t a, int64x2_t b) {
+    return vtrn2q_s64(a, b);
+}
 
 static inline void transpose_elems_s32_4x8(int32x4_t a0, int32x4_t a1, int32x4_t a2, int32x4_t a3, int32x4_t a4,
                                            int32x4_t a5, int32x4_t a6, int32x4_t a7, int32x4x2_t *o0, int32x4x2_t *o1,
@@ -1180,7 +1184,9 @@ static AOM_FORCE_INLINE void transpose_arrays_s32_4nx4n(const int32x4_t *in, int
     const int h = height >> 2;
     const int w = width >> 2;
     for (int j = 0; j < w; j++) {
-        for (int i = 0; i < h; i++) { transpose_arrays_s32_4x4(in + j * height + i * 4, out + i * width + j * 4); }
+        for (int i = 0; i < h; i++) {
+            transpose_arrays_s32_4x4(in + j * height + i * 4, out + i * width + j * 4);
+        }
     }
 }
 
@@ -1261,7 +1267,9 @@ static AOM_FORCE_INLINE void transpose_arrays_s16_4nx4n(const int16x4_t *in, int
     const int h = height >> 2;
     const int w = width >> 2;
     for (int j = 0; j < w; j++) {
-        for (int i = 0; i < h; i++) { transpose_arrays_s16_4x4(in + j * height + i * 4, out + i * width + j * 4); }
+        for (int i = 0; i < h; i++) {
+            transpose_arrays_s16_4x4(in + j * height + i * 4, out + i * width + j * 4);
+        }
     }
 }
 

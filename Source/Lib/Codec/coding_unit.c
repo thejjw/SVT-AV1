@@ -78,33 +78,37 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr,
         if (nsq_geom_lvl) {
             uint8_t allow_HVA_HVB, allow_HV4, min_nsq_bsize;
             svt_aom_set_nsq_geom_ctrls(NULL, nsq_geom_lvl, &allow_HVA_HVB, &allow_HV4, &min_nsq_bsize);
-            if (min_nsq_bsize < 8)
+            if (min_nsq_bsize < 8) {
                 disallow_sub_8x8_nsq = false;
-            if (min_nsq_bsize < 16)
+            }
+            if (min_nsq_bsize < 16) {
                 disallow_sub_16x16_nsq = false;
+            }
         }
     }
     bool disallow_4x4 = svt_aom_get_disallow_4x4(enc_mode);
     bool disallow_8x8 = svt_aom_get_disallow_8x8(
         enc_mode, allintra, rtc, picture_control_set->frame_width, picture_control_set->frame_height);
     uint32_t tot_blk_num;
-    if (sb_size_pix == 128)
-        if (disallow_8x8 && disallow_sub_16x16_nsq)
+    if (sb_size_pix == 128) {
+        if (disallow_8x8 && disallow_sub_16x16_nsq) {
             tot_blk_num = 64;
-        else if (disallow_8x8 || (disallow_4x4 && disallow_sub_8x8_nsq))
+        } else if (disallow_8x8 || (disallow_4x4 && disallow_sub_8x8_nsq)) {
             tot_blk_num = 256;
-        else if (disallow_4x4)
+        } else if (disallow_4x4) {
             tot_blk_num = 512;
-        else
+        } else {
             tot_blk_num = 1024;
-    else if (disallow_8x8 && disallow_sub_16x16_nsq)
+        }
+    } else if (disallow_8x8 && disallow_sub_16x16_nsq) {
         tot_blk_num = 16;
-    else if (disallow_8x8 || (disallow_4x4 && disallow_sub_8x8_nsq))
+    } else if (disallow_8x8 || (disallow_4x4 && disallow_sub_8x8_nsq)) {
         tot_blk_num = 64;
-    else if (disallow_4x4)
+    } else if (disallow_4x4) {
         tot_blk_num = 128;
-    else
+    } else {
         tot_blk_num = 256;
+    }
     // Do NOT initialize the final_blk_arr here
     // Malloc maximum but only initialize it only when actually used.
     // This will help to same actually memory usage

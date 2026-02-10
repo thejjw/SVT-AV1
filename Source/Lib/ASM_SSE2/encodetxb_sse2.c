@@ -472,42 +472,44 @@ void svt_av1_get_nz_map_contexts_sse2(const uint8_t *const levels, const int16_t
         offsets[1] = 1 * stride + 1;
         offsets[2] = 2 * stride + 0;
 
-        if (width == 4)
+        if (width == 4) {
             get_4_nz_map_contexts_2d(levels, height, offsets, coeff_contexts);
-        else if (width == 8)
+        } else if (width == 8) {
             get_8_coeff_contexts_2d(levels, height, offsets, coeff_contexts);
-        else
+        } else {
             get_16n_coeff_contexts_2d(levels, real_width, real_height, width, height, offsets, coeff_contexts);
+        }
     } else if (tx_class == TX_CLASS_HORIZ) {
         offsets[0] = 2;
         offsets[1] = 3;
         offsets[2] = 4;
-        if (width == 4)
+        if (width == 4) {
             get_4_nz_map_contexts_hor(levels, height, offsets, coeff_contexts);
-        else if (width == 8)
+        } else if (width == 8) {
             get_8_coeff_contexts_hor(levels, height, offsets, coeff_contexts);
-        else {
+        } else {
             get_16n_coeff_contexts_hor(levels, width, height, offsets, coeff_contexts);
         }
     } else { // TX_CLASS_VERT
         offsets[0] = 2 * stride;
         offsets[1] = 3 * stride;
         offsets[2] = 4 * stride;
-        if (width == 4)
+        if (width == 4) {
             get_4_nz_map_contexts_ver(levels, height, offsets, coeff_contexts);
-        else if (width == 8)
+        } else if (width == 8) {
             get_8_coeff_contexts_ver(levels, height, offsets, coeff_contexts);
-        else {
+        } else {
             get_16n_coeff_contexts_ver(levels, width, height, offsets, coeff_contexts);
         }
     }
 
     const int32_t bwl = get_txb_bwl_tab[tx_size];
     const int32_t pos = scan[last_idx];
-    if (last_idx <= (height << bwl) / 8)
+    if (last_idx <= (height << bwl) / 8) {
         coeff_contexts[pos] = 1;
-    else if (last_idx <= (height << bwl) / 4)
+    } else if (last_idx <= (height << bwl) / 4) {
         coeff_contexts[pos] = 2;
-    else
+    } else {
         coeff_contexts[pos] = 3;
+    }
 }

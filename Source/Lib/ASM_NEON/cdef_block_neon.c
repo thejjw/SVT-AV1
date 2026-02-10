@@ -29,7 +29,9 @@ void svt_aom_copy_rect8_8bit_to_16bit_neon(uint16_t *dst, int32_t dstride, const
             const uint8x8_t row = vld1_u8(&src[i * sstride + j]);
             vst1q_u16(&dst[i * dstride + j], vmovl_u8(row));
         }
-        for (; j < h; j++) { dst[i * dstride + j] = src[i * sstride + j]; }
+        for (; j < h; j++) {
+            dst[i * dstride + j] = src[i * sstride + j];
+        }
     }
 }
 

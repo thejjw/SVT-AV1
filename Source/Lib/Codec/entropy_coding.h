@@ -62,7 +62,9 @@ static INLINE int32_t frame_is_intra_only(const PictureParentControlSet *const p
     return pcs->frm_hdr.frame_type == KEY_FRAME || pcs->frm_hdr.frame_type == INTRA_ONLY_FRAME;
 }
 
-static INLINE int32_t frame_is_sframe(const PictureParentControlSet *pcs) { return pcs->frm_hdr.frame_type == S_FRAME; }
+static INLINE int32_t frame_is_sframe(const PictureParentControlSet *pcs) {
+    return pcs->frm_hdr.frame_type == S_FRAME;
+}
 
 // Returns 1 if this frame might allow mvs from some reference frame.
 
@@ -82,10 +84,11 @@ static INLINE uint8_t major_minor_to_seq_level_idx(BitstreamLevel bl) {
 }
 
 static INLINE void set_dc_sign(int32_t *cul_level, int32_t dc_val) {
-    if (dc_val < 0)
+    if (dc_val < 0) {
         *cul_level |= 1 << COEFF_CONTEXT_BITS;
-    else if (dc_val > 0)
+    } else if (dc_val > 0) {
         *cul_level += 2 << COEFF_CONTEXT_BITS;
+    }
 }
 
 static const uint8_t eob_to_pos_small[33] = {
@@ -119,9 +122,9 @@ static const uint8_t eob_to_pos_large[17] = {
 static INLINE int get_eob_pos_token(const int eob, int *const extra) {
     int t;
 
-    if (eob < 33)
+    if (eob < 33) {
         t = eob_to_pos_small[eob];
-    else {
+    } else {
         const int e = MIN((eob - 1) >> 5, 16);
         t           = eob_to_pos_large[e];
     }

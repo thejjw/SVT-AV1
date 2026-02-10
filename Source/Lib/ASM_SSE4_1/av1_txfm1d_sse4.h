@@ -67,8 +67,10 @@ static INLINE void transpose_32(int32_t txfm_size, const __m128i *input, __m128i
 
 // out0 = in0*w0 + in1*w1
 // out1 = in1*w0 - in0*w1
-#define btf_32_sse4_1_type1(w0, w1, in0, in1, out0, out1, bit) \
-    do { btf_32_sse4_1_type0(w1, w0, in1, in0, out0, out1, bit); } while (0)
+#define btf_32_sse4_1_type1(w0, w1, in0, in1, out0, out1, bit)  \
+    do {                                                        \
+        btf_32_sse4_1_type0(w1, w0, in1, in0, out0, out1, bit); \
+    } while (0)
 
 // out0 = in0*w0 + in1*w1
 // out1 = -in1*w0 + in0*w1
@@ -88,8 +90,10 @@ static INLINE void transpose_32(int32_t txfm_size, const __m128i *input, __m128i
 
 // out0 = in0*w0 + in1*w1
 // out1 = in1*w0 - in0*w1
-#define btf_32_type1_sse4_1_new(ww0, ww1, in0, in1, out0, out1, r, bit) \
-    do { btf_32_type0_sse4_1_new(ww1, ww0, in1, in0, out0, out1, r, bit); } while (0)
+#define btf_32_type1_sse4_1_new(ww0, ww1, in0, in1, out0, out1, r, bit)  \
+    do {                                                                 \
+        btf_32_type0_sse4_1_new(ww1, ww0, in1, in0, out0, out1, r, bit); \
+    } while (0)
 
 static INLINE __m128i mm_reverse_epi16(const __m128i x) {
     const __m128i a = _mm_shufflelo_epi16(x, 0x1b);

@@ -92,10 +92,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
             if (ix4 <= -7) {
                 for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     uint16_t ref = (ref8b[iy * stride8b] << 2) | ((ref2b[iy * stride2b] >> 6) & 3);
                     tmp[k + 7]   = _mm256_cvtepi16_epi32(
                         _mm_set1_epi16((1 << (bd + FILTER_BITS - reduce_bits_horiz - 1)) +
@@ -104,10 +105,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
             } else if (ix4 >= width + 6) {
                 for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                     int iy = iy4 + k;
-                    if (iy < 0)
+                    if (iy < 0) {
                         iy = 0;
-                    else if (iy > height - 1)
+                    } else if (iy > height - 1) {
                         iy = height - 1;
+                    }
                     uint16_t ref = (ref8b[iy * stride8b + (width - 1)] << 2) |
                         ((ref2b[iy * stride2b + (width - 1)] >> 6) & 3);
                     tmp[k + 7] = _mm256_cvtepi16_epi32(
@@ -149,10 +151,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
                     __m256i v_c67 = _mm256_broadcastd_epi32(_mm_shuffle_epi32(v_01, 3)); // A7A6A7A6A7A6A7A6
                     for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                         int iy = iy4 + k;
-                        if (iy < 0)
+                        if (iy < 0) {
                             iy = 0;
-                        else if (iy > height - 1)
+                        } else if (iy > height - 1) {
                             iy = height - 1;
+                        }
                         __m256i v_refl = load_2buffers(&ref8b[iy * stride8b + ix4 - 7],
                                                        &ref2b[iy * stride2b + ix4 - 7],
                                                        &ref8b[iy * stride8b + ix4 + 1],
@@ -188,10 +191,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
                 } else if (alpha == 0) {
                     for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                         int iy = iy4 + k;
-                        if (iy < 0)
+                        if (iy < 0) {
                             iy = 0;
-                        else if (iy > height - 1)
+                        } else if (iy > height - 1) {
                             iy = height - 1;
+                        }
 
                         sx = sx4 + beta * (k + 4);
 
@@ -275,10 +279,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
 
                     for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                         int iy = iy4 + k;
-                        if (iy < 0)
+                        if (iy < 0) {
                             iy = 0;
-                        else if (iy > height - 1)
+                        } else if (iy > height - 1) {
                             iy = height - 1;
+                        }
 
                         __m256i v_refl = load_2buffers(&ref8b[iy * stride8b + ix4 - 7],
                                                        &ref2b[iy * stride2b + ix4 - 7],
@@ -318,10 +323,11 @@ void svt_av1_highbd_warp_affine_avx2(const int32_t *mat, const uint8_t *ref8b, c
                 } else {
                     for (int k = -7; k < AOMMIN(8, p_height - i); ++k) {
                         int iy = iy4 + k;
-                        if (iy < 0)
+                        if (iy < 0) {
                             iy = 0;
-                        else if (iy > height - 1)
+                        } else if (iy > height - 1) {
                             iy = height - 1;
+                        }
 
                         sx = sx4 + beta * (k + 4);
 

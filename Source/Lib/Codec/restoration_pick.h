@@ -22,7 +22,9 @@ static INLINE uint8_t find_average(const uint8_t *src, int32_t h_start, int32_t 
                                    int32_t stride) {
     uint64_t sum = 0;
     for (int32_t i = v_start; i < v_end; i++) {
-        for (int32_t j = h_start; j < h_end; j++) sum += src[i * stride + j];
+        for (int32_t j = h_start; j < h_end; j++) {
+            sum += src[i * stride + j];
+        }
     }
     uint64_t avg = sum / ((v_end - v_start) * (h_end - h_start));
     return (uint8_t)avg;
@@ -32,7 +34,9 @@ static INLINE uint16_t find_average_highbd(const uint16_t *src, int32_t h_start,
                                            int32_t v_end, int32_t stride) {
     uint64_t sum = 0;
     for (int32_t i = v_start; i < v_end; i++) {
-        for (int32_t j = h_start; j < h_end; j++) sum += src[i * stride + j];
+        for (int32_t j = h_start; j < h_end; j++) {
+            sum += src[i * stride + j];
+        }
     }
     uint64_t avg = sum / ((v_end - v_start) * (h_end - h_start));
     return (uint16_t)avg;

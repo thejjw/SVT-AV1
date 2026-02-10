@@ -41,8 +41,9 @@ uint64_t svt_search_one_dual_avx2(int *lev0, int *lev1, int nb_strengths, uint64
         /* Find best mse among already selected options. */
         for (int gi = 0; gi < nb_strengths; gi++) {
             uint64_t curr = mse[0][i][lev0[gi]] + mse[1][i][lev1[gi]];
-            if (curr < best_mse)
+            if (curr < best_mse) {
                 best_mse = curr;
+            }
         }
         __m256i best_mse_ = _mm256_set1_epi64x(best_mse);
         /* Find best mse when adding each possible new option. */
@@ -256,11 +257,12 @@ uint64_t svt_aom_compute_cdef_dist_16bit_avx2(const uint16_t *dst, int32_t dstri
             // For 4x4 blocks, all points can be computed at once.  Subsampling is done in a special function
             // to avoid accessing memory that doesn't belong to the current picture (since subsampling is implemented
             // as a multiplier to the step size).
-            if (subsampling_factor == 2)
+            if (subsampling_factor == 2) {
                 mse_4x4_16bit_2x_subsampled_avx2(&src, dst + 4 * by * dstride + 4 * bx, dstride, &mse32);
-            else
+            } else {
                 mse_4xn_16bit_avx2(&src, dst + 4 * by * dstride + 4 * bx, dstride, &mse32, 4,
                                    1); // no subsampling
+            }
             sum_32_to_64(mse32, &mse64);
         }
     }
@@ -311,11 +313,12 @@ uint64_t svt_aom_compute_cdef_dist_8bit_avx2(const uint8_t *dst8, int32_t dstrid
             // For 4x4 blocks, all points can be computed at once.  Subsampling is done in a special function
             // to avoid accessing memory that doesn't belong to the current picture (since subsampling is implemented
             // as a multiplier to the step size).
-            if (subsampling_factor == 2)
+            if (subsampling_factor == 2) {
                 mse_4x4_8bit_2x_subsampled_avx2(&src8, dst8 + 4 * by * dstride + 4 * bx, dstride, &mse32);
-            else
+            } else {
                 mse_4xn_8bit_avx2(&src8, dst8 + 4 * by * dstride + 4 * bx, dstride, &mse32, 4,
                                   1); // no subsampling
+            }
             sum_32_to_64(mse32, &mse64);
         }
     }

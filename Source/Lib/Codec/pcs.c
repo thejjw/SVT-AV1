@@ -364,10 +364,11 @@ static EbErrorType recon_coef_ctor(EncDecSet *object_ptr, EbPtr object_init_data
 
 uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_height) {
     uint32_t frame_size = picture_width * picture_height * 3 / 2; //assuming 4:2:0;
-    if (frame_size > INPUT_SIZE_4K_TH)
+    if (frame_size > INPUT_SIZE_4K_TH) {
         return frame_size;
-    else
+    } else {
         return BITSTREAM_BUFFER_SIZE(picture_width * picture_height);
+    }
 }
 
 /*
@@ -510,8 +511,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
         return_error = svt_av1_alloc_restoration_buffers(object_ptr, init_data_ptr->av1_cm);
 
         int32_t ntiles[2];
-        for (int32_t is_uv = 0; is_uv < 2; ++is_uv)
+        for (int32_t is_uv = 0; is_uv < 2; ++is_uv) {
             ntiles[is_uv] = object_ptr->rst_info[is_uv].units_per_tile; //CHKN res_tiles_in_plane
+        }
         assert(ntiles[1] <= ntiles[0]);
         EB_CALLOC_ARRAY(object_ptr->rusi_picture[0], ntiles[0]);
         EB_CALLOC_ARRAY(object_ptr->rusi_picture[1], ntiles[1]);
@@ -578,10 +580,11 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
     // MD Rate Estimation Array
     EB_MALLOC_ARRAY(object_ptr->md_rate_est_ctx, 1);
     memset(object_ptr->md_rate_est_ctx, 0, sizeof(MdRateEstimationContext));
-    if (init_data_ptr->hbd_md == DEFAULT)
+    if (init_data_ptr->hbd_md == DEFAULT) {
         object_ptr->hbd_md = init_data_ptr->hbd_md = 2;
-    else
+    } else {
         object_ptr->hbd_md = init_data_ptr->hbd_md;
+    }
     // Mode Decision Neighbor Arrays
     uint8_t depth;
     for (depth = 0; depth < NA_TOT_CNT; depth++) {
@@ -673,8 +676,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
                 },
             };
             return_error = create_neighbor_array_units(data0, DIM(data0));
-            if (return_error == EB_ErrorInsufficientResources)
+            if (return_error == EB_ErrorInsufficientResources) {
                 return EB_ErrorInsufficientResources;
+            }
             if (init_data_ptr->hbd_md != EB_10_BIT_MD) {
                 InitData data[] = {
 
@@ -726,8 +730,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
 
                 };
                 return_error = create_neighbor_array_units(data, DIM(data));
-                if (return_error == EB_ErrorInsufficientResources)
+                if (return_error == EB_ErrorInsufficientResources) {
                     return EB_ErrorInsufficientResources;
+                }
             }
             if (init_data_ptr->hbd_md > EB_8_BIT_MD) {
                 InitData data[] = {{
@@ -776,8 +781,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    }};
                 return_error    = create_neighbor_array_units(data, DIM(data));
-                if (return_error == EB_ErrorInsufficientResources)
+                if (return_error == EB_ErrorInsufficientResources) {
                     return EB_ErrorInsufficientResources;
+                }
             }
         }
     }
@@ -977,8 +983,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
             },
         };
         return_error = create_neighbor_array_units(data0, DIM(data0));
-        if (return_error == EB_ErrorInsufficientResources)
+        if (return_error == EB_ErrorInsufficientResources) {
             return EB_ErrorInsufficientResources;
+        }
 
         if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
             InitData data[] = {
@@ -1011,8 +1018,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
                 },
             };
             return_error = create_neighbor_array_units(data, DIM(data));
-            if (return_error == EB_ErrorInsufficientResources)
+            if (return_error == EB_ErrorInsufficientResources) {
                 return EB_ErrorInsufficientResources;
+            }
         } else {
             object_ptr->ep_luma_recon_na_16bit = 0;
             object_ptr->ep_cb_recon_na_16bit   = 0;
@@ -1057,8 +1065,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
     bool disallow_4x4 = true;
     bool disallow_8x8 = true;
     for (uint8_t coeff_lvl = 0; coeff_lvl <= HIGH_LVL + 1; coeff_lvl++) {
-        if (!disallow_4x4 && !disallow_8x8)
+        if (!disallow_4x4 && !disallow_8x8) {
             break;
+        }
         const uint8_t nsq_geom_lvl = svt_aom_get_nsq_geom_level(allintra,
                                                                 init_data_ptr->input_resolution,
                                                                 init_data_ptr->enc_mode,
@@ -1068,10 +1077,12 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
         if (nsq_geom_lvl) {
             uint8_t allow_HVA_HVB, allow_HV4, min_nsq_bsize;
             svt_aom_set_nsq_geom_ctrls(NULL, nsq_geom_lvl, &allow_HVA_HVB, &allow_HV4, &min_nsq_bsize);
-            if (min_nsq_bsize < 8 || (min_nsq_bsize < 16 && allow_HV4))
+            if (min_nsq_bsize < 8 || (min_nsq_bsize < 16 && allow_HV4)) {
                 disallow_4x4 = false;
-            if (min_nsq_bsize < 16 || (min_nsq_bsize < 32 && allow_HV4))
+            }
+            if (min_nsq_bsize < 16 || (min_nsq_bsize < 32 && allow_HV4)) {
                 disallow_8x8 = false;
+            }
         }
     }
 
@@ -1141,11 +1152,13 @@ EbErrorType svt_aom_picture_control_set_creator(EbPtr *object_dbl_ptr, EbPtr obj
 static void picture_parent_control_set_dctor(EbPtr ptr) {
     PictureParentControlSet *obj = (PictureParentControlSet *)ptr;
 
-    if (obj->is_chroma_downsampled_picture_ptr_owner)
+    if (obj->is_chroma_downsampled_picture_ptr_owner) {
         EB_DELETE(obj->chroma_downsampled_pic);
+    }
 
-    if (obj->variance)
+    if (obj->variance) {
         EB_FREE_2D(obj->variance);
+    }
 
     if (obj->picture_histogram) {
         for (int region_in_picture_width_index = 0; region_in_picture_width_index < MAX_NUMBER_OF_REGIONS_IN_WIDTH;
@@ -1184,8 +1197,9 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     EB_DESTROY_MUTEX(obj->temp_filt_mutex);
     EB_FREE_ARRAY(obj->tile_group_info);
     EB_DESTROY_MUTEX(obj->pa_me_done.mutex);
-    if (obj->is_pcs_sb_params)
+    if (obj->is_pcs_sb_params) {
         svt_pcs_sb_structs_dctor(obj);
+    }
     if (obj->frame_superres_enabled || obj->frame_resize_enabled) {
         EB_DELETE(obj->enhanced_downscaled_pic);
     }
@@ -1194,8 +1208,9 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     uint16_t tile_cnt = 1; /*obj->tile_row_count * obj->tile_column_count;*/
     EB_DELETE_PTR_ARRAY(obj->tpl_disp_segment_ctrl, tile_cnt);
     EB_DESTROY_MUTEX(obj->pcs_total_rate_mutex);
-    if (obj->dg_detector)
+    if (obj->dg_detector) {
         EB_DELETE(obj->dg_detector);
+    }
 }
 
 /*
@@ -1272,8 +1287,9 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
         object_ptr->is_chroma_downsampled_picture_ptr_owner = true;
     } else if (init_data_ptr->color_format == EB_YUV420) {
         object_ptr->chroma_downsampled_pic = NULL;
-    } else
+    } else {
         return EB_ErrorBadParameter;
+    }
     // GOP
     object_ptr->pred_struct_index    = 0;
     object_ptr->picture_number       = 0;
@@ -1290,10 +1306,11 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
 
     if (init_data_ptr->calculate_variance) {
         uint8_t block_count;
-        if (init_data_ptr->allintra || init_data_ptr->aq_mode == 1 || init_data_ptr->variance_octile)
+        if (init_data_ptr->allintra || init_data_ptr->aq_mode == 1 || init_data_ptr->variance_octile) {
             block_count = 85;
-        else
+        } else {
             block_count = 1;
+        }
         EB_MALLOC_2D(object_ptr->variance, object_ptr->b64_total_count, block_count);
     }
     if (init_data_ptr->calc_hist) {
@@ -1414,18 +1431,24 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
 static void me_dctor(EbPtr p) {
     MotionEstimationData *obj = (MotionEstimationData *)p;
     EB_DELETE_PTR_ARRAY(obj->me_results, obj->init_b64_total_count);
-    if (obj->tpl_stats)
+    if (obj->tpl_stats) {
         EB_FREE_2D(obj->tpl_stats);
-    if (obj->tpl_beta)
+    }
+    if (obj->tpl_beta) {
         EB_FREE_ARRAY(obj->tpl_beta);
-    if (obj->tpl_rdmult_scaling_factors)
+    }
+    if (obj->tpl_rdmult_scaling_factors) {
         EB_FREE_ARRAY(obj->tpl_rdmult_scaling_factors);
-    if (obj->tpl_sb_rdmult_scaling_factors)
+    }
+    if (obj->tpl_sb_rdmult_scaling_factors) {
         EB_FREE_ARRAY(obj->tpl_sb_rdmult_scaling_factors);
-    if (obj->tpl_src_stats_buffer)
+    }
+    if (obj->tpl_src_stats_buffer) {
         EB_FREE_ARRAY(obj->tpl_src_stats_buffer);
-    if (obj->ssim_rdmult_scaling_factors)
+    }
+    if (obj->ssim_rdmult_scaling_factors) {
         EB_FREE_ARRAY(obj->ssim_rdmult_scaling_factors);
+    }
 }
 
 /*
@@ -1479,11 +1502,12 @@ static EbErrorType me_ctor(MotionEstimationData *object_ptr, EbPtr object_init_d
         }
         EB_MALLOC_2D(
             object_ptr->tpl_stats, (uint32_t)((adaptive_picture_width_in_mb) * (adaptive_picture_height_in_mb)), 1);
-        if (init_data_ptr->tpl_lad_mg > 0)
+        if (init_data_ptr->tpl_lad_mg > 0) {
             EB_MALLOC_ARRAY(object_ptr->tpl_src_stats_buffer,
                             (uint32_t)picture_width_in_mb * (uint32_t)picture_height_in_mb);
-        else
+        } else {
             object_ptr->tpl_src_stats_buffer = NULL;
+        }
         EB_MALLOC_ARRAY(object_ptr->tpl_beta, sb_total_count);
         EB_MALLOC_ARRAY(object_ptr->tpl_rdmult_scaling_factors,
                         adaptive_picture_width_in_mb * adaptive_picture_height_in_mb);

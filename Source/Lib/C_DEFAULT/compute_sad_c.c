@@ -29,7 +29,9 @@ uint32_t NOINLINE svt_nxm_sad_kernel_helper_c(const uint8_t *src, // input param
     uint32_t sad = 0;
 
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) sad += EB_ABS_DIFF(src[x], ref[x]);
+        for (x = 0; x < width; x++) {
+            sad += EB_ABS_DIFF(src[x], ref[x]);
+        }
         src += src_stride;
         ref += ref_stride;
     }
@@ -48,7 +50,9 @@ uint32_t svt_aom_sad_16b_kernel_c(uint16_t *src, // input parameter, source samp
     uint32_t sad = 0;
 
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) sad += EB_ABS_DIFF(src[x], ref[x]);
+        for (x = 0; x < width; x++) {
+            sad += EB_ABS_DIFF(src[x], ref[x]);
+        }
         src += src_stride;
         ref += ref_stride;
     }

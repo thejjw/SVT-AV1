@@ -169,7 +169,9 @@ void svt_sad_loop_kernel_sse4_1_intrin(uint8_t  *src, // input parameter, source
     __m128i        s0, s1, s2, s3, s4, s5, s6, s7, s8 = _mm_set1_epi32(-1);
 
     if (leftover) {
-        for (k = 0; k < leftover; k++) s8 = _mm_slli_si128(s8, 2);
+        for (k = 0; k < leftover; k++) {
+            s8 = _mm_slli_si128(s8, 2);
+        }
     }
 
     switch (block_width) {
@@ -2335,8 +2337,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
     case 4:
         for (i = 0; i < search_area_height; i += search_step) {
             for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                if ((search_area_width - j) < 8)
+                if ((search_area_width - j) < 8) {
                     continue;
+                }
                 p_src = src;
                 p_ref = ref + j;
                 s3    = _mm_setzero_si128();
@@ -2366,8 +2369,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
     case 8:
         for (i = 0; i < search_area_height; i += search_step) {
             for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                if ((search_area_width - j) < 8)
+                if ((search_area_width - j) < 8) {
                     continue;
+                }
                 p_src = src;
                 p_ref = ref + j;
                 s3 = s4 = _mm_setzero_si128();
@@ -2401,8 +2405,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 16) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s4 = s5 = _mm_setzero_si128();
@@ -2434,8 +2439,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
         } else {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
 
@@ -2486,8 +2492,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
     case 24:
         for (i = 0; i < search_area_height; i += search_step) {
             for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                if ((search_area_width - j) < 8)
+                if ((search_area_width - j) < 8) {
                     continue;
+                }
                 p_src = src;
                 p_ref = ref + j;
                 s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -2534,8 +2541,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
         if (block_height <= 32) {
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + (search_step - 1))) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -2583,8 +2591,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
             __m128i s9, s10, s11, s12;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -2664,8 +2673,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
             __m128i s9, s10, s11, s12;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -2755,8 +2765,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
             __m128i s9, s10;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s9 = s10 = _mm_setzero_si128();
@@ -2818,8 +2829,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
             __m128i s9, s10, s11, s12;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s3 = s4 = s5 = s6 = _mm_setzero_si128();
@@ -2924,8 +2936,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
             __m128i s9, s10;
             for (i = 0; i < search_area_height; i += search_step) {
                 for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                    if ((search_area_width - j) < 8)
+                    if ((search_area_width - j) < 8) {
                         continue;
+                    }
                     p_src = src;
                     p_ref = ref + j;
                     s9 = s10 = _mm_setzero_si128();
@@ -2992,8 +3005,9 @@ void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
         __m128i s9, s10;
         for (i = 0; i < search_area_height; i += search_step) {
             for (j = 0; j <= search_area_width - 8; j += (8 + search_step - 1)) {
-                if ((search_area_width - j) < 8)
+                if ((search_area_width - j) < 8) {
                     continue;
+                }
                 p_src = src;
                 p_ref = ref + j;
                 s9 = s10 = _mm_setzero_si128();
@@ -3761,17 +3775,38 @@ uint32_t svt_nxm_sad_kernel_helper_sse4_1(const uint8_t *src, uint32_t src_strid
     uint32_t nxm_sad = 0;
 
     switch (width) {
-    case 4: nxm_sad = svt_av1_compute4x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 8: nxm_sad = svt_av1_compute8x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 16: nxm_sad = svt_av1_compute16x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 24: nxm_sad = svt_av1_compute24x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 32: nxm_sad = svt_av1_compute32x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 40: nxm_sad = svt_av1_compute40x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 48: nxm_sad = svt_av1_compute48x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 56: nxm_sad = svt_av1_compute56x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 64: nxm_sad = svt_av1_compute64x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    case 128: nxm_sad = svt_av1_compute128x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width); break;
-    default: nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
+    case 4:
+        nxm_sad = svt_av1_compute4x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 8:
+        nxm_sad = svt_av1_compute8x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 16:
+        nxm_sad = svt_av1_compute16x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 24:
+        nxm_sad = svt_av1_compute24x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 32:
+        nxm_sad = svt_av1_compute32x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 40:
+        nxm_sad = svt_av1_compute40x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 48:
+        nxm_sad = svt_av1_compute48x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 56:
+        nxm_sad = svt_av1_compute56x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 64:
+        nxm_sad = svt_av1_compute64x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    case 128:
+        nxm_sad = svt_av1_compute128x_m_sad_sse4_1_intrin(src, src_stride, ref, ref_stride, height, width);
+        break;
+    default:
+        nxm_sad = svt_nxm_sad_kernel_helper_c(src, src_stride, ref, ref_stride, height, width);
     }
 
     return nxm_sad;

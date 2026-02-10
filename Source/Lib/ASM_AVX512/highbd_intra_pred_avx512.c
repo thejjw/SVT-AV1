@@ -657,7 +657,9 @@ void aom_highbd_h_predictor_32x64_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)above;
     (void)bd;
 
-    for (int32_t i = 0; i < 8; i++, left += 8) { h_pred_32x8(&dst, stride, left); }
+    for (int32_t i = 0; i < 8; i++, left += 8) {
+        h_pred_32x8(&dst, stride, left);
+    }
 }
 
 //32x16 32x32
@@ -750,7 +752,9 @@ void aom_highbd_h_predictor_64x16_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)above;
     (void)bd;
 
-    for (int32_t i = 0; i < 2; i++, left += 8) { h_pred_64x8(&dst, stride, left); }
+    for (int32_t i = 0; i < 2; i++, left += 8) {
+        h_pred_64x8(&dst, stride, left);
+    }
 }
 
 // 64x32
@@ -760,7 +764,9 @@ void aom_highbd_h_predictor_64x32_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)above;
     (void)bd;
 
-    for (int32_t i = 0; i < 4; i++, left += 8) { h_pred_64x8(&dst, stride, left); }
+    for (int32_t i = 0; i < 4; i++, left += 8) {
+        h_pred_64x8(&dst, stride, left);
+    }
 }
 
 // 64x64
@@ -770,7 +776,9 @@ void aom_highbd_h_predictor_64x64_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)above;
     (void)bd;
 
-    for (int32_t i = 0; i < 8; i++, left += 8) { h_pred_64x8(&dst, stride, left); }
+    for (int32_t i = 0; i < 8; i++, left += 8) {
+        h_pred_64x8(&dst, stride, left);
+    }
 }
 
 // =============================================================================
@@ -821,7 +829,9 @@ void aom_highbd_v_predictor_32x16_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 2; i++) { v_pred_32x8(&dst, stride, above01); }
+    for (int32_t i = 0; i < 2; i++) {
+        v_pred_32x8(&dst, stride, above01);
+    }
 }
 
 // 32x32
@@ -834,7 +844,9 @@ void aom_highbd_v_predictor_32x32_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 4; i++) { v_pred_32x8(&dst, stride, above01); }
+    for (int32_t i = 0; i < 4; i++) {
+        v_pred_32x8(&dst, stride, above01);
+    }
 }
 
 // 32x64
@@ -847,7 +859,9 @@ void aom_highbd_v_predictor_32x64_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 8; i++) { v_pred_32x8(&dst, stride, above01); }
+    for (int32_t i = 0; i < 8; i++) {
+        v_pred_32x8(&dst, stride, above01);
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -884,7 +898,9 @@ void aom_highbd_v_predictor_64x16_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 2; i++) { v_pred_64x8(&dst, stride, above0, above1); }
+    for (int32_t i = 0; i < 2; i++) {
+        v_pred_64x8(&dst, stride, above0, above1);
+    }
 }
 
 // 64x32
@@ -898,7 +914,9 @@ void aom_highbd_v_predictor_64x32_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 4; i++) { v_pred_64x8(&dst, stride, above0, above1); }
+    for (int32_t i = 0; i < 4; i++) {
+        v_pred_64x8(&dst, stride, above0, above1);
+    }
 }
 
 // 64x64
@@ -912,7 +930,9 @@ void aom_highbd_v_predictor_64x64_avx512(uint16_t *dst, ptrdiff_t stride, const 
     (void)left;
     (void)bd;
 
-    for (int32_t i = 0; i < 8; i++) { v_pred_64x8(&dst, stride, above0, above1); }
+    for (int32_t i = 0; i < 8; i++) {
+        v_pred_64x8(&dst, stride, above0, above1);
+    }
 }
 
 // =============================================================================
@@ -1235,7 +1255,9 @@ void aom_highbd_smooth_v_predictor_32x16_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_32(above, left, 16, ab, rep);
 
-    for (int32_t i = 0; i < 2; i++) { smooth_v_pred_32x8(sm_weights_d_16 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 2; i++) {
+        smooth_v_pred_32x8(sm_weights_d_16 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // 32x32
@@ -1247,7 +1269,9 @@ void aom_highbd_smooth_v_predictor_32x32_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_32(above, left, 32, ab, rep);
 
-    for (int32_t i = 0; i < 4; i++) { smooth_v_pred_32x8(sm_weights_d_32 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 4; i++) {
+        smooth_v_pred_32x8(sm_weights_d_32 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // 32x64
@@ -1259,7 +1283,9 @@ void aom_highbd_smooth_v_predictor_32x64_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_32(above, left, 64, ab, rep);
 
-    for (int32_t i = 0; i < 8; i++) { smooth_v_pred_32x8(sm_weights_d_64 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 8; i++) {
+        smooth_v_pred_32x8(sm_weights_d_64 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -1314,7 +1340,9 @@ void aom_highbd_smooth_v_predictor_64x16_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_64(above, left, 16, ab, rep);
 
-    for (int32_t i = 0; i < 2; i++) { smooth_v_pred_64x8(sm_weights_d_16 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 2; i++) {
+        smooth_v_pred_64x8(sm_weights_d_16 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // 64x32
@@ -1326,7 +1354,9 @@ void aom_highbd_smooth_v_predictor_64x32_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_64(above, left, 32, ab, rep);
 
-    for (int32_t i = 0; i < 4; i++) { smooth_v_pred_64x8(sm_weights_d_32 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 4; i++) {
+        smooth_v_pred_64x8(sm_weights_d_32 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // 64x64
@@ -1338,7 +1368,9 @@ void aom_highbd_smooth_v_predictor_64x64_avx512(uint16_t *dst, ptrdiff_t stride,
 
     smooth_v_init_64(above, left, 64, ab, rep);
 
-    for (int32_t i = 0; i < 8; i++) { smooth_v_pred_64x8(sm_weights_d_64 + 64 * i, rep, ab, &dst, stride); }
+    for (int32_t i = 0; i < 8; i++) {
+        smooth_v_pred_64x8(sm_weights_d_64 + 64 * i, rep, ab, &dst, stride);
+    }
 }
 
 // =============================================================================

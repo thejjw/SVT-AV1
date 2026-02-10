@@ -118,10 +118,11 @@ static void tpl_regular_setup_me_refs(PictureParentControlSet *base_pcs, Picture
         uint8_t ref_list_count = (list_index == REF_LIST_0) ? cur_pcs->ref_list0_count_try
                                                             : cur_pcs->ref_list1_count_try;
 
-        if (list_index == REF_LIST_0)
+        if (list_index == REF_LIST_0) {
             cur_pcs->tpl_data.tpl_ref0_count = ref_list_count;
-        else
+        } else {
             cur_pcs->tpl_data.tpl_ref1_count = ref_list_count;
+        }
 
         for (uint8_t ref_idx = 0; ref_idx < ref_list_count; ref_idx++) {
             uint64_t ref_poc = cur_pcs->ref_pic_poc_array[list_index][ref_idx];
@@ -201,8 +202,9 @@ void generate_lambda_scaling_factor(PictureParentControlSet *pcs, int64_t mc_dep
             const int index            = row * num_cols + col;
             for (int mi_row = row * num_mi_h; mi_row < (row + 1) * num_mi_h; mi_row += step) {
                 for (int mi_col = col * num_mi_w; mi_col < (col + 1) * num_mi_w; mi_col += step) {
-                    if (mi_row >= cm->mi_rows || mi_col >= mi_cols_sr)
+                    if (mi_row >= cm->mi_rows || mi_col >= mi_cols_sr) {
                         continue;
+                    }
 
                     const int index1 = (mi_row >> (tpl_synth_size_offset)) * stride +
                         (mi_col >> (tpl_synth_size_offset));
@@ -580,8 +582,9 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 
         // at least half of the block inside
         if (mb_origin_x + (size >> 1) > pcs->enhanced_pic->width ||
-            mb_origin_y + (size >> 1) > pcs->enhanced_pic->height)
+            mb_origin_y + (size >> 1) > pcs->enhanced_pic->height) {
             continue;
+        }
 
         MacroBlockD xd;
         init_xd_tpl(&xd, pcs->av1_cm, block_size, mb_origin_x, mb_origin_y);
@@ -623,10 +626,9 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 
                     const uint8_t mb_inside = (mb_origin_x + size <= pcs->enhanced_pic->width) &&
                         (mb_origin_y + size <= pcs->enhanced_pic->height);
-                    if (mb_origin_x > 0 && mb_origin_y > 0 && mb_inside)
-
+                    if (mb_origin_x > 0 && mb_origin_y > 0 && mb_inside) {
                         get_neighbor_samples_dc(src_mb, src_stride, above0_row, left0_col, bsize);
-                    else
+                    } else {
                         svt_aom_update_neighbor_samples_array_open_loop_mb(1,
                                                                            1,
                                                                            above0_row - 1,
@@ -637,6 +639,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                                                                            mb_origin_y,
                                                                            bsize,
                                                                            bsize);
+                    }
 
                     //TODO: combine dc prediction+sad into one kernel
                     svt_aom_intra_prediction_open_loop_mb(
@@ -748,8 +751,9 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 
             //Inter Src path
             me_mb_offset = tpl_blk_idx_tab[1][blk_index];
-            if (!pcs->enable_me_16x16)
+            if (!pcs->enable_me_16x16) {
                 me_mb_offset = (me_mb_offset - 1) / 4;
+            }
             const MeSbResults *me_results = pcs->pa_me_data->me_results[sb_index];
             const MeCandidate *me_block_results =
                 &me_results->me_candidate_array[me_mb_offset * pcs->pa_me_data->max_cand];
@@ -760,15 +764,17 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
             for (uint32_t me_cand_i = 0; me_cand_i < total_me_cnt; ++me_cand_i) {
                 const MeCandidate *me_cand = &me_block_results[me_cand_i];
                 //consider only single refs
-                if (me_cand->direction > 1)
+                if (me_cand->direction > 1) {
                     continue;
+                }
 
                 const uint32_t list_index    = me_cand->direction;
                 const uint32_t ref_pic_index = list_index == 0 ? me_cand->ref_idx_l0 : me_cand->ref_idx_l1;
                 //exclude this cand if the reference is within the sliding window and does not have valid TPL recon data
                 const int32_t ref_grp_idx = pcs->tpl_data.ref_tpl_group_idx[list_index][ref_pic_index];
-                if (ref_grp_idx > 0 && pcs->tpl_data.base_pcs->tpl_valid_pic[ref_grp_idx] == 0)
+                if (ref_grp_idx > 0 && pcs->tpl_data.base_pcs->tpl_valid_pic[ref_grp_idx] == 0) {
                     continue;
+                }
                 const uint32_t rf_idx    = svt_get_ref_frame_type(list_index, ref_pic_index) - 1;
                 const uint32_t me_offset = me_mb_offset * pcs->pa_me_data->max_refs +
                     (list_index ? pcs->pa_me_data->max_l0 : 0) + ref_pic_index;
@@ -778,17 +784,22 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                 ref_pic_ptr =
                     (EbPictureBufferDesc *)pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
 
-                if (((int)mb_origin_x + (x_curr_mv >> 3)) < -TPL_PADX)
+                if (((int)mb_origin_x + (x_curr_mv >> 3)) < -TPL_PADX) {
                     x_curr_mv = (-TPL_PADX - mb_origin_x) << 3;
+                }
 
-                if (((int)mb_origin_x + (int)bsize + (x_curr_mv >> 3)) > (TPL_PADX + (int)ref_pic_ptr->max_width - 1))
+                if (((int)mb_origin_x + (int)bsize + (x_curr_mv >> 3)) > (TPL_PADX + (int)ref_pic_ptr->max_width - 1)) {
                     x_curr_mv = ((TPL_PADX + ref_pic_ptr->max_width - 1) - (mb_origin_x + bsize)) << 3;
+                }
 
-                if (((int)mb_origin_y + (y_curr_mv >> 3)) < -TPL_PADY)
+                if (((int)mb_origin_y + (y_curr_mv >> 3)) < -TPL_PADY) {
                     y_curr_mv = (-TPL_PADY - mb_origin_y) << 3;
+                }
 
-                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) > (TPL_PADY + (int)ref_pic_ptr->max_height - 1))
+                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) >
+                    (TPL_PADY + (int)ref_pic_ptr->max_height - 1)) {
                     y_curr_mv = ((TPL_PADY + ref_pic_ptr->max_height - 1) - (mb_origin_y + bsize)) << 3;
+                }
 
                 Mv best_mv = {{x_curr_mv, y_curr_mv}};
 
@@ -864,8 +875,9 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                 }
 
                 if (inter_cost < best_inter_cost) {
-                    if (!pcs->tpl_ctrls.use_sad_in_src_search)
+                    if (!pcs->tpl_ctrls.use_sad_in_src_search) {
                         svt_memcpy(best_coeff, coeff, sizeof(best_coeff));
+                    }
 
                     best_ref_poc    = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_number;
                     best_rf_idx     = rf_idx;
@@ -874,8 +886,9 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                 }
             } // rf_idx
 
-            if (best_inter_cost < best_intra_cost)
+            if (best_inter_cost < best_intra_cost) {
                 best_mode = NEWMV;
+            }
 
             if (best_mode == NEWMV) {
                 uint16_t eob = 0;
@@ -978,12 +991,15 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 
             if (pcs->tpl_data.ref_in_slide_window[list_index][ref_pic_index]) {
                 uint32_t ref_frame_idx = 0;
-                while (ref_frame_idx < MAX_TPL_LA_SW && enc_ctx->poc_map_idx[ref_frame_idx] != ref_poc) ref_frame_idx++;
+                while (ref_frame_idx < MAX_TPL_LA_SW && enc_ctx->poc_map_idx[ref_frame_idx] != ref_poc) {
+                    ref_frame_idx++;
+                }
                 assert(ref_frame_idx != MAX_TPL_LA_SW);
                 ref_pic_ptr = enc_ctx->mc_flow_rec_picture_buffer[ref_frame_idx];
-            } else
+            } else {
                 ref_pic_ptr =
                     (EbPictureBufferDesc *)pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
+            }
 
             int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x + ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
                 ((int32_t)mb_origin_y + (final_best_mv.y >> 3) + (int32_t)ref_pic_ptr->org_y) *
@@ -1028,10 +1044,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                     false, // is_wm
                     NULL); // wm_params
             } else {
-                for (int i = 0; i < (int)size; ++i)
+                for (int i = 0; i < (int)size; ++i) {
                     svt_memcpy(dst_buffer + i * dst_buffer_stride,
                                ref_pic_ptr->buffer_y + ref_origin_index + i * ref_pic_ptr->stride_y,
                                sizeof(uint8_t) * (size));
+                }
             }
         } else {
             // intra recon
@@ -1049,13 +1066,13 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
             if (intra_dc_sad_path) {
                 const uint8_t mb_inside = (mb_origin_x + size <= pcs->enhanced_pic->width) &&
                     (mb_origin_y + size <= pcs->enhanced_pic->height);
-                if (mb_origin_x > 0 && mb_origin_y > 0 && mb_inside)
+                if (mb_origin_x > 0 && mb_origin_y > 0 && mb_inside) {
                     get_neighbor_samples_dc(recon_buffer + mb_origin_x + mb_origin_y * dst_buffer_stride,
                                             dst_buffer_stride,
                                             above_row,
                                             left_col,
                                             bsize);
-                else
+                } else {
                     svt_aom_update_neighbor_samples_array_open_loop_mb_recon(1, // use_top_righ_bottom_left
                                                                              1, // update_top_neighbor
                                                                              above_row - 1,
@@ -1068,6 +1085,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                                                                              size,
                                                                              input_pic->width,
                                                                              input_pic->height);
+                }
 
                 svt_aom_intra_prediction_open_loop_mb(
                     0,
@@ -1275,9 +1293,9 @@ static bool assign_tpl_segments(EncDecSegments *segmentPtr, uint16_t *segmentInO
             --segmentPtr->dep_map.dependency_map[bottom_left_segment_index];
 
             if (segmentPtr->dep_map.dependency_map[bottom_left_segment_index] == 0) {
-                if (self_assigned == true)
+                if (self_assigned == true) {
                     feedback_row_index = (int16_t)row_segment_index + 1;
-                else {
+                } else {
                     *segmentInOutIndex = segmentPtr->row_array[row_segment_index + 1].current_seg_index;
                     ++segmentPtr->row_array[row_segment_index + 1].current_seg_index;
                     continue_processing_flag = true;
@@ -1306,7 +1324,8 @@ static bool assign_tpl_segments(EncDecSegments *segmentPtr, uint16_t *segmentInO
 
         break;
 
-    default: break;
+    default:
+        break;
     }
 
     return continue_processing_flag;
@@ -1337,11 +1356,12 @@ static void tpl_mc_flow_dispenser(EncodeContext *enc_ctx, SequenceControlSet *sc
         double q_val;
         q_val = svt_av1_convert_qindex_to_q(qIndex, 8);
         int32_t delta_qindex;
-        if (pcs->tpl_data.tpl_slice_type == I_SLICE)
+        if (pcs->tpl_data.tpl_slice_type == I_SLICE) {
             delta_qindex = svt_av1_compute_qdelta(q_val, q_val * 0.25, 8);
-        else
+        } else {
             delta_qindex = svt_av1_compute_qdelta(
                 q_val, q_val * delta_rate_new[pcs->hierarchical_levels][pcs->tpl_data.tpl_temporal_layer_index], 8);
+        }
         qIndex = (qIndex + delta_qindex);
     }
     *base_rdmult = svt_aom_compute_rd_mult_based_on_qindex(EB_EIGHT_BIT, pcs->update_type, qIndex) /
@@ -1406,7 +1426,8 @@ static int get_overlap_area(int grid_pos_row, int grid_pos_col, int ref_pos_row,
         width  = ref_pos_col + bw - grid_pos_col;
         height = ref_pos_row + bh - grid_pos_row;
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 
     return width * height;
@@ -1414,10 +1435,11 @@ static int get_overlap_area(int grid_pos_row, int grid_pos_col, int ref_pos_row,
 
 static int round_floor(int ref_pos, int bsize_pix) {
     int round;
-    if (ref_pos < 0)
+    if (ref_pos < 0) {
         round = -(1 + (-ref_pos - 1) / bsize_pix);
-    else
+    } else {
         round = ref_pos / bsize_pix;
+    }
 
     return round;
 }
@@ -1426,8 +1448,9 @@ static int64_t delta_rate_cost(int64_t delta_rate, int64_t recrf_dist, int64_t s
     double  beta      = (double)srcrf_dist / recrf_dist;
     int64_t rate_cost = delta_rate;
 
-    if (srcrf_dist <= 128)
+    if (srcrf_dist <= 128) {
         return rate_cost;
+    }
 
     double dr = (double)(delta_rate >> (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT)) / pix_num;
 
@@ -1532,9 +1555,12 @@ static AOM_INLINE void tpl_model_update(PictureParentControlSet *pcs_array[MAX_T
             TplStats *tpl_stats_ptr = pcs->pa_me_data->tpl_stats[(((mi_row + idy) >> shift) * (mi_cols_sr >> shift)) +
                                                                  ((mi_col + idx) >> shift)];
 
-            while (i < frames_in_sw && pcs_array[i]->picture_number != tpl_stats_ptr->ref_frame_poc) i++;
-            if (i < frames_in_sw)
+            while (i < frames_in_sw && pcs_array[i]->picture_number != tpl_stats_ptr->ref_frame_poc) {
+                i++;
+            }
+            if (i < frames_in_sw) {
                 tpl_model_update_b(pcs_array[i], pcs, tpl_stats_ptr, mi_row + idy, mi_col + idx, block_size);
+            }
         }
     }
 }
@@ -1583,8 +1609,9 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
             recrf_dist_base_sum += tpl_stats_ptr->recrf_dist;
             mc_dep_delta_base_sum += mc_dep_delta;
             count++;
-            if (mc_dep_delta > max_dist)
+            if (mc_dep_delta > max_dist) {
                 max_dist = mc_dep_delta;
+            }
         }
     }
 
@@ -1593,8 +1620,9 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
         pcs->r0 = ((double)(recrf_dist_base_sum << (RDDIV_BITS))) / mc_dep_cost_base;
         // If there are outlier blocks responsible for most of the propagation, set r0 to 1.0 to indicate
         // no error propagation, as the result may not be reliable.
-        if (max_dist > (mc_dep_delta_base_sum / count) * 100 && max_dist > (mc_dep_delta_base_sum * 9 / 10))
+        if (max_dist > (mc_dep_delta_base_sum / count) * 100 && max_dist > (mc_dep_delta_base_sum * 9 / 10)) {
             pcs->r0 = 1.0;
+        }
         pcs->tpl_is_valid = 1;
     } else {
         pcs->tpl_is_valid = 0;
@@ -1772,7 +1800,9 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
         picture_height_in_mb = (pcs->enhanced_pic->height + 31) / 32;
     }
     // wait for PA ME to be done.
-    for (uint32_t i = 1; i < pcs->tpl_group_size; i++) { svt_wait_cond_var(&pcs->tpl_group[i]->me_ready, 0); }
+    for (uint32_t i = 1; i < pcs->tpl_group_size; i++) {
+        svt_wait_cond_var(&pcs->tpl_group[i]->me_ready, 0);
+    }
     pcs->tpl_is_valid = 0;
     init_tpl_buffers(enc_ctx);
 
@@ -1781,8 +1811,9 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
 
     if (pcs->tpl_group[0]->tpl_data.tpl_temporal_layer_index == 0) {
         // no Tiles path
-        if (scs->static_config.tile_rows == 0 && scs->static_config.tile_columns == 0)
+        if (scs->static_config.tile_rows == 0 && scs->static_config.tile_columns == 0) {
             init_tpl_segments(scs, pcs, pcs->tpl_group, frames_in_sw);
+        }
 
         uint8_t tpl_on;
         enc_ctx->poc_map_idx[0] = pcs->tpl_group[0]->picture_number;
@@ -1797,8 +1828,9 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
             if (((EbTplReferenceObject *)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_width !=
                     scs->max_input_luma_width ||
                 ((EbTplReferenceObject *)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_height !=
-                    scs->max_input_luma_height)
+                    scs->max_input_luma_height) {
                 svt_tpl_reference_param_update((EbTplReferenceObject *)ref_pic_wrapper->object_ptr, scs);
+            }
             // Give the new Reference a nominal live_count of 1
             svt_object_inc_live_count(ref_pic_wrapper, 1);
 
@@ -1822,17 +1854,20 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
                        (picture_width_in_mb) * sizeof(TplStats));
             }
             tpl_on = pcs->tpl_valid_pic[frame_idx];
-            if (tpl_on)
+            if (tpl_on) {
                 tpl_mc_flow_dispenser(enc_ctx,
                                       scs,
                                       &pcs->tpl_group[frame_idx]->pa_me_data->base_rdmult,
                                       pcs->tpl_group[frame_idx],
                                       frame_idx,
                                       context_ptr);
+            }
 
-            if (scs->tpl_lad_mg > 0)
-                if (tpl_on)
+            if (scs->tpl_lad_mg > 0) {
+                if (tpl_on) {
                     pcs->tpl_group[frame_idx]->tpl_src_data_ready = 1;
+                }
+            }
 
             // Release references
             for (int i = 0; i < (REF_FRAMES + 1); i++) {
@@ -1856,8 +1891,9 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
         // synthesizer
         for (int32_t frame_idx = frames_in_sw - 1; frame_idx >= 0; frame_idx--) {
             tpl_on = pcs->tpl_valid_pic[frame_idx];
-            if (tpl_on)
+            if (tpl_on) {
                 tpl_mc_flow_synthesizer(pcs->tpl_group, frame_idx, frames_in_sw);
+            }
         }
 #if DEBUG_TPL
 
@@ -1919,15 +1955,18 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
     for (uint32_t i = 0; i < pcs->tpl_group_size; i++) {
         if (release_pa_ref) {
             if (svt_aom_is_incomp_mg_frame(pcs->tpl_group[i])) {
-                if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id + 1)
+                if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id + 1) {
                     svt_aom_release_pa_reference_objects(scs, pcs->tpl_group[i]);
+                }
             } else {
-                if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id)
+                if (pcs->tpl_group[i]->ext_mg_id == pcs->ext_mg_id) {
                     svt_aom_release_pa_reference_objects(scs, pcs->tpl_group[i]);
+                }
             }
         }
-        if (pcs->tpl_group[i]->non_tf_input)
+        if (pcs->tpl_group[i]->non_tf_input) {
             EB_DELETE(pcs->tpl_group[i]->non_tf_input);
+        }
     }
 
     return EB_ErrorNone;
@@ -2038,8 +2077,9 @@ void *svt_aom_tpl_disp_kernel(void *input_ptr) {
             bool last_sb_flag = (pcs->b64_total_count == pcs->tpl_disp_coded_sb_count);
 
             svt_release_mutex(pcs->tpl_disp_mutex);
-            if (last_sb_flag)
+            if (last_sb_flag) {
                 svt_post_semaphore(pcs->tpl_disp_done_semaphore);
+            }
         } else {
             // Tiles path does not suupport segments
             for (uint32_t sb_index = 0; sb_index < pcs->b64_total_count; ++sb_index) {

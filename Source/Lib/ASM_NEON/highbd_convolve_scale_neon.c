@@ -402,8 +402,9 @@ void svt_av1_highbd_convolve_2d_scale_neon(const uint16_t *src, int src_stride, 
                                            ConvolveParams *conv_params, int bd) {
     uint16_t *im_block = (uint16_t *)svt_aom_memalign(
         16, 2 * sizeof(uint16_t) * MAX_SB_SIZE * (MAX_SB_SIZE + MAX_FILTER_TAP));
-    if (!im_block)
+    if (!im_block) {
         return;
+    }
     uint16_t *im_block2 = (uint16_t *)svt_aom_memalign(
         16, 2 * sizeof(uint16_t) * MAX_SB_SIZE * (MAX_SB_SIZE + MAX_FILTER_TAP));
     if (!im_block2) {

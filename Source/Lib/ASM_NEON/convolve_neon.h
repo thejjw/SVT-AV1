@@ -32,14 +32,15 @@ static inline bool is_convolve_6tap(const int16_t *const filter) {
 }
 
 static inline int32_t get_convolve_tap(const int16_t *const filter) {
-    if (is_convolve_2tap(filter))
+    if (is_convolve_2tap(filter)) {
         return 2;
-    else if (is_convolve_4tap(filter))
+    } else if (is_convolve_4tap(filter)) {
         return 4;
-    else if (is_convolve_6tap(filter))
+    } else if (is_convolve_6tap(filter)) {
         return 6;
-    else
+    } else {
         return 8;
+    }
 }
 
 static inline int16x4_t convolve4_4_2d_v(const int16x4_t s0, const int16x4_t s1, const int16x4_t s2, const int16x4_t s3,

@@ -150,7 +150,9 @@ static CodedBlockStats coded_unit_stats_array[] = {
 /**************************************************************
  * Get Coded Unit Statistics
  **************************************************************/
-const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx) { return &coded_unit_stats_array[cu_idx]; }
+const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx) {
+    return &coded_unit_stats_array[cu_idx];
+}
 
 /*****************************************
   * Long Log 2
@@ -267,8 +269,9 @@ static INLINE TxSize av1_get_tx_size(BlockSize bsize, int32_t plane /*, const Ma
     UNUSED(plane);
     //const MbModeInfo *mbmi = xd->mi[0];
     // if (xd->lossless[mbmi->segment_id]) return TX_4X4;
-    if (plane == 0)
+    if (plane == 0) {
         return blocksize_to_txsize[bsize];
+    }
     // const MacroblockdPlane *pd = &xd->plane[plane];
 
     uint32_t subsampling_x = plane > 0 ? 1 : 0;
@@ -297,8 +300,9 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
 
         sq_size == 4 ? 1
                      : max_part;
-    if (sq_size <= min_nsq_bsize)
+    if (sq_size <= min_nsq_bsize) {
         max_part_updated = 1;
+    }
     d1_it   = 0;
     sqi_mds = *idx_mds;
 
@@ -343,21 +347,25 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
             blk_geom[*idx_mds].bheight_uv = MAX(4, blk_geom[*idx_mds].bheight >> 1);
             blk_geom[*idx_mds].has_uv     = 1;
 
-            if (blk_geom[*idx_mds].bwidth == 4 && blk_geom[*idx_mds].bheight == 4)
+            if (blk_geom[*idx_mds].bwidth == 4 && blk_geom[*idx_mds].bheight == 4) {
                 blk_geom[*idx_mds].has_uv = is_last_quadrant ? 1 : 0;
+            }
 
             else if ((blk_geom[*idx_mds].bwidth >> 1) < blk_geom[*idx_mds].bwidth_uv ||
                      (blk_geom[*idx_mds].bheight >> 1) < blk_geom[*idx_mds].bheight_uv) {
                 int32_t num_blk_same_uv = 1;
-                if (blk_geom[*idx_mds].bwidth >> 1 < 4)
+                if (blk_geom[*idx_mds].bwidth >> 1 < 4) {
                     num_blk_same_uv *= 2;
-                if (blk_geom[*idx_mds].bheight >> 1 < 4)
+                }
+                if (blk_geom[*idx_mds].bheight >> 1 < 4) {
                     num_blk_same_uv *= 2;
+                }
                 //if (blk_geom[*idx_mds].nsi % 2 == 0)
                 //if (blk_geom[*idx_mds].nsi != (blk_geom[*idx_mds].totns-1) )
                 if (blk_geom[*idx_mds].nsi != (num_blk_same_uv - 1) &&
-                    blk_geom[*idx_mds].nsi != (2 * num_blk_same_uv - 1))
+                    blk_geom[*idx_mds].nsi != (2 * num_blk_same_uv - 1)) {
                     blk_geom[*idx_mds].has_uv = 0;
+                }
             }
 
             blk_geom[*idx_mds].bsize_uv = get_plane_block_size(blk_geom[*idx_mds].bsize, 1, 1);
@@ -1038,14 +1046,17 @@ static uint32_t count_total_num_of_active_blks(uint8_t min_nsq_bsize) {
             : sq_size == 8                         ? MIN(max_part, 3)
             : sq_size == 4                         ? 1
                                                    : max_part;
-        if (sq_size <= min_nsq_bsize)
+        if (sq_size <= min_nsq_bsize) {
             max_part_updated = 1;
+        }
         for (sq_it_y = 0; sq_it_y < tot_num_sq; sq_it_y++) {
             for (sq_it_x = 0; sq_it_x < tot_num_sq; sq_it_x++) {
                 for (part_it = 0; part_it < max_part_updated; part_it++) {
                     uint32_t tot_num_ns_per_part = get_num_ns_per_part(part_it, sq_size);
 
-                    for (nsq_it = 0; nsq_it < tot_num_ns_per_part; nsq_it++) depth_scan_idx++;
+                    for (nsq_it = 0; nsq_it < tot_num_ns_per_part; nsq_it++) {
+                        depth_scan_idx++;
+                    }
                 }
             }
         }
@@ -1152,8 +1163,9 @@ void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom) {
     }
     //(0)compute total number of blocks using the information provided
     max_num_active_blocks = count_total_num_of_active_blks(min_nsq_bsize);
-    if (max_num_active_blocks != max_block_count)
+    if (max_num_active_blocks != max_block_count) {
         SVT_LOG(" \n\n Error %i blocks\n\n ", max_num_active_blocks);
+    }
     //(2) Construct md scan blk_geom_mds:  use info from dps
     uint32_t idx_mds = 0;
     md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, 0, min_nsq_bsize);

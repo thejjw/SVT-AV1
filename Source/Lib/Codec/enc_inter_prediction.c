@@ -23,10 +23,11 @@
 
 void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_ptr, bool is_highbd) {
     if (!is_highbd) {
-        if (pcs->ppcs->is_ref == true)
+        if (pcs->ppcs->is_ref == true) {
             *recon_ptr = ((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->reference_picture;
-        else
+        } else {
             *recon_ptr = pcs->ppcs->enc_dec_ptr->recon_pic; // OMK
+        }
     } else {
         *recon_ptr = pcs->ppcs->enc_dec_ptr->recon_pic_16bit;
     }
@@ -42,8 +43,9 @@ void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_p
 }
 
 EbPictureBufferDesc *svt_aom_get_ref_pic_buffer(PictureControlSet *pcs, MvReferenceFrame rf) {
-    if (rf <= INTRA_FRAME || rf >= REF_FRAMES)
+    if (rf <= INTRA_FRAME || rf >= REF_FRAMES) {
         return NULL;
+    }
     const uint8_t list_idx = get_list_idx(rf);
     const uint8_t ref_idx  = get_ref_frame_idx(rf);
     return ((EbReferenceObject *)(pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr))->reference_picture;
@@ -113,8 +115,9 @@ static void av1_make_masked_scaled_inter_predictor(
             // optimize stride from MAX_SB_SIZE to bwidth to minimum the block buffer size
             src_stride16 = bwidth * width_scale + (offset << 1);
             // 16-byte align of src16
-            if (src_stride16 % 8)
+            if (src_stride16 % 8) {
                 src_stride16 = ALIGN_POWER_OF_TWO(src_stride16, 3);
+            }
 
             svt_aom_pack_block(src_ptr - offset - (offset * src_stride),
                                src_stride,
@@ -193,7 +196,9 @@ static void av1_make_masked_scaled_inter_predictor(
 static const uint8_t bsize_curvfit_model_cat_lookup[BlockSizeS_ALL] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
                                                                        3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};
 
-static int sse_norm_curvfit_model_cat_lookup(double sse_norm) { return (sse_norm > 16.0); }
+static int sse_norm_curvfit_model_cat_lookup(double sse_norm) {
+    return (sse_norm > 16.0);
+}
 
 static const double interp_rgrid_curv[4][65] = {
     {
@@ -319,10 +324,12 @@ static void model_rd_with_curvfit(PictureControlSet *pcs, BlockSize plane_bsize,
     const int qstep = AOMMAX(quantizer >> dequant_shift, 1);
 
     if (sse == 0) {
-        if (rate)
+        if (rate) {
             *rate = 0;
-        if (dist)
+        }
+        if (dist) {
             *dist = 0;
+        }
         return;
     }
 
@@ -344,10 +351,12 @@ static void model_rd_with_curvfit(PictureControlSet *pcs, BlockSize plane_bsize,
         dist_i = sse << 4;
     }
 
-    if (rate)
+    if (rate) {
         *rate = rate_i;
-    if (dist)
+    }
+    if (dist) {
         *dist = dist_i;
+    }
 }
 
 /**
@@ -365,7 +374,9 @@ static void model_rd_with_curvfit(PictureControlSet *pcs, BlockSize plane_bsize,
 void svt_av1_wedge_compute_delta_squares_c(int16_t *d, const int16_t *a, const int16_t *b, int N) {
     int i;
 
-    for (i = 0; i < N; i++) d[i] = clamp(a[i] * a[i] - b[i] * b[i], INT16_MIN, INT16_MAX);
+    for (i = 0; i < N; i++) {
+        d[i] = clamp(a[i] * a[i] - b[i] * b[i], INT16_MIN, INT16_MAX);
+    }
 }
 
 /**
@@ -402,7 +413,9 @@ void svt_av1_wedge_compute_delta_squares_c(int16_t *d, const int16_t *a, const i
 int8_t svt_av1_wedge_sign_from_residuals_c(const int16_t *ds, const uint8_t *m, int N, int64_t limit) {
     int64_t acc = 0;
 
-    do { acc += *ds++ * *m++; } while (--N);
+    do {
+        acc += *ds++ * *m++;
+    } while (--N);
 
     return acc > limit;
 }
@@ -546,10 +559,11 @@ static void pick_interinter_seg(PictureControlSet *pcs, ModeDecisionContext *ctx
     for (cur_mask_type = 0; cur_mask_type < DIFFWTD_MASK_TYPES; cur_mask_type++) {
         uint8_t *const temp_mask = cur_mask_type ? seg_mask1 : seg_mask0;
         // build mask and inverse
-        if (hbd_md)
+        if (hbd_md) {
             svt_av1_build_compound_diffwtd_mask_highbd(temp_mask, cur_mask_type, p0, bw, p1, bw, bh, bw, EB_TEN_BIT);
-        else
+        } else {
             svt_av1_build_compound_diffwtd_mask(temp_mask, cur_mask_type, p0, bw, p1, bw, bh, bw);
+        }
 
         // compute rd for mask
         const uint64_t sse = svt_av1_wedge_sse_from_residuals(residual1, diff10, temp_mask, N);
@@ -575,12 +589,13 @@ static void pick_interinter_mask(PictureControlSet *pcs, ModeDecisionContext *ct
                                  InterInterCompoundData *interinter_comp, const BlockSize bsize,
                                  const uint8_t *const p0, const uint8_t *const p1, const int16_t *const residual1,
                                  const int16_t *const diff10) {
-    if (interinter_comp->type == COMPOUND_WEDGE)
+    if (interinter_comp->type == COMPOUND_WEDGE) {
         pick_interinter_wedge(pcs, ctx, interinter_comp, bsize, p0, residual1, diff10);
-    else if (interinter_comp->type == COMPOUND_DIFFWTD)
+    } else if (interinter_comp->type == COMPOUND_DIFFWTD) {
         pick_interinter_seg(pcs, ctx, interinter_comp, bsize, p0, p1, residual1, diff10);
-    else
+    } else {
         assert(0);
+    }
 }
 
 //
@@ -590,7 +605,9 @@ int64_t svt_aom_highbd_sse_c(const uint8_t *a8, int a_stride, const uint8_t *b8,
     uint16_t *a   = (uint16_t *)a8; //CONVERT_TO_SHORTPTR(a8);
     uint16_t *b   = (uint16_t *)b8; //CONVERT_TO_SHORTPTR(b8);
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) { sse += SQR((int32_t)(a[x]) - (int32_t)(b[x])); }
+        for (x = 0; x < width; x++) {
+            sse += SQR((int32_t)(a[x]) - (int32_t)(b[x]));
+        }
         a += a_stride;
         b += b_stride;
     }
@@ -602,7 +619,9 @@ int64_t svt_aom_sse_c(const uint8_t *a, int a_stride, const uint8_t *b, int b_st
     int64_t sse = 0;
 
     for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) { sse += SQR(a[x] - b[x]); }
+        for (x = 0; x < width; x++) {
+            sse += SQR(a[x] - b[x]);
+        }
         a += a_stride;
         b += b_stride;
     }
@@ -645,12 +664,15 @@ void model_rd_for_sb_with_curvfit(PictureControlSet *pcs, ModeDecisionContext *c
         rate_sum += rate;
         dist_sum += dist;
 
-        if (plane_rate)
+        if (plane_rate) {
             plane_rate[plane] = rate;
-        if (plane_sse)
+        }
+        if (plane_sse) {
             plane_sse[plane] = sse;
-        if (plane_dist)
+        }
+        if (plane_dist) {
             plane_dist[plane] = dist;
+        }
     }
 
     *out_rate_sum = (int)rate_sum;
@@ -705,8 +727,9 @@ typedef void (*overlappable_nb_visitor_t)(uint8_t is16bit, MacroBlockD *xd, int 
 
 static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_col,
                                                  int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
-    if (!xd->up_available)
+    if (!xd->up_available) {
         return;
+    }
 
     int nb_count = 0;
 
@@ -737,8 +760,9 @@ static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const Av1Commo
 
 static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_row,
                                                 int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
-    if (!xd->left_available)
+    if (!xd->left_available) {
         return;
+    }
 
     int nb_count = 0;
 
@@ -1167,11 +1191,12 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
         int bh = clamp(
             block_size_high[bsize] >> (subsampling_y + 1), 4, block_size_high[BLOCK_64X64] >> (subsampling_y + 1));
 
-        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 0, subsampling_x, subsampling_y))
+        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 0, subsampling_x, subsampling_y)) {
             continue;
+        }
 
-        if (j == 0)
-            if (is16bit)
+        if (j == 0) {
+            if (is16bit) {
                 get_single_prediction_for_obmc_luma_hbd(scs,
                                                         above_mbmi->block_mi.interp_filters,
                                                         xd,
@@ -1185,7 +1210,7 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
                                                         ctxt->dst_origin_x,
                                                         ctxt->dst_origin_y,
                                                         ctxt->ref_pic_list0->bit_depth);
-            else
+            } else {
                 get_single_prediction_for_obmc_luma(scs,
                                                     above_mbmi->block_mi.interp_filters,
                                                     xd,
@@ -1198,7 +1223,8 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
                                                     &ctxt->prediction_ptr,
                                                     ctxt->dst_origin_x,
                                                     ctxt->dst_origin_y);
-        else if (is16bit)
+            }
+        } else if (is16bit) {
             get_single_prediction_for_obmc_chroma_hbd(scs,
                                                       above_mbmi->block_mi.interp_filters,
                                                       xd,
@@ -1214,7 +1240,7 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
                                                       ctxt->ss_x,
                                                       ctxt->ss_y,
                                                       ctxt->ref_pic_list0->bit_depth);
-        else
+        } else {
             get_single_prediction_for_obmc_chroma(scs,
                                                   above_mbmi->block_mi.interp_filters,
                                                   xd,
@@ -1229,6 +1255,7 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
                                                   ctxt->dst_origin_y,
                                                   ctxt->ss_x,
                                                   ctxt->ss_y);
+        }
     }
 }
 
@@ -1268,11 +1295,12 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *x
             block_size_wide[bsize] >> (subsampling_x + 1), 4, block_size_wide[BLOCK_64X64] >> (subsampling_x + 1));
         int bh = (left_mi_height << MI_SIZE_LOG2) >> subsampling_y;
 
-        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 1, subsampling_x, subsampling_y))
+        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 1, subsampling_x, subsampling_y)) {
             continue;
+        }
 
-        if (j == 0)
-            if (is16bit)
+        if (j == 0) {
+            if (is16bit) {
                 get_single_prediction_for_obmc_luma_hbd(scs,
                                                         left_mbmi->block_mi.interp_filters,
                                                         xd,
@@ -1286,7 +1314,7 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *x
                                                         ctxt->dst_origin_x,
                                                         ctxt->dst_origin_y,
                                                         ctxt->ref_pic_list0->bit_depth);
-            else
+            } else {
                 get_single_prediction_for_obmc_luma(scs,
                                                     left_mbmi->block_mi.interp_filters,
                                                     xd,
@@ -1299,7 +1327,8 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *x
                                                     &ctxt->prediction_ptr,
                                                     ctxt->dst_origin_x,
                                                     ctxt->dst_origin_y);
-        else if (is16bit)
+            }
+        } else if (is16bit) {
             get_single_prediction_for_obmc_chroma_hbd(scs,
                                                       left_mbmi->block_mi.interp_filters,
                                                       xd,
@@ -1315,7 +1344,7 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *x
                                                       ctxt->ss_x,
                                                       ctxt->ss_y,
                                                       ctxt->ref_pic_list0->bit_depth);
-        else
+        } else {
             get_single_prediction_for_obmc_chroma(scs,
                                                   left_mbmi->block_mi.interp_filters,
                                                   xd,
@@ -1330,14 +1359,16 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *x
                                                   ctxt->dst_origin_y,
                                                   ctxt->ss_x,
                                                   ctxt->ss_y);
+        }
     }
 }
 
 static void build_prediction_by_above_preds(uint32_t component_mask, BlockSize bsize, PictureControlSet *pcs,
                                             MacroBlockD *xd, int mi_row, int mi_col, uint8_t *tmp_buf[MAX_MB_PLANE],
                                             int tmp_stride[MAX_MB_PLANE], uint8_t is16bit) {
-    if (!xd->up_available)
+    if (!xd->up_available) {
         return;
+    }
 
     // Adjust mb_to_bottom_edge to have the correct value for the OBMC
     // prediction block. This is half the height of the original block,
@@ -1379,8 +1410,9 @@ static void build_prediction_by_above_preds(uint32_t component_mask, BlockSize b
 static void build_prediction_by_left_preds(uint32_t component_mask, BlockSize bsize, PictureControlSet *pcs,
                                            MacroBlockD *xd, int mi_row, int mi_col, uint8_t *tmp_buf[MAX_MB_PLANE],
                                            int tmp_stride[MAX_MB_PLANE], uint8_t is16bit) {
-    if (!xd->left_available)
+    if (!xd->left_available) {
         return;
+    }
 
     // Adjust mb_to_right_edge to have the correct value for the OBMC
     // prediction block. This is half the width of the original block,
@@ -1450,8 +1482,9 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD *xd,
         const int plane_col     = (rel_mi_col * MI_SIZE) >> subsampling_x;
         const int plane_col_pos = plane_col << is16bit;
 
-        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 0, subsampling_x, subsampling_y))
+        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 0, subsampling_x, subsampling_y)) {
             continue;
+        }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
                  : plane == 1                  ? ctxt->final_dst_stride_u
@@ -1464,7 +1497,7 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD *xd,
         const uint8_t *const tmp        = &ctxt->adjacent[plane][plane_col_pos];
         const uint8_t *const mask       = svt_av1_get_obmc_mask(bh);
 
-        if (is16bit)
+        if (is16bit) {
             svt_aom_highbd_blend_a64_vmask_16bit((uint16_t *)dst,
                                                  dst_stride,
                                                  (uint16_t *)dst,
@@ -1475,8 +1508,9 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD *xd,
                                                  bw,
                                                  bh,
                                                  10);
-        else
+        } else {
             svt_aom_blend_a64_vmask(dst, dst_stride, dst, dst_stride, tmp, tmp_stride, mask, bw, bh);
+        }
     }
 }
 
@@ -1497,8 +1531,9 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD *xd, 
         const int plane_row     = (rel_mi_row * MI_SIZE) >> subsampling_y;
         const int plane_row_pos = plane_row << is16bit;
 
-        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 1, subsampling_x, subsampling_y))
+        if (svt_av1_skip_u4x4_pred_in_obmc(bsize, 1, subsampling_x, subsampling_y)) {
             continue;
+        }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
                  : plane == 1                  ? ctxt->final_dst_stride_u
@@ -1511,7 +1546,7 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD *xd, 
         const uint8_t *const tmp        = &ctxt->adjacent[plane][plane_row_pos * tmp_stride];
         const uint8_t *const mask       = svt_av1_get_obmc_mask(bw);
 
-        if (is16bit)
+        if (is16bit) {
             svt_aom_highbd_blend_a64_hmask_16bit((uint16_t *)dst,
                                                  dst_stride,
                                                  (uint16_t *)dst,
@@ -1522,8 +1557,9 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD *xd, 
                                                  bw,
                                                  bh,
                                                  10);
-        else
+        } else {
             svt_aom_blend_a64_hmask(dst, dst_stride, dst, dst_stride, tmp, tmp_stride, mask, bw, bh);
+        }
     }
 }
 
@@ -1759,8 +1795,9 @@ void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride) {
     if (block_size_wide[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine ||
-        block_size_high[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine)
+        block_size_high[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine) {
         return;
+    }
     uint8_t         is16bit  = 0;
     const BlockSize bsize    = ctx->blk_geom->bsize;
     const int       bw       = xd->n4_w << MI_SIZE_LOG2;
@@ -1771,7 +1808,9 @@ void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx,
     const int src_scale = AOM_BLEND_A64_MAX_ALPHA * AOM_BLEND_A64_MAX_ALPHA;
 
     memset(wsrc_buf, 0, sizeof(int32_t) * bw * bh);
-    for (int i = 0; i < bw * bh; ++i) mask_buf[i] = AOM_BLEND_A64_MAX_ALPHA;
+    for (int i = 0; i < bw * bh; ++i) {
+        mask_buf[i] = AOM_BLEND_A64_MAX_ALPHA;
+    }
 
     // handle above row
     if (xd->up_available) {
@@ -1811,7 +1850,9 @@ void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx,
         (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y;
 
     for (int row = 0; row < bh; ++row) {
-        for (int col = 0; col < bw; ++col) { wsrc_buf[col] = src[col] * src_scale - wsrc_buf[col]; }
+        for (int col = 0; col < bw; ++col) {
+            wsrc_buf[col] = src[col] * src_scale - wsrc_buf[col];
+        }
         wsrc_buf += bw;
         src += src_pic->stride_y;
     }
@@ -1829,8 +1870,9 @@ void svt_aom_precompute_obmc_data(PictureControlSet *pcs, ModeDecisionContext *c
     int      dst_stride2[MAX_MB_PLANE] = {ctx->blk_geom->bwidth, ctx->blk_geom->bwidth, ctx->blk_geom->bwidth};
 
     if (ctx->hbd_md) {
-        if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK)
+        if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
             ctx->obmc_is_luma_neigh_10bit = true;
+        }
         dst_buf1[0] = (uint8_t *)((uint16_t *)tmp_obmc_bufs[0]);
         dst_buf1[1] = (uint8_t *)((uint16_t *)tmp_obmc_bufs[0] + (ctx->blk_geom->bwidth * ctx->blk_geom->bheight));
         dst_buf1[2] = (uint8_t *)((uint16_t *)tmp_obmc_bufs[0] + (ctx->blk_geom->bwidth * ctx->blk_geom->bheight) * 2);
@@ -1962,10 +2004,11 @@ void model_rd_from_sse(BlockSize bsize, int16_t quantizer, uint8_t bit_depth, ui
         int64_t square_error = sse;
         quantizer            = quantizer >> dequant_shift;
 
-        if (quantizer < 120)
+        if (quantizer < 120) {
             *rate = (int32_t)((square_error * (280 - quantizer)) >> (16 - AV1_PROB_COST_SHIFT));
-        else
+        } else {
             *rate = 0;
+        }
         *dist = (uint64_t)(square_error * quantizer) >> 8;
     } else {
         svt_av1_model_rd_from_var_lapndz(
@@ -2165,8 +2208,9 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
     // Loop over allowable filter combinations and select the best one
     for (unsigned int i = 0; i < DUAL_FILTER_SET_SIZE; i++) {
         // If dual filter is disabled, only test combos that use the same horizontal and vertical filter
-        if (enable_dual_filter == 0 && (filter_sets[i][0] != filter_sets[i][1]))
+        if (enable_dual_filter == 0 && (filter_sets[i][0] != filter_sets[i][1])) {
             continue;
+        }
 
         cand_bf->cand->block_mi.interp_filters = av1_make_interp_filters((InterpFilter)filter_sets[i][0],
                                                                          (InterpFilter)filter_sets[i][1]);
@@ -2231,8 +2275,9 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
         }
 
         if (scs->vq_ctrls.sharpness_ctrls.ifs && pcs->ppcs->is_noise_level) {
-            if (filter_sets[i][0] == 1 || filter_sets[i][1] == 1)
+            if (filter_sets[i][0] == 1 || filter_sets[i][1] == 1) {
                 tmp_rd = (tmp_rd * ifs_smooth_bias[pcs->picture_qp]) / 100;
+            }
         }
 
         // Update best interpoaltion filter
@@ -2247,12 +2292,14 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
 
     // If a new interp filter was selected, then the existing pred will not be valid (unless it's
     // a fullpel MV, in which case the interp filter won't impact prediction and one may be chosen for rate only)
-    if (!is_fp && org_interp_filters != best_filters)
+    if (!is_fp && org_interp_filters != best_filters) {
         cand_bf->valid_luma_pred = false;
+    }
 
     // If filters are non-zero, cannot use skip_mode. Opt to use IFS over skip_mode.
-    if (cand_bf->cand->skip_mode_allowed && cand_bf->cand->block_mi.interp_filters != 0)
+    if (cand_bf->cand->skip_mode_allowed && cand_bf->cand->block_mi.interp_filters != 0) {
         cand_bf->cand->skip_mode_allowed = false;
+    }
 
     // Update fast_luma_rate to take into account switchable_rate
     cand_bf->fast_luma_rate += switchable_rate;
@@ -2307,10 +2354,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
             intra_stride = intra_pred_desc.stride_y;
 
             if (!use_precomputed_intra) {
-                if (pu_origin_y != 0)
+                if (pu_origin_y != 0) {
                     svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                                recon_neigh_y->top_array + ((uint64_t)pu_origin_x << is16bit),
                                blk_geom->bwidth * 2 << is16bit);
+                }
 
                 if (pu_origin_x != 0) {
                     uint16_t multipler = (pu_origin_y % sb_size_luma + blk_geom->bheight * 2) > sb_size_luma ? 1 : 2;
@@ -2319,10 +2367,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
                                blk_geom->bheight * multipler << is16bit);
                 }
 
-                if (pu_origin_y != 0 && pu_origin_x != 0)
+                if (pu_origin_y != 0 && pu_origin_x != 0) {
                     topNeighArray[0] = leftNeighArray[0] =
                         recon_neigh_y
                             ->top_left_array[(recon_neigh_y->max_pic_h + pu_origin_x - pu_origin_y) << is16bit];
+                }
             }
         }
 
@@ -2334,10 +2383,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
             dst_stride   = pred_pic->stride_cb;
             intra_stride = intra_pred_desc.stride_cb;
 
-            if (blk_originy_uv != 0)
+            if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cb->top_array + ((uint64_t)blk_originx_uv << is16bit),
                            blk_geom->bwidth_uv * 2 << is16bit);
+            }
 
             if (blk_originx_uv != 0) {
                 uint16_t multipler = (blk_originy_uv % sb_size_chroma + blk_geom->bheight_uv * 2) > sb_size_chroma ? 1
@@ -2347,10 +2397,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
                            blk_geom->bheight_uv * multipler << is16bit);
             }
 
-            if (blk_originy_uv != 0 && blk_originx_uv != 0)
+            if (blk_originy_uv != 0 && blk_originx_uv != 0) {
                 topNeighArray[0] = leftNeighArray[0] =
                     recon_neigh_cb
                         ->top_left_array[(recon_neigh_cb->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
+            }
         } else {
             dst = pred_pic->buffer_cr +
                 (((pred_pic->org_x + ((dst_origin_x >> 3) << 3)) / 2 +
@@ -2359,10 +2410,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
             dst_stride   = pred_pic->stride_cr;
             intra_stride = intra_pred_desc.stride_cr;
 
-            if (blk_originy_uv != 0)
+            if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cr->top_array + ((uint64_t)blk_originx_uv << is16bit),
                            blk_geom->bwidth_uv * 2 << is16bit);
+            }
 
             if (blk_originx_uv != 0) {
                 uint16_t multipler = (blk_originy_uv % sb_size_chroma + blk_geom->bheight_uv * 2) > sb_size_chroma ? 1
@@ -2372,10 +2424,11 @@ static void inter_intra_prediction(PictureControlSet *pcs, ModeDecisionContext *
                            blk_geom->bheight_uv * multipler << is16bit);
             }
 
-            if (blk_originy_uv != 0 && blk_originx_uv != 0)
+            if (blk_originy_uv != 0 && blk_originx_uv != 0) {
                 topNeighArray[0] = leftNeighArray[0] =
                     recon_neigh_cr
                         ->top_left_array[(recon_neigh_cr->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
+            }
         }
         TxSize tx_size        = blk_geom->txsize[0]; // Nader - Intra 128x128 not supported
         TxSize tx_size_Chroma = blk_geom->txsize_uv[0]; //Nader - Intra 128x128 not supported
@@ -2708,8 +2761,9 @@ void svt_aom_enc_make_inter_predictor(SequenceControlSet *scs, uint8_t *src_ptr,
                 // optimize stride from MAX_SB_SIZE to blk_width to minimum the block buffer size
                 src_stride16 = blk_width * width_scale + (offset << 1);
                 // 16-byte align of src16
-                if (src_stride16 % 8)
+                if (src_stride16 % 8) {
                     src_stride16 = ALIGN_POWER_OF_TWO(src_stride16, 3);
+                }
 
                 svt_aom_pack_block(src_mod - offset - (offset * src_stride),
                                    src_stride,
@@ -3032,13 +3086,15 @@ static void av1_inter_prediction_obmc(PictureControlSet *pcs, BlkStruct *blk_ptr
 
     if (use_precomputed_obmc) {
         if ((!ctx->obmc_neighbor_luma_pred_ready || (!ctx->obmc_is_luma_neigh_10bit && is16bit)) &&
-            (component_mask == PICTURE_BUFFER_DESC_FULL_MASK || component_mask == PICTURE_BUFFER_DESC_LUMA_MASK))
+            (component_mask == PICTURE_BUFFER_DESC_FULL_MASK || component_mask == PICTURE_BUFFER_DESC_LUMA_MASK)) {
             svt_aom_precompute_obmc_data(pcs, ctx, PICTURE_BUFFER_DESC_LUMA_MASK);
+        }
         svt_aom_precompute_obmc_data(pcs, ctx, PICTURE_BUFFER_DESC_LUMA_MASK);
 
         if (!ctx->obmc_neighbor_chroma_pred_ready &&
-            (component_mask == PICTURE_BUFFER_DESC_FULL_MASK || component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK))
+            (component_mask == PICTURE_BUFFER_DESC_FULL_MASK || component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK)) {
             svt_aom_precompute_obmc_data(pcs, ctx, PICTURE_BUFFER_DESC_CHROMA_MASK);
+        }
         dst_buf1[0] = ctx->obmc_buff_0;
         dst_buf1[1] = ctx->obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight) << is16bit);
         dst_buf1[2] = ctx->obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight * 2) << is16bit);
@@ -3137,8 +3193,9 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
 
     const uint8_t sub8x8_inter = (block_size_wide[bsize] < 8 && ss_x) || (block_size_high[bsize] < 8 && ss_y);
 
-    if (!sub8x8_inter || block_mi->use_intrabc)
+    if (!sub8x8_inter || block_mi->use_intrabc) {
         return 0;
+    }
 
     // For sub8x8 chroma blocks, we may be covering more than one luma block's
     // worth of pixels. Thus (mi_x, mi_y) may not be the correct coordinates for
@@ -3150,8 +3207,9 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
     for (int32_t row = row_start; row <= 0; ++row) {
         for (int32_t col = col_start; col <= 0; ++col) {
             const MbModeInfo *this_mbmi = xd->mi[row * xd->mi_stride + col];
-            if (!is_inter_block(&this_mbmi->block_mi))
+            if (!is_inter_block(&this_mbmi->block_mi)) {
                 return 0;
+            }
         }
     }
 
@@ -3173,8 +3231,9 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
             MvReferenceFrame rf[2];
             av1_set_ref_frame(rf, ref_pair);
             //single ref/list
-            if (rf[1] != NONE_FRAME)
+            if (rf[1] != NONE_FRAME) {
                 continue;
+            }
             EbPictureBufferDesc *ref_pic_ptr = svt_aom_get_ref_pic_buffer(pcs, rf[0]);
 
             svt_av1_setup_scale_factors_for_frame(&(scale_factors[rf[0]]),
@@ -3202,9 +3261,10 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
                 (((ref_pic->org_x) / 2 + (ref_pic->org_y) / 2 * ref_pic->stride_cb));
 
             uint8_t *src_ptr_2b = NULL;
-            if (ref_pic->buffer_bit_inc_cb)
+            if (ref_pic->buffer_bit_inc_cb) {
                 src_ptr_2b = ref_pic->buffer_bit_inc_cb +
                     (((ref_pic->org_x) / 2 + (ref_pic->org_y) / 2 * ref_pic->stride_bit_inc_cb));
+            }
             uint8_t *dst_ptr = pred_pic->buffer_cb +
                 (((pred_pic->org_x + ((dst_origin_x >> 3) << 3)) / 2 +
                   (pred_pic->org_y + ((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cb)
@@ -3246,9 +3306,10 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
             //Cr
             src_ptr    = ref_pic->buffer_cr + (((ref_pic->org_x) / 2 + (ref_pic->org_y) / 2 * ref_pic->stride_cr));
             src_ptr_2b = NULL;
-            if (ref_pic->buffer_bit_inc_cr)
+            if (ref_pic->buffer_bit_inc_cr) {
                 src_ptr_2b = ref_pic->buffer_bit_inc_cr +
                     (((ref_pic->org_x) / 2 + (ref_pic->org_y) / 2 * ref_pic->stride_bit_inc_cr));
+            }
             dst_ptr = pred_pic->buffer_cr +
                 (((pred_pic->org_x + ((dst_origin_x >> 3) << 3)) / 2 +
                   (pred_pic->org_y + ((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cr)

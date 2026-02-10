@@ -57,8 +57,9 @@ static EbErrorType allocate_frame_buffer(EbConfig *app_cfg, EbSvtIOFormat *input
     input_ptr->cr   = 0;
     if (luma_8bit_size) {
         input_ptr->luma = malloc(luma_8bit_size);
-        if (input_ptr->luma == NULL)
+        if (input_ptr->luma == NULL) {
             return EB_ErrorInsufficientResources;
+        }
     }
 
     if (chroma_8bit_size) {
@@ -80,16 +81,18 @@ static EbErrorType allocate_frame_buffer(EbConfig *app_cfg, EbSvtIOFormat *input
 
 static EbErrorType allocate_input_buffers(EbConfig *app_cfg) {
     app_cfg->input_buffer_pool = malloc(sizeof(EbBufferHeaderType));
-    if (app_cfg->input_buffer_pool == NULL)
+    if (app_cfg->input_buffer_pool == NULL) {
         return EB_ErrorInsufficientResources;
+    }
 
     // Initialize Header
     app_cfg->input_buffer_pool->size = sizeof(EbBufferHeaderType);
 
     EbSvtIOFormat *p_buffer = malloc(sizeof(EbSvtIOFormat));
 
-    if (p_buffer == NULL)
+    if (p_buffer == NULL) {
         return EB_ErrorInsufficientResources;
+    }
 
     // Allocate frame buffer for the p_buffer
     if (app_cfg->buffered_input == -1 && !app_cfg->mmap.enable &&
@@ -126,8 +129,9 @@ static EbErrorType allocate_output_recon_buffers(EbConfig *app_cfg) {
 
     // Recon Port
     app_cfg->recon_buffer = malloc(sizeof(*app_cfg->recon_buffer));
-    if (app_cfg->recon_buffer == NULL)
+    if (app_cfg->recon_buffer == NULL) {
         return EB_ErrorInsufficientResources;
+    }
 
     // Initialize Header
     app_cfg->recon_buffer->size     = sizeof(*app_cfg->recon_buffer);
@@ -164,16 +168,19 @@ static EbErrorType preload_frames_info_ram(EbConfig *app_cfg) {
 
     read_size = input_padded_width * input_padded_height; //Luma
     read_size += 2 * chroma_width * chroma_height; // Add Chroma
-    if (app_cfg->config.encoder_bit_depth > 8)
+    if (app_cfg->config.encoder_bit_depth > 8) {
         read_size *= 2; //10 bit
+    }
     app_cfg->sequence_buffer = calloc(app_cfg->buffered_input, sizeof(uint8_t *));
-    if (app_cfg->sequence_buffer == NULL)
+    if (app_cfg->sequence_buffer == NULL) {
         return EB_ErrorInsufficientResources;
+    }
 
     for (int32_t processed_frame_count = 0; processed_frame_count < app_cfg->buffered_input; ++processed_frame_count) {
         app_cfg->sequence_buffer[processed_frame_count] = malloc(read_size);
-        if (app_cfg->sequence_buffer[processed_frame_count] == NULL)
+        if (app_cfg->sequence_buffer[processed_frame_count] == NULL) {
             return EB_ErrorInsufficientResources;
+        }
 
         // Fill the buffer with a complete frame
         size_t filled_len = fread(app_cfg->sequence_buffer[processed_frame_count], 1, read_size, app_cfg->input_file);
@@ -182,8 +189,10 @@ static EbErrorType preload_frames_info_ram(EbConfig *app_cfg) {
             fseek(app_cfg->input_file, 0, SEEK_SET);
 
             // Fill the buffer with a complete frame
-            if (read_size != fread(app_cfg->sequence_buffer[processed_frame_count], 1, read_size, app_cfg->input_file))
+            if (read_size !=
+                fread(app_cfg->sequence_buffer[processed_frame_count], 1, read_size, app_cfg->input_file)) {
                 return_error = EB_Corrupt_Frame;
+            }
         }
     }
 
@@ -340,12 +349,16 @@ static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
                     roi_map->evt_num,
                     evt->start_picture_number);
             fprintf(stdout, "qp_offset ");
-            for (int i = 0; i <= evt->max_seg_id; ++i) { fprintf(stdout, "%d ", evt->seg_qp[i]); }
+            for (int i = 0; i <= evt->max_seg_id; ++i) {
+                fprintf(stdout, "%d ", evt->seg_qp[i]);
+            }
             fprintf(stdout, "\n");
             int column_b64 = (app_cfg->config.source_width + 63) / 64;
             int row_b64    = (app_cfg->config.source_height + 63) / 64;
             for (int i = 0; i < row_b64; ++i) {
-                for (int j = 0; j < column_b64; ++j) { fprintf(stdout, "%d ", evt->b64_seg_map[i * column_b64 + j]); }
+                for (int j = 0; j < column_b64; ++j) {
+                    fprintf(stdout, "%d ", evt->b64_seg_map[i * column_b64 + j]);
+                }
                 fprintf(stdout, "\n");
             }
             fprintf(stdout, "\n");
@@ -396,7 +409,9 @@ static void deallocate_buffers(EbConfig *app_cfg) {
 
     // Deallocate sequence buffer
     if (app_cfg->sequence_buffer) {
-        for (int i = 0; i < app_cfg->buffered_input; ++i) free(app_cfg->sequence_buffer[i]);
+        for (int i = 0; i < app_cfg->buffered_input; ++i) {
+            free(app_cfg->sequence_buffer[i]);
+        }
         free(app_cfg->sequence_buffer);
     }
 }
@@ -425,8 +440,9 @@ EbErrorType init_encoder(EbConfig *app_cfg) {
     // Set the Parameters
     EbErrorType return_error = svt_av1_enc_set_parameter(app_cfg->svt_encoder_handle, &app_cfg->config);
 
-    if (return_error != EB_ErrorNone)
+    if (return_error != EB_ErrorNone) {
         return return_error;
+    }
     // STEP 5: Init Encoder
     return_error = svt_av1_enc_init(app_cfg->svt_encoder_handle);
 
@@ -441,19 +457,22 @@ EbErrorType init_encoder(EbConfig *app_cfg) {
     // STEP 6: Allocate input buffers carrying the yuv frames in
     return_error = allocate_input_buffers(app_cfg);
 
-    if (return_error != EB_ErrorNone)
+    if (return_error != EB_ErrorNone) {
         return return_error;
+    }
     // STEP 7: Allocate output Recon Buffer
     return_error = allocate_output_recon_buffers(app_cfg);
 
-    if (return_error != EB_ErrorNone)
+    if (return_error != EB_ErrorNone) {
         return return_error;
+    }
     // Allocate the Sequence Buffer
     if (app_cfg->buffered_input != -1) {
         // Preload frames into the ram for a faster yuv access time
         return_error = preload_frames_info_ram(app_cfg);
-    } else
+    } else {
         app_cfg->sequence_buffer = 0;
+    }
     ///********************** APPLICATION INIT [END] ******************////////
 
     return return_error;

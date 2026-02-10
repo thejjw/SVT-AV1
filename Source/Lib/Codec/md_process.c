@@ -38,30 +38,36 @@ static void mode_decision_context_dctor(EbPtr p) {
     uint32_t block_max_count_sb = obj->init_max_block_cnt;
 
     // MD palette search
-    if (obj->palette_buffer)
+    if (obj->palette_buffer) {
         EB_FREE(obj->palette_buffer);
+    }
     if (obj->palette_cand_array) {
         // Free fields in palette_cand_array before freeing palette_cand_array
         for (int cd = 0; cd < MAX_PAL_CAND; cd++) {
-            if (obj->palette_cand_array[cd].color_idx_map)
+            if (obj->palette_cand_array[cd].color_idx_map) {
                 EB_FREE_ARRAY(obj->palette_cand_array[cd].color_idx_map);
+            }
         }
 
         EB_FREE_ARRAY(obj->palette_cand_array);
     }
-    if (obj->palette_size_array_0)
+    if (obj->palette_size_array_0) {
         EB_FREE_ARRAY(obj->palette_size_array_0);
-    for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++)
+    }
+    for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++) {
         EB_FREE_ARRAY(obj->cand_buff_indices[cand_class_it]);
+    }
     EB_FREE_ARRAY(obj->best_candidate_index_array);
 
     EB_FREE_ARRAY(obj->above_txfm_context);
     EB_FREE_ARRAY(obj->left_txfm_context);
     for (uint32_t coded_leaf_index = 0; coded_leaf_index < block_max_count_sb; ++coded_leaf_index) {
-        if (obj->md_blk_arr_nsq[coded_leaf_index].coeff_tmp)
+        if (obj->md_blk_arr_nsq[coded_leaf_index].coeff_tmp) {
             EB_DELETE(obj->md_blk_arr_nsq[coded_leaf_index].coeff_tmp);
-        if (obj->md_blk_arr_nsq[coded_leaf_index].recon_tmp)
+        }
+        if (obj->md_blk_arr_nsq[coded_leaf_index].recon_tmp) {
             EB_DELETE(obj->md_blk_arr_nsq[coded_leaf_index].recon_tmp);
+        }
     }
     EB_DELETE_PTR_ARRAY(obj->cand_bf_ptr_array, obj->max_nics_uv);
     EB_FREE_ARRAY(obj->cand_bf_tx_depth_1->cand);
@@ -92,31 +98,41 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->avail_blk_flag);
     EB_FREE_ARRAY(obj->cost_avail);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
-    if (obj->rate_est_table)
+    if (obj->rate_est_table) {
         EB_FREE_ARRAY(obj->rate_est_table);
+    }
 
     for (int i = 0; i < NEAREST_NEAR_MV_CNT; i++) {
-        if (obj->cmp_store.pred0_buf[i])
+        if (obj->cmp_store.pred0_buf[i]) {
             EB_FREE(obj->cmp_store.pred0_buf[i]);
-        if (obj->cmp_store.pred1_buf[i])
+        }
+        if (obj->cmp_store.pred1_buf[i]) {
             EB_FREE(obj->cmp_store.pred1_buf[i]);
+        }
     }
-    if (obj->residual1)
+    if (obj->residual1) {
         EB_FREE(obj->residual1);
-    if (obj->diff10)
+    }
+    if (obj->diff10) {
         EB_FREE(obj->diff10);
+    }
 
-    if (obj->intrapred_buf)
+    if (obj->intrapred_buf) {
         EB_FREE_2D(obj->intrapred_buf);
+    }
 
-    if (obj->obmc_buff_0)
+    if (obj->obmc_buff_0) {
         EB_FREE(obj->obmc_buff_0);
-    if (obj->obmc_buff_1)
+    }
+    if (obj->obmc_buff_1) {
         EB_FREE(obj->obmc_buff_1);
-    if (obj->wsrc_buf)
+    }
+    if (obj->wsrc_buf) {
         EB_FREE(obj->wsrc_buf);
-    if (obj->mask_buf)
+    }
+    if (obj->mask_buf) {
         EB_FREE(obj->mask_buf);
+    }
     for (uint32_t txt_itr = 0; txt_itr < TX_TYPES; ++txt_itr) {
         EB_DELETE(obj->recon_coeff_ptr[txt_itr]);
         EB_DELETE(obj->recon_ptr[txt_itr]);
@@ -242,7 +258,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
                 svt_aom_set_nics(scs, &scaling_ctrls, mds1_count, mds2_count, mds3_count, pic_type, qp);
 
                 uint32_t nics = 0;
-                for (CandClass cidx = CAND_CLASS_0; cidx < CAND_CLASS_TOTAL; cidx++) { nics += mds1_count[cidx]; }
+                for (CandClass cidx = CAND_CLASS_0; cidx < CAND_CLASS_TOTAL; cidx++) {
+                    nics += mds1_count[cidx];
+                }
                 max_nics = MAX(max_nics, nics);
             }
         }
@@ -253,34 +271,39 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     for (uint8_t is_i_slice = 0; is_i_slice < 2; is_i_slice++) {
         is_chroma_mode_0 = svt_aom_set_chroma_controls(
                                NULL, svt_aom_get_chroma_level(enc_mode, is_i_slice, allintra)) == CHROMA_MODE_0;
-        if (is_chroma_mode_0)
+        if (is_chroma_mode_0) {
             break;
+        }
     }
     const uint8_t ind_uv_cands = is_chroma_mode_0 ? 84 : 0;
     max_nics += CAND_CLASS_TOTAL; //need one extra temp buffer for each fast loop call
     ctx->max_nics    = max_nics;
     ctx->max_nics_uv = max_nics + ind_uv_cands;
     // Cfl scratch memory
-    if (ctx->hbd_md > EB_8_BIT_MD)
+    if (ctx->hbd_md > EB_8_BIT_MD) {
         EB_MALLOC_ALIGNED(ctx->cfl_temp_luma_recon16bit, sizeof(uint16_t) * sb_size * sb_size);
-    if (ctx->hbd_md != EB_10_BIT_MD)
+    }
+    if (ctx->hbd_md != EB_10_BIT_MD) {
         EB_MALLOC_ALIGNED(ctx->cfl_temp_luma_recon, sizeof(uint8_t) * sb_size * sb_size);
+    }
     EB_MALLOC_ALIGNED(ctx->pred_buf_q3, CFL_BUF_SQUARE);
     uint8_t use_update_cdf = 0;
     for (uint8_t sc_class1 = 0; sc_class1 < 2; sc_class1++) {
         for (uint8_t is_islice = 0; is_islice < 2; is_islice++) {
             for (uint8_t is_base = 0; is_base < 2; is_base++) {
-                if (use_update_cdf)
+                if (use_update_cdf) {
                     break;
+                }
                 use_update_cdf |= svt_aom_get_update_cdf_level(
                     enc_mode, is_islice, is_base, sc_class1, input_resolution, allintra);
             }
         }
     }
-    if (use_update_cdf)
+    if (use_update_cdf) {
         EB_CALLOC_ARRAY(ctx->rate_est_table, 1);
-    else
+    } else {
         ctx->rate_est_table = NULL;
+    }
     // Allocate buffer for inter-inter compound prediction
     if (get_inter_compound_level(enc_mode)) {
         const uint8_t bits = ctx->hbd_md > EB_8_BIT_MD ? 2 : 1;
@@ -295,8 +318,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     // Allocate buffer for inter-intra prediction
     uint8_t ii_allowed = 0;
     for (uint8_t transition_present = 0; transition_present < 2; transition_present++) {
-        if (ii_allowed)
+        if (ii_allowed) {
             break;
+        }
         ii_allowed |= svt_aom_get_inter_intra_level(enc_mode, transition_present);
     }
     if (ii_allowed) {
@@ -309,8 +333,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     uint8_t obmc_allowed = 0;
     for (uint8_t is_base = 0; is_base < 2; is_base++) {
         for (uint8_t qp = MIN_QP_VALUE; qp <= MAX_QP_VALUE; qp++) {
-            if (obmc_allowed)
+            if (obmc_allowed) {
                 break;
+            }
             obmc_allowed |= svt_aom_get_obmc_level(enc_mode, qp, seq_qp_mod);
         }
     }
@@ -474,8 +499,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
             ctx->md_blk_arr_nsq[coded_leaf_index].recon_tmp = NULL;
         }
     }
-    for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++)
+    for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++) {
         EB_MALLOC_ARRAY(ctx->cand_buff_indices[cand_class_it], ctx->max_nics_uv);
+    }
 
     EB_MALLOC_ARRAY(ctx->best_candidate_index_array, ctx->max_nics_uv);
     EB_MALLOC_ARRAY(ctx->above_txfm_context, (sb_size >> MI_SIZE_LOG2));
@@ -669,10 +695,11 @@ void svt_aom_reset_mode_decision(SequenceControlSet *scs, ModeDecisionContext *c
     //each segment enherits the bypass encdec from the picture level
     ctx->bypass_encdec = pcs->pic_bypass_encdec;
 
-    if (!rtc_tune && (pcs->enc_mode <= ENC_M11 || pcs->temporal_layer_index != 0))
+    if (!rtc_tune && (pcs->enc_mode <= ENC_M11 || pcs->temporal_layer_index != 0)) {
         ctx->rtc_use_N4_dct_dct_shortcut = 1;
-    else
+    } else {
         ctx->rtc_use_N4_dct_dct_shortcut = 0;
+    }
     return;
 }
 

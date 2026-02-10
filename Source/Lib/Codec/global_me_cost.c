@@ -60,8 +60,10 @@ int svt_aom_gm_get_params_cost(const WarpedMotionParams *gm, const WarpedMotionP
                                                                (ref_gm->wmmat[1] >> trans_prec_diff),
                                                                (gm->wmmat[1] >> trans_prec_diff));
         AOM_FALLTHROUGH_INTENDED;
-    case IDENTITY: break;
-    default: assert(0);
+    case IDENTITY:
+        break;
+    default:
+        assert(0);
     }
     return (params_cost << AV1_PROB_COST_SHIFT);
 }

@@ -323,10 +323,11 @@ static int16_t resolve_divisor_64(uint64_t D, int16_t *shift) {
     // e is obtained from D after resetting the most significant 1 bit.
     const int64_t e = D - ((uint64_t)1 << *shift);
     // Get the most significant DIV_LUT_BITS (8) bits of e into f
-    if (*shift > DIV_LUT_BITS)
+    if (*shift > DIV_LUT_BITS) {
         f = ROUND_POWER_OF_TWO_64(e, *shift - DIV_LUT_BITS);
-    else
+    } else {
         f = e << (DIV_LUT_BITS - *shift);
+    }
     assert(f <= DIV_LUT_NUM);
     *shift += DIV_LUT_PREC_BITS;
     // Use f as lookup into the precomputed table of multipliers
@@ -339,10 +340,11 @@ static int16_t resolve_divisor_32(uint32_t D, int16_t *shift) {
     // e is obtained from D after resetting the most significant 1 bit.
     const int32_t e = D - ((uint32_t)1 << *shift);
     // Get the most significant DIV_LUT_BITS (8) bits of e into f
-    if (*shift > DIV_LUT_BITS)
+    if (*shift > DIV_LUT_BITS) {
         f = ROUND_POWER_OF_TWO(e, *shift - DIV_LUT_BITS);
-    else
+    } else {
         f = e << (DIV_LUT_BITS - *shift);
+    }
     assert(f <= DIV_LUT_NUM);
     *shift += DIV_LUT_PREC_BITS;
     // Use f as lookup into the precomputed table of multipliers
@@ -356,10 +358,11 @@ static int is_affine_valid(const WarpedMotionParams *const wm) {
 
 static int is_affine_shear_allowed(int16_t alpha, int16_t beta, int16_t gamma, int16_t delta) {
     if ((4 * abs(alpha) + 7 * abs(beta) >= (1 << WARPEDMODEL_PREC_BITS)) ||
-        (4 * abs(gamma) + 4 * abs(delta) >= (1 << WARPEDMODEL_PREC_BITS)))
+        (4 * abs(gamma) + 4 * abs(delta) >= (1 << WARPEDMODEL_PREC_BITS))) {
         return 0;
-    else
+    } else {
         return 1;
+    }
 }
 
 static int find_affine_int(int np, const int *pts1, const int *pts2, BlockSize bsize, Mv mv, WarpedMotionParams *wm,
@@ -433,8 +436,9 @@ static int find_affine_int(int np, const int *pts1, const int *pts2, BlockSize b
 
     // Compute Determinant of A
     det = (int64_t)A[0][0] * A[1][1] - (int64_t)A[0][1] * A[0][1];
-    if (det == 0)
+    if (det == 0) {
         return 1;
+    }
     i_det = resolve_divisor_64(llabs(det), &shift) * (det < 0 ? -1 : 1);
     shift -= WARPEDMODEL_PREC_BITS;
     if (shift < 0) {
@@ -476,8 +480,9 @@ bool svt_find_projection(int np, int *pts1, int *pts2, BlockSize bsize, Mv mv, W
     }
 
     // check compatibility with the fast warp filter
-    if (!svt_get_shear_params(wm_params))
+    if (!svt_get_shear_params(wm_params)) {
         return 1;
+    }
 
     return 0;
 }
@@ -645,7 +650,9 @@ void svt_av1_warp_affine_c(const int32_t *mat, const uint8_t *ref, int width, in
                     const int16_t *coeffs = svt_aom_warped_filter[offs];
 
                     int32_t sum = 1 << offset_bits_vert;
-                    for (int m = 0; m < 8; ++m) sum += tmp[(k + m + 4) * 8 + (l + 4)] * coeffs[m];
+                    for (int m = 0; m < 8; ++m) {
+                        sum += tmp[(k + m + 4) * 8 + (l + 4)] * coeffs[m];
+                    }
                     if (conv_params->is_compound) {
                         ConvBufType *p =
                             &conv_params->dst[(i - p_row + k + 4) * conv_params->dst_stride + (j - p_col + l + 4)];
@@ -663,8 +670,9 @@ void svt_av1_warp_affine_c(const int32_t *mat, const uint8_t *ref, int width, in
                             tmp32 = tmp32 - (1 << (offset_bits - conv_params->round_1)) -
                                 (1 << (offset_bits - conv_params->round_1 - 1));
                             *dst8 = clip_pixel(ROUND_POWER_OF_TWO(tmp32, round_bits));
-                        } else
+                        } else {
                             *p = sum;
+                        }
                     } else {
                         uint8_t *p = &pred[(i - p_row + k + 4) * p_stride + (j - p_col + l + 4)];
                         sum        = ROUND_POWER_OF_TWO(sum, reduce_bits_vert);
@@ -785,7 +793,9 @@ void svt_av1_highbd_warp_affine_c(const int32_t *mat, const uint8_t *ref8b, cons
                     const int16_t *coeffs = svt_aom_warped_filter[offs];
 
                     int32_t sum = 1 << offset_bits_vert;
-                    for (int m = 0; m < 8; ++m) sum += tmp[(k + m + 4) * 8 + (l + 4)] * coeffs[m];
+                    for (int m = 0; m < 8; ++m) {
+                        sum += tmp[(k + m + 4) * 8 + (l + 4)] * coeffs[m];
+                    }
                     if (conv_params->is_compound) {
                         ConvBufType *p =
                             &conv_params->dst[(i - p_row + k + 4) * conv_params->dst_stride + (j - p_col + l + 4)];
@@ -803,8 +813,9 @@ void svt_av1_highbd_warp_affine_c(const int32_t *mat, const uint8_t *ref8b, cons
                             tmp32 = tmp32 - (1 << (offset_bits - conv_params->round_1)) -
                                 (1 << (offset_bits - conv_params->round_1 - 1));
                             *dst16 = clip_pixel_highbd(ROUND_POWER_OF_TWO(tmp32, round_bits), bd);
-                        } else
+                        } else {
                             *p = sum;
+                        }
                     } else {
                         uint16_t *p = &pred[(i - p_row + k + 4) * p_stride + (j - p_col + l + 4)];
                         sum         = ROUND_POWER_OF_TWO(sum, reduce_bits_vert);
@@ -860,7 +871,7 @@ static void highbd_warp_plane(WarpedMotionParams *wm, const uint8_t *const ref8,
 void svt_av1_warp_plane(WarpedMotionParams *wm, int use_hbd, int bd, const uint8_t *ref, const uint8_t *ref_2b,
                         int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width,
                         int p_height, int p_stride, int subsampling_x, int subsampling_y, ConvolveParams *conv_params) {
-    if (use_hbd)
+    if (use_hbd) {
         highbd_warp_plane(wm,
                           ref,
                           ref_2b,
@@ -877,7 +888,7 @@ void svt_av1_warp_plane(WarpedMotionParams *wm, int use_hbd, int bd, const uint8
                           subsampling_y,
                           bd,
                           conv_params);
-    else
+    } else {
         svt_warp_plane(wm,
                        ref,
                        width,
@@ -892,13 +903,15 @@ void svt_av1_warp_plane(WarpedMotionParams *wm, int use_hbd, int bd, const uint8
                        subsampling_x,
                        subsampling_y,
                        conv_params);
+    }
 }
 
 // Returns 1 on success or 0 on an invalid affine set
 int svt_get_shear_params(WarpedMotionParams *wm) {
     const int32_t *mat = wm->wmmat;
-    if (!is_affine_valid(wm))
+    if (!is_affine_valid(wm)) {
         return 0;
+    }
     wm->alpha = clamp(mat[2] - (1 << WARPEDMODEL_PREC_BITS), INT16_MIN, INT16_MAX);
     wm->beta  = clamp(mat[3], INT16_MIN, INT16_MAX);
     int16_t shift;
@@ -914,8 +927,9 @@ int svt_get_shear_params(WarpedMotionParams *wm) {
     wm->gamma = ROUND_POWER_OF_TWO_SIGNED(wm->gamma, WARP_PARAM_REDUCE_BITS) * (1 << WARP_PARAM_REDUCE_BITS);
     wm->delta = ROUND_POWER_OF_TWO_SIGNED(wm->delta, WARP_PARAM_REDUCE_BITS) * (1 << WARP_PARAM_REDUCE_BITS);
 
-    if (!is_affine_shear_allowed(wm->alpha, wm->beta, wm->gamma, wm->delta))
+    if (!is_affine_shear_allowed(wm->alpha, wm->beta, wm->gamma, wm->delta)) {
         return 0;
+    }
 
     return 1;
 }
@@ -930,8 +944,9 @@ uint8_t svt_aom_select_samples(Mv mv, int *pts, int *pts_inref, int len, BlockSi
     // Only keep the samples with MV differences within threshold.
     for (int i = 0; i < len; ++i) {
         const int diff = abs(pts_inref[2 * i] - pts[2 * i] - mv.x) + abs(pts_inref[2 * i + 1] - pts[2 * i + 1] - mv.y);
-        if (diff > thresh)
+        if (diff > thresh) {
             continue;
+        }
         if (ret != i) {
             memcpy(pts + 2 * ret, pts + 2 * i, 2 * sizeof(pts[0]));
             memcpy(pts_inref + 2 * ret, pts_inref + 2 * i, 2 * sizeof(pts_inref[0]));

@@ -73,8 +73,9 @@ static void set_global_motion_field(PictureControlSet *pcs) {
     for (frame_index = INTRA_FRAME; frame_index <= ALTREF_FRAME; ++frame_index) {
         const uint8_t list_idx = get_list_idx(frame_index);
         const uint8_t ref_idx  = get_ref_frame_idx(frame_index);
-        if (!ppcs->is_global_motion[list_idx][ref_idx])
+        if (!ppcs->is_global_motion[list_idx][ref_idx]) {
             continue;
+        }
         ppcs->global_motion[frame_index] = ppcs->global_motion_estimation[list_idx][ref_idx];
         uint8_t sf = ppcs->gm_downsample_level == GM_DOWN ? 2 : ppcs->gm_downsample_level == GM_DOWN16 ? 4 : 1;
         svt_aom_upscale_wm_params(&ppcs->global_motion[frame_index], sf);
@@ -390,8 +391,9 @@ Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
 static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
-    if (!oh->enable_order_hint)
+    if (!oh->enable_order_hint) {
         return 0;
+    }
 
     const int bits = oh->order_hint_bits;
 
@@ -416,12 +418,14 @@ static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, 
     const int row = (sign_bias == 1) ? blk_row - row_offset : blk_row + row_offset;
     const int col = (sign_bias == 1) ? blk_col - col_offset : blk_col + col_offset;
 
-    if (row < 0 || row >= (cm->mi_rows >> 1) || col < 0 || col >= (cm->mi_cols >> 1))
+    if (row < 0 || row >= (cm->mi_rows >> 1) || col < 0 || col >= (cm->mi_cols >> 1)) {
         return 0;
+    }
 
     if (row < base_blk_row - (MAX_OFFSET_HEIGHT >> 3) || row >= base_blk_row + 8 + (MAX_OFFSET_HEIGHT >> 3) ||
-        col < base_blk_col - (MAX_OFFSET_WIDTH >> 3) || col >= base_blk_col + 8 + (MAX_OFFSET_WIDTH >> 3))
+        col < base_blk_col - (MAX_OFFSET_WIDTH >> 3) || col >= base_blk_col + 8 + (MAX_OFFSET_WIDTH >> 3)) {
         return 0;
+    }
 
     *mi_r = row;
     *mi_c = col;
@@ -446,11 +450,13 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
     ref_idx_l0                         = get_ref_frame_idx(start_frame);
     EbReferenceObject *start_frame_buf = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
 
-    if (start_frame_buf == NULL)
+    if (start_frame_buf == NULL) {
         return 0;
+    }
 
-    if (start_frame_buf->frame_type == KEY_FRAME || start_frame_buf->frame_type == INTRA_ONLY_FRAME)
+    if (start_frame_buf->frame_type == KEY_FRAME || start_frame_buf->frame_type == INTRA_ONLY_FRAME) {
         return 0;
+    }
 
     // MFMV is not applied when the reference picture is of a different spatial resolution
     // (described in the AV1 spec section 7.9.2.)
@@ -463,12 +469,14 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
     int                       start_to_current_frame_offset = get_relative_dist(
         &pcs->ppcs->scs->seq_header.order_hint_info, start_frame_order_hint, pcs->ppcs->cur_order_hint);
 
-    for (int i = LAST_FRAME; i <= INTER_REFS_PER_FRAME; ++i)
+    for (int i = LAST_FRAME; i <= INTER_REFS_PER_FRAME; ++i) {
         ref_offset[i] = get_relative_dist(
             &pcs->ppcs->scs->seq_header.order_hint_info, start_frame_order_hint, ref_order_hints[i - LAST_FRAME]);
+    }
 
-    if (dir == 2)
+    if (dir == 2) {
         start_to_current_frame_offset = -start_to_current_frame_offset;
+    }
 
     const MV_REF *const mv_ref_base = start_frame_buf->mvs;
     const int           mvs_rows    = (cm->mi_rows + 1) >> 1;
@@ -508,8 +516,9 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
 static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
     const OrderHintInfo *const order_hint_info = &pcs->ppcs->scs->seq_header.order_hint_info;
     memset(pcs->ref_frame_side, 0, sizeof(pcs->ref_frame_side));
-    if (!order_hint_info->enable_order_hint)
+    if (!order_hint_info->enable_order_hint) {
         return;
+    }
 
     TPL_MV_REF *tpl_mvs_base = pcs->tpl_mvs;
     int         size         = ((cm->mi_rows + MAX_MIB_SIZE) >> 1) * (cm->mi_stride >> 1);
@@ -526,21 +535,24 @@ static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
         ref_idx_l0             = get_ref_frame_idx(ref_frame);
         EbReferenceObject *buf = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
 
-        if (buf != NULL)
+        if (buf != NULL) {
             order_hint = buf->order_hint;
+        }
 
         ref_buf[ref_idx]        = buf;
         ref_order_hint[ref_idx] = order_hint;
 
-        if (get_relative_dist(order_hint_info, order_hint, cur_order_hint) > 0)
+        if (get_relative_dist(order_hint_info, order_hint, cur_order_hint) > 0) {
             pcs->ref_frame_side[ref_frame] = 1;
-        else if (order_hint == cur_order_hint)
+        } else if (order_hint == cur_order_hint) {
             pcs->ref_frame_side[ref_frame] = -1;
+        }
     }
 
     //for a frame based mfmv, we need to keep computing the ref_frame_side regardless mfmv is used or no
-    if (!pcs->ppcs->frm_hdr.use_ref_frame_mvs)
+    if (!pcs->ppcs->frm_hdr.use_ref_frame_mvs) {
         return;
+    }
 
     for (int idx = 0; idx < size; ++idx) {
         tpl_mvs_base[idx].mfmv0.as_int     = INVALID_MV;
@@ -552,37 +564,44 @@ static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
         const int alt_of_lst_order_hint =
             ref_buf[0 /*LAST_FRAME - LAST_FRAME*/]->ref_order_hint[ALTREF_FRAME - LAST_FRAME];
         const int is_lst_overlay = (alt_of_lst_order_hint == ref_order_hint[GOLDEN_FRAME - LAST_FRAME]);
-        if (!is_lst_overlay)
+        if (!is_lst_overlay) {
             motion_field_projection(cm, pcs, LAST_FRAME, 2);
+        }
 
         --ref_stamp;
     }
 
     if (get_relative_dist(order_hint_info, ref_order_hint[BWDREF_FRAME - LAST_FRAME], cur_order_hint) > 0) {
-        if (motion_field_projection(cm, pcs, BWDREF_FRAME, 0))
+        if (motion_field_projection(cm, pcs, BWDREF_FRAME, 0)) {
             --ref_stamp;
+        }
     }
 
     if (get_relative_dist(order_hint_info, ref_order_hint[ALTREF2_FRAME - LAST_FRAME], cur_order_hint) > 0) {
-        if (motion_field_projection(cm, pcs, ALTREF2_FRAME, 0))
+        if (motion_field_projection(cm, pcs, ALTREF2_FRAME, 0)) {
             --ref_stamp;
+        }
     }
 
     if (get_relative_dist(order_hint_info, ref_order_hint[ALTREF_FRAME - LAST_FRAME], cur_order_hint) > 0 &&
-        ref_stamp >= 0)
-        if (motion_field_projection(cm, pcs, ALTREF_FRAME, 0))
+        ref_stamp >= 0) {
+        if (motion_field_projection(cm, pcs, ALTREF_FRAME, 0)) {
             --ref_stamp;
+        }
+    }
 
-    if (ref_stamp >= 0)
+    if (ref_stamp >= 0) {
         motion_field_projection(cm, pcs, LAST2_FRAME, 2);
+    }
 }
 
 EbErrorType svt_av1_hash_table_create(HashTable *p_hash_table);
 int32_t     svt_aom_noise_log1p_fp16(int32_t noise_level_fp16);
 
 static void generate_ibc_data(PictureControlSet *pcs) {
-    if (!pcs->ppcs->frm_hdr.allow_intrabc)
+    if (!pcs->ppcs->frm_hdr.allow_intrabc) {
         return;
+    }
 
     int            i;
     int            speed = 1;
@@ -590,8 +609,9 @@ static void generate_ibc_data(PictureControlSet *pcs) {
 
     const int mesh_speed           = AOMMIN(speed, MAX_MESH_SPEED);
     sf->exhaustive_searches_thresh = (1 << 25);
-    if (mesh_speed > 0)
+    if (mesh_speed > 0) {
         sf->exhaustive_searches_thresh = sf->exhaustive_searches_thresh << 1;
+    }
 
     for (i = 0; i < MAX_MESH_STEP; ++i) {
         sf->mesh_patterns[i].range    = good_quality_mesh_patterns[mesh_speed][i].range;
@@ -613,7 +633,9 @@ static void generate_ibc_data(PictureControlSet *pcs) {
         uint32_t *block_hash_values[2];
         int       j;
 
-        for (j = 0; j < 2; j++) { EB_MALLOC_ARRAY_NO_CHECK(block_hash_values[j], pic_width * pic_height); }
+        for (j = 0; j < 2; j++) {
+            EB_MALLOC_ARRAY_NO_CHECK(block_hash_values[j], pic_width * pic_height);
+        }
         svt_aom_rtime_alloc_svt_av1_hash_table_create(&pcs->hash_table);
         Yv12BufferConfig cpi_source;
         svt_aom_link_eb_to_aom_buffer_desc_8bit(pcs->ppcs->enhanced_pic, &cpi_source);
@@ -625,11 +647,14 @@ static void generate_ibc_data(PictureControlSet *pcs) {
             const uint8_t dst_idx = !src_idx;
             svt_av1_generate_block_hash_value(
                 &cpi_source, size, block_hash_values[src_idx], block_hash_values[dst_idx], pcs);
-            if (size != 4 || pcs->ppcs->intraBC_ctrls.hash_4x4_blocks)
+            if (size != 4 || pcs->ppcs->intraBC_ctrls.hash_4x4_blocks) {
                 svt_aom_rtime_alloc_svt_av1_add_to_hash_map_by_row_with_precal_data(
                     &pcs->hash_table, block_hash_values[dst_idx], pic_width, pic_height, size);
+            }
         }
-        for (j = 0; j < 2; j++) { EB_FREE_ARRAY(block_hash_values[j]); }
+        for (j = 0; j < 2; j++) {
+            EB_FREE_ARRAY(block_hash_values[j]);
+        }
     }
 
     svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->stride_y);
@@ -699,19 +724,23 @@ static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
             // Add filter from list0
             EbReferenceObject *ref_obj_l0 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
             for (uint8_t fs = 0; fs < ref_obj_l0->ref_cdef_strengths_num; fs++) {
-                if (ref_obj_l0->ref_cdef_strengths[0][fs] < lowest_sg)
+                if (ref_obj_l0->ref_cdef_strengths[0][fs] < lowest_sg) {
                     lowest_sg = ref_obj_l0->ref_cdef_strengths[0][fs];
-                if (ref_obj_l0->ref_cdef_strengths[0][fs] > highest_sg)
+                }
+                if (ref_obj_l0->ref_cdef_strengths[0][fs] > highest_sg) {
                     highest_sg = ref_obj_l0->ref_cdef_strengths[0][fs];
+                }
             }
             if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
                 // Add filter from list1
                 EbReferenceObject *ref_obj_l1 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                 for (uint8_t fs = 0; fs < ref_obj_l1->ref_cdef_strengths_num; fs++) {
-                    if (ref_obj_l1->ref_cdef_strengths[0][fs] < lowest_sg)
+                    if (ref_obj_l1->ref_cdef_strengths[0][fs] < lowest_sg) {
                         lowest_sg = ref_obj_l1->ref_cdef_strengths[0][fs];
-                    if (ref_obj_l1->ref_cdef_strengths[0][fs] > highest_sg)
+                    }
+                    if (ref_obj_l1->ref_cdef_strengths[0][fs] > highest_sg) {
                         highest_sg = ref_obj_l1->ref_cdef_strengths[0][fs];
+                    }
                 }
             }
             int8_t mid_filter                      = MIN(63, (lowest_sg + highest_sg) / 2);
@@ -720,8 +749,9 @@ static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
             cdef_ctrls->first_pass_fs_num          = 0;
             cdef_ctrls->default_second_pass_fs_num = 0;
             // Set cdef to off if pred is.
-            if ((cdef_ctrls->pred_y_f == 0) && (cdef_ctrls->pred_uv_f == 0))
+            if ((cdef_ctrls->pred_y_f == 0) && (cdef_ctrls->pred_uv_f == 0)) {
                 pcs->ppcs->cdef_level = 0;
+            }
         }
     } else if (cdef_ctrls->search_best_ref_fs) {
         if (pcs->slice_type != I_SLICE) {
@@ -771,8 +801,9 @@ static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
             }
 
             // Set cdef to off if pred luma is.
-            if (cdef_ctrls->first_pass_fs_num == 1)
+            if (cdef_ctrls->first_pass_fs_num == 1) {
                 pcs->ppcs->cdef_level = 0;
+            }
         }
     }
 }
@@ -784,14 +815,16 @@ static const uint32_t disable_cdef_th[4][INPUT_SIZE_COUNT] = {{0, 0, 0, 0, 0, 0,
 
 // Return true if CDEF can be skipped, false if it should be performed
 static bool me_based_cdef_skip(PictureControlSet *pcs) {
-    if (pcs->slice_type == I_SLICE)
+    if (pcs->slice_type == I_SLICE) {
         return false;
+    }
 
     const uint8_t  in_res = pcs->ppcs->input_resolution;
     const uint32_t use_zero_strength_th =
         disable_cdef_th[pcs->ppcs->cdef_recon_ctrls.zero_filter_strength_lvl][in_res] * (pcs->temporal_layer_index + 1);
-    if (!use_zero_strength_th)
+    if (!use_zero_strength_th) {
         return false;
+    }
 
     uint32_t total_me_sad = 0;
     for (uint16_t b64_index = 0; b64_index < pcs->b64_total_count; ++b64_index) {
@@ -819,13 +852,15 @@ static bool me_based_cdef_skip(PictureControlSet *pcs) {
                 }
             }
         }
-        if (tot_refs)
+        if (tot_refs) {
             prev_cdef_dist /= tot_refs;
+        }
     }
 
     if (!prev_cdef_dist_th || (prev_cdef_dist < prev_cdef_dist_th * (pcs->temporal_layer_index + 1))) {
-        if (average_me_sad < use_zero_strength_th)
+        if (average_me_sad < use_zero_strength_th) {
             return true;
+        }
     }
     return false;
 }
@@ -919,8 +954,9 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         // Mode Decision Configuration Kernel Signal(s) derivation
         svt_aom_sig_deriv_mode_decision_config(scs, pcs);
 
-        if (pcs->slice_type != I_SLICE && scs->mfmv_enabled)
+        if (pcs->slice_type != I_SLICE && scs->mfmv_enabled) {
             av1_setup_motion_field(pcs->ppcs->av1_cm, pcs);
+        }
 
         pcs->intra_coded_area = 0;
         pcs->skip_coded_area  = 0;
@@ -934,14 +970,15 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         init_frame_rate_tables(pcs);
 
         // generate hash table for IBC, if enabled
-        if (frm_hdr->allow_intrabc)
+        if (frm_hdr->allow_intrabc) {
             generate_ibc_data(pcs);
+        }
         CdefSearchControls *cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
         const uint8_t       skip_perc  = pcs->ref_skip_percentage;
         if (me_based_cdef_skip(pcs) || (skip_perc > 75 && cdef_ctrls->use_skip_detector) ||
-            (scs->vq_ctrls.sharpness_ctrls.cdef && pcs->ppcs->is_noise_level))
+            (scs->vq_ctrls.sharpness_ctrls.cdef && pcs->ppcs->is_noise_level)) {
             pcs->ppcs->cdef_level = 0;
-        else if (cdef_ctrls->use_reference_cdef_fs || cdef_ctrls->search_best_ref_fs) {
+        } else if (cdef_ctrls->use_reference_cdef_fs || cdef_ctrls->search_best_ref_fs) {
             update_cdef_filters_on_ref_info(pcs);
         }
 
@@ -969,8 +1006,9 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
                 }
             }
             // To Do: fix the case of lossy and lossless segments in the same frame
-            if (!frm_hdr->coded_lossless && has_lossless_segment)
+            if (!frm_hdr->coded_lossless && has_lossless_segment) {
                 frm_hdr->segmentation_params.segmentation_enabled = 0;
+            }
         }
         if (!frm_hdr->segmentation_params.segmentation_enabled) {
             frm_hdr->coded_lossless = pcs->lossless[0] = !pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
@@ -990,8 +1028,9 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
             pcs->ppcs->cdef_level                                = 0;
         }
 
-        if (frm_hdr->all_lossless)
+        if (frm_hdr->all_lossless) {
             pcs->ppcs->enable_restoration = 0;
+        }
 
         // The following shortcuts are necessary to enforce the use of block_4x4, block_8x8, and Tx_4x4,
         // these cannot be controlled at the block level, so they are invoked even if only one segment is marked as lossless

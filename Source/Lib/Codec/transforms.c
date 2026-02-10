@@ -75,11 +75,13 @@ void svt_av1_gen_fwd_stage_range(int8_t *stage_range_col, int8_t *stage_range_ro
     // Take the shift from the larger dimension in the rectangular case.
     const int8_t *shift = cfg->shift;
     // i < MAX_TXFM_STAGE_NUM will mute above array bounds warning
-    for (int32_t i = 0; i < cfg->stage_num_col && i < MAX_TXFM_STAGE_NUM; ++i)
+    for (int32_t i = 0; i < cfg->stage_num_col && i < MAX_TXFM_STAGE_NUM; ++i) {
         stage_range_col[i] = (int8_t)(cfg->stage_range_col[i] + shift[0] + bd + 1);
+    }
     // i < MAX_TXFM_STAGE_NUM will mute above array bounds warning
-    for (int32_t i = 0; i < cfg->stage_num_row && i < MAX_TXFM_STAGE_NUM; ++i)
+    for (int32_t i = 0; i < cfg->stage_num_row && i < MAX_TXFM_STAGE_NUM; ++i) {
         stage_range_row[i] = (int8_t)(cfg->stage_range_row[i] + shift[0] + shift[1] + bd + 1);
+    }
 }
 
 void svt_av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
@@ -2241,53 +2243,79 @@ static void av1_fadst32_new(const int32_t *input, int32_t *output, int8_t cos_bi
 void svt_av1_fidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 4; ++i) output[i] = round_shift((int64_t)input[i] * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 4; ++i) {
+        output[i] = round_shift((int64_t)input[i] * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
 void svt_av1_fidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 8; ++i) output[i] = input[i] * 2;
+    for (int32_t i = 0; i < 8; ++i) {
+        output[i] = input[i] * 2;
+    }
 }
 
 void svt_av1_fidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 16; ++i) output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 16; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
 void svt_av1_fidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 32; ++i) output[i] = input[i] * 4;
+    for (int32_t i = 0; i < 32; ++i) {
+        output[i] = input[i] * 4;
+    }
 }
 
 static void av1_fidentity64_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 64; ++i) output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 64; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
 TxfmFunc svt_aom_fwd_txfm_type_to_func(TxfmType txfmtype) {
     switch (txfmtype) {
-    case TXFM_TYPE_DCT4: return svt_av1_fdct4_new;
-    case TXFM_TYPE_DCT8: return svt_av1_fdct8_new;
-    case TXFM_TYPE_DCT16: return svt_av1_fdct16_new;
-    case TXFM_TYPE_DCT32: return svt_av1_fdct32_new;
-    case TXFM_TYPE_DCT64: return svt_av1_fdct64_new;
-    case TXFM_TYPE_ADST4: return svt_av1_fadst4_new;
-    case TXFM_TYPE_ADST8: return svt_av1_fadst8_new;
-    case TXFM_TYPE_ADST16: return svt_av1_fadst16_new;
-    case TXFM_TYPE_ADST32: return av1_fadst32_new;
-    case TXFM_TYPE_IDENTITY4: return svt_av1_fidentity4_c;
-    case TXFM_TYPE_IDENTITY8: return svt_av1_fidentity8_c;
-    case TXFM_TYPE_IDENTITY16: return svt_av1_fidentity16_c;
-    case TXFM_TYPE_IDENTITY32: return svt_av1_fidentity32_c;
-    case TXFM_TYPE_IDENTITY64: return av1_fidentity64_c;
-    default: assert(0); return NULL;
+    case TXFM_TYPE_DCT4:
+        return svt_av1_fdct4_new;
+    case TXFM_TYPE_DCT8:
+        return svt_av1_fdct8_new;
+    case TXFM_TYPE_DCT16:
+        return svt_av1_fdct16_new;
+    case TXFM_TYPE_DCT32:
+        return svt_av1_fdct32_new;
+    case TXFM_TYPE_DCT64:
+        return svt_av1_fdct64_new;
+    case TXFM_TYPE_ADST4:
+        return svt_av1_fadst4_new;
+    case TXFM_TYPE_ADST8:
+        return svt_av1_fadst8_new;
+    case TXFM_TYPE_ADST16:
+        return svt_av1_fadst16_new;
+    case TXFM_TYPE_ADST32:
+        return av1_fadst32_new;
+    case TXFM_TYPE_IDENTITY4:
+        return svt_av1_fidentity4_c;
+    case TXFM_TYPE_IDENTITY8:
+        return svt_av1_fidentity8_c;
+    case TXFM_TYPE_IDENTITY16:
+        return svt_av1_fidentity16_c;
+    case TXFM_TYPE_IDENTITY32:
+        return svt_av1_fidentity32_c;
+    case TXFM_TYPE_IDENTITY64:
+        return av1_fidentity64_c;
+    default:
+        assert(0);
+        return NULL;
     }
 }
 
@@ -2324,22 +2352,28 @@ static INLINE void av1_tranform_two_d_core_c(int16_t *input, uint32_t input_stri
 
     // Columns
     for (c = 0; c < txfm_size_col; ++c) {
-        if (cfg->ud_flip == 0)
-            for (r = 0; r < txfm_size_row; ++r) temp_in[r] = input[r * input_stride + c];
-        else {
-            for (r = 0; r < txfm_size_row; ++r)
+        if (cfg->ud_flip == 0) {
+            for (r = 0; r < txfm_size_row; ++r) {
+                temp_in[r] = input[r * input_stride + c];
+            }
+        } else {
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip upside down
                 temp_in[r] = input[(txfm_size_row - r - 1) * input_stride + c];
+            }
         }
         svt_av1_round_shift_array_c(temp_in, txfm_size_row, -shift[0]); // NM svt_av1_round_shift_array_c
         txfm_func_col(temp_in, temp_out, cos_bit_col, stage_range_col);
         svt_av1_round_shift_array_c(temp_out, txfm_size_row, -shift[1]); // NM svt_av1_round_shift_array_c
         if (cfg->lr_flip == 0) {
-            for (r = 0; r < txfm_size_row; ++r) buf[r * txfm_size_col + c] = temp_out[r];
+            for (r = 0; r < txfm_size_row; ++r) {
+                buf[r * txfm_size_col + c] = temp_out[r];
+            }
         } else {
-            for (r = 0; r < txfm_size_row; ++r)
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip from left to right
                 buf[r * txfm_size_col + (txfm_size_col - c - 1)] = temp_out[r];
+            }
         }
     }
 
@@ -2363,12 +2397,15 @@ static INLINE void set_fwd_txfm_non_scale_range(Txfm2dFlipCfg *cfg) {
     av1_zero(cfg->stage_range_col);
     av1_zero(cfg->stage_range_row);
 
-    if (cfg->txfm_type_col == TXFM_TYPE_INVALID)
+    if (cfg->txfm_type_col == TXFM_TYPE_INVALID) {
         return;
+    }
 
     const int8_t *range_mult2_col = fwd_txfm_range_mult2_list[cfg->txfm_type_col];
     const int32_t stage_num_col   = MIN(cfg->stage_num_col, MAX_TXFM_STAGE_NUM);
-    for (int32_t i = 0; i < stage_num_col; ++i) cfg->stage_range_col[i] = (range_mult2_col[i] + 1) >> 1;
+    for (int32_t i = 0; i < stage_num_col; ++i) {
+        cfg->stage_range_col[i] = (range_mult2_col[i] + 1) >> 1;
+    }
 
     if (cfg->txfm_type_row != TXFM_TYPE_INVALID) {
         const int8_t *range_mult2_row = fwd_txfm_range_mult2_list[cfg->txfm_type_row];
@@ -2401,8 +2438,9 @@ static uint64_t energy_computation(int32_t *coeff, uint32_t coeff_stride, uint32
     uint64_t prediction_distortion = 0;
 
     for (uint32_t row_index = 0; row_index < area_height; ++row_index) {
-        for (uint32_t column_index = 0; column_index < area_width; ++column_index)
+        for (uint32_t column_index = 0; column_index < area_width; ++column_index) {
             prediction_distortion += (int64_t)SQR((int64_t)(coeff[column_index]));
+        }
         coeff += coeff_stride;
     }
 
@@ -2418,7 +2456,9 @@ uint64_t svt_handle_transform64x64_c(int32_t *output) {
     three_quad_energy += energy_computation(output + 32 * 64, 64, 64, 32);
 
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -2491,7 +2531,9 @@ uint64_t svt_handle_transform64x32_c(int32_t *output) {
     const uint64_t three_quad_energy = energy_computation(output + 32, 64, 32, 32);
 
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -2528,7 +2570,9 @@ uint64_t svt_handle_transform64x16_c(int32_t *output) {
     const uint64_t three_quad_energy = energy_computation(output + 32, 64, 32, 16);
 
     // Re-pack non-zero coeffs in the first 32x16 indices.
-    for (int32_t row = 1; row < 16; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 16; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return three_quad_energy;
 }
@@ -2562,21 +2606,27 @@ uint64_t svt_handle_transform32x64_N2_N4_c(int32_t *output) {
 
 uint64_t svt_handle_transform64x16_N2_N4_c(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x16 indices.
-    for (int32_t row = 1; row < 16; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 16; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return 0;
 }
 
 uint64_t svt_handle_transform64x32_N2_N4_c(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return 0;
 }
 
 uint64_t svt_handle_transform64x64_N2_N4_c(int32_t *output) {
     // Re-pack non-zero coeffs in the first 32x32 indices.
-    for (int32_t row = 1; row < 32; ++row) svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    for (int32_t row = 1; row < 32; ++row) {
+        svt_memcpy_c(output + row * 32, output + row * 64, 32 * sizeof(*output));
+    }
 
     return 0;
 }
@@ -2683,40 +2733,44 @@ static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t 
 
     switch (transform_size) {
     case TX_64X32:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x32_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x32_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x32_N2_N4(coeff_buffer);
 
         break;
 
     case TX_32X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_32x64_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x64_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform32x64_N2_N4(coeff_buffer);
 
         break;
 
     case TX_64X16:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x16_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x16_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x16_N2_N4(coeff_buffer);
 
         break;
 
     case TX_16X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_16x64_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x64_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform16x64_N2_N4(coeff_buffer);
 
@@ -2724,17 +2778,19 @@ static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t 
 
     case TX_32X16:
         // TTK
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x16_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x16_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_16x32_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x32_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X8:
@@ -2746,17 +2802,19 @@ static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t 
         break;
 
     case TX_32X8:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x8_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x8_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_8X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_8x32_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_8x32_N2_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
     case TX_16X4:
         svt_av1_fwd_txfm2d_16x4_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -2785,10 +2843,11 @@ static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t 
 
     case TX_32X32:
         if (transform_type == V_DCT || transform_type == H_DCT || transform_type == V_ADST ||
-            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST)
+            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST) {
             // Tahani: I believe those cases are never hit
             svt_aom_transform_two_d_32x32_N2_c(
                 residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         else {
             svt_av1_fwd_txfm2d_32x32_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -2811,7 +2870,9 @@ static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t 
         svt_av1_fwd_txfm2d_4x4_N2(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
 
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 
     return return_error;
@@ -2829,40 +2890,44 @@ static EbErrorType av1_estimate_transform_N4(int16_t *residual_buffer, uint32_t 
 
     switch (transform_size) {
     case TX_64X32:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x32_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x32_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x32_N2_N4(coeff_buffer);
 
         break;
 
     case TX_32X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_32x64_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x64_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform32x64_N2_N4(coeff_buffer);
 
         break;
 
     case TX_64X16:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x16_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x16_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x16_N2_N4(coeff_buffer);
 
         break;
 
     case TX_16X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_16x64_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x64_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform16x64_N2_N4(coeff_buffer);
 
@@ -2870,17 +2935,19 @@ static EbErrorType av1_estimate_transform_N4(int16_t *residual_buffer, uint32_t 
 
     case TX_32X16:
         // TTK
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x16_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x16_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_16x32_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x32_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X8:
@@ -2892,17 +2959,19 @@ static EbErrorType av1_estimate_transform_N4(int16_t *residual_buffer, uint32_t 
         break;
 
     case TX_32X8:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x8_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x8_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_8X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_8x32_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_8x32_N4_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
     case TX_16X4:
         svt_av1_fwd_txfm2d_16x4_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -2931,10 +3000,11 @@ static EbErrorType av1_estimate_transform_N4(int16_t *residual_buffer, uint32_t 
 
     case TX_32X32:
         if (transform_type == V_DCT || transform_type == H_DCT || transform_type == V_ADST ||
-            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST)
+            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST) {
             // Tahani: I believe those cases are never hit
             svt_aom_transform_two_d_32x32_N4_c(
                 residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         else {
             svt_av1_fwd_txfm2d_32x32_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -2957,7 +3027,9 @@ static EbErrorType av1_estimate_transform_N4(int16_t *residual_buffer, uint32_t 
         svt_av1_fwd_txfm2d_4x4_N4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
 
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 
     return return_error;
@@ -3001,40 +3073,44 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
 
     switch (transform_size) {
     case TX_64X32:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x32(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x32_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x32(coeff_buffer);
 
         break;
 
     case TX_32X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_32x64(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x64_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform32x64(coeff_buffer);
 
         break;
 
     case TX_64X16:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_64x16(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_64x16_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform64x16(coeff_buffer);
 
         break;
 
     case TX_16X64:
-        if (transform_type == DCT_DCT)
+        if (transform_type == DCT_DCT) {
             svt_av1_fwd_txfm2d_16x64(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x64_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         *three_quad_energy = svt_handle_transform16x64(coeff_buffer);
 
@@ -3042,17 +3118,19 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
 
     case TX_32X16:
         // TTK
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x16(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x16_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_16x32(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_16x32_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_16X8:
@@ -3064,17 +3142,19 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
         break;
 
     case TX_32X8:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_32x8(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_32x8_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
 
     case TX_8X32:
-        if ((transform_type == DCT_DCT) || (transform_type == IDTX))
+        if ((transform_type == DCT_DCT) || (transform_type == IDTX)) {
             svt_av1_fwd_txfm2d_8x32(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
-        else
+        } else {
             svt_av1_fwd_txfm2d_8x32_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
         break;
     case TX_16X4:
         svt_av1_fwd_txfm2d_16x4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -3103,9 +3183,10 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
 
     case TX_32X32:
         if (transform_type == V_DCT || transform_type == H_DCT || transform_type == V_ADST ||
-            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST)
+            transform_type == H_ADST || transform_type == V_FLIPADST || transform_type == H_FLIPADST) {
             // Tahani: I believe those cases are never hit
             svt_av1_transform_two_d_32x32_c(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
+        }
 
         else {
             svt_av1_fwd_txfm2d_32x32(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
@@ -3128,7 +3209,9 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
         svt_av1_fwd_txfm2d_4x4(residual_buffer, coeff_buffer, residual_stride, transform_type, bit_depth);
 
         break;
-    default: assert(0); break;
+    default:
+        assert(0);
+        break;
     }
 
     return return_error;
@@ -3214,7 +3297,9 @@ EbErrorType svt_aom_estimate_transform(PictureControlSet *pcs, ModeDecisionConte
 
         svt_av1_fwht4x4(residual_buffer, dst, residual_stride);
         for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) { coeff_buffer[(j << 2) + i] = dst[(i << 2) + j]; }
+            for (int j = 0; j < 4; j++) {
+                coeff_buffer[(j << 2) + i] = dst[(i << 2) + j];
+            }
         }
         return EB_ErrorNone;
     }
@@ -3602,28 +3687,66 @@ void svt_av1_highbd_fwd_txfm_n4(int16_t *src_diff, TranLow *coeff, int diff_stri
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
     switch (tx_size) {
-    case TX_64X64: highbd_fwd_txfm_64x64_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X64: highbd_fwd_txfm_32x64_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X32: highbd_fwd_txfm_64x32_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X64: highbd_fwd_txfm_16x64_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X16: highbd_fwd_txfm_64x16_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X32: highbd_fwd_txfm_32x32_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X16: highbd_fwd_txfm_16x16_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X8: highbd_fwd_txfm_8x8_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_4X8: highbd_fwd_txfm_4x8_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X4: highbd_fwd_txfm_8x4_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X16: highbd_fwd_txfm_8x16_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X8: highbd_fwd_txfm_16x8_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X32: highbd_fwd_txfm_16x32_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X16: highbd_fwd_txfm_32x16_n4(src_diff, coeff, diff_stride, txfm_param); break;
+    case TX_64X64:
+        highbd_fwd_txfm_64x64_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X64:
+        highbd_fwd_txfm_32x64_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X32:
+        highbd_fwd_txfm_64x32_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X64:
+        highbd_fwd_txfm_16x64_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X16:
+        highbd_fwd_txfm_64x16_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X32:
+        highbd_fwd_txfm_32x32_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X16:
+        highbd_fwd_txfm_16x16_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X8:
+        highbd_fwd_txfm_8x8_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_4X8:
+        highbd_fwd_txfm_4x8_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X4:
+        highbd_fwd_txfm_8x4_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X16:
+        highbd_fwd_txfm_8x16_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X8:
+        highbd_fwd_txfm_16x8_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X32:
+        highbd_fwd_txfm_16x32_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X16:
+        highbd_fwd_txfm_32x16_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
     case TX_4X4:
         //hack highbd_fwd_txfm_4x4(src_diff, coeff, diff_stride, txfm_param);
         break;
-    case TX_4X16: highbd_fwd_txfm_4x16_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X4: highbd_fwd_txfm_16x4_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X32: highbd_fwd_txfm_8x32_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X8: highbd_fwd_txfm_32x8_n4(src_diff, coeff, diff_stride, txfm_param); break;
-    default: assert(0); break;
+    case TX_4X16:
+        highbd_fwd_txfm_4x16_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X4:
+        highbd_fwd_txfm_16x4_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X32:
+        highbd_fwd_txfm_8x32_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X8:
+        highbd_fwd_txfm_32x8_n4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    default:
+        assert(0);
+        break;
     }
 }
 
@@ -3631,28 +3754,66 @@ void svt_av1_highbd_fwd_txfm_n2(int16_t *src_diff, TranLow *coeff, int diff_stri
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
     switch (tx_size) {
-    case TX_64X64: highbd_fwd_txfm_64x64_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X64: highbd_fwd_txfm_32x64_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X32: highbd_fwd_txfm_64x32_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X64: highbd_fwd_txfm_16x64_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X16: highbd_fwd_txfm_64x16_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X32: highbd_fwd_txfm_32x32_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X16: highbd_fwd_txfm_16x16_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X8: highbd_fwd_txfm_8x8_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_4X8: highbd_fwd_txfm_4x8_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X4: highbd_fwd_txfm_8x4_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X16: highbd_fwd_txfm_8x16_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X8: highbd_fwd_txfm_16x8_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X32: highbd_fwd_txfm_16x32_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X16: highbd_fwd_txfm_32x16_n2(src_diff, coeff, diff_stride, txfm_param); break;
+    case TX_64X64:
+        highbd_fwd_txfm_64x64_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X64:
+        highbd_fwd_txfm_32x64_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X32:
+        highbd_fwd_txfm_64x32_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X64:
+        highbd_fwd_txfm_16x64_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X16:
+        highbd_fwd_txfm_64x16_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X32:
+        highbd_fwd_txfm_32x32_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X16:
+        highbd_fwd_txfm_16x16_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X8:
+        highbd_fwd_txfm_8x8_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_4X8:
+        highbd_fwd_txfm_4x8_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X4:
+        highbd_fwd_txfm_8x4_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X16:
+        highbd_fwd_txfm_8x16_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X8:
+        highbd_fwd_txfm_16x8_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X32:
+        highbd_fwd_txfm_16x32_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X16:
+        highbd_fwd_txfm_32x16_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
     case TX_4X4:
         //hack highbd_fwd_txfm_4x4(src_diff, coeff, diff_stride, txfm_param);
         break;
-    case TX_4X16: highbd_fwd_txfm_4x16_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X4: highbd_fwd_txfm_16x4_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X32: highbd_fwd_txfm_8x32_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X8: highbd_fwd_txfm_32x8_n2(src_diff, coeff, diff_stride, txfm_param); break;
-    default: assert(0); break;
+    case TX_4X16:
+        highbd_fwd_txfm_4x16_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X4:
+        highbd_fwd_txfm_16x4_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X32:
+        highbd_fwd_txfm_8x32_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X8:
+        highbd_fwd_txfm_32x8_n2(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    default:
+        assert(0);
+        break;
     }
 }
 
@@ -3660,28 +3821,66 @@ void svt_av1_highbd_fwd_txfm(int16_t *src_diff, TranLow *coeff, int diff_stride,
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
     switch (tx_size) {
-    case TX_64X64: highbd_fwd_txfm_64x64(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X64: highbd_fwd_txfm_32x64(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X32: highbd_fwd_txfm_64x32(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X64: highbd_fwd_txfm_16x64(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_64X16: highbd_fwd_txfm_64x16(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X32: highbd_fwd_txfm_32x32(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X16: highbd_fwd_txfm_16x16(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X8: highbd_fwd_txfm_8x8(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_4X8: highbd_fwd_txfm_4x8(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X4: highbd_fwd_txfm_8x4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X16: highbd_fwd_txfm_8x16(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X8: highbd_fwd_txfm_16x8(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X32: highbd_fwd_txfm_16x32(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X16: highbd_fwd_txfm_32x16(src_diff, coeff, diff_stride, txfm_param); break;
+    case TX_64X64:
+        highbd_fwd_txfm_64x64(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X64:
+        highbd_fwd_txfm_32x64(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X32:
+        highbd_fwd_txfm_64x32(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X64:
+        highbd_fwd_txfm_16x64(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_64X16:
+        highbd_fwd_txfm_64x16(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X32:
+        highbd_fwd_txfm_32x32(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X16:
+        highbd_fwd_txfm_16x16(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X8:
+        highbd_fwd_txfm_8x8(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_4X8:
+        highbd_fwd_txfm_4x8(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X4:
+        highbd_fwd_txfm_8x4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X16:
+        highbd_fwd_txfm_8x16(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X8:
+        highbd_fwd_txfm_16x8(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X32:
+        highbd_fwd_txfm_16x32(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X16:
+        highbd_fwd_txfm_32x16(src_diff, coeff, diff_stride, txfm_param);
+        break;
     case TX_4X4:
         //hack highbd_fwd_txfm_4x4(src_diff, coeff, diff_stride, txfm_param);
         break;
-    case TX_4X16: highbd_fwd_txfm_4x16(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_16X4: highbd_fwd_txfm_16x4(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_8X32: highbd_fwd_txfm_8x32(src_diff, coeff, diff_stride, txfm_param); break;
-    case TX_32X8: highbd_fwd_txfm_32x8(src_diff, coeff, diff_stride, txfm_param); break;
-    default: assert(0); break;
+    case TX_4X16:
+        highbd_fwd_txfm_4x16(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_16X4:
+        highbd_fwd_txfm_16x4(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_8X32:
+        highbd_fwd_txfm_8x32(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    case TX_32X8:
+        highbd_fwd_txfm_32x8(src_diff, coeff, diff_stride, txfm_param);
+        break;
+    default:
+        assert(0);
+        break;
     }
 }
 
@@ -3696,16 +3895,23 @@ void svt_av1_wht_fwd_txfm(int16_t *src_diff, int bw, int32_t *coeff, TxSize tx_s
     txfm_param.bd     = bit_depth;
     txfm_param.is_hbd = is_hbd;
     switch (pf_shape) {
-    case N4_SHAPE: svt_av1_highbd_fwd_txfm_n4(src_diff, coeff, bw, &txfm_param); break;
-    case N2_SHAPE: svt_av1_highbd_fwd_txfm_n2(src_diff, coeff, bw, &txfm_param); break;
-    default: svt_av1_highbd_fwd_txfm(src_diff, coeff, bw, &txfm_param);
+    case N4_SHAPE:
+        svt_av1_highbd_fwd_txfm_n4(src_diff, coeff, bw, &txfm_param);
+        break;
+    case N2_SHAPE:
+        svt_av1_highbd_fwd_txfm_n2(src_diff, coeff, bw, &txfm_param);
+        break;
+    default:
+        svt_av1_highbd_fwd_txfm(src_diff, coeff, bw, &txfm_param);
     }
 }
 
 void svt_av1_fidentity16_N2_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 8; ++i) output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 8; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    }
 
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
@@ -4023,7 +4229,9 @@ void svt_av1_fdct16_new_N2(const int32_t *input, int32_t *output, int8_t cos_bit
 void svt_av1_fidentity8_N2_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 4; ++i) output[i] = input[i] * 2;
+    for (int32_t i = 0; i < 4; ++i) {
+        output[i] = input[i] * 2;
+    }
 }
 
 void svt_av1_fadst8_new_N2(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
@@ -4546,7 +4754,9 @@ void svt_av1_fdct32_new_N2(const int32_t *input, int32_t *output, int8_t cos_bit
 void svt_av1_fidentity32_N2_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 16; ++i) output[i] = input[i] * 4;
+    for (int32_t i = 0; i < 16; ++i) {
+        output[i] = input[i] * 4;
+    }
 }
 
 void svt_av1_fdct64_new_N2(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
@@ -5224,27 +5434,45 @@ void svt_av1_fdct64_new_N2(const int32_t *input, int32_t *output, int8_t cos_bit
 static void av1_fidentity64_N2_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 32; ++i) output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 32; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
 static INLINE TxfmFunc fwd_txfm_type_to_func_N2(TxfmType txfmtype) {
     switch (txfmtype) {
-    case TXFM_TYPE_DCT4: return svt_av1_fdct4_new_N2;
-    case TXFM_TYPE_DCT8: return svt_av1_fdct8_new_N2;
-    case TXFM_TYPE_DCT16: return svt_av1_fdct16_new_N2;
-    case TXFM_TYPE_DCT32: return svt_av1_fdct32_new_N2;
-    case TXFM_TYPE_DCT64: return svt_av1_fdct64_new_N2;
-    case TXFM_TYPE_ADST4: return svt_av1_fadst4_new_N2;
-    case TXFM_TYPE_ADST8: return svt_av1_fadst8_new_N2;
-    case TXFM_TYPE_ADST16: return svt_av1_fadst16_new_N2;
-    case TXFM_TYPE_ADST32: return av1_fadst32_new;
-    case TXFM_TYPE_IDENTITY4: return svt_av1_fidentity4_N2_c;
-    case TXFM_TYPE_IDENTITY8: return svt_av1_fidentity8_N2_c;
-    case TXFM_TYPE_IDENTITY16: return svt_av1_fidentity16_N2_c;
-    case TXFM_TYPE_IDENTITY32: return svt_av1_fidentity32_N2_c;
-    case TXFM_TYPE_IDENTITY64: return av1_fidentity64_N2_c;
-    default: assert(0); return NULL;
+    case TXFM_TYPE_DCT4:
+        return svt_av1_fdct4_new_N2;
+    case TXFM_TYPE_DCT8:
+        return svt_av1_fdct8_new_N2;
+    case TXFM_TYPE_DCT16:
+        return svt_av1_fdct16_new_N2;
+    case TXFM_TYPE_DCT32:
+        return svt_av1_fdct32_new_N2;
+    case TXFM_TYPE_DCT64:
+        return svt_av1_fdct64_new_N2;
+    case TXFM_TYPE_ADST4:
+        return svt_av1_fadst4_new_N2;
+    case TXFM_TYPE_ADST8:
+        return svt_av1_fadst8_new_N2;
+    case TXFM_TYPE_ADST16:
+        return svt_av1_fadst16_new_N2;
+    case TXFM_TYPE_ADST32:
+        return av1_fadst32_new;
+    case TXFM_TYPE_IDENTITY4:
+        return svt_av1_fidentity4_N2_c;
+    case TXFM_TYPE_IDENTITY8:
+        return svt_av1_fidentity8_N2_c;
+    case TXFM_TYPE_IDENTITY16:
+        return svt_av1_fidentity16_N2_c;
+    case TXFM_TYPE_IDENTITY32:
+        return svt_av1_fidentity32_N2_c;
+    case TXFM_TYPE_IDENTITY64:
+        return av1_fidentity64_N2_c;
+    default:
+        assert(0);
+        return NULL;
     }
 }
 
@@ -5280,22 +5508,28 @@ static INLINE void av1_tranform_two_d_core_N2_c(int16_t *input, uint32_t input_s
 
     // Columns
     for (c = 0; c < txfm_size_col; ++c) {
-        if (cfg->ud_flip == 0)
-            for (r = 0; r < txfm_size_row; ++r) temp_in[r] = input[r * input_stride + c];
-        else {
-            for (r = 0; r < txfm_size_row; ++r)
+        if (cfg->ud_flip == 0) {
+            for (r = 0; r < txfm_size_row; ++r) {
+                temp_in[r] = input[r * input_stride + c];
+            }
+        } else {
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip upside down
                 temp_in[r] = input[(txfm_size_row - r - 1) * input_stride + c];
+            }
         }
         svt_av1_round_shift_array_c(temp_in, txfm_size_row, -shift[0]); // NM svt_av1_round_shift_array_c
         txfm_func_col(temp_in, temp_out, cos_bit_col, stage_range_col);
         svt_av1_round_shift_array_c(temp_out, txfm_size_row / 2, -shift[1]); // NM svt_av1_round_shift_array_c
         if (cfg->lr_flip == 0) {
-            for (r = 0; r < txfm_size_row; ++r) buf[r * txfm_size_col + c] = temp_out[r];
+            for (r = 0; r < txfm_size_row; ++r) {
+                buf[r * txfm_size_col + c] = temp_out[r];
+            }
         } else {
-            for (r = 0; r < txfm_size_row; ++r)
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip from left to right
                 buf[r * txfm_size_col + (txfm_size_col - c - 1)] = temp_out[r];
+            }
         }
     }
 
@@ -5662,7 +5896,9 @@ void svt_av1_fadst8_new_N4(const int32_t *input, int32_t *output, int8_t cos_bit
 void svt_av1_fidentity8_N4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 2; ++i) output[i] = input[i] * 2;
+    for (int32_t i = 0; i < 2; ++i) {
+        output[i] = input[i] * 2;
+    }
 }
 
 void svt_av1_fdct16_new_N4(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
@@ -5936,7 +6172,9 @@ void svt_av1_fadst16_new_N4(const int32_t *input, int32_t *output, int8_t cos_bi
 void svt_av1_fidentity16_N4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 4; ++i) output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 4; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 2 * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
@@ -6192,7 +6430,9 @@ void svt_av1_fdct32_new_N4(const int32_t *input, int32_t *output, int8_t cos_bit
 void svt_av1_fidentity32_N4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 8; ++i) output[i] = input[i] * 4;
+    for (int32_t i = 0; i < 8; ++i) {
+        output[i] = input[i] * 4;
+    }
 }
 
 void svt_av1_fdct64_new_N4(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
@@ -6791,27 +7031,45 @@ void svt_av1_fdct64_new_N4(const int32_t *input, int32_t *output, int8_t cos_bit
 static void av1_fidentity64_N4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;
-    for (int32_t i = 0; i < 16; ++i) output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    for (int32_t i = 0; i < 16; ++i) {
+        output[i] = round_shift((int64_t)input[i] * 4 * new_sqrt2, new_sqrt2_bits);
+    }
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
 static INLINE TxfmFunc fwd_txfm_type_to_func_N4(TxfmType txfmtype) {
     switch (txfmtype) {
-    case TXFM_TYPE_DCT4: return svt_av1_fdct4_new_N4;
-    case TXFM_TYPE_DCT8: return svt_av1_fdct8_new_N4;
-    case TXFM_TYPE_DCT16: return svt_av1_fdct16_new_N4;
-    case TXFM_TYPE_DCT32: return svt_av1_fdct32_new_N4;
-    case TXFM_TYPE_DCT64: return svt_av1_fdct64_new_N4;
-    case TXFM_TYPE_ADST4: return svt_av1_fadst4_new_N4;
-    case TXFM_TYPE_ADST8: return svt_av1_fadst8_new_N4;
-    case TXFM_TYPE_ADST16: return svt_av1_fadst16_new_N4;
-    case TXFM_TYPE_ADST32: return av1_fadst32_new;
-    case TXFM_TYPE_IDENTITY4: return svt_av1_fidentity4_N4_c;
-    case TXFM_TYPE_IDENTITY8: return svt_av1_fidentity8_N4_c;
-    case TXFM_TYPE_IDENTITY16: return svt_av1_fidentity16_N4_c;
-    case TXFM_TYPE_IDENTITY32: return svt_av1_fidentity32_N4_c;
-    case TXFM_TYPE_IDENTITY64: return av1_fidentity64_N4_c;
-    default: assert(0); return NULL;
+    case TXFM_TYPE_DCT4:
+        return svt_av1_fdct4_new_N4;
+    case TXFM_TYPE_DCT8:
+        return svt_av1_fdct8_new_N4;
+    case TXFM_TYPE_DCT16:
+        return svt_av1_fdct16_new_N4;
+    case TXFM_TYPE_DCT32:
+        return svt_av1_fdct32_new_N4;
+    case TXFM_TYPE_DCT64:
+        return svt_av1_fdct64_new_N4;
+    case TXFM_TYPE_ADST4:
+        return svt_av1_fadst4_new_N4;
+    case TXFM_TYPE_ADST8:
+        return svt_av1_fadst8_new_N4;
+    case TXFM_TYPE_ADST16:
+        return svt_av1_fadst16_new_N4;
+    case TXFM_TYPE_ADST32:
+        return av1_fadst32_new;
+    case TXFM_TYPE_IDENTITY4:
+        return svt_av1_fidentity4_N4_c;
+    case TXFM_TYPE_IDENTITY8:
+        return svt_av1_fidentity8_N4_c;
+    case TXFM_TYPE_IDENTITY16:
+        return svt_av1_fidentity16_N4_c;
+    case TXFM_TYPE_IDENTITY32:
+        return svt_av1_fidentity32_N4_c;
+    case TXFM_TYPE_IDENTITY64:
+        return av1_fidentity64_N4_c;
+    default:
+        assert(0);
+        return NULL;
     }
 }
 
@@ -6847,22 +7105,28 @@ static INLINE void av1_tranform_two_d_core_N4_c(int16_t *input, uint32_t input_s
 
     // Columns
     for (c = 0; c < txfm_size_col; ++c) {
-        if (cfg->ud_flip == 0)
-            for (r = 0; r < txfm_size_row; ++r) temp_in[r] = input[r * input_stride + c];
-        else {
-            for (r = 0; r < txfm_size_row; ++r)
+        if (cfg->ud_flip == 0) {
+            for (r = 0; r < txfm_size_row; ++r) {
+                temp_in[r] = input[r * input_stride + c];
+            }
+        } else {
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip upside down
                 temp_in[r] = input[(txfm_size_row - r - 1) * input_stride + c];
+            }
         }
         svt_av1_round_shift_array_c(temp_in, txfm_size_row, -shift[0]); // NM svt_av1_round_shift_array_c
         txfm_func_col(temp_in, temp_out, cos_bit_col, stage_range_col);
         svt_av1_round_shift_array_c(temp_out, txfm_size_row / 4, -shift[1]); // NM svt_av1_round_shift_array_c
         if (cfg->lr_flip == 0) {
-            for (r = 0; r < txfm_size_row; ++r) buf[r * txfm_size_col + c] = temp_out[r];
+            for (r = 0; r < txfm_size_row; ++r) {
+                buf[r * txfm_size_col + c] = temp_out[r];
+            }
         } else {
-            for (r = 0; r < txfm_size_row; ++r)
+            for (r = 0; r < txfm_size_row; ++r) {
                 // flip from left to right
                 buf[r * txfm_size_col + (txfm_size_col - c - 1)] = temp_out[r];
+            }
         }
     }
 
@@ -6880,9 +7144,11 @@ static INLINE void av1_tranform_two_d_core_N4_c(int16_t *input, uint32_t input_s
             }
         }
     }
-    for (int i = 0; i < (txfm_size_col * txfm_size_row); i++)
-        if (i % txfm_size_col >= (txfm_size_col >> 2) || i / txfm_size_col >= (txfm_size_row >> 2))
+    for (int i = 0; i < (txfm_size_col * txfm_size_row); i++) {
+        if (i % txfm_size_col >= (txfm_size_col >> 2) || i / txfm_size_col >= (txfm_size_row >> 2)) {
             output[i] = 0;
+        }
+    }
 }
 
 void svt_aom_transform_two_d_64x64_N4_c(int16_t *input, int32_t *output, uint32_t input_stride, TxType transform_type,

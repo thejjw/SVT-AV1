@@ -74,7 +74,9 @@ static INLINE void transpose8x8_float(const float *A, float *b, const int32_t ld
 
 void svt_aom_transpose_float_avx2(const float *A, float *b, int32_t n) {
     for (int32_t y = 0; y < n; y += 8) {
-        for (int32_t x = 0; x < n; x += 8) transpose8x8_float(A + y * n + x, b + x * n + y, n, n);
+        for (int32_t x = 0; x < n; x += 8) {
+            transpose8x8_float(A + y * n + x, b + x * n + y, n, n);
+        }
     }
 }
 

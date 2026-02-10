@@ -1473,12 +1473,16 @@ uint32_t svt_aom_sad_16b_kernel_neon(uint16_t *src, uint32_t src_stride, uint16_
     assert(width % 4 == 0);
 
     switch (width) {
-    case 4: return highbd_sad4xh_neon(src, src_stride, ref, ref_stride, height);
-    case 8: return highbd_sad8xh_neon(src, src_stride, ref, ref_stride, height);
-    case 16: return highbd_sad16xh_neon(src, src_stride, ref, ref_stride, height);
+    case 4:
+        return highbd_sad4xh_neon(src, src_stride, ref, ref_stride, height);
+    case 8:
+        return highbd_sad8xh_neon(src, src_stride, ref, ref_stride, height);
+    case 16:
+        return highbd_sad16xh_neon(src, src_stride, ref, ref_stride, height);
     case 32:
     case 64:
-    case 128: return highbd_sadwxh_neon(src, src_stride, ref, ref_stride, height, width);
+    case 128:
+        return highbd_sadwxh_neon(src, src_stride, ref, ref_stride, height, width);
     }
 
     uint32_t offset       = 0;

@@ -53,12 +53,15 @@ static inline int32_t av1_get_tx_scale(const TxSize tx_size) {
 extern const int8_t *eb_av1_nz_map_ctx_offset[19];
 
 static INLINE int get_lower_levels_ctx_eob(int bwl, int height, int scan_idx) {
-    if (scan_idx == 0)
+    if (scan_idx == 0) {
         return 0;
-    if (scan_idx <= (height << bwl) / 8)
+    }
+    if (scan_idx <= (height << bwl) / 8) {
         return 1;
-    if (scan_idx <= (height << bwl) / 4)
+    }
+    if (scan_idx <= (height << bwl) / 4) {
         return 2;
+    }
     return 3;
 }
 
@@ -66,11 +69,13 @@ static AOM_FORCE_INLINE int get_br_ctx_eob(const int c, // raster order
                                            const int bwl, const TxClass tx_class) {
     const int row = c >> bwl;
     const int col = c - (row << bwl);
-    if (c == 0)
+    if (c == 0) {
         return 0;
+    }
     if ((tx_class == TX_CLASS_2D && row < 2 && col < 2) || (tx_class == TX_CLASS_HORIZ && col == 0) ||
-        (tx_class == TX_CLASS_VERT && row == 0))
+        (tx_class == TX_CLASS_VERT && row == 0)) {
         return 7;
+    }
     return 14;
 }
 
@@ -83,7 +88,9 @@ static const uint8_t clip_max3[256] = {
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
 
-static INLINE int get_padded_idx(const int idx, const int bwl) { return idx + ((idx >> bwl) << TX_PAD_HOR_LOG2); }
+static INLINE int get_padded_idx(const int idx, const int bwl) {
+    return idx + ((idx >> bwl) << TX_PAD_HOR_LOG2);
+}
 
 static AOM_FORCE_INLINE int get_nz_mag(const uint8_t *const levels, const int bwl, const TxClass tx_class) {
     int mag;
@@ -113,8 +120,9 @@ static AOM_FORCE_INLINE int get_nz_map_ctx_from_stats(const int stats,
                                                       const int coeff_idx, // raster order
                                                       const int bwl, const TxSize tx_size, const TxClass tx_class) {
     // tx_class == 0(TX_CLASS_2D)
-    if ((tx_class | coeff_idx) == 0)
+    if ((tx_class | coeff_idx) == 0) {
         return 0;
+    }
     int ctx = (stats + 1) >> 1;
     ctx     = AOMMIN(ctx, 4);
     switch (tx_class) {
@@ -141,7 +149,8 @@ static AOM_FORCE_INLINE int get_nz_map_ctx_from_stats(const int stats,
         const int row = coeff_idx >> bwl;
         return ctx + nz_map_ctx_offset_1d[row];
     }
-    default: break;
+    default:
+        break;
     }
     return 0;
 }

@@ -23,8 +23,9 @@ float svt_aom_noise_psd_get_default_value(int32_t block_size, float factor) {
 
 struct aom_noise_tx_t *svt_aom_noise_tx_malloc(int32_t block_size) {
     struct aom_noise_tx_t *noise_tx = (struct aom_noise_tx_t *)malloc(sizeof(struct aom_noise_tx_t));
-    if (!noise_tx)
+    if (!noise_tx) {
         return NULL;
+    }
     memset(noise_tx, 0, sizeof(*noise_tx));
     switch (block_size) {
     case 2:
@@ -95,12 +96,15 @@ void svt_aom_noise_tx_filter_c(int32_t block_size, float *block_ptr, const float
 void svt_aom_noise_tx_inverse(struct aom_noise_tx_t *noise_tx, float *data) {
     const int32_t n = noise_tx->block_size * noise_tx->block_size;
     noise_tx->ifft(noise_tx->tx_block, noise_tx->temp, data);
-    for (int32_t i = 0; i < n; ++i) data[i] /= n;
+    for (int32_t i = 0; i < n; ++i) {
+        data[i] /= n;
+    }
 }
 
 void svt_aom_noise_tx_free(struct aom_noise_tx_t *noise_tx) {
-    if (!noise_tx)
+    if (!noise_tx) {
         return;
+    }
     svt_aom_free(noise_tx->tx_block);
     svt_aom_free(noise_tx->temp);
     free(noise_tx);
