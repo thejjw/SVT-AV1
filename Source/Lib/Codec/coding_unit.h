@@ -207,8 +207,6 @@ typedef struct BlkStruct {
 
     uint8_t segment_id;
 
-    PartitionType part;
-
     // Partition contexts for the current block, derived from the neighbouring blocks' partitions
     PartitionContextType left_part_ctx;
     PartitionContextType above_part_ctx;

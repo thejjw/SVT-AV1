@@ -1906,7 +1906,6 @@ static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDeci
 
 static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, MdScan* mds,
                                 const int max_pd0_size, const int min_pd0_size, int* s_depth_ret, int* e_depth_ret) {
-    const uint32_t sqi_mds = mds->mds_idx;
     const int      sq_size = block_size_wide[mds->bsize];
     ctx->blk_ptr           = pc_tree->block_data[PART_N][0];
 

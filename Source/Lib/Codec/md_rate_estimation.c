@@ -1054,53 +1054,43 @@ void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row
 /*******************************************************************************
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
-void svt_aom_update_part_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, uint16_t tile_idx, int mi_row, int mi_col) {
-    const Av1Common* const cm       = pcs->ppcs->av1_cm;
-    MacroBlockD*           xd       = blk_ptr->av1xd;
-    const BlockGeom*       blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
-    BlockSize              bsize    = blk_geom->bsize;
-    FRAME_CONTEXT*         fc       = xd->tile_ctx;
-    assert(bsize < BlockSizeS_ALL);
-
-    if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols) {
-        return;
-    }
-    const int hbs               = mi_size_wide[bsize] / 2;
+void svt_aom_update_part_stats(PictureControlSet *pcs, const PartitionType partition, const BlockSize bsize,
+    const uint16_t tile_idx, const uint32_t sb_index, const int mi_row, const int mi_col) {
+    const Av1Common* const cm = pcs->ppcs->av1_cm;
+    FRAME_CONTEXT*         fc = &pcs->ec_ctx_array[sb_index];
     const int is_partition_root = bsize >= BLOCK_8X8;
-    if (is_partition_root) {
-        const PartitionType partition = blk_ptr->part;
-        int                 ctx;
+    assert(bsize < BlockSizeS_ALL);
+    assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
+    if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols || !is_partition_root)
+        return;
+    const int hbs               = mi_size_wide[bsize] >> 1;
+    const int has_rows = (mi_row + hbs) < cm->mi_rows;
+    const int has_cols = (mi_col + hbs) < cm->mi_cols;
 
-        NeighborArrayUnit* partition_context_na        = pcs->ep_partition_context_na[tile_idx];
-        uint32_t partition_context_left_neighbor_index = get_neighbor_array_unit_left_index(partition_context_na,
-                                                                                            (mi_row << MI_SIZE_LOG2));
-        uint32_t partition_context_top_neighbor_index  = get_neighbor_array_unit_top_index(partition_context_na,
-                                                                                          (mi_col << MI_SIZE_LOG2));
+    NeighborArrayUnit *partition_context_na        = pcs->ep_partition_context_na[tile_idx];
+    const uint32_t partition_context_left_neighbor_index = get_neighbor_array_unit_left_index(partition_context_na,
+                                                                                        (mi_row << MI_SIZE_LOG2));
+    const uint32_t partition_context_top_neighbor_index  = get_neighbor_array_unit_top_index(partition_context_na,
+                                                                                        (mi_col << MI_SIZE_LOG2));
 
-        const PartitionContextType above_ctx =
-            (((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
-             (char)INVALID_NEIGHBOR_DATA)
-            ? 0
-            : ((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
-        const PartitionContextType left_ctx =
-            (((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
-             (char)INVALID_NEIGHBOR_DATA)
-            ? 0
-            : ((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
-        const int32_t bsl   = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
-        int32_t       above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
+    const PartitionContextType above_ctx =
+        (((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
+            (char)INVALID_NEIGHBOR_DATA)
+        ? 0
+        : ((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
+    const PartitionContextType left_ctx =
+        (((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
+            (char)INVALID_NEIGHBOR_DATA)
+        ? 0
+        : ((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
+    const int32_t bsl   = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
+    const int32_t above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
+    assert(bsl >= 0);
 
-        assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
-        assert(bsl >= 0);
+    const int ctx = (left * 2 + above) + bsl * PARTITION_PLOFFSET;
 
-        ctx = (left * 2 + above) + bsl * PARTITION_PLOFFSET;
-
-        const int has_rows = (mi_row + hbs) < cm->mi_rows;
-        const int has_cols = (mi_col + hbs) < cm->mi_cols;
-
-        if (has_rows && has_cols) {
-            update_cdf(fc->partition_cdf[ctx], partition, svt_aom_partition_cdf_length(bsize));
-        }
+    if (has_rows && has_cols) {
+        update_cdf(fc->partition_cdf[ctx], partition, svt_aom_partition_cdf_length(bsize));
     }
 }
 

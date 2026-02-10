@@ -6901,18 +6901,6 @@ static void move_blk_data_redund(PictureControlSet* pcs, ModeDecisionContext* ct
     }
 
     svt_memcpy(&dst->block_mi, &src->block_mi, sizeof(BlockModeInfo));
-    //dst->interp_filters = src->interp_filters;
-    //dst->interinter_comp.type = src->interinter_comp.type;
-    //dst->interinter_comp.mask_type = src->interinter_comp.mask_type;
-    //dst->interinter_comp.wedge_index = src->interinter_comp.wedge_index;
-    //dst->interinter_comp.wedge_sign = src->interinter_comp.wedge_sign;
-    //dst->compound_idx = src->compound_idx;
-    //dst->comp_group_idx = src->comp_group_idx;
-    //dst->is_interintra_used = src->is_interintra_used;
-    //dst->interintra_mode = src->interintra_mode;
-    //dst->use_wedge_interintra = src->use_wedge_interintra;
-    //dst->interintra_wedge_index = src->interintra_wedge_index; //inter_intra wedge index
-    //dst->filter_intra_mode = src->filter_intra_mode;
     svt_memcpy(&dst->eob, &src->eob, sizeof(EobData));
     svt_memcpy(dst->tx_type, src->tx_type, sizeof(src->tx_type[0]) * MAX_TXB_COUNT);
     dst->tx_type_uv = src->tx_type_uv;
@@ -6920,38 +6908,15 @@ static void move_blk_data_redund(PictureControlSet* pcs, ModeDecisionContext* ct
     dst->y_has_coeff = src->y_has_coeff;
     dst->u_has_coeff = src->u_has_coeff;
     dst->v_has_coeff = src->v_has_coeff;
-
-    //dst->mv[0].as_int = src->mv[0].as_int;
-    //dst->mv[1].as_int = src->mv[1].as_int;
-
-    // Intra Mode
-    //dst->angle_delta[PLANE_TYPE_Y] = src->angle_delta[PLANE_TYPE_Y];
-    //dst->angle_delta[PLANE_TYPE_UV] = src->angle_delta[PLANE_TYPE_UV];
-    //dst->intra_chroma_mode = src->intra_chroma_mode;
-    // Inter Mode
-    //dst->ref_frame[0] = src->ref_frame[0];
-    //dst->ref_frame[1] = src->ref_frame[1];
-    //dst->motion_mode = src->motion_mode;
-    //dst->num_proj_ref = src->num_proj_ref;
     dst->overlappable_neighbors = src->overlappable_neighbors;
-    //dst->cfl_alpha_idx = src->cfl_alpha_idx; // Index of the alpha Cb and alpha Cr combination
-    //dst->cfl_alpha_signs = src->cfl_alpha_signs; // Joint sign of alpha Cb and alpha Cr
     dst->block_has_coeff = src->block_has_coeff;
     dst->qindex          = src->qindex;
-    //dst->skip_mode = src->skip_mode;
-    //dst->tx_depth = src->tx_depth;
     svt_memcpy(dst->av1xd, src->av1xd, sizeof(MacroBlockD));
 
     dst->inter_mode_ctx = src->inter_mode_ctx;
-
     dst->drl_index = src->drl_index;
-    //dst->pred_mode = src->pred_mode;
 
     svt_memcpy(dst->predmv, src->predmv, 2 * sizeof(Mv));
-    //dst->interp_filters = src->interp_filters;
-
-    dst->part = src->part;
-    //dst->use_intrabc = src->use_intrabc;
     dst->drl_ctx[0]      = src->drl_ctx[0];
     dst->drl_ctx[1]      = src->drl_ctx[1];
     dst->drl_ctx_near[0] = src->drl_ctx_near[0];
@@ -9413,7 +9378,8 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
 }
 
-static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDecisionContext *ctx, const MdScan* const mds) {
+static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDecisionContext* ctx,
+    const PC_TREE* const pc_tree, const MdScan* const mds) {
     bool             skip_nsq = false;
     const BlockGeom* blk_geom = ctx->blk_geom;
 
@@ -9507,7 +9473,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
             (ctx->sb_origin_y + sq_blk_geom->org_y) >> MI_SIZE_LOG2,
             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
             ctx->md_rate_est_ctx,
-            ctx->md_blk_arr_nsq[blk_geom->sqi_mds].part,
+            pc_tree->partition,
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
         const uint64_t best_part_cost = RDCOST(full_lambda, best_part_rate, 0);
@@ -10103,9 +10069,10 @@ static bool update_redundant(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     return 0;
 }
 
-static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionContext* ctx, const MdScan* const mds) {
+static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionContext* ctx,
+    const PC_TREE* const pc_tree, const MdScan* const mds) {
     int skip_processing_block = false;
-    if (update_skip_nsq_based_on_split_rate(pcs, ctx, mds)) {
+    if (update_skip_nsq_based_on_split_rate(pcs, ctx, pc_tree, mds)) {
         return true;
     }
     if (update_skip_nsq_based_on_sq_txs(ctx)) {
@@ -10322,7 +10289,6 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
         pc_tree->rdc.rd_cost                                        = split_cost;
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
-        pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
         array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
     }
 
@@ -10383,7 +10349,6 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         init_block_data(pcs, ctx, blk_idx_mds);
         md_encode_block_light_pd0(pcs, ctx, input_pic);
 
-        pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->rdc.rd_cost                        = pc_tree->block_data[shape][0]->cost;
         pc_tree->rdc.valid                          = 1;
         pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
@@ -10417,19 +10382,20 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
 
 static void test_split_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                       MdScan* mds, PC_TREE* pc_tree, int mi_row, int mi_col) {
+    const int mi_rows = pcs->ppcs->av1_cm->mi_rows;
+    const int mi_cols = pcs->ppcs->av1_cm->mi_cols;
     const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
     for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
         const int x_idx = (i & 1) * mi_step;
         const int y_idx = (i >> 1) * mi_step;
 
         // if block fully outside pic, don't process
-        if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) {
+        if (mi_row + y_idx >= mi_rows || mi_col + x_idx >= mi_cols) {
             continue;
         }
         svt_aom_pick_partition_lpd1(scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
     }
-    pc_tree->block_data[PART_N][0]->part       = PARTITION_SPLIT;
-    pc_tree->partition                         = PARTITION_SPLIT;
+    pc_tree->partition = PARTITION_SPLIT;
 }
 
 /*
@@ -10486,8 +10452,7 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs
         md_encode_block_light_pd1(pcs, ctx, input_pic);
 
         // LPD1 uses a fixed partition structure, so no need to update cost
-        pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->partition = from_shape_to_part[ctx->blk_geom->shape];
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
             pc_tree->block_data[PART_N][0]->qindex  = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx = ctx->blk_geom->sqi_mds;
@@ -10685,13 +10650,12 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
     // Only get here if all partitions are valid (and/or out of bounds).
     PC_TREE* array_update_part = pc_tree;
     if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
-        pc_tree->rdc.valid                         = 1;
+        pc_tree->rdc.valid = 1;
     } else {
-        pc_tree->rdc.rd_cost                                        = split_cost;
-        pc_tree->rdc.valid                                          = 1;
-        pc_tree->partition                                          = PARTITION_SPLIT;
-        pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
-        array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
+        pc_tree->rdc.rd_cost = split_cost;
+        pc_tree->rdc.valid   = 1;
+        pc_tree->partition   = PARTITION_SPLIT;
+        array_update_part    = last_quad_valid ? pc_tree->split[3] : NULL;
     }
 
     // When current depth is selected, this array update is for the 3rd quadrant (which is not updated in
@@ -10790,7 +10754,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 }
 
                 // call nsq-reduction func if NSQ is on
-                if (get_skip_processing_nsq_block(pcs, ctx, mds)) {
+                if (get_skip_processing_nsq_block(pcs, ctx, pc_tree, mds)) {
                     valid_part = false;
                     break;
                 }
@@ -10839,8 +10803,6 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 pc_tree->partition   = from_shape_to_part[shape];
                 pc_tree->rdc.rd_cost = part_cost;
                 pc_tree->rdc.valid   = 1;
-
-                pc_tree->block_data[PART_N][0]->part = from_shape_to_part[shape];
             }
         }
     }

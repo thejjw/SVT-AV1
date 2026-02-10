@@ -195,8 +195,8 @@ void svt_aom_update_stats(struct PictureControlSet* pcs, struct BlkStruct* blk_p
 /*******************************************************************************
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
-void svt_aom_update_part_stats(struct PictureControlSet* pcs, struct BlkStruct* blk_ptr, uint16_t tile_idx, int mi_row,
-                               int mi_col);
+void svt_aom_update_part_stats(struct PictureControlSet* pcs, const PartitionType partition, const BlockSize bsize,
+    const uint16_t tile_idx, const uint32_t sb_index, const int mi_row, const int mi_col);
 
 /*
 * Returns the me-based qindex (used for lambda modulation only; not at Q/Q-1)

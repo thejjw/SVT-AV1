@@ -1771,19 +1771,10 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
 // expects ctx->blk_geom, ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y to be set
 static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree) {
     ModeDecisionContext* md_ctx   = ctx->md_ctx;
-    const BlockGeom*     blk_geom = ctx->blk_geom /*= md_ctx->blk_geom = get_blk_geom_mds(blk_ptr->mds_idx)*/;
-    //ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
-    SuperBlock* sb_ptr = md_ctx->sb_ptr;
-
-    int            sb_index = ctx->sb_index;
-    const uint16_t tile_idx = ctx->tile_index;
-    //const bool is_16bit = ctx->is_16bit;
-
-    //ctx->blk_org_x = (uint16_t)(md_ctx->sb_origin_x + blk_geom->org_x);
-    //ctx->blk_org_y = (uint16_t)(md_ctx->sb_origin_y + blk_geom->org_y);
-
-    //EbPictureBufferDesc* recon_buffer;
-    //svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
+    const BlockGeom*     blk_geom = ctx->blk_geom;
+    SuperBlock*          sb_ptr   = md_ctx->sb_ptr;
+    int                  sb_index = ctx->sb_index;
+    const uint16_t       tile_idx = ctx->tile_index;
 
     if (!pcs->scs->allintra) {
         if (is_intra_mode(blk_ptr->block_mi.mode)) {
@@ -1917,7 +1908,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
             sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt].palette_info = NULL;
         }
     }
-    BlkStruct*   src_cu            = blk_ptr; // &md_ctx->md_blk_arr_nsq[d1_itr];
+    BlkStruct*   src_cu            = blk_ptr;
     EcBlkStruct* dst_cu            = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
     ptree->blk_data[blk_geom->nsi] = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
     svt_aom_move_blk_data(pcs, ctx, src_cu, dst_cu);
@@ -2015,9 +2006,8 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
     ptree->partition = partition;
     ptree->bsize     = bsize;
     if (pcs->cdf_ctrl.update_se) {
-        pc_tree->block_data[PART_N][0]->av1xd->tile_ctx = &pcs->ec_ctx_array[ctx->sb_index];
         // Update the partition stats
-        svt_aom_update_part_stats(pcs, pc_tree->block_data[PART_N][0], ctx->tile_index, mi_row, mi_col);
+        svt_aom_update_part_stats(pcs, partition, bsize, ctx->tile_index, ctx->sb_index, mi_row, mi_col);
     }
 
     switch (partition) {
@@ -2068,7 +2058,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
         encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2], ptree);
         break;
     case PARTITION_HORZ_4:
-        for (int i = 0; i < /*SUB_PARTITIONS_PART4*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
             int this_mi_row = mi_row + i * quarter_step;
             if (i > 0 && this_mi_row >= pcs->ppcs->av1_cm->mi_rows) {
                 // Only the last block is able to be outside the picture boundary. If one of the first
@@ -2080,7 +2070,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
         }
         break;
     case PARTITION_VERT_4:
-        for (int i = 0; i < /*SUB_PARTITIONS_PART4*/ 4; ++i) {
+        for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
             int this_mi_col = mi_col + i * quarter_step;
             if (i > 0 && this_mi_col >= pcs->ppcs->av1_cm->mi_cols) {
                 // Only the last block is able to be outside the picture boundary. If one of the first
