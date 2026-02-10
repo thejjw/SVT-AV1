@@ -1596,7 +1596,6 @@ static void init_md_scan(PictureControlSet* pcs, ModeDecisionContext* ctx, MdSca
 static void set_blocks_to_be_tested(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                     MdScan* mds, const bool use_predetermined_depths) {
     memset(ctx->avail_blk_flag, false, sizeof(uint8_t) * scs->max_block_cnt);
-    memset(ctx->cost_avail, false, sizeof(uint8_t) * scs->max_block_cnt);
     int min_sq_size = (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_64x64) ? 64
         : (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_32x32)             ? 32
         : (ctx->disallow_8x8 || (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_16x16))
@@ -1909,33 +1908,15 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
                                 const int max_pd0_size, const int min_pd0_size, int* s_depth_ret, int* e_depth_ret) {
     const uint32_t sqi_mds = mds->mds_idx;
     const int      sq_size = block_size_wide[mds->bsize];
-    ctx->blk_ptr           = pc_tree->block_data[PART_N][0]; // &ctx->md_blk_arr_nsq[mds->mds_idx];
+    ctx->blk_ptr           = pc_tree->block_data[PART_N][0];
 
     int s_depth = ctx->depth_refinement_ctrls.mode == PD0_DEPTH_PRED_PART_ONLY ? 0 : -2;
     int e_depth = ctx->depth_refinement_ctrls.mode == PD0_DEPTH_PRED_PART_ONLY ? 0 : 2;
-    // Selected depths should be available, unless they are not valid blocks (e.g. out of bounds).
-    // Therefore, when blocks are invalid, don't add parent/child.
-    if (!ctx->cost_avail[sqi_mds] || (s_depth == 0 && e_depth == 0)) {
+    if (s_depth == 0 && e_depth == 0) {
         *s_depth_ret = 0;
         *e_depth_ret = 0;
         return;
-    } else {
-        if (ctx->avail_blk_flag[sqi_mds]) {
-            // Getting here means avail_blk_flag is true, so the block was tested. Decisions that rely on
-            // info from a tested block should go here. For incomplete blocks, the cost may be available from
-            // H/V, while the info for the SQ block is not available
-            if (ctx->depth_refinement_ctrls.mode == PD0_DEPTH_PRED_PART_ONLY) {
-                // Cap to (-1,+1) if the pred mode is INTER (if both INTER and INTRA are tested)
-                if (ctx->intra_ctrls.enable_intra && is_inter_mode(ctx->blk_ptr->block_mi.mode)) {
-                    s_depth = MAX(s_depth, -1);
-                    e_depth = MIN(e_depth, 1);
-                }
-            }
-        }
     }
-
-    // If multiple depths are selected, perform refinement
-    assert(s_depth != 0 || e_depth != 0);
 
     // 4x4 blocks have no children
     if (sq_size == 4) {
@@ -2016,8 +1997,7 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, mds->mds_idx);
         update_pred_th_offset(pcs, ctx, blk_geom, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
         if (s_depth &&
-            // Check avail_blk_flag b/c use cost inside, and cost may not be
-            // updated even if cost_avail is true.
+            // Check avail_blk_flag b/c use block's cost inside
             ctx->avail_blk_flag[mds->mds_idx] &&
             sq_size < ((pcs->scs->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
             is_parent_to_current_deviation_small(pcs, ctx, blk_geom, s_th_offset, &s_depth);
@@ -2027,8 +2007,7 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         }
 
         if (e_depth &&
-            // Check avail_blk_flag b/c use cost inside, and cost may not be
-            // updated even if cost_avail is true.
+            // Check avail_blk_flag b/c use block's cost inside
             ctx->avail_blk_flag[mds->mds_idx] && sq_size > 4) {
             is_child_to_current_deviation_small(pcs, ctx, blk_geom, mds->mds_idx, e_th_offset, &e_depth);
             if (e_depth) {

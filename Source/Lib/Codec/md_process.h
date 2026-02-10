@@ -947,7 +947,6 @@ typedef struct ModeDecisionContext {
     MdRateEstimationContext*      rate_est_table;
     BlkStruct*                    md_blk_arr_nsq;
     uint8_t*                      avail_blk_flag;
-    uint8_t*                      cost_avail;
     // Used to track which blocks should be tested in MD in each PD stage
     MdScan* mds;
     // Used to store results of MD

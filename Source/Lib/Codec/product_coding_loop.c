@@ -7915,7 +7915,6 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
     if (pcs->scs->allintra && ctx->lpd0_ctrls.pd0_level == VERY_LIGHT_PD0) {
         blk_ptr->cost = compute_vlpd0_cost_allintra(pcs, ctx);
         ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
-        ctx->cost_avail[blk_ptr->mds_idx]     = true;
         return;
     }
 #endif
@@ -8028,7 +8027,6 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
     }
 
     ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
-    ctx->cost_avail[blk_ptr->mds_idx]     = true;
 }
 
 int svt_aom_get_comp_group_idx_context_enc(const MacroBlockD* xd);
@@ -8818,7 +8816,6 @@ static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContex
     }
 
     ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
-    ctx->cost_avail[blk_ptr->mds_idx]     = true;
 }
 
 static void tx_shortcut_detector(ModeDecisionContext* ctx, ModeDecisionCandidateBuffer** cand_bf_ptr_array) {
@@ -9414,7 +9411,6 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         non_normative_txs(pcs, ctx, blk_ptr, cand_bf);
     }
     ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
-    ctx->cost_avail[blk_ptr->mds_idx]     = true;
 }
 
 static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDecisionContext *ctx, const MdScan* const mds) {
@@ -10055,7 +10051,6 @@ static bool update_redundant(PictureControlSet* pcs, ModeDecisionContext* ctx) {
         BlkStruct* redund_blk_ptr = &ctx->md_blk_arr_nsq[redundant_blk_mds];
         move_blk_data_redund(pcs, ctx, redund_blk_ptr, blk_ptr);
         ctx->avail_blk_flag[blk_ptr->mds_idx] = ctx->avail_blk_flag[redundant_blk_mds];
-        ctx->cost_avail[blk_ptr->mds_idx]     = ctx->cost_avail[redundant_blk_mds];
 
         if (ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
             // If a redundant block is being tested, there must be a search over NSQ shapes and/or depth.
@@ -10328,7 +10323,6 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
-        ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
         array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
     }
 
@@ -10384,8 +10378,8 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         pc_tree->block_data[shape][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
 
         // Neighbour partition array is not updated in PD0, so set neighbour info to invalid.
-        ctx->blk_ptr->left_part_ctx  = 0;
-        ctx->blk_ptr->above_part_ctx = 0;
+        pc_tree->block_data[PART_N][0]->left_part_ctx = 0;
+        pc_tree->block_data[PART_N][0]->above_part_ctx = 0;
         init_block_data(pcs, ctx, blk_idx_mds);
         md_encode_block_light_pd0(pcs, ctx, input_pic);
 
@@ -10394,12 +10388,8 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         pc_tree->rdc.valid                          = 1;
         pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
-            assert(ctx->cost_avail[blk_idx_mds]);
-            ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
             pc_tree->block_data[PART_N][0]->qindex         = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx        = ctx->blk_geom->sqi_mds;
-            pc_tree->block_data[PART_N][0]->left_part_ctx  = 0;
-            pc_tree->block_data[PART_N][0]->above_part_ctx = 0;
         }
 #if !CLN_REMOVE_VAR_SUB_DEPTH
         if (ctx->var_skip_sub_depth_ctrls.enabled && mds->split_flag &&
@@ -10701,7 +10691,6 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
-        ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
         array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
     }
 
@@ -10852,7 +10841,6 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 pc_tree->rdc.valid   = 1;
 
                 pc_tree->block_data[PART_N][0]->part = from_shape_to_part[shape];
-                ctx->cost_avail[ctx->blk_geom->sqi_mds]     = 1;
             }
         }
     }
