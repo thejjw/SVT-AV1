@@ -60,7 +60,7 @@ extern "C" {
 #define OUT_Q_ADVANCE(h, size) (((h) == (size) - 1) ? 0 : (h) + 1)
 #define MIN_LAD_MG 1
 #define RC_DEFAULT_LAD_MG 2 // default look ahead value for rate control
-void svt_aom_assert_err(uint32_t condition, char *err_msg);
+void svt_aom_assert_err(uint32_t condition, char* err_msg);
 
 #define TPL_DEP_COST_SCALE_LOG2 4
 #define MAX_TX_WEIGHT 500
@@ -85,11 +85,12 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 #define VQ_PIC_AVG_VARIANCE_TH 1000
 #define NUM_MV_COMPONENTS 2
 #define NUM_MV_HIST 2
-#define MAX_MV_HIST_SIZE 2 * REF_LIST_MAX_DEPTH *NUM_MV_COMPONENTS *NUM_MV_HIST
+#define MAX_MV_HIST_SIZE (2 * REF_LIST_MAX_DEPTH * NUM_MV_COMPONENTS * NUM_MV_HIST)
 
 #define INVALID_LUMA 256
 
 #define NEAREST_NEAR_MV_CNT 4 // 1 nearest + 3 near
+
 typedef struct SharpnessCtrls {
     uint8_t scene_transition;
     uint8_t tf;
@@ -99,9 +100,11 @@ typedef struct SharpnessCtrls {
     uint8_t restoration;
     uint8_t rdoq;
 } SharpnessCtrls;
+
 typedef struct VqCtrls {
     SharpnessCtrls sharpness_ctrls;
 } VqCtrls;
+
 typedef struct MrpCtrls {
     /*
      * Referencing_scheme [0, 2] used only in 3L-5L
@@ -152,6 +155,7 @@ typedef struct MrpCtrls {
     uint8_t flat_max_refs;
 
 } MrpCtrls;
+
 typedef struct TfControls {
     // Filtering set
     uint8_t enabled; // Specifies whether the current input will be filtered or not (0: OFF, 1: ON)
@@ -228,6 +232,7 @@ typedef struct TfControls {
     // Specifies whether to tune the params using qp (0: OFF, 1: ON)
     uint8_t qp_opt;
 } TfControls;
+
 typedef enum GM_LEVEL {
     GM_FULL   = 0, // Exhaustive search mode.
     GM_DOWN   = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
@@ -239,6 +244,7 @@ typedef enum GM_LEVEL {
     // average ME distortion, and the picture variance
     GM_ADAPT_1 = 4,
 } GM_LEVEL;
+
 typedef enum SqWeightOffsets {
     CONSERVATIVE_OFFSET_0 = 5,
     CONSERVATIVE_OFFSET_1 = 10,
@@ -249,6 +255,7 @@ typedef enum SqWeightOffsets {
 #define COEFF_LVL_TH_0 (5833 / 96)
 #define COEFF_LVL_TH_1 (5833 / 48)
 #define COEFF_LVL_TH_2 (16666 / 48)
+
 typedef enum InputCoeffLvl {
     VLOW_LVL    = 0,
     LOW_LVL     = 1,
@@ -256,19 +263,22 @@ typedef enum InputCoeffLvl {
     HIGH_LVL    = 3,
     INVALID_LVL = ~0,
 } InputCoeffLvl;
+
 typedef struct Buf2D {
-    uint8_t *buf;
-    uint8_t *buf0;
+    uint8_t* buf;
+    uint8_t* buf0;
     int      width;
     int      height;
     int      stride;
 } Buf2D;
+
 typedef struct MvLimits {
     int col_min;
     int col_max;
     int row_min;
     int row_max;
 } MvLimits;
+
 typedef struct {
     uint8_t by;
     uint8_t bx;
@@ -524,29 +534,30 @@ typedef int16_t InterpKernel[SUBPEL_TAPS];
 #undef MEM_VALUE_T_SZ_BITS
 #define MEM_VALUE_T_SZ_BITS (sizeof(MEM_VALUE_T) << 3)
 
-static __inline void mem_put_le16(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le16(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
 }
 
-static __inline void mem_put_le24(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le24(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
     mem[2] = (MAU_T)((val >> 16) & 0xff);
 }
 
-static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le32(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
     mem[2] = (MAU_T)((val >> 16) & 0xff);
     mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
+
 /* clang-format on */
 
 typedef uint16_t ConvBufType;
@@ -554,7 +565,7 @@ typedef uint16_t ConvBufType;
 typedef struct ConvolveParams {
     int32_t      ref;
     int32_t      do_average;
-    ConvBufType *dst;
+    ConvBufType* dst;
     int32_t      dst_stride;
     int32_t      round_0;
     int32_t      round_1;
@@ -588,20 +599,30 @@ static INLINE int64_t clamp64(int64_t value, int64_t low, int64_t high) {
 static INLINE double fclamp(double value, double low, double high) {
     return value < low ? low : (value > high ? high : value);
 }
-static INLINE uint8_t clip_pixel(int32_t val) { return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val); }
+
+static INLINE uint8_t clip_pixel(int32_t val) {
+    return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val);
+}
 
 static INLINE uint16_t clip_pixel_highbd(int32_t val, int32_t bd) {
     switch (bd) {
     case 8:
-    default: return (uint16_t)clamp(val, 0, 255);
-    case 10: return (uint16_t)clamp(val, 0, 1023);
-    case 12: return (uint16_t)clamp(val, 0, 4095);
+    default:
+        return (uint16_t)clamp(val, 0, 255);
+    case 10:
+        return (uint16_t)clamp(val, 0, 1023);
+    case 12:
+        return (uint16_t)clamp(val, 0, 4095);
     }
 }
 
-static INLINE unsigned int negative_to_zero(int value) { return (value < 0) ? 0 : value; }
+static INLINE unsigned int negative_to_zero(int value) {
+    return (value < 0) ? 0 : value;
+}
 
-static INLINE int av1_num_planes(EbColorConfig *color_info) { return color_info->mono_chrome ? 1 : MAX_MB_PLANE; }
+static INLINE int av1_num_planes(EbColorConfig* color_info) {
+    return color_info->mono_chrome ? 1 : MAX_MB_PLANE;
+}
 
 typedef struct IntraSize {
     uint8_t top;
@@ -643,16 +664,23 @@ typedef enum ATTRIBUTE_PACKED {
     LPD1_LVL_5 = 5, // Light-PD1 path, with most aggressive feature levels
     LPD1_LEVELS // Number of light-PD1 paths (regular PD1 isn't a light-PD1 path)
 } Pd1Level;
+
 // If adding/removing a class, must also update is_intra_class func and MD_STAGE_NICS array
 typedef enum CandClass { CAND_CLASS_0, CAND_CLASS_1, CAND_CLASS_2, CAND_CLASS_3, CAND_CLASS_TOTAL } CandClass;
+
 typedef enum MdStage { MD_STAGE_0, MD_STAGE_1, MD_STAGE_2, MD_STAGE_3, MD_STAGE_TOTAL, INVALID_MD_STAGE } MdStage;
+
 typedef enum MdStagingMode {
     MD_STAGING_MODE_0,
     MD_STAGING_MODE_1,
     MD_STAGING_MODE_2,
     MD_STAGING_MODE_TOTAL
 } MdStagingMode;
-static INLINE bool is_intra_class(CandClass c) { return (c == CAND_CLASS_0 || c == CAND_CLASS_3); }
+
+static INLINE bool is_intra_class(CandClass c) {
+    return (c == CAND_CLASS_0 || c == CAND_CLASS_3);
+}
+
 #define NICS_PIC_TYPE 3
 #define NICS_SCALING_LEVELS 16
 static const uint32_t MD_STAGE_NICS[NICS_PIC_TYPE][CAND_CLASS_TOTAL] =
@@ -685,6 +713,7 @@ static const uint32_t MD_STAGE_NICS_SCAL_NUM[NICS_SCALING_LEVELS][MD_STAGE_TOTAL
     {0, 2, 0, 0}, // LEVEL 14
     {0, 0, 0, 0} // LEVEL 15
 };
+
 typedef enum {
     EIGHTTAP_REGULAR,
     EIGHTTAP_SMOOTH,
@@ -700,6 +729,7 @@ enum {
     SPEL_ME, //ME
     SPEL_PME, //PME
 } UENUM1BYTE(SUBPEL_STAGE);
+
 enum {
     USE_2_TAPS_ORIG = 0, // This is used in temporal filtering.
     USE_2_TAPS,
@@ -713,13 +743,16 @@ enum {
     //SUBPEL_TREE_PRUNED_MORE = 2,      // Not supported - (from libaom: Prunes 1/2-pel searches more aggressively)
     //SUBPEL_TREE_PRUNED_EVENMORE = 3,  // Not supported - (from libaom: Prunes 1/2- and 1/4-pel searches)
 } UENUM1BYTE(SUBPEL_SEARCH_METHODS);
+
 enum { EIGHTH_PEL, QUARTER_PEL, HALF_PEL, FULL_PEL } UENUM1BYTE(SUBPEL_FORCE_STOP);
+
 typedef struct InterpFilterParams {
-    const int16_t *filter_ptr;
+    const int16_t* filter_ptr;
     uint16_t       taps;
     uint16_t       subpel_shifts;
     InterpFilter   interp_filter;
 } InterpFilterParams;
+
 typedef enum IfsLevel {
     IFS_OFF, // IFS OFF
     IFS_MDS0, // IFS @ md_stage_0()
@@ -727,18 +760,22 @@ typedef enum IfsLevel {
     IFS_MDS2, // IFS @ md_stage_2()
     IFS_MDS3, // IFS @ md_stage_3()
 } IfsLevel;
+
 typedef enum SpatialSseLevel {
     SSSE_MDS1, // Spatial SSE @ md_stage_1() and beyond
     SSSE_MDS2, // Spatial SSE @ md_stage_2() and beyond
     SSSE_MDS3, // Spatial SSE @ md_stage_3() and beyond
     SSSE_OFF // Spatial SSE OFF
 } SpatialSseLevel;
+
 typedef enum DistortionType { SAD, VAR, SSD, DIST_TYPES } DistortionType;
+
 // Profile 0.  8-bit and 10-bit 4:2:0 and 4:0:0 only.
 // Profile 1.  8-bit and 10-bit 4:4:4
 // Profile 2.  8-bit and 10-bit 4:2:2
 //            12 bit  4:0:0, 4:2:2 and 4:4:4
 typedef enum BitstreamProfile { PROFILE_0, PROFILE_1, PROFILE_2, MAX_PROFILES } BitstreamProfile;
+
 // Note: Some enums use the attribute 'packed' to use smallest possible integer
 // type, so that we can save memory when they are used in structs/arrays.
 
@@ -788,6 +825,7 @@ typedef enum ATTRIBUTE_PACKED {
 } PartitionType;
 
 #define MAX_NUM_BLOCKS_ALLOC 4421
+
 typedef enum ATTRIBUTE_PACKED {
     PART_N,
     PART_H,
@@ -908,6 +946,7 @@ typedef char PartitionContextType;
 // block transform size
 #ifdef _MSC_VER
 typedef uint8_t TxSize;
+
 enum ATTRIBUTE_PACKED {
 #else
 typedef enum ATTRIBUTE_PACKED {
@@ -985,10 +1024,14 @@ static INLINE TxSize av1_get_adjusted_tx_size(TxSize tx_size) {
     switch (tx_size) {
     case TX_64X64:
     case TX_64X32:
-    case TX_32X64: return TX_32X32;
-    case TX_64X16: return TX_32X16;
-    case TX_16X64: return TX_16X32;
-    default: return tx_size;
+    case TX_32X64:
+        return TX_32X32;
+    case TX_64X16:
+        return TX_32X16;
+    case TX_16X64:
+        return TX_16X32;
+    default:
+        return tx_size;
     }
 }
 
@@ -1031,6 +1074,7 @@ typedef enum ATTRIBUTE_PACKED {
 
 #ifdef _MSC_VER
 typedef uint8_t TxType;
+
 enum ATTRIBUTE_PACKED {
 #else
 typedef enum ATTRIBUTE_PACKED {
@@ -1088,6 +1132,7 @@ static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, I
                                                                       V_FLIPADST,
                                                                       H_FLIPADST,
                                                                       INVALID_TX_TYPE}};
+
 typedef enum ATTRIBUTE_PACKED {
     // DCT only
     EXT_TX_SET_DCTONLY,
@@ -1226,6 +1271,7 @@ typedef enum ATTRIBUTE_PACKED {
     INTRA_MODES             = PAETH_PRED + 1, // PAETH_PRED has to be the last intra mode.
     INTRA_INVALID           = MB_MODE_COUNT, // For uv_mode in inter blocks
 } PredictionMode;
+
 #define MAX_UPSAMPLE_SZ 16
 
 typedef enum ATTRIBUTE_PACKED {
@@ -1281,6 +1327,7 @@ typedef uint16_t CONV_BUF_TYPE;
 #define WEDGE_WEIGHT_BITS 6
 #define MASK_PRIMARY_SIZE ((MAX_WEDGE_SIZE) << 1)
 #define MASK_PRIMARY_STRIDE (MASK_PRIMARY_SIZE)
+
 enum {
     MD_COMP_AVG,
     MD_COMP_DIST,
@@ -1288,13 +1335,16 @@ enum {
     MD_COMP_WEDGE,
     MD_COMP_TYPES,
 } UENUM1BYTE(MD_COMP_TYPE);
+
 #define COMPOUND_TYPE CompoundType
 #define MAX_DIFFWTD_MASK_BITS 1
+
 enum {
     DIFFWTD_38 = 0,
     DIFFWTD_38_INV,
     DIFFWTD_MASK_TYPES,
 } UENUM1BYTE(DIFFWTD_MASK_TYPE);
+
 typedef struct {
     /*!< Specifies how the two predictions should be blended together. */
     CompoundType type;
@@ -1308,6 +1358,7 @@ typedef struct {
     /*!< Specifies the type of mask to be used during blending. */
     DIFFWTD_MASK_TYPE mask_type;
 } InterInterCompoundData;
+
 typedef enum ATTRIBUTE_PACKED {
     FILTER_DC_PRED,
     FILTER_V_PRED,
@@ -1316,6 +1367,7 @@ typedef enum ATTRIBUTE_PACKED {
     FILTER_PAETH_PRED,
     FILTER_INTRA_MODES,
 } FilterIntraMode;
+
 static const PredictionMode fimode_to_intramode[FILTER_INTRA_MODES] = {DC_PRED, V_PRED, H_PRED, D157_PRED, PAETH_PRED};
 #define DIRECTIONAL_MODES 8
 #define MAX_ANGLE_DELTA 3
@@ -1405,6 +1457,7 @@ enum {
 
 #define FWD_RF_OFFSET(ref) (ref - LAST_FRAME)
 #define BWD_RF_OFFSET(ref) (ref - BWDREF_FRAME)
+
 typedef enum ATTRIBUTE_PACKED {
     LAST_LAST2_FRAMES, // { LAST_FRAME, LAST2_FRAME }
     LAST_LAST3_FRAMES, // { LAST_FRAME, LAST3_FRAME }
@@ -1462,12 +1515,9 @@ typedef enum ATTRIBUTE_PACKED {
 
 #define MAX_NUM_TEMPORAL_LAYERS 8
 #define MAX_NUM_SPATIAL_LAYERS 4
-/* clang-format off */
-// clang-format seems to think this is a pointer dereference and not a
-// multiplication.
-#define MAX_NUM_OPERATING_POINTS \
-MAX_NUM_TEMPORAL_LAYERS * MAX_NUM_SPATIAL_LAYERS
+#define MAX_NUM_OPERATING_POINTS (MAX_NUM_TEMPORAL_LAYERS * MAX_NUM_SPATIAL_LAYERS)
 
+/* clang-format off */
 static INLINE int32_t is_valid_seq_level_idx(uint8_t seq_level_idx) {
     return seq_level_idx == 31 ||
         (seq_level_idx < 24 &&
@@ -1479,16 +1529,16 @@ static INLINE int32_t is_valid_seq_level_idx(uint8_t seq_level_idx) {
         seq_level_idx != 22 && seq_level_idx != 23);
 }
 
-typedef enum
-{
-    SINGLE_REFERENCE = 0,
-    COMPOUND_REFERENCE = 1,
+/* clang-format on */
+
+typedef enum {
+    SINGLE_REFERENCE      = 0,
+    COMPOUND_REFERENCE    = 1,
     REFERENCE_MODE_SELECT = 2,
-    REFERENCE_MODES = 3,
+    REFERENCE_MODES       = 3,
 } ReferenceMode;
 
-typedef enum RefreshFrameContextMode
-{
+typedef enum RefreshFrameContextMode {
     /**
     * Frame context updates are disabled
     */
@@ -1503,8 +1553,7 @@ typedef enum RefreshFrameContextMode
 //**********************************************************************************************************************//
 // aom_codec.h
 /*!\brief Algorithm return codes */
-typedef enum AomCodecErr
-{
+typedef enum AomCodecErr {
     /*!\brief Operation completed without error */
     AOM_CODEC_OK,
     /*!\brief Unspecified error */
@@ -1551,58 +1600,70 @@ typedef enum AomCodecErr
 //**********************************************************************************************************************//
 // Common_data.h
 static const uint8_t intra_mode_context[INTRA_MODES] = {
-    0, 1, 2, 3, 4, 4, 4, 4, 3, 0, 1, 2, 0,
+    0,
+    1,
+    2,
+    3,
+    4,
+    4,
+    4,
+    4,
+    3,
+    0,
+    1,
+    2,
+    0,
 };
 
 static const TxSize txsize_sqr_map[TX_SIZES_ALL] = {
-    TX_4X4,    // TX_4X4
-    TX_8X8,    // TX_8X8
-    TX_16X16,  // TX_16X16
-    TX_32X32,  // TX_32X32
-    TX_64X64,  // TX_64X64
-    TX_4X4,    // TX_4X8
-    TX_4X4,    // TX_8X4
-    TX_8X8,    // TX_8X16
-    TX_8X8,    // TX_16X8
-    TX_16X16,  // TX_16X32
-    TX_16X16,  // TX_32X16
-    TX_32X32,  // TX_32X64
-    TX_32X32,  // TX_64X32
-    TX_4X4,    // TX_4X16
-    TX_4X4,    // TX_16X4
-    TX_8X8,    // TX_8X32
-    TX_8X8,    // TX_32X8
-    TX_16X16,  // TX_16X64
-    TX_16X16,  // TX_64X16
+    TX_4X4, // TX_4X4
+    TX_8X8, // TX_8X8
+    TX_16X16, // TX_16X16
+    TX_32X32, // TX_32X32
+    TX_64X64, // TX_64X64
+    TX_4X4, // TX_4X8
+    TX_4X4, // TX_8X4
+    TX_8X8, // TX_8X16
+    TX_8X8, // TX_16X8
+    TX_16X16, // TX_16X32
+    TX_16X16, // TX_32X16
+    TX_32X32, // TX_32X64
+    TX_32X32, // TX_64X32
+    TX_4X4, // TX_4X16
+    TX_4X4, // TX_16X4
+    TX_8X8, // TX_8X32
+    TX_8X8, // TX_32X8
+    TX_16X16, // TX_16X64
+    TX_16X16, // TX_64X16
 };
 static const TxSize txsize_sqr_up_map[TX_SIZES_ALL] = {
-    TX_4X4,    // TX_4X4
-    TX_8X8,    // TX_8X8
-    TX_16X16,  // TX_16X16
-    TX_32X32,  // TX_32X32
-    TX_64X64,  // TX_64X64
-    TX_8X8,    // TX_4X8
-    TX_8X8,    // TX_8X4
-    TX_16X16,  // TX_8X16
-    TX_16X16,  // TX_16X8
-    TX_32X32,  // TX_16X32
-    TX_32X32,  // TX_32X16
-    TX_64X64,  // TX_32X64
-    TX_64X64,  // TX_64X32
-    TX_16X16,  // TX_4X16
-    TX_16X16,  // TX_16X4
-    TX_32X32,  // TX_8X32
-    TX_32X32,  // TX_32X8
-    TX_64X64,  // TX_16X64
-    TX_64X64,  // TX_64X16
+    TX_4X4, // TX_4X4
+    TX_8X8, // TX_8X8
+    TX_16X16, // TX_16X16
+    TX_32X32, // TX_32X32
+    TX_64X64, // TX_64X64
+    TX_8X8, // TX_4X8
+    TX_8X8, // TX_8X4
+    TX_16X16, // TX_8X16
+    TX_16X16, // TX_16X8
+    TX_32X32, // TX_16X32
+    TX_32X32, // TX_32X16
+    TX_64X64, // TX_32X64
+    TX_64X64, // TX_64X32
+    TX_16X16, // TX_4X16
+    TX_16X16, // TX_16X4
+    TX_32X32, // TX_8X32
+    TX_32X32, // TX_32X8
+    TX_64X64, // TX_16X64
+    TX_64X64, // TX_64X16
 };
 
 // above and left partition
-typedef struct PartitionContext
-{
+typedef struct PartitionContext {
     PartitionContextType above;
     PartitionContextType left;
-}PartitionContext;
+} PartitionContext;
+
 // Generates 5 bit field in which each bit set to 1 represents
 // a BlockSize partition  11111 means we split 128x128, 64x64, 32x32, 16x16
 // and 8x8.  10000 means we just split the 128x128 to 64x64
@@ -1612,29 +1673,30 @@ static const struct
     PartitionContextType above;
     PartitionContextType left;
 } partition_context_lookup[BlockSizeS_ALL] = {
-{ 31, 31 },  // 4X4   - {0b11111, 0b11111}
-{ 31, 30 },  // 4X8   - {0b11111, 0b11110}
-{ 30, 31 },  // 8X4   - {0b11110, 0b11111}
-{ 30, 30 },  // 8X8   - {0b11110, 0b11110}
-{ 30, 28 },  // 8X16  - {0b11110, 0b11100}
-{ 28, 30 },  // 16X8  - {0b11100, 0b11110}
-{ 28, 28 },  // 16X16 - {0b11100, 0b11100}
-{ 28, 24 },  // 16X32 - {0b11100, 0b11000}
-{ 24, 28 },  // 32X16 - {0b11000, 0b11100}
-{ 24, 24 },  // 32X32 - {0b11000, 0b11000}
-{ 24, 16 },  // 32X64 - {0b11000, 0b10000}
-{ 16, 24 },  // 64X32 - {0b10000, 0b11000}
-{ 16, 16 },  // 64X64 - {0b10000, 0b10000}
-{ 16, 0 },   // 64X128- {0b10000, 0b00000}
-{ 0, 16 },   // 128X64- {0b00000, 0b10000}
-{ 0, 0 },    // 128X128-{0b00000, 0b00000}
-{ 31, 28 },  // 4X16  - {0b11111, 0b11100}
-{ 28, 31 },  // 16X4  - {0b11100, 0b11111}
-{ 30, 24 },  // 8X32  - {0b11110, 0b11000}
-{ 24, 30 },  // 32X8  - {0b11000, 0b11110}
-{ 28, 16 },  // 16X64 - {0b11100, 0b10000}
-{ 16, 28 },  // 64X16 - {0b10000, 0b11100}
+    { 31, 31 },  // 4X4   - {0b11111, 0b11111}
+    { 31, 30 },  // 4X8   - {0b11111, 0b11110}
+    { 30, 31 },  // 8X4   - {0b11110, 0b11111}
+    { 30, 30 },  // 8X8   - {0b11110, 0b11110}
+    { 30, 28 },  // 8X16  - {0b11110, 0b11100}
+    { 28, 30 },  // 16X8  - {0b11100, 0b11110}
+    { 28, 28 },  // 16X16 - {0b11100, 0b11100}
+    { 28, 24 },  // 16X32 - {0b11100, 0b11000}
+    { 24, 28 },  // 32X16 - {0b11000, 0b11100}
+    { 24, 24 },  // 32X32 - {0b11000, 0b11000}
+    { 24, 16 },  // 32X64 - {0b11000, 0b10000}
+    { 16, 24 },  // 64X32 - {0b10000, 0b11000}
+    { 16, 16 },  // 64X64 - {0b10000, 0b10000}
+    { 16, 0 },   // 64X128- {0b10000, 0b00000}
+    { 0, 16 },   // 128X64- {0b00000, 0b10000}
+    { 0, 0 },    // 128X128-{0b00000, 0b00000}
+    { 31, 28 },  // 4X16  - {0b11111, 0b11100}
+    { 28, 31 },  // 16X4  - {0b11100, 0b11111}
+    { 30, 24 },  // 8X32  - {0b11110, 0b11000}
+    { 24, 30 },  // 32X8  - {0b11000, 0b11110}
+    { 28, 16 },  // 16X64 - {0b11100, 0b10000}
+    { 16, 28 },  // 64X16 - {0b10000, 0b11100}
 };
+
 /* clang-format on */
 
 // Width/height lookup tables in units of various block sizes
@@ -1685,12 +1747,15 @@ extern const int32_t av1_ext_tx_used[EXT_TX_SET_TYPES][TX_TYPES];
 static INLINE TxSetType get_ext_tx_set_type(TxSize tx_size, int32_t is_inter, int32_t use_reduced_set) {
     const TxSize tx_size_sqr_up = txsize_sqr_up_map[tx_size];
 
-    if (tx_size_sqr_up > TX_32X32)
+    if (tx_size_sqr_up > TX_32X32) {
         return EXT_TX_SET_DCTONLY;
-    if (tx_size_sqr_up == TX_32X32)
+    }
+    if (tx_size_sqr_up == TX_32X32) {
         return is_inter ? EXT_TX_SET_DCT_IDTX : EXT_TX_SET_DCTONLY;
-    if (use_reduced_set)
+    }
+    if (use_reduced_set) {
         return is_inter ? EXT_TX_SET_DCT_IDTX : EXT_TX_SET_DTT4_IDTX;
+    }
     const TxSize tx_size_sqr = txsize_sqr_map[tx_size];
     if (is_inter) {
         return (tx_size_sqr == TX_16X16 ? EXT_TX_SET_DTT9_IDTX_1DDCT : EXT_TX_SET_ALL16);
@@ -1698,10 +1763,12 @@ static INLINE TxSetType get_ext_tx_set_type(TxSize tx_size, int32_t is_inter, in
         return (tx_size_sqr == TX_16X16 ? EXT_TX_SET_DTT4_IDTX : EXT_TX_SET_DTT4_IDTX_1DDCT);
     }
 }
+
 static INLINE int32_t get_ext_tx_types(TxSize tx_size, int32_t is_inter, int32_t use_reduced_set) {
     const int32_t set_type = get_ext_tx_set_type(tx_size, is_inter, use_reduced_set);
     return av1_num_ext_tx_set[set_type];
 }
+
 // Maps tx set types to the indices.
 extern const int32_t ext_tx_set_index[2][EXT_TX_SET_TYPES];
 
@@ -1709,15 +1776,19 @@ static INLINE int32_t get_ext_tx_set(TxSize tx_size, int32_t is_inter, int32_t u
     const TxSetType set_type = get_ext_tx_set_type(tx_size, is_inter, use_reduced_set);
     return ext_tx_set_index[is_inter][set_type];
 }
+
 static INLINE bool is_intra_mode(PredictionMode mode) {
     return mode < INTRA_MODE_END; // && mode >= INTRA_MODE_START; // mode is always greater than INTRA_MODE_START
 }
+
 static INLINE bool is_inter_mode(PredictionMode mode) {
     return mode >= SINGLE_INTER_MODE_START && mode < COMP_INTER_MODE_END;
 }
+
 static INLINE int32_t is_inter_compound_mode(PredictionMode mode) {
     return mode >= NEAREST_NEARESTMV && mode <= NEW_NEWMV;
 }
+
 static INLINE int is_inter_singleref_mode(PredictionMode mode) {
     return mode >= SINGLE_INTER_MODE_START && mode < SINGLE_INTER_MODE_END;
 }
@@ -1794,6 +1865,7 @@ typedef struct LoopFilterInfoN {
     LoopFilterThresh lfthr[MAX_LOOP_FILTER + 1];
     uint8_t          lvl[MAX_MB_PLANE][MAX_SEGMENTS][2][REF_FRAMES][MAX_MODE_LF_DELTAS];
 } LoopFilterInfoN;
+
 #define CDEF_PRI_STRENGTHS 16
 #define CDEF_SEC_STRENGTHS 4
 // Bits of precision used for the model
@@ -1844,15 +1916,17 @@ typedef struct LoopFilterInfoN {
 
 #define GM_TRANS_MIN -GM_TRANS_MAX
 #define GM_ALPHA_MIN -GM_ALPHA_MAX
-/* clang-format off */
+
 typedef enum TransformationType {
-    IDENTITY = 0,      // identity transformation, 0-parameter
-    TRANSLATION = 1,   // translational motion 2-parameter
-    ROTZOOM = 2,       // simplified affine with rotation + zoom only, 4-parameter
-    AFFINE = 3,        // affine, 6-parameter
+    IDENTITY    = 0, // identity transformation, 0-parameter
+    TRANSLATION = 1, // translational motion 2-parameter
+    ROTZOOM     = 2, // simplified affine with rotation + zoom only, 4-parameter
+    AFFINE      = 3, // affine, 6-parameter
     TRANS_TYPES,
 } TransformationType;
+
 #define MAX_PARAMDIM 6
+
 // The order of values in the wmmat matrix below is best described
 // by the affine transformation:
 //      [x'     (m2 m3 m0   [x
@@ -1860,28 +1934,28 @@ typedef enum TransformationType {
 //       1]       0  0 1)    1]
 typedef struct WarpedMotionParams {
     TransformationType wmtype;
-    int32_t wmmat[MAX_PARAMDIM];
-    int16_t alpha, beta, gamma, delta;
-    int8_t invalid;
+    int32_t            wmmat[MAX_PARAMDIM];
+    int16_t            alpha, beta, gamma, delta;
+    int8_t             invalid;
 } WarpedMotionParams;
 
 /*! Scale factors and scaling function pointers  when reference and current frame dimensions are not equal */
 typedef struct ScaleFactors {
-    int32_t x_scale_fp;  // horizontal fixed point scale factor
-    int32_t y_scale_fp;  // vertical fixed point scale factor
+    int32_t x_scale_fp; // horizontal fixed point scale factor
+    int32_t y_scale_fp; // vertical fixed point scale factor
     int32_t x_step_q4;
     int32_t y_step_q4;
 
-    int32_t(*scale_value_x)(int32_t val, const struct ScaleFactors *sf);
-    int32_t(*scale_value_y)(int32_t val, const struct ScaleFactors *sf);
+    int32_t (*scale_value_x)(int32_t val, const struct ScaleFactors* sf);
+    int32_t (*scale_value_y)(int32_t val, const struct ScaleFactors* sf);
 } ScaleFactors;
 
 /* clang-format off */
 static const WarpedMotionParams default_warp_params = {
     IDENTITY,
-{ 0, 0, (1 << WARPEDMODEL_PREC_BITS), 0, 0, (1 << WARPEDMODEL_PREC_BITS) },
-0, 0, 0, 0,
-0,
+    {0, 0, (1 << WARPEDMODEL_PREC_BITS), 0, 0, (1 << WARPEDMODEL_PREC_BITS)},
+    0, 0, 0, 0,
+    0,
 };
 
 /***********************************    AV1_OBU     ********************************/
@@ -1891,7 +1965,7 @@ static const WarpedMotionParams default_warp_params = {
 
 // ***************************** Definitions *****************************
 
-#define SC_FRAMES_TO_IGNORE     1000 // The speed control algorith starts after SC_FRAMES_TO_IGNORE number frames.
+#define SC_FRAMES_TO_IGNORE         1000 // The speed control algorith starts after SC_FRAMES_TO_IGNORE number frames.
 #define SC_FRAMES_INTERVAL_SPEED      60 // The speed control Interval To Check the speed
 #define SC_FRAMES_INTERVAL_T1         60 // The speed control Interval Threshold1
 #define SC_FRAMES_INTERVAL_T2        180 // The speed control Interval Threshold2
@@ -1922,22 +1996,22 @@ static const WarpedMotionParams default_warp_params = {
 #define ASSERT(exp) ((void)sizeof(exp))
 #endif
 
-#define    ME_FILTER_TAP       4
-#define    SUB_SAD_SEARCH      0
-#define    FULL_SAD_SEARCH     1
+#define ME_FILTER_TAP   4
+#define SUB_SAD_SEARCH  0
+#define FULL_SAD_SEARCH 1
 /************************ INPUT CLASS **************************/
 
-#define EbInputResolution             uint8_t
-typedef enum ResolutionRange
-{
-    INPUT_SIZE_240p_RANGE   = 0,
-    INPUT_SIZE_360p_RANGE   = 1,
-    INPUT_SIZE_480p_RANGE   = 2,
-    INPUT_SIZE_720p_RANGE   = 3,
-    INPUT_SIZE_1080p_RANGE  = 4,
-    INPUT_SIZE_4K_RANGE     = 5,
-    INPUT_SIZE_8K_RANGE     = 6,
-    INPUT_SIZE_COUNT        = 7
+#define EbInputResolution uint8_t
+
+typedef enum ResolutionRange {
+    INPUT_SIZE_240p_RANGE  = 0,
+    INPUT_SIZE_360p_RANGE  = 1,
+    INPUT_SIZE_480p_RANGE  = 2,
+    INPUT_SIZE_720p_RANGE  = 3,
+    INPUT_SIZE_1080p_RANGE = 4,
+    INPUT_SIZE_4K_RANGE    = 5,
+    INPUT_SIZE_8K_RANGE    = 6,
+    INPUT_SIZE_COUNT       = 7
 } ResolutionRange;
 
 /** The EbPtr type is intended to be used to pass pointers to and from the eBrisk
@@ -2195,104 +2269,102 @@ typedef enum {
 
 // Multi-Pass Partitioning Depth(Multi - Pass PD) performs multiple PD stages for the same SB towards 1 final Partitioning Structure
 // As we go from PDn to PDn + 1, the prediction accuracy of the MD feature(s) increases while the number of block(s) decreases
-typedef enum MultiPassPdLevel
-{
+typedef enum MultiPassPdLevel {
     MULTI_PASS_PD_OFF     = 0, // Multi-Pass PD OFF = 1-single PD Pass
     MULTI_PASS_PD_ON      = 1, // Multi-Pass PD ON  = PD0 | PD0_REFINEMENT | PD1
     MULTI_PASS_PD_INVALID = 0, // Invalid Multi-Pass PD Mode
 } MultiPassPdLevel;
-typedef enum RasterScanCuIndex
-{
+
+typedef enum RasterScanCuIndex {
     // 2Nx2N [85 partitions]
-    RASTER_SCAN_CU_INDEX_64x64 = 0,
-    RASTER_SCAN_CU_INDEX_32x32_0 = 1,
-    RASTER_SCAN_CU_INDEX_32x32_1 = 2,
-    RASTER_SCAN_CU_INDEX_32x32_2 = 3,
-    RASTER_SCAN_CU_INDEX_32x32_3 = 4,
-    RASTER_SCAN_CU_INDEX_16x16_0 = 5,
-    RASTER_SCAN_CU_INDEX_16x16_1 = 6,
-    RASTER_SCAN_CU_INDEX_16x16_2 = 7,
-    RASTER_SCAN_CU_INDEX_16x16_3 = 8,
-    RASTER_SCAN_CU_INDEX_16x16_4 = 9,
-    RASTER_SCAN_CU_INDEX_16x16_5 = 10,
-    RASTER_SCAN_CU_INDEX_16x16_6 = 11,
-    RASTER_SCAN_CU_INDEX_16x16_7 = 12,
-    RASTER_SCAN_CU_INDEX_16x16_8 = 13,
-    RASTER_SCAN_CU_INDEX_16x16_9 = 14,
+    RASTER_SCAN_CU_INDEX_64x64    = 0,
+    RASTER_SCAN_CU_INDEX_32x32_0  = 1,
+    RASTER_SCAN_CU_INDEX_32x32_1  = 2,
+    RASTER_SCAN_CU_INDEX_32x32_2  = 3,
+    RASTER_SCAN_CU_INDEX_32x32_3  = 4,
+    RASTER_SCAN_CU_INDEX_16x16_0  = 5,
+    RASTER_SCAN_CU_INDEX_16x16_1  = 6,
+    RASTER_SCAN_CU_INDEX_16x16_2  = 7,
+    RASTER_SCAN_CU_INDEX_16x16_3  = 8,
+    RASTER_SCAN_CU_INDEX_16x16_4  = 9,
+    RASTER_SCAN_CU_INDEX_16x16_5  = 10,
+    RASTER_SCAN_CU_INDEX_16x16_6  = 11,
+    RASTER_SCAN_CU_INDEX_16x16_7  = 12,
+    RASTER_SCAN_CU_INDEX_16x16_8  = 13,
+    RASTER_SCAN_CU_INDEX_16x16_9  = 14,
     RASTER_SCAN_CU_INDEX_16x16_10 = 15,
     RASTER_SCAN_CU_INDEX_16x16_11 = 16,
     RASTER_SCAN_CU_INDEX_16x16_12 = 17,
     RASTER_SCAN_CU_INDEX_16x16_13 = 18,
     RASTER_SCAN_CU_INDEX_16x16_14 = 19,
     RASTER_SCAN_CU_INDEX_16x16_15 = 20,
-    RASTER_SCAN_CU_INDEX_8x8_0 = 21,
-    RASTER_SCAN_CU_INDEX_8x8_1 = 22,
-    RASTER_SCAN_CU_INDEX_8x8_2 = 23,
-    RASTER_SCAN_CU_INDEX_8x8_3 = 24,
-    RASTER_SCAN_CU_INDEX_8x8_4 = 25,
-    RASTER_SCAN_CU_INDEX_8x8_5 = 26,
-    RASTER_SCAN_CU_INDEX_8x8_6 = 27,
-    RASTER_SCAN_CU_INDEX_8x8_7 = 28,
-    RASTER_SCAN_CU_INDEX_8x8_8 = 29,
-    RASTER_SCAN_CU_INDEX_8x8_9 = 30,
-    RASTER_SCAN_CU_INDEX_8x8_10 = 31,
-    RASTER_SCAN_CU_INDEX_8x8_11 = 32,
-    RASTER_SCAN_CU_INDEX_8x8_12 = 33,
-    RASTER_SCAN_CU_INDEX_8x8_13 = 34,
-    RASTER_SCAN_CU_INDEX_8x8_14 = 35,
-    RASTER_SCAN_CU_INDEX_8x8_15 = 36,
-    RASTER_SCAN_CU_INDEX_8x8_16 = 37,
-    RASTER_SCAN_CU_INDEX_8x8_17 = 38,
-    RASTER_SCAN_CU_INDEX_8x8_18 = 39,
-    RASTER_SCAN_CU_INDEX_8x8_19 = 40,
-    RASTER_SCAN_CU_INDEX_8x8_20 = 41,
-    RASTER_SCAN_CU_INDEX_8x8_21 = 42,
-    RASTER_SCAN_CU_INDEX_8x8_22 = 43,
-    RASTER_SCAN_CU_INDEX_8x8_23 = 44,
-    RASTER_SCAN_CU_INDEX_8x8_24 = 45,
-    RASTER_SCAN_CU_INDEX_8x8_25 = 46,
-    RASTER_SCAN_CU_INDEX_8x8_26 = 47,
-    RASTER_SCAN_CU_INDEX_8x8_27 = 48,
-    RASTER_SCAN_CU_INDEX_8x8_28 = 49,
-    RASTER_SCAN_CU_INDEX_8x8_29 = 50,
-    RASTER_SCAN_CU_INDEX_8x8_30 = 51,
-    RASTER_SCAN_CU_INDEX_8x8_31 = 52,
-    RASTER_SCAN_CU_INDEX_8x8_32 = 53,
-    RASTER_SCAN_CU_INDEX_8x8_33 = 54,
-    RASTER_SCAN_CU_INDEX_8x8_34 = 55,
-    RASTER_SCAN_CU_INDEX_8x8_35 = 56,
-    RASTER_SCAN_CU_INDEX_8x8_36 = 57,
-    RASTER_SCAN_CU_INDEX_8x8_37 = 58,
-    RASTER_SCAN_CU_INDEX_8x8_38 = 59,
-    RASTER_SCAN_CU_INDEX_8x8_39 = 60,
-    RASTER_SCAN_CU_INDEX_8x8_40 = 61,
-    RASTER_SCAN_CU_INDEX_8x8_41 = 62,
-    RASTER_SCAN_CU_INDEX_8x8_42 = 63,
-    RASTER_SCAN_CU_INDEX_8x8_43 = 64,
-    RASTER_SCAN_CU_INDEX_8x8_44 = 65,
-    RASTER_SCAN_CU_INDEX_8x8_45 = 66,
-    RASTER_SCAN_CU_INDEX_8x8_46 = 67,
-    RASTER_SCAN_CU_INDEX_8x8_47 = 68,
-    RASTER_SCAN_CU_INDEX_8x8_48 = 69,
-    RASTER_SCAN_CU_INDEX_8x8_49 = 70,
-    RASTER_SCAN_CU_INDEX_8x8_50 = 71,
-    RASTER_SCAN_CU_INDEX_8x8_51 = 72,
-    RASTER_SCAN_CU_INDEX_8x8_52 = 73,
-    RASTER_SCAN_CU_INDEX_8x8_53 = 74,
-    RASTER_SCAN_CU_INDEX_8x8_54 = 75,
-    RASTER_SCAN_CU_INDEX_8x8_55 = 76,
-    RASTER_SCAN_CU_INDEX_8x8_56 = 77,
-    RASTER_SCAN_CU_INDEX_8x8_57 = 78,
-    RASTER_SCAN_CU_INDEX_8x8_58 = 79,
-    RASTER_SCAN_CU_INDEX_8x8_59 = 80,
-    RASTER_SCAN_CU_INDEX_8x8_60 = 81,
-    RASTER_SCAN_CU_INDEX_8x8_61 = 82,
-    RASTER_SCAN_CU_INDEX_8x8_62 = 83,
-    RASTER_SCAN_CU_INDEX_8x8_63 = 84
+    RASTER_SCAN_CU_INDEX_8x8_0    = 21,
+    RASTER_SCAN_CU_INDEX_8x8_1    = 22,
+    RASTER_SCAN_CU_INDEX_8x8_2    = 23,
+    RASTER_SCAN_CU_INDEX_8x8_3    = 24,
+    RASTER_SCAN_CU_INDEX_8x8_4    = 25,
+    RASTER_SCAN_CU_INDEX_8x8_5    = 26,
+    RASTER_SCAN_CU_INDEX_8x8_6    = 27,
+    RASTER_SCAN_CU_INDEX_8x8_7    = 28,
+    RASTER_SCAN_CU_INDEX_8x8_8    = 29,
+    RASTER_SCAN_CU_INDEX_8x8_9    = 30,
+    RASTER_SCAN_CU_INDEX_8x8_10   = 31,
+    RASTER_SCAN_CU_INDEX_8x8_11   = 32,
+    RASTER_SCAN_CU_INDEX_8x8_12   = 33,
+    RASTER_SCAN_CU_INDEX_8x8_13   = 34,
+    RASTER_SCAN_CU_INDEX_8x8_14   = 35,
+    RASTER_SCAN_CU_INDEX_8x8_15   = 36,
+    RASTER_SCAN_CU_INDEX_8x8_16   = 37,
+    RASTER_SCAN_CU_INDEX_8x8_17   = 38,
+    RASTER_SCAN_CU_INDEX_8x8_18   = 39,
+    RASTER_SCAN_CU_INDEX_8x8_19   = 40,
+    RASTER_SCAN_CU_INDEX_8x8_20   = 41,
+    RASTER_SCAN_CU_INDEX_8x8_21   = 42,
+    RASTER_SCAN_CU_INDEX_8x8_22   = 43,
+    RASTER_SCAN_CU_INDEX_8x8_23   = 44,
+    RASTER_SCAN_CU_INDEX_8x8_24   = 45,
+    RASTER_SCAN_CU_INDEX_8x8_25   = 46,
+    RASTER_SCAN_CU_INDEX_8x8_26   = 47,
+    RASTER_SCAN_CU_INDEX_8x8_27   = 48,
+    RASTER_SCAN_CU_INDEX_8x8_28   = 49,
+    RASTER_SCAN_CU_INDEX_8x8_29   = 50,
+    RASTER_SCAN_CU_INDEX_8x8_30   = 51,
+    RASTER_SCAN_CU_INDEX_8x8_31   = 52,
+    RASTER_SCAN_CU_INDEX_8x8_32   = 53,
+    RASTER_SCAN_CU_INDEX_8x8_33   = 54,
+    RASTER_SCAN_CU_INDEX_8x8_34   = 55,
+    RASTER_SCAN_CU_INDEX_8x8_35   = 56,
+    RASTER_SCAN_CU_INDEX_8x8_36   = 57,
+    RASTER_SCAN_CU_INDEX_8x8_37   = 58,
+    RASTER_SCAN_CU_INDEX_8x8_38   = 59,
+    RASTER_SCAN_CU_INDEX_8x8_39   = 60,
+    RASTER_SCAN_CU_INDEX_8x8_40   = 61,
+    RASTER_SCAN_CU_INDEX_8x8_41   = 62,
+    RASTER_SCAN_CU_INDEX_8x8_42   = 63,
+    RASTER_SCAN_CU_INDEX_8x8_43   = 64,
+    RASTER_SCAN_CU_INDEX_8x8_44   = 65,
+    RASTER_SCAN_CU_INDEX_8x8_45   = 66,
+    RASTER_SCAN_CU_INDEX_8x8_46   = 67,
+    RASTER_SCAN_CU_INDEX_8x8_47   = 68,
+    RASTER_SCAN_CU_INDEX_8x8_48   = 69,
+    RASTER_SCAN_CU_INDEX_8x8_49   = 70,
+    RASTER_SCAN_CU_INDEX_8x8_50   = 71,
+    RASTER_SCAN_CU_INDEX_8x8_51   = 72,
+    RASTER_SCAN_CU_INDEX_8x8_52   = 73,
+    RASTER_SCAN_CU_INDEX_8x8_53   = 74,
+    RASTER_SCAN_CU_INDEX_8x8_54   = 75,
+    RASTER_SCAN_CU_INDEX_8x8_55   = 76,
+    RASTER_SCAN_CU_INDEX_8x8_56   = 77,
+    RASTER_SCAN_CU_INDEX_8x8_57   = 78,
+    RASTER_SCAN_CU_INDEX_8x8_58   = 79,
+    RASTER_SCAN_CU_INDEX_8x8_59   = 80,
+    RASTER_SCAN_CU_INDEX_8x8_60   = 81,
+    RASTER_SCAN_CU_INDEX_8x8_61   = 82,
+    RASTER_SCAN_CU_INDEX_8x8_62   = 83,
+    RASTER_SCAN_CU_INDEX_8x8_63   = 84
 } RasterScanCuIndex;
 
-typedef struct StatStruct
-{
+typedef struct StatStruct {
     uint64_t   poc;
     uint64_t   total_num_bits;
     uint8_t    qindex;
@@ -2327,5 +2399,5 @@ typedef enum {
 #ifdef __cplusplus
 }
 #endif
+/* clang-format on */
 #endif // EbDefinitions_h
-/* File EOF */

@@ -2144,4 +2144,5 @@ void svt_aom_setup_common_rtcd_internal(EbCpuFlags flags) {
 
     svt_release_mutex(common_rtcd_init_mutex);
 }
+
 // clang-format on

@@ -18,6 +18,7 @@
 extern "C" {
 #endif
 #include <limits.h>
+
 /****************************
      * UTILITY FUNCTIONS
      ****************************/
@@ -25,6 +26,7 @@ typedef struct BlockList {
     uint8_t  list_size;
     uint16_t blk_mds_table[3]; //stores a max of 3 redundant blocks
 } BlockList_t;
+
 typedef enum GeomIndex {
     GEOM_0, //64x64  ->16x16  NSQ:OFF
     GEOM_1, //64x64  ->16x16  NSQ:ON (only H & V shapes, but not 16x8 and 8x16)
@@ -110,17 +112,20 @@ static const BlockSize ss_size_lookup[BlockSizeS_ALL][2][2] = {
     {{BLOCK_32X8, BLOCK_INVALID}, {BLOCK_16X8, BLOCK_16X4}},
     {{BLOCK_16X64, BLOCK_16X32}, {BLOCK_INVALID, BLOCK_8X32}},
     {{BLOCK_64X16, BLOCK_INVALID}, {BLOCK_32X16, BLOCK_32X8}}};
+
 static INLINE BlockSize get_plane_block_size(BlockSize bsize, int32_t subsampling_x, int32_t subsampling_y) {
-    if (bsize == BLOCK_INVALID)
+    if (bsize == BLOCK_INVALID) {
         return BLOCK_INVALID;
+    }
     return ss_size_lookup[bsize][subsampling_x][subsampling_y];
 }
 
 static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_x, int32_t subsampling_y) {
     const BlockSize plane_bsize = get_plane_block_size(bsize, subsampling_x, subsampling_y);
     TxSize          uv_tx       = TX_INVALID;
-    if (plane_bsize < BlockSizeS_ALL)
+    if (plane_bsize < BlockSizeS_ALL) {
         uv_tx = eb_max_txsize_rect_lookup[plane_bsize];
+    }
     return av1_get_adjusted_tx_size(uv_tx);
 }
 
@@ -183,6 +188,7 @@ static const uint32_t blk32_idx_tab[GEOM_TOT - 1][4] = {{1, 22, 43, 64},
 static INLINE const BlockGeom* get_blk_geom_mds(const BlockGeom* blk_geom_table, uint32_t bidx_mds) {
     return &blk_geom_table[bidx_mds];
 }
+
 uint32_t svt_aom_get_mds_idx(const BlockGeom* blk_geom_table, uint32_t max_block_count, uint32_t orgx, uint32_t orgy,
                              uint32_t size);
 
@@ -197,7 +203,7 @@ typedef struct CodedBlockStats {
     uint8_t parent32x32_index;
 } CodedBlockStats;
 
-extern const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx);
+const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx);
 
 /****************************
      * MACROS
@@ -300,7 +306,9 @@ typedef struct MiniGopStats {
     uint8_t end_index;
     uint8_t length;
 } MiniGopStats;
-extern const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index);
+
+const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index);
+
 typedef enum MinigopIndex {
     L6_INDEX    = 0,
     L5_0_INDEX  = 1,
@@ -334,24 +342,30 @@ typedef enum MinigopIndex {
     L2_14_INDEX = 29,
     L2_15_INDEX = 30
 } MinigopIndex;
+
 // Right shift that replicates gcc's implementation
 
 static inline int gcc_right_shift(int a, unsigned shift) {
-    if (!a)
+    if (!a) {
         return 0;
-    if (a > 0)
+    }
+    if (a > 0) {
         return a >> shift;
+    }
     static const unsigned sbit = 1u << (sizeof(sbit) * CHAR_BIT - 1);
     a                          = (unsigned)a >> shift;
-    while (shift) a |= sbit >> shift--;
+    while (shift) {
+        a |= sbit >> shift--;
+    }
     return a ^ sbit;
 }
 
 static INLINE int convert_to_trans_prec(int allow_hp, int coor) {
-    if (allow_hp)
+    if (allow_hp) {
         return ROUND_POWER_OF_TWO_SIGNED(coor, WARPEDMODEL_PREC_BITS - 3);
-    else
+    } else {
         return ROUND_POWER_OF_TWO_SIGNED(coor, WARPEDMODEL_PREC_BITS - 2) * 2;
+    }
 }
 
 /* Convert Floating Point to Fixed Point example: int32_t val_fp8 = FLOAT2FP(val_float, 8, int32_t) */
