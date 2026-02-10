@@ -881,7 +881,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->scene_change_detection       = 0;
     config_ptr->rate_control_mode            = SVT_AV1_RC_MODE_CQP_OR_CRF;
     config_ptr->look_ahead_distance          = (uint32_t)~0;
-    config_ptr->target_bit_rate              = 2000513;
+    config_ptr->target_bit_rate              = DEFAULT_TBR;
     config_ptr->max_bit_rate                 = 0;
     config_ptr->max_qp_allowed               = 63;
     config_ptr->min_qp_allowed               = MIN_QP_AUTO;

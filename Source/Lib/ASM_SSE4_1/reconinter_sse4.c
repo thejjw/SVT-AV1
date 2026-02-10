@@ -17,7 +17,7 @@
 static INLINE __m128i calc_mask(const __m128i mask_base, const __m128i s0, const __m128i s1) {
     const __m128i diff = _mm_abs_epi16(_mm_sub_epi16(s0, s1));
     return _mm_abs_epi16(_mm_add_epi16(mask_base, _mm_srli_epi16(diff, 4)));
-    // clamp(diff, 0, 64) can be skiped for diff is always in the range ( 38, 54)
+    // clamp(diff, 0, 64) can be skipped for diff is always in the range ( 38, 54)
 }
 
 void svt_av1_build_compound_diffwtd_mask_sse4_1(uint8_t *mask, DIFFWTD_MASK_TYPE mask_type, const uint8_t *src0,

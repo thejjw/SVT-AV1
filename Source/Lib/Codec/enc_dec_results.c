@@ -10,7 +10,6 @@
 */
 
 #include <stdlib.h>
-//#include "definitions.h"
 #include "enc_dec_results.h"
 
 static EbErrorType enc_dec_results_ctor(EncDecResults *context_ptr, EbPtr object_init_data_ptr) {

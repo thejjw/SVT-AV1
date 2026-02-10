@@ -20,6 +20,7 @@
 #include "entropy_coding.h"
 #include "inter_prediction.h"
 #include "aom_dsp_rtcd.h"
+#include "md_process.h"
 
 int  svt_av1_get_spatial_seg_prediction(PictureControlSet *pcs, MacroBlockD *xd, uint32_t blk_org_x, uint32_t blk_org_y,
                                         int *cdf_index);

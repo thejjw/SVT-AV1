@@ -65,7 +65,6 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 #define TPL_DEP_COST_SCALE_LOG2 4
 #define MAX_TX_WEIGHT 500
 #define MAX_TPL_LA_SW MAX_TPL_GROUP_SIZE // Max TPL look ahead sliding window size
-#define DEPTH_PROB_PRECISION 10000
 #define UPDATED_LINKS 100 //max number of pictures a dep-Cnt-cleanUp triggering picture can process
 #define MAX_TILE_CNTS 128 // Annex A.3
 
@@ -274,27 +273,11 @@ typedef struct {
     uint8_t by;
     uint8_t bx;
 } CdefList;
-#define FB_NUM 3 // number of freqiency bands
-#define SSEG_NUM 2 // number of sse_gradient bands
-#define DEPTH_DELTA_NUM 5 // number of depth refinement 0: Pred-2, 1:  Pred-1, 2:  Pred, 3:  Pred+1, 4:  Pred+2,
-#define TXT_DEPTH_DELTA_NUM 3 // negative, pred, positive
-#define UNUSED_HIGH_FREQ_BAND_TH 200
-#define UNUSED_LOW_FREQ_BAND_TH 0
 
 /*!\brief force enum to be unsigned 1 byte*/
 #define UENUM1BYTE(enumvar) \
     ;                       \
     typedef uint8_t enumvar
-
-enum {
-    DIAMOND      = 0,
-    NSTEP        = 1,
-    HEX          = 2,
-    BIGDIA       = 3,
-    SQUARE       = 4,
-    FAST_HEX     = 5,
-    FAST_DIAMOND = 6
-} UENUM1BYTE(SEARCH_METHODS);
 
 enum {
     // No recode.
@@ -319,19 +302,11 @@ enum {
  * FUTURE_WINDOW_WIDTH defined in EbPictureDecisionProcess.c
  */
 #define ALTREF_MAX_NFRAMES 33
-#define ALTREF_MAX_STRENGTH 6
 #define PAD_VALUE (128 + 32)
-#define PAD_VALUE_SCALED (128 + 128 + 32)
-#define NSQ_TAB_SIZE 8
-#define NUMBER_OF_DEPTH 6
-#define NUMBER_OF_SHAPES 10
 #define TF_MAX_EXTENSION 6 // Max additional tf pics after modulation per side
 #define TF_MAX_BASE_REF_PICS 7 // Max tf pics at each side for BASE
 #define TF_MAX_L1_REF_PICS_6L 2 // Max additional tf pics at each side for L1 for 6L hierarchy
 #define TF_MAX_L1_REF_PICS_SUB_6L 1 // Max additional tf pics at each side for L1 for sub-6L hierarchy
-//  Delta QP support
-#define ADD_DELTA_QP_SUPPORT 1 // Add delta QP support
-#define BLOCK_MAX_COUNT_SB_128 4421
 
 #define MAX_TXB_COUNT 16 // Maximum number of transform blocks per depth
 #define MAX_TXB_COUNT_UV 4 // Maximum number of transform blocks per depth for chroma planes
@@ -339,7 +314,6 @@ enum {
 #define ROUND_UV(x) (((x) >> 3) << 3)
 #define SWITCHABLE_FILTER_CONTEXTS ((SWITCHABLE_FILTERS + 1) * 4)
 #define MAX_MB_PLANE 3
-#define CFL_MAX_BlockSize (BLOCK_32X32)
 #define CFL_BUF_LINE (32)
 #define CFL_BUF_LINE_I128 (CFL_BUF_LINE >> 3)
 #define CFL_BUF_LINE_I256 (CFL_BUF_LINE >> 4)
@@ -347,7 +321,6 @@ enum {
 /***********************************    AV1_OBU     ********************************/
 #define INVALID_NEIGHBOR_DATA 0xFFu
 #define CONFIG_BITSTREAM_DEBUG 0
-#define CONFIG_BUFFER_MODEL 1
 #define CONFIG_COEFFICIENT_RANGE_CHECKING 0
 #define CONFIG_ENTROPY_STATS 0
 
@@ -403,7 +376,6 @@ enum {
 // 4 frame filter levels: y plane vertical, y plane horizontal,
 // u plane, and v plane
 #define FRAME_LF_COUNT 4
-#define DEFAULT_DELTA_LF_MULTI 0
 #define MAX_MODE_LF_DELTAS 2
 #define LEVEL_MAJOR_BITS 3
 #define LEVEL_MINOR_BITS 2
@@ -442,11 +414,8 @@ one more than the minimum. */
 // Pad 16 extra bytes to avoid reading overflow in SIMD optimization.
 #define TX_PAD_END 16
 #define TX_PAD_2D ((MAX_TX_SIZE + TX_PAD_HOR) * (MAX_TX_SIZE + TX_PAD_VER) + TX_PAD_END)
-#define COMPOUND_WEIGHT_MODE DIST
 #define DIST_PRECISION_BITS 4
-#define DIST_PRECISION (1 << DIST_PRECISION_BITS) // 16
 
-#define LOOP_FILTER_BITMASK 0
 #define PROFILE_BITS 3
 
 // AV1 Loop Filter
@@ -461,6 +430,10 @@ one more than the minimum. */
 #define SCALE_SUBPEL_MASK (SCALE_SUBPEL_SHIFTS - 1)
 #define SCALE_EXTRA_BITS (SCALE_SUBPEL_BITS - SUBPEL_BITS)
 #define SCALE_EXTRA_OFF ((1 << SCALE_EXTRA_BITS) / 2)
+
+#define LEAST_SQUARES_SAMPLES_MAX_BITS 3
+#define LEAST_SQUARES_SAMPLES_MAX (1 << LEAST_SQUARES_SAMPLES_MAX_BITS)
+#define SAMPLES_ARRAY_SIZE (LEAST_SQUARES_SAMPLES_MAX * 2)
 
 typedef int16_t InterpKernel[SUBPEL_TAPS];
 
@@ -489,7 +462,6 @@ typedef int16_t InterpKernel[SUBPEL_TAPS];
 #define EB_EXTERN
 #endif // __cplusplus
 
-#define RESTRICT
 #ifdef _WIN32
 #define FOPEN(f, s, m) fopen_s(&f, s, m)
 #else
@@ -576,7 +548,6 @@ static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
     mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
 /* clang-format on */
-//#endif  // AOM_PORTS_MEM_OPS_H_
 
 typedef uint16_t ConvBufType;
 
@@ -725,7 +696,6 @@ typedef enum {
     EXTRA_FILTERS      = INTERP_FILTERS_ALL - SWITCHABLE_FILTERS,
 } InterpFilter;
 
-#define AV1_COMMON Av1Common
 enum {
     SPEL_ME, //ME
     SPEL_PME, //PME
@@ -1163,7 +1133,6 @@ typedef enum ATTRIBUTE_PACKED { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } Plane
 
 #define CFL_ALPHABET_SIZE_LOG2 4
 #define CFL_ALPHABET_SIZE (1 << CFL_ALPHABET_SIZE_LOG2)
-#define CFL_MAGS_SIZE ((2 << CFL_ALPHABET_SIZE_LOG2) + 1)
 #define CFL_IDX_U(idx) (idx >> CFL_ALPHABET_SIZE_LOG2)
 #define CFL_IDX_V(idx) (idx & (CFL_ALPHABET_SIZE - 1))
 
@@ -1296,7 +1265,6 @@ typedef enum ATTRIBUTE_PACKED {
     MASKED_COMPOUND_TYPES = 2,
 } CompoundType;
 
-#define COMPOUND_INTRA 4 //just for the decoder
 #define AOM_BLEND_A64_ROUND_BITS 6
 #define AOM_BLEND_A64_MAX_ALPHA (1 << AOM_BLEND_A64_ROUND_BITS) // 64
 
@@ -1311,15 +1279,8 @@ typedef uint16_t CONV_BUF_TYPE;
 #define MAX_WEDGE_SIZE (1 << MAX_WEDGE_SIZE_LOG2)
 #define MAX_WEDGE_SQUARE (MAX_WEDGE_SIZE * MAX_WEDGE_SIZE)
 #define WEDGE_WEIGHT_BITS 6
-#define WEDGE_NONE -1
 #define MASK_PRIMARY_SIZE ((MAX_WEDGE_SIZE) << 1)
 #define MASK_PRIMARY_STRIDE (MASK_PRIMARY_SIZE)
-typedef struct {
-    int enable_order_hint; // 0 - disable order hint, and related tools
-    int order_hint_bits_minus_1; // dist_wtd_comp, ref_frame_mvs,
-    int enable_dist_wtd_comp; // 0 - disable dist-wtd compound modes
-    int enable_ref_frame_mvs; // 0 - disable ref frame mvs
-} OrderHintInfoEnc;
 enum {
     MD_COMP_AVG,
     MD_COMP_DIST,
@@ -1370,8 +1331,6 @@ static const PredictionMode fimode_to_intramode[FILTER_INTRA_MODES] = {DC_PRED, 
 #define COMP_INDEX_CONTEXTS 6
 #define COMP_GROUP_IDX_CONTEXTS 6
 
-#define NMV_CONTEXTS 3
-
 #define NEWMV_MODE_CONTEXTS 6
 #define GLOBALMV_MODE_CONTEXTS 2
 #define REFMV_MODE_CONTEXTS 6
@@ -1392,7 +1351,6 @@ static const PredictionMode fimode_to_intramode[FILTER_INTRA_MODES] = {DC_PRED, 
 #define DEFAULT_DELTA_Q_RES 1
 #define DELTA_LF_SMALL 3
 #define DELTA_LF_PROBS (DELTA_LF_SMALL)
-#define DEFAULT_DELTA_LF_RES 2
 
 /* Segment Feature Masks */
 #define MAX_MV_REF_CANDIDATES 2
@@ -1494,17 +1452,11 @@ typedef enum ATTRIBUTE_PACKED {
 #define CDEF_MAX_STRENGTHS 16
 
 #define UNDISP_QUEUE_SIZE (REF_FRAMES * 10)
-// 4 scratch frames for the new frames to support a maximum of 4 cores decoding
-// in parallel, 3 for scaled references on the encoder.
-#define FRAME_BUFFERS (REF_FRAMES + 7)
 
 /* Constant values while waiting for the sequence header */
 #define FRAME_ID_LENGTH 15
 #define DELTA_FRAME_ID_LENGTH 14
 
-#define FRAME_CONTEXTS (FRAME_BUFFERS + 1)
-// Extra frame context which is always kept at default values
-#define FRAME_CONTEXT_DEFAULTS (FRAME_CONTEXTS - 1)
 #define PRIMARY_REF_BITS 3
 #define PRIMARY_REF_NONE 7
 
@@ -1806,7 +1758,6 @@ typedef enum FrameContextIndex {
 #define NUM_QM_LEVELS (1 << QM_LEVEL_BITS)
 // av1_loopfilter.h
 #define MAX_LOOP_FILTER 63
-#define MAX_SHARPNESS 7
 #define SIMD_WIDTH 16
 
 typedef struct LoopFilter {
@@ -1882,26 +1833,17 @@ typedef struct LoopFilterInfoN {
 #define GM_TRANS_PREC_DIFF (WARPEDMODEL_PREC_BITS - GM_TRANS_PREC_BITS)
 #define GM_TRANS_ONLY_PREC_DIFF (WARPEDMODEL_PREC_BITS - 3)
 #define GM_TRANS_DECODE_FACTOR (1 << GM_TRANS_PREC_DIFF)
-#define GM_TRANS_ONLY_DECODE_FACTOR (1 << GM_TRANS_ONLY_PREC_DIFF)
-#define GM_TRANS_ONLY_PREC_BITS 3
 
 #define GM_ALPHA_PREC_BITS 15
 #define GM_ABS_ALPHA_BITS 12
 #define GM_ALPHA_PREC_DIFF (WARPEDMODEL_PREC_BITS - GM_ALPHA_PREC_BITS)
 #define GM_ALPHA_DECODE_FACTOR (1 << GM_ALPHA_PREC_DIFF)
 
-#define GM_ROW3HOMO_PREC_BITS 16
-#define GM_ABS_ROW3HOMO_BITS 11
-#define GM_ROW3HOMO_PREC_DIFF (WARPEDMODEL_ROW3HOMO_PREC_BITS - GM_ROW3HOMO_PREC_BITS)
-#define GM_ROW3HOMO_DECODE_FACTOR (1 << GM_ROW3HOMO_PREC_DIFF)
-
 #define GM_TRANS_MAX (1 << GM_ABS_TRANS_BITS)
 #define GM_ALPHA_MAX (1 << GM_ABS_ALPHA_BITS)
-#define GM_ROW3HOMO_MAX (1 << GM_ABS_ROW3HOMO_BITS)
 
 #define GM_TRANS_MIN -GM_TRANS_MAX
 #define GM_ALPHA_MIN -GM_ALPHA_MAX
-#define GM_ROW3HOMO_MIN -GM_ROW3HOMO_MAX
 /* clang-format off */
 typedef enum TransformationType {
     IDENTITY = 0,      // identity transformation, 0-parameter
@@ -1949,8 +1891,6 @@ static const WarpedMotionParams default_warp_params = {
 
 // ***************************** Definitions *****************************
 
-#define MAX_BITS_PER_FRAME            8000000
-
 #define SC_FRAMES_TO_IGNORE     1000 // The speed control algorith starts after SC_FRAMES_TO_IGNORE number frames.
 #define SC_FRAMES_INTERVAL_SPEED      60 // The speed control Interval To Check the speed
 #define SC_FRAMES_INTERVAL_T1         60 // The speed control Interval Threshold1
@@ -1958,7 +1898,6 @@ static const WarpedMotionParams default_warp_params = {
 #define SC_FRAMES_INTERVAL_T3        120 // The speed control Interval Threshold3
 
 #define LAST_BWD_FRAME     8
-#define LAST_ALT_FRAME    16
 
 #define MAX_NUM_TOKENS          200
 
@@ -1976,7 +1915,6 @@ static const WarpedMotionParams default_warp_params = {
 /** Redefine ASSERT() to avoid warnings
 */
 #if defined _DEBUG || _DEBUG_
-#include <assert.h>
 #define ASSERT assert
 #elif defined _DEBUG
 #define ASSERT assert
@@ -1987,7 +1925,6 @@ static const WarpedMotionParams default_warp_params = {
 #define    ME_FILTER_TAP       4
 #define    SUB_SAD_SEARCH      0
 #define    FULL_SAD_SEARCH     1
-#define    SSD_SEARCH          2
 /************************ INPUT CLASS **************************/
 
 #define EbInputResolution             uint8_t
@@ -2209,9 +2146,6 @@ void(*error_handler)(
 // Common Macros
 #define UNUSED(x) (void)(x)
 
-//***Profile, tier, level***
-#define TOTAL_LEVEL_COUNT                           13
-
 //***Encoding Parameters***
 
 #define BLOCK_SIZE_64                               64u
@@ -2231,10 +2165,6 @@ void(*error_handler)(
 #define MAX_REF_IDX                                 4
 #define MAX_ELAPSED_IDR_COUNT                       1024
 
-//***Segments***
-#define CU_MAX_COUNT                                85
-
-#define MAX_INTRA_REFERENCE_SAMPLES                 (BLOCK_SIZE_64 << 2) + 1
 
 #define _MVXT(mv)                                   ( (int16_t)((mv) &  0xFFFF) )
 #define _MVYT(mv)                                   ( (int16_t)((mv) >> 16    ) )
@@ -2360,16 +2290,6 @@ typedef enum RasterScanCuIndex
     RASTER_SCAN_CU_INDEX_8x8_62 = 83,
     RASTER_SCAN_CU_INDEX_8x8_63 = 84
 } RasterScanCuIndex;
-
-extern const uint32_t raster_scan_blk_x[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_y[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_size[CU_MAX_COUNT];
-
-extern const uint32_t md_scan_to_raster_scan[CU_MAX_COUNT];
-
-extern const uint32_t raster_scan_blk_parent_index[CU_MAX_COUNT];
 
 typedef struct StatStruct
 {

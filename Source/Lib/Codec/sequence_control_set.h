@@ -28,19 +28,12 @@ typedef enum EncPass {
     ENC_SECOND_PASS, // Second pass of two pass mode
     MAX_ENCODE_PASS = 2,
 } EncPass;
-typedef struct FirstPassControls {
-    uint8_t ds; // use downsampled input (0: no downsample, 1: downsample by 1 in each direction)
-} FirstPassControls;
 
 typedef struct BitstreamLevel {
     uint8_t major;
     uint8_t minor;
 } BitstreamLevel;
 
-typedef struct List0OnlyBase {
-    // Specifies whether to use List1 for BASE frame(s) or not (0: OFF, 1: ON)
-    uint8_t enabled;
-} List0OnlyBase;
 typedef struct QpBasedThScaling {
     bool tf_me_qp_based_th_scaling;
     bool tf_ref_qp_based_th_scaling;
@@ -246,10 +239,11 @@ typedef struct SequenceControlSet {
     int cqp_base_q;
 #endif
     // less than 200 frames or gop_constraint_rc is set, used in VBR and set in multipass encode
-    uint8_t           is_short_clip;
-    uint8_t           passes;
-    FirstPassControls first_pass_ctrls;
-    uint8_t           final_pass_preset;
+    uint8_t is_short_clip;
+    uint8_t passes;
+    // use downsampled input for first pass
+    bool    first_pass_downsample;
+    uint8_t final_pass_preset;
     /* Specifies whether to use 16bit pipeline.
     *
     * 0: 8 bit pipeline.
@@ -300,8 +294,9 @@ typedef struct SequenceControlSet {
     // Desired dimensions for an externally triggered resize
     ResizePendingParams resize_pending_params;
     // Enable low latency KF coding for RTC
-    bool          low_latency_kf;
-    List0OnlyBase list0_only_base_ctrls;
+    bool low_latency_kf;
+    // Specifies whether to use List1 for BASE frame(s) or not
+    bool list0_only_base;
     // Control if feature levels are directly modulated using the sequence QP.
     // 0: No seq QP modulation
     // 1: Enable only high-QP modulation (apply conservative offsets to high QP)

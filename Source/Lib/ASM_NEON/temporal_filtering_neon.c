@@ -140,7 +140,7 @@ static void calculate_squared_errors_sum_2x8x8_no_div_neon(const uint8_t *s, int
 }
 
 static void svt_av1_apply_temporal_filter_planewise_medium_partial_neon(
-    struct MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,
     uint32_t luma_window_error_quad_fp8[4], int is_chroma) {
     unsigned int i, j, k, subblock_idx;
@@ -273,7 +273,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_neon(
 }
 
 void svt_av1_apply_temporal_filter_planewise_medium_neon(
-    struct MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
     const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre, const uint8_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count) {
@@ -753,7 +753,7 @@ static void calculate_squared_errors_sum_2x8xh_no_div_highbd_neon(const uint16_t
 }
 
 static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_neon(
-    struct MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,
     uint32_t luma_window_error_quad_fp8[4], int is_chroma, uint32_t encoder_bit_depth) {
     unsigned int i, j, k, subblock_idx;
@@ -897,7 +897,7 @@ static void apply_filtering_central_loop_hbd(uint16_t w, uint16_t h, uint16_t *s
     }
 }
 
-void svt_aom_apply_filtering_central_neon(struct MeContext *me_ctx, EbPictureBufferDesc *input_picture_ptr_central,
+void svt_aom_apply_filtering_central_neon(MeContext *me_ctx, EbPictureBufferDesc *input_picture_ptr_central,
                                           EbByte *src, uint32_t **accum, uint16_t **count, uint16_t blk_width,
                                           uint16_t blk_height, uint32_t ss_x, uint32_t ss_y) {
     uint16_t src_stride_y = input_picture_ptr_central->stride_y;
@@ -915,10 +915,10 @@ void svt_aom_apply_filtering_central_neon(struct MeContext *me_ctx, EbPictureBuf
     }
 }
 
-void svt_aom_apply_filtering_central_highbd_neon(struct MeContext    *me_ctx,
-                                                 EbPictureBufferDesc *input_picture_ptr_central, uint16_t **src_16bit,
-                                                 uint32_t **accum, uint16_t **count, uint16_t blk_width,
-                                                 uint16_t blk_height, uint32_t ss_x, uint32_t ss_y) {
+void svt_aom_apply_filtering_central_highbd_neon(MeContext *me_ctx, EbPictureBufferDesc *input_picture_ptr_central,
+                                                 uint16_t **src_16bit, uint32_t **accum, uint16_t **count,
+                                                 uint16_t blk_width, uint16_t blk_height, uint32_t ss_x,
+                                                 uint32_t ss_y) {
     uint16_t src_stride_y = input_picture_ptr_central->stride_y;
 
     // Luma
@@ -937,7 +937,7 @@ void svt_aom_apply_filtering_central_highbd_neon(struct MeContext    *me_ctx,
 }
 
 void svt_av1_apply_temporal_filter_planewise_medium_hbd_neon(
-    struct MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
     const uint16_t *u_src, const uint16_t *v_src, int uv_src_stride, const uint16_t *u_pre, const uint16_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count,
@@ -1166,8 +1166,8 @@ int32_t svt_estimate_noise_highbd_fp16_neon(const uint16_t *src, int width, int 
 #endif
 
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_neon(
-    struct MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, unsigned int block_width,
-    unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor_fp16) {
+    MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
+    uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor_fp16) {
     // Decay factors for non-local mean approach.
     // Larger noise -> larger filtering weight.
     int32_t idx_32x32 = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
@@ -1219,7 +1219,7 @@ static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_neon
 }
 
 void svt_av1_apply_zz_based_temporal_filter_planewise_medium_neon(
-    struct MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_pre, const uint8_t *v_pre,
+    MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_pre, const uint8_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count) {
     svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_neon(
@@ -1247,8 +1247,8 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_neon(
 }
 
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_hbd_neon(
-    struct MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, unsigned int block_width,
-    unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor_fp16) {
+    MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
+    uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor_fp16) {
     // Decay factors for non-local mean approach.
     // Larger noise -> larger filtering weight.
     int32_t idx_32x32 = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
@@ -1301,7 +1301,7 @@ static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_hbd_
 }
 
 void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_neon(
-    struct MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, const uint16_t *u_pre, const uint16_t *v_pre,
+    MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, const uint16_t *u_pre, const uint16_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count,
     uint32_t encoder_bit_depth) {

@@ -142,8 +142,8 @@ static INLINE __m128i xx_roundn_epi16(__m128i v_val_d, int32_t bits) {
     return _mm_srai_epi16(v_tmp_d, bits);
 }
 
-// This fucntion will fail gcc Linux ABI build
-// Tunraround is to replace the core of the fucntion in each call
+// This function will fail gcc Linux ABI build
+// Workaround is to replace the core of the function in each call
 
 //static INLINE __m256i yy_roundn_epu16(__m256i v_val_w, int bits) {
 //  const __m256i v_s_w = _mm256_srli_epi16(v_val_w, bits - 1);

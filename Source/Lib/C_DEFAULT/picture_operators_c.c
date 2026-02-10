@@ -15,25 +15,6 @@
 #include "utility.h"
 #include "common_dsp_rtcd.h"
 #include "ac_bias.h"
-/*********************************
-* Picture Average
-*********************************/
-void svt_picture_average_kernel_c(EbByte src0, uint32_t src0_stride, EbByte src1, uint32_t src1_stride, EbByte dst,
-                                  uint32_t dst_stride, uint32_t area_width, uint32_t area_height) {
-    uint32_t x, y;
-
-    for (y = 0; y < area_height; y++) {
-        for (x = 0; x < area_width; x++) { dst[x] = (src0[x] + src1[x] + 1) >> 1; }
-        src0 += src0_stride;
-        src1 += src1_stride;
-        dst += dst_stride;
-    }
-}
-
-void svt_picture_average_kernel1_line_c(EbByte src0, EbByte src1, EbByte dst, uint32_t areaWidth) {
-    uint32_t i;
-    for (i = 0; i < areaWidth; i++) dst[i] = (src0[i] + src1[i] + 1) / 2;
-}
 
 /*********************************
 * Picture Copy Kernel

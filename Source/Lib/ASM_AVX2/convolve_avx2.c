@@ -1241,7 +1241,7 @@ static INLINE __m128i xx_load_128(const void *a) { return _mm_loadu_si128((const
 static INLINE __m256i calc_mask_avx2(const __m256i mask_base, const __m256i s0, const __m256i s1) {
     const __m256i diff = _mm256_abs_epi16(_mm256_sub_epi16(s0, s1));
     return _mm256_abs_epi16(_mm256_add_epi16(mask_base, _mm256_srli_epi16(diff, 4)));
-    // clamp(diff, 0, 64) can be skiped for diff is always in the range ( 38, 54)
+    // clamp(diff, 0, 64) can be skipped for diff is always in the range ( 38, 54)
 }
 void svt_av1_build_compound_diffwtd_mask_highbd_avx2(uint8_t *mask, DIFFWTD_MASK_TYPE mask_type, const uint8_t *src0,
                                                      int src0_stride, const uint8_t *src1, int src1_stride, int h,

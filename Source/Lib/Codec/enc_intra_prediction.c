@@ -511,8 +511,8 @@ void svt_av1_predict_intra_block(
     }
 
     //CHKN BlockSize bsize = mbmi->bsize;
-    struct MacroblockdPlane  pd_s;
-    struct MacroblockdPlane * pd = &pd_s;
+    MacroblockdPlane  pd_s;
+    MacroblockdPlane * pd = &pd_s;
     if (plane == 0)
         pd->subsampling_x = pd->subsampling_y = 0;
     else
@@ -558,17 +558,6 @@ void svt_av1_predict_intra_block(
             tx_size, row_off, col_off, pd->subsampling_x, pd->subsampling_y);
 
     const int32_t disable_edge_filter = !(seq_header_ptr->enable_intra_edge_filter);
-
-    //if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    //  build_intra_predictors_high(
-    //      xd, ref, ref_stride, dst, dst_stride, mode, angle_delta,
-    //      filter_intra_mode, tx_size, disable_edge_filter,
-    //      have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
-    //      have_top_right ? AOMMIN(txwpx, xr) : 0,
-    //      have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
-    //      have_bottom_left ? AOMMIN(txhpx, yd) : 0, plane);
-    //  return;
-    //}
 
     build_intra_predictors(
             xd,
@@ -659,8 +648,8 @@ void svt_av1_predict_intra_block_16bit(
 
     //CHKN BlockSize bsize = mbmi->bsize;
 
-    struct MacroblockdPlane  pd_s;
-    struct MacroblockdPlane * pd = &pd_s;
+    MacroblockdPlane  pd_s;
+    MacroblockdPlane * pd = &pd_s;
     if (plane == 0)
         pd->subsampling_x = pd->subsampling_y = 0;
     else

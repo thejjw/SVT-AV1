@@ -45,12 +45,12 @@ typedef struct svt_mv_cost_param {
     int          early_exit_th;
     // A multiplier used to convert rate to sad cost
     int sad_per_bit;
-} MV_COST_PARAMS;
+} svt_mv_cost_param;
 
 // =============================================================================
 //  Motion Search
 // =============================================================================
-extern struct svt_buf_2d {
+typedef struct svt_buf_2d {
     uint8_t *buf;
     int      width;
     int      height;
@@ -59,10 +59,10 @@ extern struct svt_buf_2d {
 
 typedef struct {
     // The reference buffer
-    struct svt_buf_2d *ref;
+    svt_buf_2d *ref;
 
     // The source and predictors/mask used by translational search
-    struct svt_buf_2d *src;
+    svt_buf_2d *src;
 } MSBuffers;
 // =============================================================================
 //  Subpixel Motion Search
@@ -96,7 +96,7 @@ typedef struct {
     uint8_t           ref_idx;
     SubpelMvLimits    mv_limits;
     // For calculating mv cost
-    MV_COST_PARAMS mv_cost_params;
+    svt_mv_cost_param mv_cost_params;
 
     // Distortion calculation params
     SUBPEL_SEARCH_VAR_PARAMS var_params;
@@ -107,7 +107,7 @@ typedef int(fractional_mv_step_fp)(void *ictx, MacroBlockD *xd, const struct AV1
 extern fractional_mv_step_fp svt_av1_find_best_sub_pixel_tree;
 extern fractional_mv_step_fp svt_av1_find_best_sub_pixel_tree_pruned;
 
-int svt_aom_fp_mv_err_cost(const Mv *mv, const MV_COST_PARAMS *mv_cost_params);
+int svt_aom_fp_mv_err_cost(const Mv *mv, const svt_mv_cost_param *mv_cost_params);
 
 static INLINE void svt_av1_set_subpel_mv_search_range(SubpelMvLimits *subpel_limits, const FullMvLimits *mv_limits,
                                                       const Mv *ref_mv) {

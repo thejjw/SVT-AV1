@@ -98,7 +98,7 @@ EB_API int svt_add_metadata(EbBufferHeaderType *buffer, const uint32_t type, con
     return 0;
 }
 
-EbErrorType svt_aom_copy_metadata_buffer(EbBufferHeaderType *dst, const struct SvtMetadataArray *const src) {
+EbErrorType svt_aom_copy_metadata_buffer(EbBufferHeaderType *dst, const SvtMetadataArrayT *const src) {
     if (!dst || !src)
         return EB_ErrorBadParameter;
     EbErrorType return_error = EB_ErrorNone;

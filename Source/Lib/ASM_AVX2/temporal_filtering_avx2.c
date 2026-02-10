@@ -152,8 +152,8 @@ static void calculate_squared_errors_sum_2x8xh_no_div_highbd_avx2(const uint16_t
     output[1] = _mm_cvtsi128_si32(_mm256_extracti128_si256(sum, 0x1)) >> shift_factor;
 }
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_avx2(
-    struct MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, unsigned int block_width,
-    unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor) {
+    MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
+    uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor) {
     unsigned int i, j, k, subblock_idx;
 
     int32_t  idx_32x32 = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
@@ -205,7 +205,7 @@ static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_avx2
     }
 }
 void svt_av1_apply_zz_based_temporal_filter_planewise_medium_avx2(
-    struct MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_pre, const uint8_t *v_pre,
+    MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_pre, const uint8_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count) {
     svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_avx2(me_ctx,
@@ -238,7 +238,7 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_avx2(
     }
 }
 static void svt_av1_apply_temporal_filter_planewise_medium_partial_avx2(
-    struct MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,
     uint32_t luma_window_error_quad_fp8[4], int is_chroma) {
     unsigned int i, j, k, subblock_idx;
@@ -357,7 +357,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_avx2(
 }
 
 void svt_av1_apply_temporal_filter_planewise_medium_avx2(
-    struct MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
     const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre, const uint8_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count) {
@@ -405,9 +405,8 @@ void svt_av1_apply_temporal_filter_planewise_medium_avx2(
     }
 }
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_partial_avx2(
-    struct MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, unsigned int block_width,
-    unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor,
-    uint32_t encoder_bit_depth) {
+    MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
+    uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor, uint32_t encoder_bit_depth) {
     unsigned int i, j, k, subblock_idx;
 
     int32_t idx_32x32 = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
@@ -463,7 +462,7 @@ static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_partial_
 }
 
 void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_avx2(
-    struct MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, const uint16_t *u_pre, const uint16_t *v_pre,
+    MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, const uint16_t *u_pre, const uint16_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count,
     uint32_t encoder_bit_depth) {
@@ -500,7 +499,7 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_avx2(
 }
 
 static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_avx2(
-    struct MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,
     uint32_t luma_window_error_quad_fp8[4], int is_chroma, uint32_t encoder_bit_depth) {
     unsigned int i, j, k, subblock_idx;
@@ -626,7 +625,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_avx2(
 }
 
 void svt_av1_apply_temporal_filter_planewise_medium_hbd_avx2(
-    struct MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
+    MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
     const uint16_t *u_src, const uint16_t *v_src, int uv_src_stride, const uint16_t *u_pre, const uint16_t *v_pre,
     int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count,
@@ -896,7 +895,7 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t *src, uint16_t width, uint16_
     // v   = 4*E - 2*(D+F+B+H) + (A+C+G+I)
 
     const __m256i zero            = _mm256_setzero_si256();
-    const __m256i edge_treshold   = _mm256_set1_epi16(EDGE_THRESHOLD);
+    const __m256i edge_threshold  = _mm256_set1_epi16(EDGE_THRESHOLD);
     __m256i       num_accumulator = _mm256_setzero_si256();
     __m256i       sum_accumulator = _mm256_setzero_si256();
 
@@ -930,7 +929,7 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t *src, uint16_t width, uint16_
                 _mm256_add_epi16(_mm256_sub_epi16(_mm256_slli_epi16(E, 2), D_F_B_Hx2), A_C_G_I));
 
             //if (ga < EDGE_THRESHOLD)
-            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_treshold, ga_avx), 15);
+            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_threshold, ga_avx), 15);
             v_avx2      = _mm256_mullo_epi16(v_avx2, cmp);
 
             //num_accumulator and sum_accumulator have 32bit values
@@ -988,7 +987,7 @@ int32_t svt_estimate_noise_highbd_fp16_avx2(const uint16_t *src, int width, int 
     // v   = 4*E - 2*(D+F+B+H) + (A+C+G+I)
 
     const __m256i zero            = _mm256_setzero_si256();
-    const __m256i edge_treshold   = _mm256_set1_epi16(EDGE_THRESHOLD);
+    const __m256i edge_threshold  = _mm256_set1_epi16(EDGE_THRESHOLD);
     __m256i       num_accumulator = _mm256_setzero_si256();
     __m256i       sum_accumulator = _mm256_setzero_si256();
     const __m256i rounding        = _mm256_set1_epi16(1 << ((bd - 8) - 1));
@@ -1023,7 +1022,7 @@ int32_t svt_estimate_noise_highbd_fp16_avx2(const uint16_t *src, int width, int 
                 _mm256_add_epi16(_mm256_sub_epi16(_mm256_slli_epi16(E, 2), D_F_B_Hx2), A_C_G_I));
 
             //if (ga < EDGE_THRESHOLD)
-            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_treshold, ga_avx), 15);
+            __m256i cmp = _mm256_srli_epi16(_mm256_cmpgt_epi16(edge_threshold, ga_avx), 15);
             v_avx2      = _mm256_srai_epi16(_mm256_add_epi16(_mm256_mullo_epi16(v_avx2, cmp), rounding), (bd - 8));
 
             //num_accumulator and sum_accumulator have 32bit values

@@ -271,7 +271,7 @@ static uint64_t compute_cdef_dist(const EbByte dst, int32_t doffset, int32_t dst
  * Call cdef_filter_fb() to perform filtering, then compute the MSE for each pair.
 */
 static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uint32_t segment_index) {
-    struct PictureParentControlSet *ppcs     = pcs->ppcs;
+    PictureParentControlSet        *ppcs     = pcs->ppcs;
     FrameHeader                    *frm_hdr  = &ppcs->frm_hdr;
     Av1Common                      *cm       = ppcs->av1_cm;
     const bool                      is_16bit = scs->is_16bit_pipeline;
@@ -314,7 +314,7 @@ static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uin
     int32_t xsize_prev = (1 << MAX_SB_SIZE_LOG2) + 2 * CDEF_HBORDER;
     DECLARE_ALIGNED(32, uint16_t, inbuf[CDEF_INBUF_SIZE]);
     uint16_t *in = inbuf + CDEF_VBORDER * CDEF_BSTRIDE + CDEF_HBORDER;
-    // tmp_dst is uint16_t to accomodate high bit depth content; 8bit will treat it as a uint8_t
+    // tmp_dst is uint16_t to accommodate high bit depth content; 8bit will treat it as a uint8_t
     // buffer and will not use half of the buffer
     DECLARE_ALIGNED(32, uint16_t, tmp_dst[1 << (MAX_SB_SIZE_LOG2 * 2)]);
 

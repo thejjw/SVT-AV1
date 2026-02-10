@@ -125,9 +125,6 @@ typedef struct SwitchFrameCfg {
     EbSFrameMode sframe_mode;
 } SwitchFrameCfg;
 
-#define MAX_GFUBOOST_FACTOR 10.0
-#define MIN_GFUBOOST_FACTOR 4.0
-
 // Function return size of frame stats buffer
 static INLINE int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
     /* if lookahead is enabled return num_lap_buffers else num_lag_buffers */

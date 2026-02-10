@@ -90,7 +90,7 @@ void init_fn_ptr(void) {
 #endif
 }
 
-static INLINE const uint8_t *get_buf_from_mv(const struct Buf2D *buf, const Mv *mv) {
+static INLINE const uint8_t *get_buf_from_mv(const Buf2D *buf, const Mv *mv) {
     return &buf->buf[mv->y * buf->stride + mv->x];
 }
 
@@ -187,10 +187,10 @@ static INLINE int is_mv_in(const MvLimits *mv_limits, const Mv *mv) {
 
 int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv *center_mv, const AomVarianceFnPtr *vfp,
                            int use_mvcost) {
-    const struct Buf2D *const what    = &x->plane[0].src;
-    const struct Buf2D *const in_what = &x->xdplane[0].pre[0];
-    const Mv                  mv      = {{best_mv->x * 8, best_mv->y * 8}};
-    unsigned int              unused;
+    const Buf2D *const what    = &x->plane[0].src;
+    const Buf2D *const in_what = &x->xdplane[0].pre[0];
+    const Mv           mv      = {{best_mv->x * 8, best_mv->y * 8}};
+    unsigned int       unused;
     if (x->approx_inter_rate)
         return vfp->vf(what->buf, what->stride, get_buf_from_mv(in_what, best_mv), in_what->stride, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost_light(&mv, center_mv) : 0);
@@ -199,12 +199,12 @@ int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv 
             (use_mvcost ? svt_aom_mv_err_cost(&mv, center_mv, x->nmv_vec_cost, x->mv_cost_stack, x->errorperbit) : 0);
 }
 
-// Exhuastive motion search around a given centre position with a given
+// Exhaustive motion search around a given centre position with a given
 // step size.
-static int exhuastive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
+static int exhaustive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
                                   const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
-    const struct Buf2D *const what       = &x->plane[0].src;
-    const struct Buf2D *const in_what    = &x->xdplane[0].pre[0];
+    const Buf2D *const        what       = &x->plane[0].src;
+    const Buf2D *const        in_what    = &x->xdplane[0].pre[0];
     Mv                        fcenter_mv = {.as_int = center_mv->as_int};
     unsigned int              best_sad   = INT_MAX;
     int                       r, c, i;
@@ -412,12 +412,12 @@ int svt_av1_diamond_search_sad_c(IntraBcContext *x, const SearchSiteConfig *cfg,
 
 static int svt_av1_refining_search_sad(IntraBcContext *x, Mv *ref_mv, int error_per_bit, int search_range,
                                        const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
-    const Mv                  neighbors[4] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}};
-    const struct Buf2D *const what         = &x->plane[0].src;
-    const struct Buf2D *const in_what      = &x->xdplane[0].pre[0];
-    const Mv                  fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
-    const uint8_t            *best_address = get_buf_from_mv(in_what, ref_mv);
-    unsigned int              best_sad     = fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
+    const Mv           neighbors[4] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}};
+    const Buf2D *const what         = &x->plane[0].src;
+    const Buf2D *const in_what      = &x->xdplane[0].pre[0];
+    const Mv           fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
+    const uint8_t     *best_address = get_buf_from_mv(in_what, ref_mv);
+    unsigned int       best_sad     = fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
         mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
     for (int i = 0; i < search_range; i++) {
         int       best_site = -1;
@@ -556,9 +556,6 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
     int                        range    = sf->mesh_patterns[0].range;
     int                        baseline_interval_divisor;
 
-    // Keep track of number of exhaustive calls (this frame in this thread).
-    //CHKN if (x->ex_search_count_ptr != NULL) ++(*x->ex_search_count_ptr);
-
     // Trap illegal values for interval and range for this function.
     if ((range < MIN_RANGE) || (range > MAX_RANGE) || (interval < MIN_INTERVAL) || (interval > range))
         return INT_MAX;
@@ -572,14 +569,14 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
     interval = AOMMAX(interval, range / baseline_interval_divisor);
 
     // initial search
-    bestsme = exhuastive_mesh_search(x, &f_ref_mv, &temp_mv, range, interval, sadpb, fn_ptr, &temp_mv);
+    bestsme = exhaustive_mesh_search(x, &f_ref_mv, &temp_mv, range, interval, sadpb, fn_ptr, &temp_mv);
 
     if ((interval > MIN_INTERVAL) && (range > MIN_RANGE)) {
         // Progressive searches with range and step size decreasing each time
         // till we reach a step size of 1. Then break out.
         for (int i = 1; i < MAX_MESH_STEP; ++i) {
             // First pass with coarser step and longer range
-            bestsme = exhuastive_mesh_search(x,
+            bestsme = exhaustive_mesh_search(x,
                                              &f_ref_mv,
                                              &temp_mv,
                                              sf->mesh_patterns[i].range,
@@ -607,24 +604,23 @@ static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, cons
 #if CONFIG_ENABLE_OBMC
 static int get_obmc_mvpred_var(const IntraBcContext *x, const int32_t *wsrc, const int32_t *mask, const Mv *best_mv,
                                const Mv *center_mv, const AomVarianceFnPtr *vfp, int use_mvcost, int is_second) {
-    const struct Buf2D *in_what = (const struct Buf2D *)(&x->xdplane[0].pre[is_second]);
-    const Mv            mv      = {{best_mv->x * 8, best_mv->y * 8}};
-    unsigned int        unused;
+    const Buf2D *in_what = (const Buf2D *)(&x->xdplane[0].pre[is_second]);
+    const Mv     mv      = {{best_mv->x * 8, best_mv->y * 8}};
+    unsigned int unused;
     if (x->approx_inter_rate)
-        return vfp->ovf(get_buf_from_mv((const struct Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
+        return vfp->ovf(get_buf_from_mv((const Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost_light(&mv, center_mv) : 0);
     else
-        return vfp->ovf(get_buf_from_mv((const struct Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
+        return vfp->ovf(get_buf_from_mv((const Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost(&mv, center_mv, x->nmv_vec_cost, x->mv_cost_stack, x->errorperbit) : 0);
 }
 static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc, const int32_t *mask, Mv *ref_mv,
                                     int error_per_bit, int search_range, const AomVarianceFnPtr *fn_ptr,
                                     const Mv *center_mv, int is_second, uint8_t search_diag) {
-    const Mv neighbors[8] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
-    const struct Buf2D *in_what    = (const struct Buf2D *)(&x->xdplane[0].pre[is_second]);
-    const Mv            fcenter_mv = {{center_mv->x >> 3, center_mv->y >> 3}};
-    unsigned int        best_sad   = fn_ptr->osdf(
-                                get_buf_from_mv((const struct Buf2D *)in_what, ref_mv), in_what->stride, wsrc, mask) +
+    const Mv     neighbors[8] = {{{0, -1}}, {{-1, 0}}, {{1, 0}}, {{0, 1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
+    const Buf2D *in_what      = (const Buf2D *)(&x->xdplane[0].pre[is_second]);
+    const Mv     fcenter_mv   = {{center_mv->x >> 3, center_mv->y >> 3}};
+    unsigned int best_sad = fn_ptr->osdf(get_buf_from_mv((const Buf2D *)in_what, ref_mv), in_what->stride, wsrc, mask) +
         mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
     int i, j;
 
@@ -635,7 +631,7 @@ static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc
             const Mv mv = {{ref_mv->x + neighbors[j].x, ref_mv->y + neighbors[j].y}};
             if (is_mv_in(&x->mv_limits, &mv)) {
                 unsigned int sad = fn_ptr->osdf(
-                    get_buf_from_mv((const struct Buf2D *)in_what, &mv), in_what->stride, wsrc, mask);
+                    get_buf_from_mv((const Buf2D *)in_what, &mv), in_what->stride, wsrc, mask);
                 if (sad < best_sad) {
                     sad += mvsad_err_cost(x, &mv, &fcenter_mv, error_per_bit);
                     if (sad < best_sad) {
@@ -656,7 +652,7 @@ static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc
     return best_sad;
 }
 
-int svt_av1_obmc_full_pixel_search(struct ModeDecisionContext *ctx, IntraBcContext *x, const Mv *mvp_full, int sadpb,
+int svt_av1_obmc_full_pixel_search(ModeDecisionContext *ctx, IntraBcContext *x, const Mv *mvp_full, int sadpb,
                                    const AomVarianceFnPtr *fn_ptr, const Mv *ref_mv, Mv *dst_mv, int is_second) {
     // obmc_full_pixel_diamond does not provide BDR gain on 360p
     const int32_t *wsrc         = ctx->wsrc_buf;
@@ -791,7 +787,7 @@ static unsigned int setup_obmc_center_error(const int32_t *mask, const Mv *bestm
         if (br0 != br || bc0 != bc)                          \
             CHECK_BETTER##k(second, br0 + kr, bc0 + kc, lp); \
     } while (0)
-static int upsampled_obmc_pref_error(MacroBlockD *xd, const AV1_COMMON *const cm, int mi_row, int mi_col,
+static int upsampled_obmc_pref_error(MacroBlockD *xd, const Av1Common *const cm, int mi_row, int mi_col,
                                      const Mv *const mv, const int32_t *mask, const AomVarianceFnPtr *vfp,
                                      const int32_t *const wsrc, const uint8_t *const y, int y_stride, int subpel_x_q3,
                                      int subpel_y_q3, int w, int h, unsigned int *sse, int subpel_search) {
@@ -853,7 +849,7 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
     return buf + offset;
 }
 
-int svt_av1_find_best_obmc_sub_pixel_tree_up(struct ModeDecisionContext *ctx, IntraBcContext *x,
+int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext *ctx, IntraBcContext *x,
                                              const struct Av1Common *const cm, int mi_row, int mi_col, Mv *bestmv,
                                              const Mv *ref_mv, int allow_hp, int error_per_bit,
                                              const AomVarianceFnPtr *vfp, int forced_stop, int iters_per_step,
@@ -1027,12 +1023,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(struct ModeDecisionContext *ctx, In
 #endif
 
 int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSize bsize, Mv *mvp_full, int step_param,
-                              int method, int run_mesh_search, int error_per_bit, int *cost_list, const Mv *ref_mv,
-                              int var_max, int rd, int x_pos, int y_pos, int intra) {
-    UNUSED(run_mesh_search);
-    UNUSED(var_max);
-    UNUSED(rd);
-
+                              int error_per_bit, int *cost_list, const Mv *ref_mv, int x_pos, int y_pos, int intra) {
     int32_t ibc_shift = 0;
     //IBC Modes:   0: OFF 1:Slow   2:Faster   3:Fastest
     ibc_shift = pcs->ppcs->intraBC_ctrls.ibc_shift;
@@ -1050,67 +1041,28 @@ int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSi
         cost_list[4] = INT_MAX;
     }
 
-    // Keep track of number of searches (this frame in this thread).
-    //if (x->m_search_count_ptr != NULL) ++(*x->m_search_count_ptr);
+    var = full_pixel_diamond(
+        pcs, x, mvp_full, step_param, error_per_bit, MAX_MVSEARCH_STEPS - 1 - step_param, 1, cost_list, fn_ptr, ref_mv);
 
-    switch (method) {
-    case FAST_DIAMOND:
-        //var = fast_dia_search(x, mvp_full, step_param, error_per_bit, 0,
-        //                      cost_list, fn_ptr, 1, ref_mv);
-        break;
-    case FAST_HEX:
-        //var = fast_hex_search(x, mvp_full, step_param, error_per_bit, 0,
-        //                      cost_list, fn_ptr, 1, ref_mv);
-        break;
-    case HEX:
-        //var = av1_hex_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                     fn_ptr, 1, ref_mv);
-        break;
-    case SQUARE:
-        //var = square_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                    fn_ptr, 1, ref_mv);
-        break;
-    case BIGDIA:
-        //var = bigdia_search(x, mvp_full, step_param, error_per_bit, 1, cost_list,
-        //                    fn_ptr, 1, ref_mv);
-        break;
-    case NSTEP:
-        var = full_pixel_diamond(pcs,
-                                 x,
-                                 mvp_full,
-                                 step_param,
-                                 error_per_bit,
-                                 MAX_MVSEARCH_STEPS - 1 - step_param,
-                                 1,
-                                 cost_list,
-                                 fn_ptr,
-                                 ref_mv);
+    if (x->is_exhaustive_allowed) {
+        int exhaustive_thr = sf->exhaustive_searches_thresh;
+        exhaustive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
 
-        if (x->is_exhaustive_allowed) {
-            int exhuastive_thr = sf->exhaustive_searches_thresh;
-            exhuastive_thr >>= 10 - (mi_size_wide_log2[bsize] + mi_size_high_log2[bsize]);
+        exhaustive_thr = exhaustive_thr << ibc_shift;
 
-            exhuastive_thr = exhuastive_thr << ibc_shift;
+        if (var > exhaustive_thr) {
+            int var_ex;
+            Mv  tmp_mv_ex;
+            var_ex = full_pixel_exhaustive(pcs, x, &x->best_mv, error_per_bit, cost_list, fn_ptr, ref_mv, &tmp_mv_ex);
 
-            if (var > exhuastive_thr) {
-                int var_ex;
-                Mv  tmp_mv_ex;
-                var_ex = full_pixel_exhaustive(
-                    pcs, x, &x->best_mv, error_per_bit, cost_list, fn_ptr, ref_mv, &tmp_mv_ex);
-
-                if (var_ex < var) {
-                    var        = var_ex;
-                    x->best_mv = tmp_mv_ex;
-                }
+            if (var_ex < var) {
+                var        = var_ex;
+                x->best_mv = tmp_mv_ex;
             }
         }
-        break;
-    default: assert(0 && "Invalid search method.");
     }
 
     do {
-        //CHKN if (!intra || !av1_use_hash_me(&cpi->common)) break;
-
         // already single ME
         // get block size and original buffer of current block
         const int block_height = block_size_high[bsize];
@@ -1170,5 +1122,5 @@ int svt_av1_full_pixel_search(PictureControlSet *pcs, IntraBcContext *x, BlockSi
         }
     } while (0);
 
-    return 0; //CHKN  var;
+    return 0;
 }

@@ -735,7 +735,7 @@ static void pad_2b_compressed_input_picture(uint8_t *src_pic, uint32_t src_strid
  ************************************************/
 void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlSet  *scs,
                                                                 EbPictureBufferDesc *input_pic) {
-    bool is16_bit_input = (bool)(scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
+    bool is16_bit_input = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
 
     uint32_t       color_format  = input_pic->color_format;
     const uint16_t subsampling_x = (color_format == EB_YUV444 ? 0 : 1);

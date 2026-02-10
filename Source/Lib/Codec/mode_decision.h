@@ -17,7 +17,6 @@
 #include "pcs.h"
 #include "coding_unit.h"
 #include "pic_buffer_desc.h"
-#include "adaptive_mv_pred.h"
 #include "pic_operators.h"
 #include "neighbor_arrays.h"
 #include "object.h"
@@ -25,7 +24,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define ENABLE_AMVP_MV_FOR_RC_PU 0
 #define MAX_MB_PLANE 3
 #define MAX_MPM_CANDIDATES 3
 #define MERGE_PENALTY 10
@@ -41,7 +39,6 @@ typedef struct WarpSampleInfo {
     int pts_inref[SAMPLES_ARRAY_SIZE];
 } WarpSampleInfo;
 // Create incomplete struct definition for the following function pointer typedefs
-struct ModeDecisionCandidateBuffer;
 struct ModeDecisionContext;
 
 /**************************************
@@ -61,32 +58,6 @@ typedef struct ModeDecisionCandidate {
     bool      skip_mode_allowed;
     uint8_t   drl_index;
 } ModeDecisionCandidate;
-
-/**************************************
- * Function Ptrs Definitions
- **************************************/
-typedef EbErrorType (*EbPredictionFunc)(uint8_t hbd_md, struct ModeDecisionContext *ctx, PictureControlSet *pcs,
-                                        struct ModeDecisionCandidateBuffer *cand_bf);
-typedef uint64_t (*EbFastCostFunc)(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
-                                   struct ModeDecisionCandidateBuffer *cand_bf, uint64_t lambda,
-                                   uint64_t luma_distortion);
-typedef EbErrorType (*EbAv1FullCostFunc)(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
-                                         struct ModeDecisionCandidateBuffer *cand_bf, BlkStruct *blk_ptr,
-                                         uint64_t y_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
-                                         uint64_t cb_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
-                                         uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t lambda,
-                                         uint64_t *y_coeff_bits, uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits,
-                                         BlockSize bsize);
-/**************************************
-    * Mode Decision Candidate Buffer
-    **************************************/
-typedef struct IntraChromacand_bf {
-    uint32_t             mode;
-    uint64_t             cost;
-    uint64_t             distortion;
-    EbPictureBufferDesc *prediction_ptr;
-    EbPictureBufferDesc *residual_ptr;
-} IntraChromacand_bf;
 
 /**************************************
     * Mode Decision Candidate Buffer
@@ -124,6 +95,21 @@ typedef struct ModeDecisionCandidateBuffer {
     // The prediction of SIMPLE_TRANSLATION is not valid when OBMC face-off is used (where OBMC will re-use the pred buffer of SIMPLE_TRANSLATION)
     bool valid_luma_pred;
 } ModeDecisionCandidateBuffer;
+
+/**************************************
+ * Function Ptrs Definitions
+ **************************************/
+typedef EbErrorType (*EbPredictionFunc)(uint8_t hbd_md, struct ModeDecisionContext *ctx, PictureControlSet *pcs,
+                                        ModeDecisionCandidateBuffer *cand_bf);
+typedef uint64_t (*EbFastCostFunc)(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
+                                   ModeDecisionCandidateBuffer *cand_bf, uint64_t lambda, uint64_t luma_distortion);
+typedef EbErrorType (*EbAv1FullCostFunc)(PictureControlSet *pcs, struct ModeDecisionContext *ctx,
+                                         ModeDecisionCandidateBuffer *cand_bf, BlkStruct *blk_ptr,
+                                         uint64_t y_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
+                                         uint64_t cb_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
+                                         uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t lambda,
+                                         uint64_t *y_coeff_bits, uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits,
+                                         BlockSize bsize);
 
 /**************************************
     * Extern Function Declarations

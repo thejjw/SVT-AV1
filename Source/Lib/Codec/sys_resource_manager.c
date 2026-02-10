@@ -378,7 +378,7 @@ typedef struct DctorAble {
 void svt_object_wrapper_dctor(EbPtr p) {
     EbObjectWrapper *wrapper = (EbObjectWrapper *)p;
     if (wrapper->object_destroyer) {
-        //customized destoryer
+        //customized destroyer
         if (wrapper->object_ptr)
             wrapper->object_destroyer(wrapper->object_ptr);
     } else {

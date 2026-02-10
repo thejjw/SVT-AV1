@@ -18,7 +18,6 @@
 #include "pic_buffer_desc.h"
 #include "coding_unit.h"
 #include "ec_object.h"
-#include "definitions.h"
 #include "pred_structure.h"
 #include "neighbor_arrays.h"
 #include "enc_dec_segments.h"
@@ -108,11 +107,11 @@ typedef struct Dequants {
 
 typedef struct MacroblockdPlane {
     // TranLow *dqcoeff;
-    PlaneType    plane_type;
-    int32_t      subsampling_x;
-    int32_t      subsampling_y;
-    struct Buf2D dst;
-    int32_t      is_16bit;
+    PlaneType plane_type;
+    int32_t   subsampling_x;
+    int32_t   subsampling_y;
+    Buf2D     dst;
+    int32_t   is_16bit;
 } MacroblockdPlane;
 
 /**************************************
@@ -386,7 +385,6 @@ typedef struct B64Geom {
     uint8_t  width;
     uint8_t  height;
     uint8_t  is_complete_b64;
-    bool     raster_scan_blk_validity[CU_MAX_COUNT];
 } B64Geom;
 
 typedef struct SbGeom {
@@ -521,7 +519,6 @@ typedef struct GmControls {
 } GmControls;
 typedef struct CdefSearchControls {
     uint8_t enabled;
-    uint8_t number_of_prim_in_second_loop[2];
     // Number of primary filters considered in the first pass. (luma and chroma)
     uint8_t first_pass_fs_num;
     // Primary filter strengths to consider in the first pass.
@@ -610,7 +607,7 @@ typedef struct PaletteCtrls {
 } PaletteCtrls;
 
 /*!
- * \brief The stucture of Cyclic_Refresh.
+ * \brief The structure of Cyclic_Refresh.
  * \ingroup cyclic_refresh
  */
 typedef struct CyclicRefresh {
@@ -901,15 +898,10 @@ typedef struct PictureParentControlSet {
     // Resolution of delta quant
     // int32_t delta_q_res;
     int32_t            allow_comp_inter_inter;
-    int16_t            pan_mvx;
-    int16_t            pan_mvy;
-    int16_t            tilt_mvx;
-    int16_t            tilt_mvy;
     WarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
     PictureControlSet *child_pcs;
     EncDecSet         *enc_dec_ptr;
     Macroblock        *av1x;
-    int32_t            film_grain_params_present; // todo (AN): Do we need this flag at picture level?
     int8_t             cdef_level;
     bool               enable_restoration; // true if restoration filtering is enabled for the current frame
 
@@ -943,7 +935,6 @@ typedef struct PictureParentControlSet {
     uint16_t                        save_source_picture_height;
     EbHandle                        temp_filt_done_semaphore;
     EbHandle                        temp_filt_mutex;
-    EbHandle                        debug_mutex;
 
     uint8_t  temp_filt_prep_done;
     uint16_t temp_filt_seg_acc;
@@ -958,7 +949,6 @@ typedef struct PictureParentControlSet {
     uint8_t     past_altref_nframes;
     uint8_t     future_altref_nframes;
     bool        do_tf;
-    uint64_t    filtered_sse_uv;
     FrameHeader frm_hdr;
     uint16_t   *altref_buffer_highbd[3];
     uint8_t     pic_obmc_level;
@@ -1060,8 +1050,6 @@ typedef struct PictureParentControlSet {
     int this_frame_target; // Actual frame target after rc adjustment.
     int projected_frame_size;
     int max_frame_size;
-    int frames_to_key;
-    int frames_since_key;
     int top_index;
     int bottom_index;
     // stores gf group (minigop) length
@@ -1112,7 +1100,6 @@ typedef struct TplDispResults {
     EbDctor                  dctor;
     EbObjectWrapper         *pcs_wrapper;
     uint32_t                 frame_index;
-    EbFifo                  *sbo_feedback_fifo_ptr;
     uint32_t                 input_type;
     int16_t                  enc_dec_segment_row;
     uint16_t                 tile_group_index;
@@ -1131,7 +1118,6 @@ typedef struct PictureControlSetInitData {
     EbBitDepth    bit_depth;
     EbColorFormat color_format;
     uint32_t      b64_size;
-    uint8_t       cfg_palette;
     // since we still have lot of code assuming 64x64 SB, we add a new paramter supporting
     // both128x128 and 64x64, ultimately the fixed code supporting 64x64 should be upgraded to use
     // 128x128 and sb_size could be removed.
@@ -1140,7 +1126,6 @@ typedef struct PictureControlSetInitData {
     uint16_t                 enc_dec_segment_row;
     EncMode                  enc_mode;
     EbSvtAv1EncConfiguration static_config;
-    uint8_t                  speed_control;
     int8_t                   hbd_md;
     uint8_t                  mfmv;
     // init value for child pcs
@@ -1159,7 +1144,6 @@ typedef struct PictureControlSetInitData {
     uint16_t   non_m8_pad_h;
     uint8_t    enable_tpl_la;
     uint8_t    tpl_synth_size;
-    uint32_t   rate_control_mode;
     Av1Common *av1_cm;
     uint8_t    ref_count_used_list0;
     uint8_t    ref_count_used_list1;
@@ -1167,20 +1151,13 @@ typedef struct PictureControlSetInitData {
     uint8_t aq_mode;
     uint8_t calc_hist;
     uint8_t tpl_lad_mg;
-    uint8_t final_pass_preset;
     uint8_t input_resolution;
     uint8_t calculate_variance;
     bool    is_scale;
     bool    rtc_tune;
-    bool    enable_variance_boost;
-    uint8_t variance_boost_strength;
     uint8_t variance_octile;
-    uint8_t tf_strength;
     bool    allintra;
-    uint8_t qp_scale_compress_strength;
     bool    adaptive_film_grain;
-    uint8_t max_tx_size;
-    double  ac_bias;
     bool    use_flat_ipp;
 } PictureControlSetInitData;
 

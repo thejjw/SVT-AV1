@@ -30,10 +30,6 @@ extern "C" {
      **************************************/
 extern EbHandle svt_create_thread(void *thread_function(void *), void *thread_context);
 
-extern EbErrorType svt_start_thread(EbHandle thread_handle);
-
-extern EbErrorType svt_stop_thread(EbHandle thread_handle);
-
 extern EbErrorType svt_destroy_thread(EbHandle thread_handle);
 
 /**************************************

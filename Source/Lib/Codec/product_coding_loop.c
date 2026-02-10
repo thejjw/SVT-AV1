@@ -40,6 +40,8 @@
 #include "inter_prediction.h"
 #include "enc_intra_prediction.h"
 #include "mode_decision.h"
+#include "adaptive_mv_pred.h"
+
 #define INIT_BIT_EST 6000
 #define DIVIDE_AND_ROUND(x, y) (((x) + ((y) >> 1)) / (y))
 void     svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureControlSet *pcs,
@@ -47,8 +49,7 @@ void     svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom
 uint64_t svt_spatial_full_distortion_ssim_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_stride,
                                                  uint8_t *recon, int32_t recon_offset, uint32_t recon_stride,
                                                  uint32_t area_width, uint32_t area_height, bool hbd, double ac_bias);
-void     aom_av1_set_ssim_rdmult(struct ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row,
-                                 const int mi_col);
+void     aom_av1_set_ssim_rdmult(ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row, const int mi_col);
 
 extern IntraSize              svt_aom_intra_unit[];
 static const EbPredictionFunc product_prediction_fun_table_light_pd0[2] = {svt_av1_intra_prediction,
@@ -1345,7 +1346,7 @@ void set_md_stage_counts(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     ctx->bypass_md_stage_2 = (ctx->nic_ctrls.md_staging_mode == MD_STAGING_MODE_2) ? false : true;
 }
 static void sort_fast_cost_based_candidates(
-    struct ModeDecisionContext *ctx, uint32_t input_buffer_start_idx,
+    ModeDecisionContext *ctx, uint32_t input_buffer_start_idx,
     uint32_t  input_buffer_count, //how many cand buffers to sort. one of the buffer can have max cost.
     uint32_t *cand_buff_indices) {
     ModeDecisionCandidateBuffer **buffer_ptr_array     = ctx->cand_bf_ptr_array;
@@ -1366,7 +1367,7 @@ static void sort_fast_cost_based_candidates(
         }
     }
 }
-void sort_full_cost_based_candidates(struct ModeDecisionContext *ctx, uint32_t num_of_cand_to_sort,
+void sort_full_cost_based_candidates(ModeDecisionContext *ctx, uint32_t num_of_cand_to_sort,
                                      uint32_t *cand_buff_indices) {
     uint32_t                      i, j, index;
     ModeDecisionCandidateBuffer **buffer_ptr_array = ctx->cand_bf_ptr_array;
@@ -1382,8 +1383,8 @@ void sort_full_cost_based_candidates(struct ModeDecisionContext *ctx, uint32_t n
     }
 }
 static void construct_best_sorted_arrays_md_stage_3(
-    struct ModeDecisionContext *ctx,
-    uint32_t                   *best_candidate_index_array) { //best = union from all classes
+    ModeDecisionContext *ctx,
+    uint32_t            *best_candidate_index_array) { //best = union from all classes
 
     uint32_t best_candi = 0;
     for (CandClass class_i = CAND_CLASS_0; class_i < CAND_CLASS_TOTAL; class_i++)
@@ -1396,9 +1397,8 @@ static void construct_best_sorted_arrays_md_stage_3(
 independent chroma search is set to be performed before the last MD stage.
 
 The chroma search may be skipped if there are no intra candidates, or based on speed features.*/
-static bool perform_ind_uv_search_last_mds(struct ModeDecisionContext   *ctx,
-                                           ModeDecisionCandidateBuffer **buffer_ptr_array,
-                                           uint32_t                     *best_cand_idx_array) {
+static bool perform_ind_uv_search_last_mds(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer **buffer_ptr_array,
+                                           uint32_t *best_cand_idx_array) {
     const uint32_t mds3_cand_count  = ctx->md_stage_3_total_count;
     uint16_t       mds3_intra_count = 0;
     uint64_t       best_intra_cost  = MAX_MODE_COST;
@@ -1678,13 +1678,13 @@ static void md_stage_0(PictureControlSet *pcs, ModeDecisionContext *ctx,
     // Set the cost of the scratch candidate to max to get discarded @ the sorting phase
     *(cand_bf_ptr_array_base[highest_cost_index]->fast_cost) = MAX_CU_COST;
 }
-void svt_pme_sad_loop_kernel_c(const struct svt_mv_cost_param *mv_cost_params,
-                               uint8_t                        *src, // input parameter, source samples Ptr
-                               uint32_t                        src_stride, // input parameter, source stride
-                               uint8_t                        *ref, // input parameter, reference samples Ptr
-                               uint32_t                        ref_stride, // input parameter, reference stride
-                               uint32_t                        block_height, // input parameter, block height (M)
-                               uint32_t                        block_width, // input parameter, block width (N)
+void svt_pme_sad_loop_kernel_c(const svt_mv_cost_param *mv_cost_params,
+                               uint8_t                 *src, // input parameter, source samples Ptr
+                               uint32_t                 src_stride, // input parameter, source stride
+                               uint8_t                 *ref, // input parameter, reference samples Ptr
+                               uint32_t                 ref_stride, // input parameter, reference stride
+                               uint32_t                 block_height, // input parameter, block height (M)
+                               uint32_t                 block_width, // input parameter, block width (N)
                                uint32_t *best_cost, int16_t *best_mvx, int16_t *best_mvy,
                                int16_t search_position_start_x, int16_t search_position_start_y,
                                int16_t search_area_width, int16_t search_area_height, int16_t search_step, int16_t mvx,
@@ -1731,7 +1731,7 @@ void svt_pme_sad_loop_kernel_c(const struct svt_mv_cost_param *mv_cost_params,
     return;
 }
 
-static void md_full_pel_search_large_lbd(MV_COST_PARAMS *mv_cost_params, ModeDecisionContext *ctx,
+static void md_full_pel_search_large_lbd(svt_mv_cost_param *mv_cost_params, ModeDecisionContext *ctx,
                                          EbPictureBufferDesc *input_pic, EbPictureBufferDesc *ref_pic,
                                          uint32_t input_origin_index, int16_t mvx, int16_t mvy,
                                          int16_t search_position_start_x, int16_t search_position_end_x,
@@ -1802,7 +1802,7 @@ static void md_full_pel_search_large_lbd(MV_COST_PARAMS *mv_cost_params, ModeDec
     }
 }
 
-static void svt_init_mv_cost_params(MV_COST_PARAMS *mv_cost_params, ModeDecisionContext *ctx, const Mv *ref_mv,
+static void svt_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, ModeDecisionContext *ctx, const Mv *ref_mv,
                                     uint8_t base_q_idx, uint32_t rdmult, uint8_t hbd_md) {
     mv_cost_params->ref_mv        = ref_mv;
     mv_cost_params->full_ref_mv   = get_fullmv_from_mv(ref_mv);
@@ -1821,10 +1821,10 @@ static void md_full_pel_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                int16_t sparse_search_step, uint8_t is_sprs_lev0_performed, int16_t *best_mvx,
                                int16_t *best_mvy, uint32_t *best_cost, uint8_t hbd_md) {
     // Mvcost params
-    MV_COST_PARAMS mv_cost_params;
-    FrameHeader   *frm_hdr = &pcs->ppcs->frm_hdr;
-    uint32_t       rdmult  = dist_type != SAD ? ctx->full_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD]
-                                              : ctx->fast_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD];
+    svt_mv_cost_param mv_cost_params;
+    FrameHeader      *frm_hdr = &pcs->ppcs->frm_hdr;
+    uint32_t          rdmult  = dist_type != SAD ? ctx->full_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD]
+                                                 : ctx->fast_lambda_md[hbd_md ? EB_10_BIT_MD : EB_8_BIT_MD];
     svt_init_mv_cost_params(
         &mv_cost_params, ctx, &ctx->ref_mv, frm_hdr->quantization_params.base_q_idx, rdmult, hbd_md);
     uint32_t cost;
@@ -2684,8 +2684,8 @@ static void read_refine_me_mvs(PictureControlSet *pcs, ModeDecisionContext *ctx)
                     ctx->fp_me_dist[list][ref]     = fn_ptr->vf(
                         pred_y, ref_pic->stride_y, src_y, input_pic->stride_y, &sse);
 
-                    MV_COST_PARAMS mv_cost_params;
-                    FrameHeader   *frm_hdr = &pcs->ppcs->frm_hdr;
+                    svt_mv_cost_param mv_cost_params;
+                    FrameHeader      *frm_hdr = &pcs->ppcs->frm_hdr;
                     // Variance is computed for 8bit, so use 8bit lambda
                     uint32_t rdmult = ctx->full_lambda_md[EB_8_BIT_MD];
                     svt_init_mv_cost_params(
@@ -2960,7 +2960,7 @@ static void build_single_ref_mvp_array(PictureControlSet *pcs, ModeDecisionConte
         }
     }
 }
-bool svt_aom_is_valid_unipred_ref(struct ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
+bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
                                   uint8_t ref_idx);
 /*
 * Performs an ME search around MVP(s)
@@ -3024,7 +3024,7 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
             if (me_data_present) {
                 // Early MVP vs. ME_MV check; do not perform PME search for blocks that have a valid ME_MV unless the ME_MV has a different direction than all MVP(s) and the ME_MV mag is higher than MV_TH (not around(0,0))
                 if (ctx->md_pme_ctrls.early_check_mv_th_multiplier != MIN_SIGNED_VALUE) {
-                    uint8_t is_me_mv_diffrent_than_mvp = 0;
+                    uint8_t is_me_mv_different_than_mvp = 0;
                     for (int8_t mvp_index = 0; mvp_index < ctx->mvp_count[list_idx][ref_idx]; mvp_index++) {
                         Mv mvp = {.as_int = ctx->mvp_array[list_idx][ref_idx][mvp_index].as_int};
 
@@ -3035,7 +3035,7 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
                         // Check x direction
                         if (ABS(mvp.x) > mv_th) {
                             if (ctx->fp_me_mv[list_idx][ref_idx].x * mvp.x < 0) {
-                                is_me_mv_diffrent_than_mvp = 1;
+                                is_me_mv_different_than_mvp = 1;
                                 break;
                             }
                         }
@@ -3043,13 +3043,13 @@ static void pme_search(PictureControlSet *pcs, ModeDecisionContext *ctx, EbPictu
                         // Check y direction
                         if (ABS(mvp.y) > mv_th) {
                             if (ctx->fp_me_mv[list_idx][ref_idx].y * mvp.y < 0) {
-                                is_me_mv_diffrent_than_mvp = 1;
+                                is_me_mv_different_than_mvp = 1;
                                 break;
                             }
                         }
                     }
 
-                    if (is_me_mv_diffrent_than_mvp == 0) {
+                    if (is_me_mv_different_than_mvp == 0) {
                         ctx->valid_pme_mv[list_idx][ref_idx]       = 1;
                         ctx->pme_res[list_idx][ref_idx].dist       = ctx->post_subpel_me_mv_cost[list_idx][ref_idx];
                         ctx->best_pme_mv[list_idx][ref_idx].as_int = ctx->sub_me_mv[list_idx][ref_idx].as_int;
@@ -3675,7 +3675,7 @@ static void check_best_indepedant_cfl(PictureControlSet *pcs, EbPictureBufferDes
                 (int64_t)RDCOST(full_lambda, ctx->md_rate_est_ctx->palette_uv_mode_fac_bits[0][use_palette_uv], 0);
         }
     }
-    // cfl vs. best independant
+    // cfl vs. best independent
     if (ctx->ind_uv_avail &&
         ((uint64_t)(ctx->best_uv_cost[cand_bf->cand->block_mi.mode] + ind_palette_cost_diff) < cfl_uv_cost)) {
         // Update the current candidate
@@ -4259,8 +4259,8 @@ static INLINE bool search_dct_dct_only(PictureControlSet *pcs, ModeDecisionConte
         return 1;
     return 0;
 }
-static int32_t av1_txt_rate_est(struct ModeDecisionContext *ctx, struct ModeDecisionCandidateBuffer *cand_bf,
-                                bool is_inter, TxSize tx_size, TxType tx_type, bool reduced_tx_set_used) {
+static int32_t av1_txt_rate_est(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf, bool is_inter,
+                                TxSize tx_size, TxType tx_type, bool reduced_tx_set_used) {
     if (get_ext_tx_types(tx_size, is_inter, reduced_tx_set_used) > 1) {
         const TxSize square_tx_size = txsize_sqr_map[tx_size];
         assert(square_tx_size < EXT_TX_SIZES);
@@ -4445,7 +4445,7 @@ static void tx_type_search(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                                             (txbwidth * txbheight))
                         << ctx->mds_subres_step;
 
-                    // If SATD of current type is better than the prevous best, update best, and continue evaluating tx_type
+                    // If SATD of current type is better than the previous best, update best, and continue evaluating tx_type
                     if (satd < best_satd_tx_search) {
                         best_satd_tx_search = satd;
                     } else {
@@ -6431,7 +6431,7 @@ static void full_loop_core(PictureControlSet *pcs, ModeDecisionContext *ctx, Mod
                              &cb_coeff_bits,
                              &cr_coeff_bits,
                              1);
-        // If CFL is performed, check independant chroma vs. cfl.
+        // If CFL is performed, check independent chroma vs. cfl.
         // If independent chroma data is unavailable, update the chroma fast rate, since the rate computed
         // at MDS0 assumes UV_DC_PRED is used.
         if (cfl_performed) {
@@ -7462,7 +7462,7 @@ uint64_t estimate_ref_frame_type_bits(ModeDecisionContext *ctx, BlkStruct *blk_p
 /*
  * Estimate the rate of signaling all available ref_frame_type
  */
-static void estimate_ref_frames_num_bits(struct ModeDecisionContext *ctx, PictureControlSet *pcs) {
+static void estimate_ref_frames_num_bits(ModeDecisionContext *ctx, PictureControlSet *pcs) {
     uint64_t     comp_inter_fac_bits_uni = 0;
     uint64_t     comp_inter_fac_bits_bi  = 0;
     FrameHeader *frm_hdr                 = &pcs->ppcs->frm_hdr;

@@ -60,7 +60,7 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc *pictureBuffe
         picture_buffer_desc_init_data_ptr->left_padding + picture_buffer_desc_init_data_ptr->right_padding;
 
     svt_aom_assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
-                       "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
+                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr = (pictureBufferDescPtr->stride_y +
                                                                          subsampling_x) >>
@@ -144,7 +144,7 @@ EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc *pictureBuf
         picture_buffer_desc_init_data_ptr->left_padding + picture_buffer_desc_init_data_ptr->right_padding;
 
     svt_aom_assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
-                       "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
+                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr = (pictureBufferDescPtr->stride_y +
                                                                          subsampling_x) >>
@@ -628,15 +628,6 @@ int32_t svt_aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32
             buf + yplane_size + uvplane_size + (uv_border_h * uv_stride) + uv_border_w, aom_byte_align);
 
         ybf->use_external_refernce_buffers = 0;
-
-        //if (use_highbitdepth) {
-        //    if (ybf->y_buffer_8bit) svt_aom_free(ybf->y_buffer_8bit);
-        //    ybf->y_buffer_8bit = (uint8_t *)svt_aom_memalign(32, (size_t)yplane_size);
-        //    if (!ybf->y_buffer_8bit) return -1;
-        //}
-        //else {
-        //    assert(!ybf->y_buffer_8bit);
-        //}
 
         ybf->corrupted = 0; /* assume not corrupted by errors */
         return 0;

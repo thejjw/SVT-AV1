@@ -2312,13 +2312,13 @@ void svt_ext_all_sad_calculation_8x8_16x16_sse4_1(uint8_t *src, uint32_t src_str
         y_best  = mvy + (search_position_start_y + i) * 8;         \
     }
 
-void svt_pme_sad_loop_kernel_sse4_1(const struct svt_mv_cost_param *mv_cost_params,
-                                    uint8_t                        *src, // input parameter, source samples Ptr
-                                    uint32_t                        src_stride, // input parameter, source stride
-                                    uint8_t                        *ref, // input parameter, reference samples Ptr
-                                    uint32_t                        ref_stride, // input parameter, reference stride
-                                    uint32_t                        block_height, // input parameter, block height (M)
-                                    uint32_t                        block_width, // input parameter, block width (N)
+void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param *mv_cost_params,
+                                    uint8_t                 *src, // input parameter, source samples Ptr
+                                    uint32_t                 src_stride, // input parameter, source stride
+                                    uint8_t                 *ref, // input parameter, reference samples Ptr
+                                    uint32_t                 ref_stride, // input parameter, reference stride
+                                    uint32_t                 block_height, // input parameter, block height (M)
+                                    uint32_t                 block_width, // input parameter, block width (N)
                                     uint32_t *best_cost, int16_t *best_mvx, int16_t *best_mvy,
                                     int16_t search_position_start_x, int16_t search_position_start_y,
                                     int16_t search_area_width, int16_t search_area_height, int16_t search_step,

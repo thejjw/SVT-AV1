@@ -227,10 +227,10 @@ Loop over all 64x64 filter blocks and perform the CDEF filtering for each block,
 the filter strength pairs chosen in finish_cdef_search().
 */
 void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
-    struct PictureParentControlSet *ppcs     = pcs->ppcs;
-    Av1Common                      *cm       = ppcs->av1_cm;
-    FrameHeader                    *frm_hdr  = &ppcs->frm_hdr;
-    bool                            is_16bit = scs->is_16bit_pipeline;
+    PictureParentControlSet *ppcs     = pcs->ppcs;
+    Av1Common               *cm       = ppcs->av1_cm;
+    FrameHeader             *frm_hdr  = &ppcs->frm_hdr;
+    bool                     is_16bit = scs->is_16bit_pipeline;
 
     EbPictureBufferDesc *recon_pic;
     svt_aom_get_recon_pic(pcs, &recon_pic, is_16bit);
@@ -669,7 +669,7 @@ static uint64_t joint_strength_search_dual(int32_t *best_lev0, int32_t *best_lev
     return best_tot_mse;
 }
 void finish_cdef_search(PictureControlSet *pcs) {
-    struct PictureParentControlSet *ppcs    = pcs->ppcs;
+    PictureParentControlSet        *ppcs    = pcs->ppcs;
     FrameHeader                    *frm_hdr = &ppcs->frm_hdr;
     Av1Common                      *cm      = ppcs->av1_cm;
     int32_t                         mi_rows = ppcs->av1_cm->mi_rows;

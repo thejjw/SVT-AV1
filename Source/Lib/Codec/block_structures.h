@@ -32,29 +32,6 @@ typedef struct TileInfo {
     int32_t tile_rs_index; //tile index in raster order
 } TileInfo;
 
-typedef struct FilterIntraModeInfo {
-    /*!< Specifies the type of intra filtering, and can represent any of the following:
-         * FILTER_DC_PRED, FILTER_V_PRED, FILTER_H_PRED, FILTER_D157_PRED, FILTER_PAETH_PRED */
-    FilterIntraMode filter_intra_mode;
-
-    /*!< This bit specifies whether or not intra filtering can be used. */
-    uint8_t use_filter_intra;
-} FilterIntraModeInfo_t;
-
-typedef struct InterIntraModeParams {
-    /*!< Specifies the type of intra prediction to be used */
-    InterIntraMode interintra_mode;
-
-    /*!< equal to 1 specifies that wedge blending should be used.
-            * wedge_interintra equal to 0 specifies that intra blending should be used. */
-    uint8_t wedge_interintra;
-
-    /*!< Used to derive the direction and offset of the wedge mask used during blending. */
-    uint8_t interintra_wedge_index;
-
-    /*!< Specifies the sign of the wedge blend. */
-    // int interintra_wedge_sign; Always 0
-} InterIntraModeParams;
 typedef struct BlockModeInfo {
     /*! \brief The prediction mode used */
     PredictionMode mode;

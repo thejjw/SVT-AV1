@@ -131,7 +131,7 @@ typedef struct EncodeContext {
     uint32_t elapsed_non_idr_count;
     uint32_t elapsed_non_cra_count;
     bool     initial_picture;
-    uint64_t last_idr_picture; // the most recently occured IDR picture (in decode order)
+    uint64_t last_idr_picture; // the most recently occurred IDR picture (in decode order)
 
     // Sequence Termination Flags
     uint64_t terminating_picture_number;

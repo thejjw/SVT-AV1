@@ -27,13 +27,6 @@ extern "C" {
 #define MAX_FULL_PEL_VAL ((1 << (MAX_MVSEARCH_STEPS - 1)) - 1)
 // Maximum size of the first step in full pel units
 #define MAX_FIRST_STEP (1 << (MAX_MVSEARCH_STEPS - 1))
-// Allowed motion vector pixel distance outside image border
-// for Block_16x16
-#define BORDER_MV_PIXELS_B16 (16 + AOM_INTERP_EXTEND)
-
-#define SEARCH_RANGE_8P 3
-#define SEARCH_GRID_STRIDE_8P (2 * SEARCH_RANGE_8P + 1)
-#define SEARCH_GRID_CENTER_8P (SEARCH_RANGE_8P * SEARCH_GRID_STRIDE_8P + SEARCH_RANGE_8P)
 
 // motion search site
 typedef struct SearchSite {
@@ -80,8 +73,8 @@ void svt_av1_init3smotion_compensation(SearchSiteConfig *cfg, int stride);
 void svt_av1_set_mv_search_range(MvLimits *mv_limits, const Mv *mv);
 
 int svt_av1_full_pixel_search(struct PictureControlSet *pcs, IntraBcContext /*MACROBLOCK*/ *x, BlockSize bsize,
-                              Mv *mvp_full, int step_param, int method, int run_mesh_search, int error_per_bit,
-                              int *cost_list, const Mv *ref_mv, int var_max, int rd, int x_pos, int y_pos, int intra);
+                              Mv *mvp_full, int step_param, int error_per_bit, int *cost_list, const Mv *ref_mv,
+                              int x_pos, int y_pos, int intra);
 int svt_aom_mv_err_cost(const Mv *mv, const Mv *ref, const int *mvjcost, const int *mvcost[2], int error_per_bit);
 int svt_aom_mv_err_cost_light(const Mv *mv, const Mv *ref);
 #if CONFIG_ENABLE_OBMC

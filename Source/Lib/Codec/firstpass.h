@@ -25,7 +25,7 @@ extern "C" {
 #define MAX_LAG_BUFFERS 35
 
 /*!
- * \brief The stucture of acummulated frame stats in the first pass.
+ * \brief The structure of accumulated frame stats in the first pass.
  */
 typedef struct {
     /*!

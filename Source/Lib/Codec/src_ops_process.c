@@ -376,7 +376,7 @@ static uint32_t blk_end_array[MAX_TPL_MODE]      = {20, 4, 0};
 static TxSize   tx_size_array[MAX_TPL_MODE]      = {TX_16X16, TX_32X32, TX_64X64};
 static TxSize   sub2_tx_size_array[MAX_TPL_MODE] = {TX_16X8, TX_32X16, TX_64X32};
 static TxSize   sub4_tx_size_array[MAX_TPL_MODE] = {TX_16X4, TX_32X8, TX_64X16};
-static void     svt_tpl_init_mv_cost_params(MV_COST_PARAMS *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
+static void     svt_tpl_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
                                             uint32_t rdmult, uint8_t hbd_md) {
     mv_cost_params->ref_mv        = ref_mv;
     mv_cost_params->full_ref_mv   = get_fullmv_from_mv(ref_mv);
@@ -447,7 +447,7 @@ static void tpl_subpel_search(SequenceControlSet *scs, PictureParentControlSet *
     int32_t qIndex = quantizer_to_qindex[(uint8_t)scs->static_config.qp] +
         scs->static_config.extended_crf_qindex_offset;
     qIndex          = AOMMIN(MAXQ, qIndex);
-    uint32_t rdmult = svt_aom_compute_rd_mult_based_on_qindex((EbBitDepth)8, pcs->update_type, qIndex) /
+    uint32_t rdmult = svt_aom_compute_rd_mult_based_on_qindex(EB_EIGHT_BIT, pcs->update_type, qIndex) /
         TPL_RDMULT_SCALING_FACTOR;
     svt_tpl_init_mv_cost_params(&ms_params->mv_cost_params, &ref_mv, qIndex, rdmult,
                                 0); // 10BIT not supported
@@ -1337,7 +1337,7 @@ static void tpl_mc_flow_dispenser(EncodeContext *enc_ctx, SequenceControlSet *sc
                 q_val, q_val * delta_rate_new[pcs->hierarchical_levels][pcs->tpl_data.tpl_temporal_layer_index], 8);
         qIndex = (qIndex + delta_qindex);
     }
-    *base_rdmult = svt_aom_compute_rd_mult_based_on_qindex((EbBitDepth)8, pcs->update_type, qIndex) /
+    *base_rdmult = svt_aom_compute_rd_mult_based_on_qindex(EB_EIGHT_BIT, pcs->update_type, qIndex) /
         TPL_RDMULT_SCALING_FACTOR;
 
     {

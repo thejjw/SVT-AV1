@@ -896,9 +896,9 @@ EbErrorType svt_output_buffer_header_creator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr);
 
-void svt_input_buffer_header_destroyer(    EbPtr p);
-void svt_output_recon_buffer_header_destroyer(    EbPtr p);
-void svt_output_buffer_header_destroyer(    EbPtr p);
+void svt_input_buffer_header_destroyer(EbPtr p);
+void svt_output_recon_buffer_header_destroyer(EbPtr p);
+void svt_output_buffer_header_destroyer(EbPtr p);
 
 EbErrorType svt_input_y8b_creator(EbPtr *object_dbl_ptr, EbPtr  object_init_data_ptr);
 void svt_input_y8b_destroyer(EbPtr p);
@@ -1154,7 +1154,7 @@ static int create_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
     EbReferenceObjectDescInitData     eb_ref_obj_ect_desc_init_data_structure;
     EbPictureBufferDescInitData       ref_pic_buf_desc_init_data;
     SequenceControlSet* scs = enc_handle_ptr->scs_instance->scs;
-    bool is_16bit = (bool)(scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
+    bool is_16bit = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
     // Initialize the various Picture types
     ref_pic_buf_desc_init_data.max_width = scs->max_input_luma_width;
     ref_pic_buf_desc_init_data.max_height = scs->max_input_luma_height;
@@ -1285,7 +1285,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.color_format = color_format;
         input_data.b64_size = scs->b64_size;
         input_data.enc_mode = scs->static_config.enc_mode;
-        input_data.speed_control = (uint8_t)scs->speed_control_flag;
         input_data.hbd_md = scs->enable_hbd_mode_decision;
         input_data.bit_depth = scs->static_config.encoder_bit_depth;
         input_data.log2_tile_rows = scs->static_config.tile_rows;
@@ -1297,8 +1296,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.enable_tpl_la = scs->tpl;
         input_data.enc_dec_segment_col = (uint16_t)scs->tpl_segment_col_count_array;
         input_data.enc_dec_segment_row = (uint16_t)scs->tpl_segment_row_count_array;
-        input_data.final_pass_preset = scs->final_pass_preset;
-        input_data.rate_control_mode = scs->static_config.rate_control_mode;
         MrpCtrls* mrp_ctrl = &(scs->mrp_ctrls);
         input_data.ref_count_used_list0 =
             MAX(mrp_ctrl->sc_base_ref_list0_count,
@@ -1328,14 +1325,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.is_scale = scs->static_config.superres_mode > SUPERRES_NONE ||
             scs->static_config.resize_mode > RESIZE_NONE;
         input_data.rtc_tune = scs->static_config.rtc;
-        input_data.enable_variance_boost = scs->static_config.enable_variance_boost;
-        input_data.variance_boost_strength = scs->static_config.variance_boost_strength;
         input_data.variance_octile = scs->static_config.variance_octile;
-        input_data.tf_strength = scs->static_config.tf_strength;
-        input_data.qp_scale_compress_strength = scs->static_config.qp_scale_compress_strength;
         input_data.adaptive_film_grain = scs->static_config.adaptive_film_grain;
-        input_data.max_tx_size = scs->static_config.max_tx_size;
-        input_data.ac_bias = scs->static_config.ac_bias;
         input_data.static_config = scs->static_config;
         input_data.allintra = scs->allintra;
         input_data.use_flat_ipp = scs->use_flat_ipp;
@@ -1387,7 +1378,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
         input_data.sb_size = scs->super_block_size;
         input_data.hbd_md = scs->enable_hbd_mode_decision;
         input_data.mfmv = scs->mfmv_enabled;
-        input_data.cfg_palette = scs->static_config.screen_content_mode;
         //Jing: Get tile info from parent_pcs
         PictureParentControlSet* parent_pcs = (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
         input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
@@ -1434,7 +1424,6 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             input_data.sb_size = scs->super_block_size;
             input_data.hbd_md = scs->enable_hbd_mode_decision;
             input_data.mfmv = scs->mfmv_enabled;
-            input_data.cfg_palette = scs->static_config.screen_content_mode;
             //Jing: Get tile info from parent_pcs
             PictureParentControlSet* parent_pcs = (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
             input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
@@ -3026,24 +3015,6 @@ static void derive_tf_params(SequenceControlSet *scs) {
     tf_controls(scs, tf_level);
 }
 
-
-/*
- * Derive List0-only @ BASE Params
- */
-static void set_list0_only_base(SequenceControlSet* scs, uint8_t list0_only_base) {
-    List0OnlyBase* ctrls = &scs->list0_only_base_ctrls;
-
-    switch (list0_only_base) {
-    case 0:
-        ctrls->enabled = 0;
-        break;
-    case 1:
-        ctrls->enabled = 1;
-        break;
-    default:
-        break;
-    }
-}
 /*
  * Set the MRP control
  */
@@ -3315,26 +3286,6 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->ld_reduce_ref_buffs = 0;
     }
 }
-static void set_first_pass_ctrls(
-    SequenceControlSet* scs,
-    uint8_t first_pass_level) {
-
-    FirstPassControls* first_pass_ctrls = &scs->first_pass_ctrls;
-    switch (first_pass_level) {
-
-    case 0:
-        first_pass_ctrls->ds = 0;
-        break;
-
-    case 1:
-        first_pass_ctrls->ds = 1;
-        break;
-
-    default:
-        assert(0);
-        break;
-    }
-}
 
 static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t resize_mode, uint8_t aq_mode, bool allintra) {
     if (allintra) {
@@ -3377,15 +3328,12 @@ void set_multi_pass_params(SequenceControlSet *scs)
     switch (config->pass) {
 
         case ENC_SINGLE_PASS: {
-            set_first_pass_ctrls(scs, 0);
+            scs->first_pass_downsample = false;
             scs->final_pass_preset = config->enc_mode;
             break;
         }
         case ENC_FIRST_PASS: {
-            if (config->enc_mode <= ENC_M8)
-                set_first_pass_ctrls(scs, 0);
-            else
-                set_first_pass_ctrls(scs, 1);
+            scs->first_pass_downsample = config->enc_mode > ENC_M8;
             scs->final_pass_preset = config->enc_mode;
             if (scs->final_pass_preset <= ENC_M6)
                 scs->static_config.enc_mode = ENC_M9;
@@ -3409,7 +3357,7 @@ void set_multi_pass_params(SequenceControlSet *scs)
     }
 
     int do_downsample =
-        (scs->first_pass_ctrls.ds) && scs->max_input_luma_width >= 128 && scs->max_input_luma_height >= 128
+        scs->first_pass_downsample && scs->max_input_luma_width >= 128 && scs->max_input_luma_height >= 128
         ? 1
         : 0;
 
@@ -3686,7 +3634,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         uint8_t tpl_lad_mg = 1; // Specify the number of mini-gops to be used as LAD. 0: 1 mini-gop, 1: 2 mini-gops and 3: 3 mini-gops
         uint32_t mg_size = 1 << scs->static_config.hierarchical_levels;
         // If the lookahead is specified to be less than one mini-gop, then use only the current mini-gop for TPL (the current MG is always required to encode).
-        // Otherwise, set tpl_lad_mg to 1 when TPL is used, regardless of teh specified lookahead, because TPL has been optimized to use 1 MG lookahead. Using
+        // Otherwise, set tpl_lad_mg to 1 when TPL is used, regardless of the specified lookahead, because TPL has been optimized to use 1 MG lookahead. Using
         // more lookahead MGs may result in disadvantageous trade-offs (speed/BDR/memory).
         if (scs->static_config.look_ahead_distance < mg_size)
             tpl_lad_mg = 0;
@@ -3895,13 +3843,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     svt_aom_set_mfmv_config(scs);
 
-    uint8_t list0_only_base_lvl = 0;
-    if (scs->static_config.enc_mode <= ENC_M2)
-        list0_only_base_lvl = 0;
-    else
-        list0_only_base_lvl = 1;
-
-    set_list0_only_base(scs, list0_only_base_lvl);
+    scs->list0_only_base = scs->static_config.enc_mode > ENC_M2;
 
     if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ||
         scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
@@ -3991,7 +3933,7 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
     scs->picture_analysis_number_of_regions_per_width =
         scs->max_input_luma_width >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_WIDTH : 1;
     scs->picture_analysis_number_of_regions_per_height =
-        scs->max_input_luma_height >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_WIDTH : 1;
+        scs->max_input_luma_height >= 64 ? HIGHER_THAN_CLASS_1_REGION_SPLIT_PER_HEIGHT : 1;
 
     scs->pic_based_rate_est = false;
     scs->block_mean_calc_prec        = BLOCK_MEAN_PREC_SUB;
@@ -4922,14 +4864,14 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
     dst->size         = src->size;
     dst->qp           = src->qp;
     dst->pic_type = src->pic_type;
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
 
             EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)dst->p_buffer;
             EbSvtAv1EncConfiguration* config = &scs->static_config;
-            bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+            bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t subsampling_x  = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t subsampling_y  = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
             const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
@@ -4959,7 +4901,7 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
             EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)dst->p_buffer;
             EbSvtAv1EncConfiguration* config = &scs->static_config;
-            bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+            bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t subsampling_x  = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t subsampling_y  = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
             const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
@@ -5008,7 +4950,7 @@ static void copy_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst,
     dst->size         = src->size;
     dst->qp           = src->qp;
     dst->pic_type     = src->pic_type;
-    if (scs->first_pass_ctrls.ds) {
+    if (scs->first_pass_downsample) {
         // Copy the picture buffer
         if (src->p_buffer != NULL)
             downsample_copy_frame_buffer(
@@ -5095,10 +5037,10 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
             }
             else {
                 svt_aom_assert_err(node->size == sizeof(SvtAv1InputPicDef),
-                    "invalide private data of type RES_CHANGE_EVENT");
+                    "invalid private data of type RES_CHANGE_EVENT");
                 SvtAv1InputPicDef  *input_pic_def = (SvtAv1InputPicDef *)node->data;
                 svt_block_on_mutex(config_mutex);
-                // Check if a resolution change occured
+                // Check if a resolution change occurred
                 scs->max_input_luma_width = input_pic_def->input_luma_width;
                 scs->max_input_luma_height = input_pic_def->input_luma_height;
                 scs->max_input_pad_right = input_pic_def->input_pad_right;
@@ -5213,7 +5155,7 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     // check whether the n_filled_len has enough samples to be processed
     EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)lib_y8b_hdr->p_buffer;
     EbSvtAv1EncConfiguration* config = &scs->static_config;
-    bool is_16bit_input = (bool)(config->encoder_bit_depth > EB_EIGHT_BIT);
+    bool is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
 
     const uint8_t subsampling_x = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
     const uint8_t subsampling_y = ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
@@ -5657,7 +5599,7 @@ EbErrorType svt_input_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_input_buffer_header_destroyer(    EbPtr p)
+void svt_input_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
@@ -5719,7 +5661,7 @@ EbErrorType svt_output_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_output_buffer_header_destroyer(    EbPtr p)
+void svt_output_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType* obj = (EbBufferHeaderType*)p;
     EB_FREE(obj);
@@ -5758,7 +5700,7 @@ EbErrorType svt_output_recon_buffer_header_creator(
     return EB_ErrorNone;
 }
 
-void svt_output_recon_buffer_header_destroyer(    EbPtr p)
+void svt_output_recon_buffer_header_destroyer(EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
     EB_FREE(obj->p_buffer);

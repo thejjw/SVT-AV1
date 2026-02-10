@@ -2201,7 +2201,7 @@ static void hme_level2_b64(PictureParentControlSet *pcs, uint32_t org_x, uint32_
  *   Set the final search centre
  *******************************************/
 
-void set_final_seach_centre_sb(PictureParentControlSet *pcs, MeContext *me_ctx) {
+void set_final_search_centre_sb(PictureParentControlSet *pcs, MeContext *me_ctx) {
     UNUSED(pcs);
     // Hierarchical ME Search Center
     int16_t xHmeSearchCenter = 0;
@@ -2486,7 +2486,7 @@ static void hme_b64(PictureParentControlSet *pcs, uint32_t org_x, uint32_t org_y
     }
 
     // Set final MV centre
-    set_final_seach_centre_sb(pcs, me_ctx);
+    set_final_search_centre_sb(pcs, me_ctx);
 
     if (me_ctx->me_type == ME_MCTF) {
         if (ABS(me_ctx->search_results[0][0].hme_sc_x) > ABS(me_ctx->search_results[0][0].hme_sc_y))
@@ -3001,7 +3001,7 @@ static void compute_distortion(
     pcs->me_8x8_distortion[b64_index]   = (dist_8x8 * b64_size) / (pix_num);
 }
 
-// Initalize data used in ME/HME
+// Initialize data used in ME/HME
 static INLINE void init_me_hme_data(MeContext *me_ctx) {
     // Initialize HME search centres to 0
     if (me_ctx->enable_hme_flag) {
@@ -3070,7 +3070,7 @@ EbErrorType svt_aom_motion_estimation_b64(
     uint8_t prune_ref = me_ctx->enable_hme_flag && me_ctx->me_type != ME_MCTF;
     // Initialize ME/HME buffers
     init_me_hme_data(me_ctx);
-    // HME: Perform Hierachical Motion Estimation for all refrence frames for the current 64x64 block.
+    // HME: Perform Hierarchical Motion Estimation for all reference frames for the current 64x64 block.
     hme_b64(pcs, b64_origin_x, b64_origin_y, me_ctx, input_ptr);
 
     if (me_ctx->me_type == ME_MCTF &&
@@ -3078,14 +3078,14 @@ EbErrorType svt_aom_motion_estimation_b64(
         me_ctx->tf_use_pred_64x64_only_th = (uint8_t)~0;
         return return_error;
     }
-    // prune the refrence frames based on the HME outputs.
+    // prune the reference frames based on the HME outputs.
     if (prune_ref) {
         hme_prune_ref_and_adjust_sr(me_ctx);
     }
-    // Full pel: Perform the Integer Motion Estimation on the allowed refrence frames.
+    // Full pel: Perform the Integer Motion Estimation on the allowed reference frames.
     integer_search_b64(pcs, me_ctx, b64_origin_x, b64_origin_y, input_ptr);
 
-    // prune the refrence frames
+    // prune the reference frames
     if (prune_ref && me_ctx->me_hme_prune_ctrls.enable_me_hme_ref_pruning) {
         me_prune_ref(me_ctx);
     }

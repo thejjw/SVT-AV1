@@ -99,7 +99,6 @@ Iterator svt_aom_vector_iterator(Vector *vector, size_t index) {
 void *svt_aom_iterator_get(Iterator *iterator) { return iterator->pointer; }
 void  svt_aom_iterator_increment(Iterator *iterator) {
     assert(iterator != NULL);
-    // iterator->pointer += iterator->element_size;
     iterator->pointer = (unsigned char *)iterator->pointer + iterator->element_size;
 }
 
@@ -111,7 +110,6 @@ bool _vector_should_grow(Vector *vector) {
 }
 
 void *_vector_offset(Vector *vector, size_t index) {
-    // return vector->data + (index * vector->element_size);
     return (unsigned char *)vector->data + (index * vector->element_size);
 }
 void _vector_assign(Vector *vector, size_t index, void *element) {

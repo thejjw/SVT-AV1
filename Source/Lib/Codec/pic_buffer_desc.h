@@ -205,7 +205,7 @@ typedef struct EbPictureBufferDescInitData {
     uint16_t      right_padding;
     uint16_t      top_padding;
     uint16_t      bot_padding;
-    bool          split_mode; //ON: allocate 8bit data seperately from nbit data
+    bool          split_mode; //ON: allocate 8bit data separately from nbit data
 
     uint8_t mfmv;
     bool    is_16bit_pipeline;

@@ -265,9 +265,9 @@ static bool scene_transition_detector(
     PictureParentControlSet* future_pcs_ptr = parent_pcs_window[2];
 
     // calculating the frame threshold based on the number of 64x64 blocks in the frame
-    uint32_t  region_threshhold;
+    uint32_t  region_threshold;
 
-    bool is_abrupt_change; // this variable signals an abrubt change (scene change or flash)
+    bool is_abrupt_change; // this variable signals an abrupt change (scene change or flash)
     bool is_scene_change; // this variable signals a frame representing a scene change
 
     uint32_t** ahd_running_avg = pd_ctx->ahd_running_avg;
@@ -309,7 +309,7 @@ static bool scene_transition_detector(
             region_width += region_width_offset;
             region_height += region_height_offset;
 
-            region_threshhold = SCENE_TH * NUM64x64INPIC(region_width, region_height);
+            region_threshold = SCENE_TH * NUM64x64INPIC(region_width, region_height);
 
             for (int bin = 0; bin < HISTOGRAM_NUMBER_OF_BINS; ++bin) {
                 ahd += ABS((int32_t)current_pcs_ptr->picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin] - (int32_t)pd_ctx->prev_picture_histogram[region_in_picture_width_index][region_in_picture_height_index][bin]);
@@ -324,7 +324,7 @@ static bool scene_transition_detector(
                 ahd_running_avg[region_in_picture_width_index][region_in_picture_height_index] -
                 (int32_t)ahd);
 
-            if (ahd_error > region_threshhold && ahd >= ahd_error) {
+            if (ahd_error > region_threshold && ahd >= ahd_error) {
                 is_abrupt_change = true;
             }
             if (is_abrupt_change)
@@ -486,7 +486,7 @@ static void early_hme_b64(
     return;
 }
 
-void dg_detector_hme_level0(struct PictureParentControlSet *ppcs, uint32_t seg_idx) {
+void dg_detector_hme_level0(PictureParentControlSet *ppcs, uint32_t seg_idx) {
     EbPictureBufferDesc * src_sixt_ds_pic = ((EbPaReferenceObject*)ppcs->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;
 
     EbPictureBufferDesc * ref_sixt_ds_pic = ((EbPaReferenceObject*)ppcs->dg_detector->ref_pic->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;
@@ -820,7 +820,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
             end_pcs);
     }
     ctx->list0_only = 0;
-    if (scs->list0_only_base_ctrls.enabled) {
+    if (scs->list0_only_base) {
         ctx->list0_only = 1;
     }
 }
@@ -3274,7 +3274,7 @@ bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
         return 0;
 }
 void first_pass_frame_end_one_pass(PictureParentControlSet *pcs);
-#define HIGH_BAND 250000
+
 /* modulate_ref_pics()
  For INTRA, the modulation uses the noise level, and towards increasing the number of ref_pics
  For BASE and L1, the modulation uses the filt_INTRA-to-unfilterd_INTRA distortion range, and towards decreasing the number of ref_pics
@@ -4153,7 +4153,7 @@ static void update_sframe_ref_order_hint(PictureParentControlSet *ppcs, PictureD
     assert(sizeof(ppcs->dpb_order_hint) == sizeof(pd_ctx->ref_order_hint));
     if (ppcs->pred_structure == LOW_DELAY) {
         for (int32_t i = 0; i < REF_FRAMES; i++) {
-            // dpd_order_hint should be updated with relative postion of key frame
+            // dpd_order_hint should be updated with relative position of key frame
             ppcs->dpb_order_hint[i] = (uint32_t)(pd_ctx->ref_order_hint[i] - pd_ctx->key_poc);
         }
     }
@@ -4276,7 +4276,7 @@ static void check_window_availability(SequenceControlSet* scs, EncodeContext* en
     else {
 
         //TODO: risk of a race condition accessing prev(pcs0 is released, and pcs1 still doing sc).
-        //Actually we dont need to keep prev, just keep previous copy of histograms.
+        //Actually we don't need to keep prev, just keep previous copy of histograms.
         pcs->pd_window[0] =
             queue_entry->picture_number > 0 ? (PictureParentControlSet *)enc_ctx->picture_decision_reorder_queue[previous_entry_index]->ppcs_wrapper->object_ptr : NULL;
         pcs->pd_window[1] =

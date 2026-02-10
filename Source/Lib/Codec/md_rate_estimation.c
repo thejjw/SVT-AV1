@@ -434,7 +434,7 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
 }
 /**************************************************************************
  * svt_aom_estimate_coefficients_rate()
- * Estimate the rate of the quantised coefficient
+ * Estimate the rate of the quantized coefficient
  * based on the frame CDF
  ***************************************************************************/
 void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx, FRAME_CONTEXT *fc) {
@@ -552,8 +552,7 @@ int svt_aom_get_palette_bsize_ctx(BlockSize bsize);
 
 int svt_aom_get_palette_mode_ctx(const MacroBlockD *xd);
 
-static INLINE InterpFilter av1_extract_interp_filter(InterpFilters filters, int32_t x_filter);
-int32_t                    svt_aom_partition_cdf_length(BlockSize bsize);
+int32_t svt_aom_partition_cdf_length(BlockSize bsize);
 /*******************************************************************************
  * Updates all the filter type stats/CDF for the current block
  ******************************************************************************/
@@ -744,7 +743,6 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_pt
  * Updates all the syntax stats/CDF for the current block
  ******************************************************************************/
 void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row, int mi_col) {
-    //    const AV1_COMMON *const cm   = pcs->ppcs->av1_cm;
     FrameHeader            *frm_hdr = &pcs->ppcs->frm_hdr;
     MacroBlockD            *xd      = blk_ptr->av1xd;
     const MbModeInfo *const mbmi    = xd->mi[0];
@@ -962,11 +960,11 @@ void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
 void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint16_t tile_idx, int mi_row, int mi_col) {
-    const AV1_COMMON *const cm       = pcs->ppcs->av1_cm;
-    MacroBlockD            *xd       = blk_ptr->av1xd;
-    const BlockGeom        *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
-    BlockSize               bsize    = blk_geom->bsize;
-    FRAME_CONTEXT          *fc       = xd->tile_ctx;
+    const Av1Common *const cm       = pcs->ppcs->av1_cm;
+    MacroBlockD           *xd       = blk_ptr->av1xd;
+    const BlockGeom       *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    BlockSize              bsize    = blk_geom->bsize;
+    FRAME_CONTEXT         *fc       = xd->tile_ctx;
     assert(bsize < BlockSizeS_ALL);
 
     if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)

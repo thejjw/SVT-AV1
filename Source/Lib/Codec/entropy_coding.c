@@ -1302,13 +1302,13 @@ int32_t svt_aom_uleb_encode(uint64_t value, size_t available, uint8_t *coded_val
     return 0;
 }
 
-int32_t svt_aom_wb_is_byte_aligned(const struct AomWriteBitBuffer *wb) { return (wb->bit_offset % CHAR_BIT == 0); }
+int32_t svt_aom_wb_is_byte_aligned(const AomWriteBitBuffer *wb) { return (wb->bit_offset % CHAR_BIT == 0); }
 
-uint32_t svt_aom_wb_bytes_written(const struct AomWriteBitBuffer *wb) {
+uint32_t svt_aom_wb_bytes_written(const AomWriteBitBuffer *wb) {
     return wb->bit_offset / CHAR_BIT + (wb->bit_offset % CHAR_BIT > 0);
 }
 
-INLINE static void svt_aom_wb_write_bit_inlined(struct AomWriteBitBuffer *wb, int32_t bit) {
+INLINE static void svt_aom_wb_write_bit_inlined(AomWriteBitBuffer *wb, int32_t bit) {
     const int32_t off = (int32_t)wb->bit_offset;
     const int32_t p   = off / CHAR_BIT;
     const int32_t q   = CHAR_BIT - 1 - off % CHAR_BIT;
@@ -1322,18 +1322,18 @@ INLINE static void svt_aom_wb_write_bit_inlined(struct AomWriteBitBuffer *wb, in
     wb->bit_offset = off + 1;
 }
 
-INLINE static void svt_aom_wb_write_literal_inlined(struct AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
+INLINE static void svt_aom_wb_write_literal_inlined(AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
     int32_t bit;
     for (bit = bits - 1; bit >= 0; bit--) svt_aom_wb_write_bit(wb, (data >> bit) & 1);
 }
 
-void NOINLINE svt_aom_wb_write_bit(struct AomWriteBitBuffer *wb, int32_t bit) { svt_aom_wb_write_bit_inlined(wb, bit); }
+void NOINLINE svt_aom_wb_write_bit(AomWriteBitBuffer *wb, int32_t bit) { svt_aom_wb_write_bit_inlined(wb, bit); }
 
-void NOINLINE svt_aom_wb_write_literal(struct AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
+void NOINLINE svt_aom_wb_write_literal(AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
     svt_aom_wb_write_literal_inlined(wb, data, bits);
 }
 
-void NOINLINE svt_aom_wb_write_inv_signed_literal(struct AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
+void NOINLINE svt_aom_wb_write_inv_signed_literal(AomWriteBitBuffer *wb, int32_t data, int32_t bits) {
     svt_aom_wb_write_literal_inlined(wb, data, bits + 1);
 }
 
@@ -2076,7 +2076,7 @@ static void write_ref_frames(FRAME_CONTEXT *frame_context, PictureParentControlS
         }
     }
 }
-static void encode_restoration_mode(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void encode_restoration_mode(PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
     FrameHeader *frm_hdr = &pcs->frm_hdr;
     //SVT_ERROR("encode_restoration_mode might not work. Double check the reference code\n");
     assert(!frm_hdr->all_lossless);
@@ -2149,7 +2149,7 @@ static void encode_restoration_mode(PictureParentControlSet *pcs, struct AomWrit
     }
 }
 
-static void encode_segmentation(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void encode_segmentation(PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
     SegmentationParams *segmentation_params = &pcs->frm_hdr.segmentation_params;
     svt_aom_wb_write_bit(wb, segmentation_params->segmentation_enabled);
     if (segmentation_params->segmentation_enabled) {
@@ -2180,7 +2180,7 @@ static void encode_segmentation(PictureParentControlSet *pcs, struct AomWriteBit
     }
 }
 
-static void encode_loopfilter(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void encode_loopfilter(PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
     FrameHeader *frm_hdr = &pcs->frm_hdr;
     assert(!frm_hdr->coded_lossless);
     if (frm_hdr->allow_intrabc)
@@ -2239,7 +2239,7 @@ static void encode_loopfilter(PictureParentControlSet *pcs, struct AomWriteBitBu
     }
 }
 
-static void encode_cdef(const PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void encode_cdef(const PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
     //assert(!cm->coded_lossless);
     // moved out side
     //if (!cm->seq_params.cdef_level) return;
@@ -2259,7 +2259,7 @@ static void encode_cdef(const PictureParentControlSet *pcs, struct AomWriteBitBu
     }
 }
 
-static void write_delta_q(struct AomWriteBitBuffer *wb, int32_t delta_q) {
+static void write_delta_q(AomWriteBitBuffer *wb, int32_t delta_q) {
     if (delta_q != 0) {
         svt_aom_wb_write_bit(wb, 1);
         svt_aom_wb_write_inv_signed_literal(wb, delta_q, 6);
@@ -2267,7 +2267,7 @@ static void write_delta_q(struct AomWriteBitBuffer *wb, int32_t delta_q) {
         svt_aom_wb_write_bit(wb, 0);
 }
 
-static void encode_quantization(const PictureParentControlSet *const pcs, struct AomWriteBitBuffer *wb) {
+static void encode_quantization(const PictureParentControlSet *const pcs, AomWriteBitBuffer *wb) {
     const FrameHeader *frm_hdr = &pcs->frm_hdr;
     svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.base_q_idx, QINDEX_BITS);
     write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y]);
@@ -2294,7 +2294,7 @@ static void encode_quantization(const PictureParentControlSet *const pcs, struct
     }
 }
 
-static void write_tile_info_max_tile(const PictureParentControlSet *const pcs, struct AomWriteBitBuffer *wb) {
+static void write_tile_info_max_tile(const PictureParentControlSet *const pcs, AomWriteBitBuffer *wb) {
     Av1Common *cm = pcs->av1_cm;
     svt_aom_wb_write_bit(wb, cm->tiles_info.uniform_tile_spacing_flag);
 
@@ -2464,9 +2464,7 @@ void svt_aom_set_tile_info(PictureParentControlSet *pcs) {
     svt_av1_calculate_tile_rows(pcs);
 }
 
-static void write_tile_info(const PictureParentControlSet *const pcs,
-                            //struct AomWriteBitBuffer *saved_wb,
-                            struct AomWriteBitBuffer *wb) {
+static void write_tile_info(const PictureParentControlSet *const pcs, AomWriteBitBuffer *wb) {
     Av1Common *const cm                     = pcs->av1_cm;
     uint16_t         tile_cnt               = cm->tiles_info.tile_rows * cm->tiles_info.tile_cols;
     pcs->child_pcs->tile_size_bytes_minus_1 = 0;
@@ -2500,7 +2498,7 @@ static void write_tile_info(const PictureParentControlSet *const pcs,
     }
 }
 
-static AOM_INLINE void write_render_size(struct AomWriteBitBuffer *wb, PictureParentControlSet *ppcs) {
+static AOM_INLINE void write_render_size(AomWriteBitBuffer *wb, PictureParentControlSet *ppcs) {
     int render_and_frame_size_different = 0;
     if (ppcs->frame_resize_enabled)
         render_and_frame_size_different = 1;
@@ -2513,7 +2511,7 @@ static AOM_INLINE void write_render_size(struct AomWriteBitBuffer *wb, PicturePa
     svt_aom_wb_write_literal(wb, render_height_minus_1, 16);
 }
 
-static AOM_INLINE void write_superres_scale(struct AomWriteBitBuffer *wb, PictureParentControlSet *pcs) {
+static AOM_INLINE void write_superres_scale(AomWriteBitBuffer *wb, PictureParentControlSet *pcs) {
     SequenceControlSet *scs            = pcs->scs;
     Av1Common          *cm             = pcs->av1_cm;
     uint8_t             superres_denom = cm->frm_size.superres_denominator;
@@ -2534,7 +2532,7 @@ static AOM_INLINE void write_superres_scale(struct AomWriteBitBuffer *wb, Pictur
     }
 }
 
-static void write_frame_size(PictureParentControlSet *pcs, int32_t frame_size_override, struct AomWriteBitBuffer *wb) {
+static void write_frame_size(PictureParentControlSet *pcs, int32_t frame_size_override, AomWriteBitBuffer *wb) {
     SequenceControlSet *scs = pcs->scs;
     (void)(*pcs);
     (void)frame_size_override;
@@ -2553,12 +2551,12 @@ static void write_frame_size(PictureParentControlSet *pcs, int32_t frame_size_ov
     write_render_size(wb, pcs);
 }
 
-static void write_profile(BitstreamProfile profile, struct AomWriteBitBuffer *wb) {
+static void write_profile(BitstreamProfile profile, AomWriteBitBuffer *wb) {
     assert(profile >= PROFILE_0 && profile < MAX_PROFILES);
     svt_aom_wb_write_literal(wb, profile, PROFILE_BITS);
 }
 
-static AOM_INLINE void write_bitdepth(const SequenceControlSet *const scs, struct AomWriteBitBuffer *wb) {
+static AOM_INLINE void write_bitdepth(const SequenceControlSet *const scs, AomWriteBitBuffer *wb) {
     // Profile 0/1: [0] for 8 bit, [1]  10-bit
     // Profile   2: [0] for 8 bit, [10] 10-bit, [11] - 12-bit
     svt_aom_wb_write_bit(wb, scs->static_config.encoder_bit_depth == EB_EIGHT_BIT ? 0 : 1);
@@ -2568,7 +2566,7 @@ static AOM_INLINE void write_bitdepth(const SequenceControlSet *const scs, struc
     }
 }
 
-static AOM_INLINE void write_color_config(const SequenceControlSet *const scs, struct AomWriteBitBuffer *wb) {
+static AOM_INLINE void write_color_config(const SequenceControlSet *const scs, AomWriteBitBuffer *wb) {
     write_bitdepth(scs, wb);
     const int is_monochrome = 0; // monochrome is not supported yet
     // monochrome bit
@@ -2634,7 +2632,7 @@ static AOM_INLINE void write_color_config(const SequenceControlSet *const scs, s
     svt_aom_wb_write_bit(wb, separate_uv_delta_q);
 }
 
-static void write_sequence_header(SequenceControlSet *scs, struct AomWriteBitBuffer *wb) {
+static void write_sequence_header(SequenceControlSet *scs, AomWriteBitBuffer *wb) {
     const int32_t max_frame_width   = scs->seq_header.max_frame_width;
     const int32_t max_frame_height  = scs->seq_header.max_frame_height;
     unsigned      frame_width_bits  = svt_log2f(max_frame_width);
@@ -2745,7 +2743,7 @@ void svt_aom_write_primitive_quniform(AomWriter *w, uint16_t n, uint16_t v) {
     }
 }
 
-static void aom_wb_write_primitive_quniform(struct AomWriteBitBuffer *wb, uint16_t n, uint16_t v) {
+static void aom_wb_write_primitive_quniform(AomWriteBitBuffer *wb, uint16_t n, uint16_t v) {
     if (n <= 1)
         return;
     const int32_t l = get_msb(n - 1) + 1;
@@ -2790,7 +2788,7 @@ void svt_aom_write_primitive_subexpfin(AomWriter *w, uint16_t n, uint16_t k, uin
     }
 }
 
-static void aom_wb_write_primitive_subexpfin(struct AomWriteBitBuffer *wb, uint16_t n, uint16_t k, uint16_t v) {
+static void aom_wb_write_primitive_subexpfin(AomWriteBitBuffer *wb, uint16_t n, uint16_t k, uint16_t v) {
     int32_t i  = 0;
     int32_t mk = 0;
     while (1) {
@@ -2844,12 +2842,12 @@ void svt_aom_write_primitive_refsubexpfin(AomWriter *w, uint16_t n, uint16_t k, 
     svt_aom_write_primitive_subexpfin(w, n, k, recenter_finite_nonneg(n, ref, v));
 }
 
-static void aom_wb_write_primitive_refsubexpfin(struct AomWriteBitBuffer *wb, uint16_t n, uint16_t k, uint16_t ref,
+static void aom_wb_write_primitive_refsubexpfin(AomWriteBitBuffer *wb, uint16_t n, uint16_t k, uint16_t ref,
                                                 uint16_t v) {
     aom_wb_write_primitive_subexpfin(wb, n, k, recenter_finite_nonneg(n, ref, v));
 }
 
-void svt_aom_wb_write_signed_primitive_refsubexpfin(struct AomWriteBitBuffer *wb, uint16_t n, uint16_t k, int16_t ref,
+void svt_aom_wb_write_signed_primitive_refsubexpfin(AomWriteBitBuffer *wb, uint16_t n, uint16_t k, int16_t ref,
                                                     int16_t v) {
     ref += n - 1;
     v += n - 1;
@@ -2862,7 +2860,7 @@ int32_t svt_aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t re
 }
 
 static void write_global_motion_params(const WarpedMotionParams *params, const WarpedMotionParams *ref_params,
-                                       struct AomWriteBitBuffer *wb, int32_t allow_hp) {
+                                       AomWriteBitBuffer *wb, int32_t allow_hp) {
     const TransformationType type = params->wmtype;
     svt_aom_wb_write_bit(wb, type != IDENTITY);
     if (type != IDENTITY) {
@@ -2927,7 +2925,7 @@ static void write_global_motion_params(const WarpedMotionParams *params, const W
                                                        (int16_t)(params->wmmat[1] >> trans_prec_diff));
     }
 }
-static void write_global_motion(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb)
+static void write_global_motion(PictureParentControlSet *pcs, AomWriteBitBuffer *wb)
 
 {
     int32_t      frame;
@@ -2963,7 +2961,7 @@ static void write_global_motion(PictureParentControlSet *pcs, struct AomWriteBit
 }
 
 #if CONFIG_ENABLE_FILM_GRAIN
-static void write_film_grain_params(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void write_film_grain_params(PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
     FrameHeader  *frm_hdr = &pcs->frm_hdr;
     AomFilmGrain *pars    = &frm_hdr->film_grain_params;
 
@@ -3084,7 +3082,7 @@ static uint32_t get_ref_order_hint(PictureParentControlSet *pcs, MvReferenceFram
     return pcs->dpb_order_hint[ref_idx];
 }
 
-static void write_frame_size_with_refs(PictureParentControlSet *pcs, struct AomWriteBitBuffer *wb) {
+static void write_frame_size_with_refs(PictureParentControlSet *pcs, AomWriteBitBuffer *wb) {
 #if DEBUG_SFRAME
     fprintf(stderr,
             "\nFrame %d, dpb buf order hint %u,%u,%u,%u,%u,%u,%u\n",
@@ -3146,8 +3144,7 @@ static void write_frame_size_with_refs(PictureParentControlSet *pcs, struct AomW
 
 // New function based on HLS R18
 static void write_uncompressed_header_obu(SequenceControlSet *scs /*Av1Comp *cpi*/, PictureParentControlSet *pcs,
-                                          //struct AomWriteBitBuffer *saved_wb,
-                                          struct AomWriteBitBuffer *wb, uint8_t show_existing) {
+                                          AomWriteBitBuffer *wb, uint8_t show_existing) {
     // Av1Common *const cm = &cpi->common;
     // MacroBlockD *const xd = &cpi->td.mb.e_mbd;
     Av1Common *const cm       = pcs->av1_cm;
@@ -3476,8 +3473,8 @@ static void write_uncompressed_header_obu(SequenceControlSet *scs /*Av1Comp *cpi
 }
 
 static uint32_t write_obu_header(ObuType obu_type, int32_t obuExtension, uint8_t *const dst) {
-    struct AomWriteBitBuffer wb   = {dst, 0};
-    uint32_t                 size = 0;
+    AomWriteBitBuffer wb   = {dst, 0};
+    uint32_t          size = 0;
 
     svt_aom_wb_write_literal(&wb, 0, 1); // forbidden bit.
     svt_aom_wb_write_literal(&wb, (int32_t)obu_type, 4);
@@ -3510,7 +3507,7 @@ static size_t obu_mem_move(uint32_t obu_header_size, uint32_t obu_payload_size, 
     return length_field_size;
 }
 
-static void add_trailing_bits(struct AomWriteBitBuffer *wb) {
+static void add_trailing_bits(AomWriteBitBuffer *wb) {
     if (svt_aom_wb_is_byte_aligned(wb))
         svt_aom_wb_write_literal(wb, 0x80, 8);
     else {
@@ -3523,8 +3520,8 @@ static void add_trailing_bits(struct AomWriteBitBuffer *wb) {
 static uint32_t write_obu_metadata(SvtMetadataT *metadata, uint8_t *const dst) {
     if (!metadata || !metadata->payload)
         return 0;
-    struct AomWriteBitBuffer wb   = {dst, 0};
-    uint32_t                 size = 0;
+    AomWriteBitBuffer wb   = {dst, 0};
+    uint32_t          size = 0;
     svt_aom_wb_write_literal(&wb, metadata->type, 8);
     for (size_t i = 0; i < metadata->sz; ++i) { svt_aom_wb_write_literal(&wb, metadata->payload[i], 8); }
     add_trailing_bits(&wb);
@@ -3532,14 +3529,14 @@ static uint32_t write_obu_metadata(SvtMetadataT *metadata, uint8_t *const dst) {
     return size;
 }
 
-static void write_bitstream_level(BitstreamLevel bl, struct AomWriteBitBuffer *wb) {
+static void write_bitstream_level(BitstreamLevel bl, AomWriteBitBuffer *wb) {
     uint8_t seq_level_idx = major_minor_to_seq_level_idx(bl);
     assert(is_valid_seq_level_idx(seq_level_idx));
     svt_aom_wb_write_literal(wb, seq_level_idx, LEVEL_BITS);
 }
 static uint32_t write_sequence_header_obu(SequenceControlSet *scs, uint8_t *const dst, uint8_t numberSpatialLayers) {
-    struct AomWriteBitBuffer wb   = {dst, 0};
-    uint32_t                 size = 0;
+    AomWriteBitBuffer wb   = {dst, 0};
+    uint32_t          size = 0;
 
     set_bitstream_level_tier(scs);
 
@@ -3606,8 +3603,8 @@ static uint32_t write_sequence_header_obu(SequenceControlSet *scs, uint8_t *cons
 }
 static uint32_t write_tile_group_header(uint8_t *const dst, int startTile, int endTile, int tiles_log2,
                                         int tile_start_and_end_present_flag) {
-    struct AomWriteBitBuffer wb   = {dst, 0};
-    uint32_t                 size = 0;
+    AomWriteBitBuffer wb   = {dst, 0};
+    uint32_t          size = 0;
 
     if (!tiles_log2)
         return size;
@@ -3624,8 +3621,8 @@ static uint32_t write_tile_group_header(uint8_t *const dst, int startTile, int e
 
 static uint32_t write_frame_header_obu(SequenceControlSet *scs, PictureParentControlSet *pcs, uint8_t *const dst,
                                        uint8_t show_existing, int32_t appendTrailingBits) {
-    struct AomWriteBitBuffer wb         = {dst, 0};
-    uint32_t                 total_size = 0;
+    AomWriteBitBuffer wb         = {dst, 0};
+    uint32_t          total_size = 0;
 
     write_uncompressed_header_obu(scs, pcs, /* saved_wb,*/ &wb, show_existing);
 

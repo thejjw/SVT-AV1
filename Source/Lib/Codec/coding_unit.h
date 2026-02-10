@@ -49,16 +49,16 @@ typedef struct {
 } MV_REF;
 
 typedef struct MacroBlockDPlane {
-    int          subsampling_x;
-    int          subsampling_y;
-    struct Buf2D dst;
-    struct Buf2D pre[2];
+    int   subsampling_x;
+    int   subsampling_y;
+    Buf2D dst;
+    Buf2D pre[2];
     // block size in pixels
     uint8_t width, height;
 } MacroBlockDPlane;
 
 typedef struct MacroBlockPlane {
-    struct Buf2D src;
+    Buf2D src;
     /*
         DECLARE_ALIGNED(16, int16_t, src_diff[MAX_SB_SQUARE]);
         TranLow *qcoeff;

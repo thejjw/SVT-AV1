@@ -16,7 +16,6 @@
 #include "mode_decision.h"
 #include "sys_resource_manager.h"
 #include "pic_buffer_desc.h"
-#include "entropy_coding.h"
 #include "reference_object.h"
 #include "neighbor_arrays.h"
 #include "object.h"
@@ -30,9 +29,6 @@ extern "C" {
  **************************************/
 #define MODE_DECISION_CANDIDATE_MAX_COUNT_Y 1855
 #define MODE_DECISION_CANDIDATE_MAX_COUNT (MODE_DECISION_CANDIDATE_MAX_COUNT_Y + 84)
-#define DEPTH_ONE_STEP 21
-#define DEPTH_TWO_STEP 5
-#define DEPTH_THREE_STEP 1
 #define MAX_MVP_CANIDATES 4
 /**************************************
  * Macros
@@ -56,8 +52,6 @@ typedef struct PALETTE_BUFFER {
     int     kmeans_data_buf[2 * MAX_PALETTE_SQUARE];
 } PALETTE_BUFFER;
 
-struct ModeDecisionCandidate;
-struct ModeDecisionCandidateBuffer;
 typedef struct RefResults {
     // to process this ref or not
     uint8_t do_ref;

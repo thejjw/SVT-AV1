@@ -1173,7 +1173,6 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     EB_DESTROY_MUTEX(obj->me_processed_b64_mutex);
     EB_DESTROY_SEMAPHORE(obj->temp_filt_done_semaphore);
     EB_DESTROY_MUTEX(obj->temp_filt_mutex);
-    EB_DESTROY_MUTEX(obj->debug_mutex);
     EB_FREE_ARRAY(obj->tile_group_info);
     EB_DESTROY_MUTEX(obj->pa_me_done.mutex);
     if (obj->is_pcs_sb_params)
@@ -1317,7 +1316,6 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
     EB_CREATE_MUTEX(object_ptr->me_processed_b64_mutex);
     EB_CREATE_SEMAPHORE(object_ptr->temp_filt_done_semaphore, 0, 1);
     EB_CREATE_MUTEX(object_ptr->temp_filt_mutex);
-    EB_CREATE_MUTEX(object_ptr->debug_mutex);
     EB_MALLOC_ARRAY(object_ptr->av1_cm, 1);
 
     EB_CREATE_MUTEX(object_ptr->pa_me_done.mutex);
@@ -1506,17 +1504,6 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
         b64_geom->width           = (uint8_t)MIN(width - b64_geom->org_x, b64_size);
         b64_geom->height          = (uint8_t)MIN(height - b64_geom->org_y, b64_size);
         b64_geom->is_complete_b64 = (b64_geom->width == b64_size && b64_geom->height == b64_size) ? 1 : 0;
-
-        // b64_geom->raster_scan_blk_validity is only used when this condition is true:
-        // if (scs->in_loop_ois == 0 && pcs->tpl_ctrls.enable)
-        // while today scs->in_loop_ois is always set to 1 in set_param_based_on_input()
-        for (int i = RASTER_SCAN_CU_INDEX_64x64; i <= RASTER_SCAN_CU_INDEX_8x8_63; i++) {
-            b64_geom->raster_scan_blk_validity[i] =
-                ((b64_geom->org_x + raster_scan_blk_x[i] + raster_scan_blk_size[i] > width) ||
-                 (b64_geom->org_y + raster_scan_blk_y[i] + raster_scan_blk_size[i] > height))
-                ? false
-                : true;
-        }
     }
 
     return return_error;

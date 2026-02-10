@@ -75,7 +75,7 @@ static void check_set_prio(void) {
     /* We can only use realtime priority if we are running as root, so
      * check if geteuid() == 0 (meaning either root or sudo).
      * If we don't do this check, we will eventually run into memory
-     * issues if the encoder is uninitalized and re-initalized multiple
+     * issues if the encoder is uninitialized and re-initialized multiple
      * times in one executable due to a bug in glibc.
      * https://sourceware.org/bugzilla/show_bug.cgi?id=19511
      *
@@ -89,7 +89,7 @@ static void check_set_prio(void) {
     pthread_attr_t attr;
     int            ret;
     if ((ret = pthread_attr_init(&attr))) {
-        SVT_WARN("Failed to initalize thread attributes: %s\n", strerror(ret));
+        SVT_WARN("Failed to initialize thread attributes: %s\n", strerror(ret));
         return;
     }
     struct sched_param param;
@@ -140,7 +140,7 @@ EbHandle svt_create_thread(void *thread_function(void *), void *thread_context) 
 
     pthread_attr_t attr;
     if (pthread_attr_init(&attr)) {
-        SVT_ERROR("Failed to initalize thread attributes\n");
+        SVT_ERROR("Failed to initialize thread attributes\n");
         return NULL;
     }
 
@@ -180,53 +180,6 @@ EbHandle svt_create_thread(void *thread_function(void *), void *thread_context) 
     return thread_handle;
 }
 
-///****************************************
-// * svt_start_thread
-// ****************************************/
-//EbErrorType svt_start_thread(
-//    EbHandle thread_handle)
-//{
-//    EbErrorType error_return = EB_ErrorNone;
-//
-//    /* Note JMJ 9/6/2011
-//        The thread Pause/Resume functionality is being removed.  The main reason is that
-//        POSIX Threads (aka pthreads) does not support this functionality.  The destructor
-//        and deinit code is safe as along as when EbDestropyThread is called on a thread,
-//        the thread is immediately destroyed and its stack cleared.
-//
-//        The Encoder Start/Stop functionality, which previously used the thread Pause/Resume
-//        functions could be implemented with mutex checks either at the head of the pipeline,
-//        or throughout the code if a more responsive Pause is needed.
-//    */
-//
-//#ifdef _WIN32
-//    //error_return = ResumeThread((HANDLE) thread_handle) ? EB_ErrorThreadUnresponsive : EB_ErrorNone;
-//#else
-//#endif // _WIN32
-//
-//    error_return = (thread_handle) ? EB_ErrorNone : EB_ErrorNullThread;
-//
-//    return error_return;
-//}
-//
-///****************************************
-// * svt_stop_thread
-// ****************************************/
-//EbErrorType svt_stop_thread(
-//    EbHandle thread_handle)
-//{
-//    EbErrorType error_return = EB_ErrorNone;
-//
-//#ifdef _WIN32
-//    //error_return = SuspendThread((HANDLE) thread_handle) ? EB_ErrorThreadUnresponsive : EB_ErrorNone;
-//#else
-//#endif // _WIN32
-//
-//    error_return = (thread_handle) ? EB_ErrorNone : EB_ErrorNullThread;
-//
-//    return error_return;
-//}
-//
 /****************************************
  * svt_destroy_thread
  ****************************************/

@@ -13,13 +13,13 @@
 #include <stdlib.h>
 
 #include "enc_inter_prediction.h"
-//#include "convolve.h"
 #include "aom_dsp_rtcd.h"
 #include "rd_cost.h"
 #include "resize.h"
 #include "av1me.h"
 #include "sequence_control_set.h"
 #include "ac_bias.h"
+#include "warped_motion.h"
 
 void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_ptr, bool is_highbd) {
     if (!is_highbd) {
@@ -671,7 +671,7 @@ extern void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage,
                                               uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
 
 struct build_prediction_ctxt {
-    const AV1_COMMON *cm;
+    const Av1Common  *cm;
     int               mi_row;
     int               mi_col;
     uint8_t         **tmp_buf;
@@ -699,7 +699,7 @@ static const int max_neighbor_obmc[6] = {0, 1, 2, 3, 4, 4};
 
 typedef void (*overlappable_nb_visitor_t)(uint8_t is16bit, MacroBlockD *xd, int rel_mi_pos, uint8_t nb_mi_size,
                                           MbModeInfo *nb_mi, void *fun_ctxt);
-static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const AV1_COMMON *cm, MacroBlockD *xd, int mi_col,
+static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_col,
                                                  int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
     if (!xd->up_available)
         return;
@@ -731,7 +731,7 @@ static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const AV1_COMM
     }
 }
 
-static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const AV1_COMMON *cm, MacroBlockD *xd, int mi_row,
+static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_row,
                                                 int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
     if (!xd->left_available)
         return;
@@ -1739,7 +1739,7 @@ static void av1_make_masked_warp_inter_predictor(uint8_t *src_ptr, uint8_t *src_
 //    wsrc(x, y) - mask(x, y) * P(x, y) / (AOM_BLEND_A64_MAX_ALPHA ** 2)
 //
 #if CONFIG_ENABLE_OBMC
-void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const AV1_COMMON *cm,
+void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
                                const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
                                const uint8_t *left, int left_stride) {
     if (block_size_wide[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine ||
@@ -2113,7 +2113,7 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
     const uint8_t       enable_dual_filter = scs->seq_header.enable_dual_filter;
     const uint32_t      encoder_bit_depth  = scs->static_config.encoder_bit_depth;
 
-    /* Save the orignal interp filter because the compensation is likely available
+    /* Save the original interp filter because the compensation is likely available
      * for that filter, and can be skipped in IFS. Also, we shouldn't overwrite
      * the pred buffer with a filter that is different from the input, because
      * the luma compensation may be skipped after the search if the best selected
@@ -2780,10 +2780,9 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet *scs, ScaleFactors sf
                        subsampling_shift);
     return return_error;
 }
-static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, struct ModeDecisionContext *ctx,
-                                           BlockModeInfo *block_mi, EbPictureBufferDesc *ref_pic_0,
-                                           EbPictureBufferDesc *ref_pic_1, EbPictureBufferDesc *pred, ScaleFactors *sf0,
-                                           ScaleFactors *sf1) {
+static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, ModeDecisionContext *ctx, BlockModeInfo *block_mi,
+                                           EbPictureBufferDesc *ref_pic_0, EbPictureBufferDesc *ref_pic_1,
+                                           EbPictureBufferDesc *pred, ScaleFactors *sf0, ScaleFactors *sf1) {
     const BlockGeom *blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
@@ -2838,11 +2837,10 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, struct ModeD
 /*
   inter prediction for light PD1
 */
-static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, struct ModeDecisionContext *ctx,
-                                           BlockModeInfo *block_mi, EbPictureBufferDesc *ref_pic_0,
-                                           EbPictureBufferDesc *ref_pic_1, EbPictureBufferDesc *pred_pic,
-                                           uint32_t component_mask, uint8_t hbd_md, ScaleFactors *sf0,
-                                           ScaleFactors *sf1) {
+static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, ModeDecisionContext *ctx, BlockModeInfo *block_mi,
+                                           EbPictureBufferDesc *ref_pic_0, EbPictureBufferDesc *ref_pic_1,
+                                           EbPictureBufferDesc *pred_pic, uint32_t component_mask, uint8_t hbd_md,
+                                           ScaleFactors *sf0, ScaleFactors *sf1) {
     const BlockGeom *blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
@@ -2992,7 +2990,7 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet *scs, struct ModeD
 
 #if CONFIG_ENABLE_OBMC
 static void av1_inter_prediction_obmc(PictureControlSet *pcs, BlkStruct *blk_ptr, uint8_t use_precomputed_obmc,
-                                      struct ModeDecisionContext *ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
+                                      ModeDecisionContext *ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
                                       EbPictureBufferDesc *pred_pic, uint16_t dst_origin_x, uint16_t dst_origin_y,
                                       uint32_t component_mask, uint8_t bit_depth, uint8_t is_16bit_pipeline) {
     uint8_t is16bit = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
@@ -3279,7 +3277,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet *pcs, MacroBlockD *xd, Bl
 EbErrorType svt_aom_inter_prediction(SequenceControlSet *scs, PictureControlSet *pcs, BlockModeInfo *block_mi,
                                      WarpedMotionParams *wm_params_0, WarpedMotionParams *wm_params_1,
                                      BlkStruct *blk_ptr, const BlockGeom *blk_geom, bool use_precomputed_obmc,
-                                     bool use_precomputed_ii, struct ModeDecisionContext *ctx,
+                                     bool use_precomputed_ii, ModeDecisionContext *ctx,
                                      NeighborArrayUnit *recon_neigh_y, NeighborArrayUnit *recon_neigh_cb,
                                      NeighborArrayUnit *recon_neigh_cr, EbPictureBufferDesc *ref_pic_0,
                                      EbPictureBufferDesc *ref_pic_1, uint16_t ref_origin_x, uint16_t ref_origin_y,

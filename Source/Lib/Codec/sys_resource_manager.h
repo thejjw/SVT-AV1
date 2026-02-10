@@ -60,7 +60,7 @@ typedef struct EbObjectWrapper {
 /*********************************************************************
      * Fifo
      *   Defines a static (i.e. no dynamic memory allocation) single
-     *   linked-list, constant time fifo implmentation. The fifo uses
+     *   linked-list, constant time fifo implementation. The fifo uses
      *   the EbObjectWrapper member next_ptr to create the linked-list.
      *   The Fifo also contains a counting_semaphore for OS thread-blocking
      *   and dynamic EbObjectWrapper counting.

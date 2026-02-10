@@ -26,14 +26,6 @@ extern "C" {
 #define MEAN_PRECISION (VARIANCE_PRECISION >> 1)
 #define HME_DECIM_FILTER_TAP 9
 
-// Quater pel refinement methods
-typedef enum EbQuarterPelRefinementMethod {
-    EB_QUARTER_IN_FULL,
-    EB_QUARTER_IN_HALF_HORIZONTAL,
-    EB_QUARTER_IN_HALF_VERTICAL,
-    EB_QUARTER_IN_HALF_DIAGONAL
-} EbQuarterPelInterpolationMethod;
-
 typedef struct MePredictionUnit {
     uint64_t distortion;
     int16_t  x_mv;
@@ -266,17 +258,6 @@ typedef enum EbMeTierZeroPu {
     ME_TIER_ZERO_PU_16x64_3 = 208
 } EbMeTierZeroPu;
 
-typedef struct IntraReferenceSamplesOpenLoop {
-    EbDctor  dctor;
-    uint8_t *y_intra_reference_array_reverse;
-
-    // Scratch buffers used in the interpolaiton process
-    uint8_t reference_above_line_y[MAX_INTRA_REFERENCE_SAMPLES];
-    uint8_t reference_left_line_y[MAX_INTRA_REFERENCE_SAMPLES];
-    bool    above_ready_flag_y;
-    bool    left_ready_flag_y;
-} IntraReferenceSamplesOpenLoop;
-
 typedef struct MeHmeRefPruneCtrls {
     bool enable_me_hme_ref_pruning;
     // TH used to prune references based on hme sad deviation
@@ -339,12 +320,6 @@ typedef struct PreHmeCtrls {
     uint8_t          skip_search_line; //if 1 skips every other search region line
     uint8_t          l1_early_exit;
 } PreHmeCtrls;
-typedef struct MeHmeSearchAreaCtrls {
-    SearchAreaMinMax hme_l0_sa[SEARCH_REGION_COUNT];
-    SearchArea       hme_l1_sa[SEARCH_REGION_COUNT];
-    SearchArea       hme_l2_sa[SEARCH_REGION_COUNT];
-    SearchAreaMinMax me_sa[SEARCH_REGION_COUNT];
-} MeHmeSearchAreaCtrls;
 typedef struct SearchResults {
     uint8_t  list_i; // list index of this ref
     uint8_t  ref_i; // ref list index of this ref
@@ -398,7 +373,6 @@ typedef struct MeContext {
     uint32_t          *p_best_full_pel_mv16x16;
     uint32_t          *p_best_full_pel_mv32x32;
     uint32_t          *p_best_full_pel_mv64x64;
-    uint8_t            full_quarter_pel_refinement;
     uint16_t          *p_eight_pos_sad16x16;
     uint32_t           p_eight_sad32x32[4][8];
     uint32_t           p_eight_sad16x16[16][8];
@@ -412,7 +386,6 @@ typedef struct MeContext {
     MeHmeRefPruneCtrls me_hme_prune_ctrls;
     MeSrCtrls          me_sr_adjustment_ctrls;
     Me8x8VarCtrls      me_8x8_var_ctrls;
-    uint8_t            max_hme_sr_area_multipler;
     MvBasedSearchAdj   mv_based_sa_adj;
     // ME
     uint8_t          best_list_idx;
@@ -449,14 +422,10 @@ typedef struct MeContext {
                                       [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     uint64_t hme_level2_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
                            [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t adjust_hme_l1_factor[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    int16_t adjust_hme_l2_factor[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    int16_t hme_factor;
     // ------- Context for Alt-Ref ME ------
     void *alt_ref_reference_ptr;
     // Open Loop ME
-    EbMeType                    me_type;
-    EbDownScaledBufDescPtrArray mctf_ref_desc_ptr_array;
+    EbMeType me_type;
 
     uint8_t num_of_list_to_search;
     uint8_t num_of_ref_pic_to_search[2];
@@ -499,8 +468,6 @@ typedef struct MeContext {
     uint32_t me_safe_limit_zz_th;
     uint32_t tf_tot_vert_blks; //total vertical motion blocks in TF
     uint32_t tf_tot_horz_blks; //total horizontal motion blocks in TF
-    uint8_t  skip_frame;
-    uint8_t  bypass_blk_step;
     uint32_t b64_width;
     uint32_t b64_height;
     uint8_t  performed_phme[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][2];

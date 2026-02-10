@@ -30,7 +30,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define VECTOR_MINIMUM_CAPACITY 2
 #define VECTOR_GROWTH_FACTOR 2
-#define VECTOR_SHRINK_THRESHOLD (1 / 4)
 
 #define VECTOR_ERROR -1
 #define VECTOR_SUCCESS 0
@@ -76,8 +75,6 @@ void *svt_aom_iterator_get(Iterator *iterator);
 void svt_aom_iterator_increment(Iterator *iterator);
 
 /***** PRIVATE *****/
-
-//#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 bool _vector_should_grow(Vector *vector);
 

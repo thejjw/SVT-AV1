@@ -31,7 +31,6 @@
 
 #include "transforms.h"
 #include "aom_dsp_rtcd.h"
-#include "svt_log.h"
 #include "intra_prediction.h"
 #include "motion_estimation.h"
 
@@ -570,7 +569,6 @@ double svt_av1_get_gfu_boost_projection_factor(double min_factor, double max_fac
 }
 
 #define MAX_GFUBOOST_FACTOR 10.0
-//#define MIN_GFUBOOST_FACTOR 4.0
 static int get_gfu_boost_from_r0_lap(double min_factor, double max_factor, double r0, int frames_to_key) {
     double    factor = svt_av1_get_gfu_boost_projection_factor(min_factor, max_factor, frames_to_key);
     const int boost  = (int)rint(factor / r0);
@@ -720,8 +718,7 @@ static const rate_factor_level rate_factor_levels[SVT_AV1_FRAME_UPDATE_TYPES] = 
     GF_ARF_LOW, // INTNL_ARF_UPDATE
 };
 
-static int av1_frame_type_qdelta_org(struct PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q,
-                                     const int bit_depth) {
+static int av1_frame_type_qdelta_org(PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, const int bit_depth) {
     const rate_factor_level rf_lvl      = rate_factor_levels[ppcs->update_type];
     const FrameType         frame_type  = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
     double                  rate_factor = rate_factor_deltas[rf_lvl];
@@ -817,7 +814,7 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
     int                      active_best_quality  = 0;
     int                      active_worst_quality = qindex;
     rc->arf_q                                     = 0;
-    int           q;
+
     const uint8_t temporal_layer      = ppcs->temporal_layer_index;
     const uint8_t hierarchical_levels = ppcs->hierarchical_levels;
     const int     leaf_frame          = ppcs->is_highest_layer;
@@ -903,7 +900,6 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
 #endif
     }
 
-    q = active_worst_quality;
     if (use_qstep_based_q_calc) {
         const unsigned int r0_weight_idx = !frame_is_intra_only(ppcs) + !!temporal_layer;
         assert(r0_weight_idx <= 2);
@@ -978,13 +974,11 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
 #if DEBUG_QP_SCALING
     SVT_DEBUG("  after adj: abq %i, awq %i\n", active_best_quality, active_worst_quality);
 #endif
-    q = active_best_quality;
-    clamp(q, active_best_quality, active_worst_quality);
     ppcs->top_index    = active_worst_quality;
     ppcs->bottom_index = active_best_quality;
     assert(ppcs->top_index <= rc->worst_quality && ppcs->top_index >= rc->best_quality);
     assert(ppcs->bottom_index <= rc->worst_quality && ppcs->bottom_index >= rc->best_quality);
-    return q;
+    return active_best_quality;
 }
 /******************************************************
  * non_base_boost
@@ -1291,7 +1285,7 @@ void svt_aom_lambda_assign(PictureControlSet *pcs, uint32_t *fast_lambda, uint32
 * compute_deltaq
 * Compute delta-q based on the q, bitdepth and cyclic refresh parameters
 *******************************************************************************/
-static int compute_deltaq(struct PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, double rate_ratio_qdelta,
+static int compute_deltaq(PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q, double rate_ratio_qdelta,
                           const int bit_depth) {
     const rate_factor_level rf_lvl     = rate_factor_levels[ppcs->update_type];
     const FrameType         frame_type = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
@@ -1464,7 +1458,7 @@ void svt_aom_cyclic_refresh_init(PictureParentControlSet *ppcs) {
     // Use larger delta-qp (increase rate_ratio_qdelta) for first few
     // refresh cycles after a key frame (svc) or scene change (non svc).
     // For non svc screen content, after a scene change gradually reduce
-    // this boost and supress it further if either of the previous two
+    // this boost and suppress it further if either of the previous two
     // frames overshot.
     if (cr->percent_refresh > 0) {
         if (!ppcs->sc_class1) {
@@ -1870,9 +1864,7 @@ void set_rc_buffer_sizes(SequenceControlSet *scs) {
     rc->optimal_buffer_level  = (optimal == 0) ? bandwidth / 8 : optimal * bandwidth / 1000;
     rc->maximum_buffer_size   = (maximum == 0) ? bandwidth / 8 : maximum * bandwidth / 1000;
 }
-//#define INT_MAX 0x7fffffff
-#define BPER_MB_NORMBITS 9
-#define FRAME_OVERHEAD_BITS 200
+
 static void av1_rc_init(SequenceControlSet *scs) {
     EncodeContext              *enc_ctx = scs->enc_ctx;
     RATE_CONTROL               *rc      = &enc_ctx->rc;
@@ -2352,9 +2344,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet *pcs, int act
             // not first frame of one pass and kf_boost is set
             double q_adj_factor = 1.0;
             double q_val;
-            active_best_quality =
-                //get_kf_active_quality_cqp(rc, rc->avg_frame_qindex[KEY_FRAME], bit_depth);
-                get_kf_active_quality_tpl(rc, rc->avg_frame_qindex[KEY_FRAME], bit_depth);
+            active_best_quality = get_kf_active_quality_tpl(rc, rc->avg_frame_qindex[KEY_FRAME], bit_depth);
             // Allow somewhat lower kf minq with small image formats.
             if ((width * height) <= (352 * 288)) {
                 q_adj_factor -= 0.25;
@@ -2362,8 +2352,6 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet *pcs, int act
             // Convert the adjustment factor to a qindex delta
             // on active_best_quality.
             q_val = svt_av1_convert_qindex_to_q(active_best_quality, bit_depth);
-            // active_best_quality +=
-            //     av1_compute_qdelta(rc, q_val, q_val * q_adj_factor, bit_depth);
             active_best_quality += svt_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
         }
     } else {
@@ -2581,7 +2569,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs) {
         }
         // For alt_ref and GF frames (including internal arf frames) adjust the
         // worst allowed quality as well. This insures that even on hard
-        // sections we dont clamp the Q at the same value for arf frames and
+        // sections we don't clamp the Q at the same value for arf frames and
         // leaf (non arf) frames. This is important to the TPL model which assumes
         // Q drops with each arf level.
         if (!(pcs->ppcs->is_overlay) &&
@@ -2762,7 +2750,7 @@ static void update_buffer_level(PictureParentControlSet *ppcs, int encoded_frame
 /*********************************************************************************************
 * Reset rate_control_param into default values
 ***********************************************************************************************/
-static void rc_param_reset(struct RateControlIntervalParamContext *rc_param) {
+static void rc_param_reset(RateControlIntervalParamContext *rc_param) {
     rc_param->size                     = -1;
     rc_param->processed_frame_number   = 0;
     rc_param->vbr_bits_off_target      = 0;
@@ -3371,49 +3359,37 @@ static void restore_two_pass_param(PictureParentControlSet         *ppcs,
 static void restore_param(PictureParentControlSet *ppcs, RateControlIntervalParamContext *rate_control_param_ptr) {
     SequenceControlSet *scs    = ppcs->scs;
     EncodeContext      *ec_ctx = scs->enc_ctx;
-
     if (scs->static_config.gop_constraint_rc && rate_control_param_ptr->first_poc == ppcs->picture_number) {
         rate_control_param_ptr->rolling_target_bits = ec_ctx->rc.avg_frame_bandwidth;
         rate_control_param_ptr->rolling_actual_bits = ec_ctx->rc.avg_frame_bandwidth;
     }
-    if (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR)
-        restore_two_pass_param(ppcs, rate_control_param_ptr);
 
-    ppcs->frames_since_key = (int)(ppcs->decode_order - ppcs->last_idr_picture);
+    restore_two_pass_param(ppcs, rate_control_param_ptr);
 
-    int key_max = scs->static_config.intra_period_length + 1;
+    int     key_max         = scs->static_config.intra_period_length + 1;
+    int64_t last_frame_diff = (int)(scs->twopass.stats_buf_ctx->stats_in_end[-1].frame - ppcs->last_idr_picture + 1);
     if (scs->lap_rc) {
         if (scs->static_config.hierarchical_levels != ppcs->hierarchical_levels || ppcs->end_of_sequence_region)
-            key_max = (int)MIN(
-                (scs->static_config.intra_period_length + 1),
-                (int)((int64_t)((scs->twopass.stats_buf_ctx->stats_in_end - 1)->frame) - ppcs->last_idr_picture + 1));
-        else
-            key_max = scs->static_config.intra_period_length + 1;
+            key_max = MIN(key_max, last_frame_diff);
     } else {
-        if (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR)
-            key_max = (int)MIN(
-                scs->static_config.intra_period_length + 1,
-                (int)((int64_t)((scs->twopass.stats_buf_ctx->stats_in_end - 1)->frame) - ppcs->last_idr_picture + 1));
+        key_max = MIN(key_max, last_frame_diff);
     }
-    if (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR) {
-        ppcs->frames_to_key     = key_max - ppcs->frames_since_key;
-        TWO_PASS *const twopass = &scs->twopass;
-        RATE_CONTROL   *rc      = &ec_ctx->rc;
-        // For the last minigop of the sequence, when look ahead is not long enough to find the GOP size, the GOP size is set
-        // to kf_cfg->key_freq_max and the kf_group_bits is calculated based on that. However, when we get closer to the end, the
-        // end of sequence will be in the look ahead and frames_to_key is updated. In this case, kf_group_bits is calculated based
-        // on the new GOP size
-        if (scs->lap_rc && ((scs->static_config.intra_period_length + 1) != ppcs->frames_since_key) &&
-            (scs->lad_mg + 1) * (1 << scs->static_config.hierarchical_levels) <
-                scs->static_config.intra_period_length &&
-            (scs->static_config.hierarchical_levels != ppcs->hierarchical_levels || ppcs->end_of_sequence_region) &&
-            !rate_control_param_ptr->end_of_seq_seen) {
-            twopass->kf_group_bits = (ppcs->frames_to_key) * twopass->kf_group_bits /
-                (scs->static_config.intra_period_length + 1 - ppcs->frames_since_key);
-            rate_control_param_ptr->end_of_seq_seen = 1;
-        }
-        rc->frames_to_key    = ppcs->frames_to_key;
-        rc->frames_since_key = ppcs->frames_since_key;
+
+    TWO_PASS *const twopass = &scs->twopass;
+    RATE_CONTROL   *rc      = &ec_ctx->rc;
+    // For the last minigop of the sequence, when look ahead is not long enough to find the GOP size, the GOP size is set
+    // to kf_cfg->key_freq_max and the kf_group_bits is calculated based on that. However, when we get closer to the end, the
+    // end of sequence will be in the look ahead and frames_to_key is updated. In this case, kf_group_bits is calculated based
+    // on the new GOP size
+    rc->frames_since_key = (int)(ppcs->decode_order - ppcs->last_idr_picture);
+    rc->frames_to_key    = key_max - rc->frames_since_key;
+    if (scs->lap_rc && ((scs->static_config.intra_period_length + 1) != rc->frames_since_key) &&
+        (scs->lad_mg + 1) * (1 << scs->static_config.hierarchical_levels) < scs->static_config.intra_period_length &&
+        (scs->static_config.hierarchical_levels != ppcs->hierarchical_levels || ppcs->end_of_sequence_region) &&
+        !rate_control_param_ptr->end_of_seq_seen) {
+        twopass->kf_group_bits = rc->frames_to_key * twopass->kf_group_bits /
+            (scs->static_config.intra_period_length + 1 - rc->frames_since_key);
+        rate_control_param_ptr->end_of_seq_seen = 1;
     }
 }
 
@@ -3462,9 +3438,8 @@ static void coded_frames_stat_calc(PictureParentControlSet *ppcs) {
                 ? queue_entry_index_temp - CODED_FRAMES_STAT_QUEUE_MAX_DEPTH
                 : queue_entry_index_temp;
 
-            move_slide_window_flag =
-                (bool)(move_slide_window_flag &&
-                       (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1));
+            move_slide_window_flag = move_slide_window_flag &&
+                (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1);
 
             if (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1) {
                 // check if it is the last frame. If we have reached the last frame, we would output the buffered frames in the Queue.
@@ -3653,7 +3628,8 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                             process_tpl_stats_frame_kf_gfu_boost(pcs);
                         }
                         svt_block_on_mutex(scs->enc_ctx->stat_file_mutex);
-                        restore_param(pcs->ppcs, pcs->ppcs->rate_control_param_ptr);
+                        if (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CBR)
+                            restore_param(pcs->ppcs, pcs->ppcs->rate_control_param_ptr);
 
                         if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR)
                             svt_aom_one_pass_rt_rate_alloc(pcs->ppcs);
