@@ -3884,7 +3884,6 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
         // When lambda tuning is on, lambda of each block is set separately, however at interdepth decision the sb lambda is used
         uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD] : ctx->full_sb_lambda_md[EB_8_BIT_MD];
         ctx->blk_ptr->cost   = RDCOST(full_lambda, cand_bf->total_rate, cand_bf->full_dist);
-        ctx->blk_ptr->default_cost = ctx->blk_ptr->cost;
         ctx->blk_ptr->full_dist    = cand_bf->full_dist;
     }
 

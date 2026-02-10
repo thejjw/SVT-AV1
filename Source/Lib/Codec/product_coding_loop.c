@@ -6961,9 +6961,6 @@ static void move_blk_data_redund(PictureControlSet* pcs, ModeDecisionContext* ct
     dst->left_part_ctx   = src->left_part_ctx;
     dst->above_part_ctx  = src->above_part_ctx;
     dst->cost            = src->cost;
-    // Similar to cost but does not get updated @ svt_aom_d1_non_square_block_decision() and
-    // svt_aom_d2_inter_depth_block_decision()
-    dst->default_cost = src->default_cost;
     // only for MD
     uint16_t bwidth     = ctx->blk_geom->bwidth;
     uint16_t bheight    = ctx->blk_geom->bheight;
@@ -7916,7 +7913,7 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
 #if FTR_VLPD0 // score
     BlkStruct* blk_ptr = ctx->blk_ptr;
     if (pcs->scs->allintra && ctx->lpd0_ctrls.pd0_level == VERY_LIGHT_PD0) {
-        blk_ptr->cost = blk_ptr->default_cost = compute_vlpd0_cost_allintra(pcs, ctx);
+        blk_ptr->cost = compute_vlpd0_cost_allintra(pcs, ctx);
         ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
         ctx->cost_avail[blk_ptr->mds_idx]     = true;
         return;
@@ -7972,12 +7969,12 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
     if (ctx->lpd0_ctrls.pd0_level == VERY_LIGHT_PD0) {
         uint32_t rate      = ctx->md_rate_est_ctx->partition_fac_bits[0][PARTITION_NONE];
         uint64_t dist      = ctx->mds0_best_cost;
-        ctx->blk_ptr->cost = ctx->blk_ptr->default_cost = RDCOST(ctx->full_sb_lambda_md[EB_8_BIT_MD], rate, dist);
+        ctx->blk_ptr->cost = RDCOST(ctx->full_sb_lambda_md[EB_8_BIT_MD], rate, dist);
     } else {
         ctx->md_stage = MD_STAGE_3;
         md_stage_3_light_pd0(pcs, ctx, input_pic, input_origin_index, blk_origin_index);
         // Update the cost
-        ctx->blk_ptr->cost = ctx->blk_ptr->default_cost = *(ctx->cand_bf_ptr_array[ctx->mds0_best_idx]->full_cost);
+        ctx->blk_ptr->cost = *(ctx->cand_bf_ptr_array[ctx->mds0_best_idx]->full_cost);
     }
     assert(ctx->lpd1_ctrls.pd1_level < LPD1_LEVELS);
 
@@ -9453,7 +9450,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
         const uint64_t part_cost = RDCOST(full_lambda, split_rate, 0);
 
-        if (part_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * nsq_split_cost_th) {
+        if (part_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].cost * nsq_split_cost_th) {
             return true;
         }
     }
@@ -9539,7 +9536,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
         const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
-        if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * lower_depth_split_cost_th) {
+        if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].cost * lower_depth_split_cost_th) {
             return true;
         }
     }
@@ -9574,7 +9571,7 @@ static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx) {
     // Derive the distortion/cost ratio
     const uint32_t full_lambda     = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
     const uint64_t dist            = RDCOST(full_lambda, 0, sq_blk_ptr->full_dist);
-    const uint64_t dist_cost_ratio = (dist * 100) / sq_blk_ptr->default_cost;
+    const uint64_t dist_cost_ratio = (dist * 100) / sq_blk_ptr->cost;
     const uint64_t min_ratio       = 50;
     const uint64_t max_ratio       = 100;
     const uint64_t modulated_th    = (100 * (dist_cost_ratio - min_ratio)) / (max_ratio - min_ratio);
@@ -9732,15 +9729,15 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
             }
 
             // compute the cost of the SQ block and H block
-            const uint64_t sq_cost = local_cu_unit[sqi].default_cost;
-            const uint64_t h_cost  = local_cu_unit[sqi + 1].default_cost + local_cu_unit[sqi + 2].default_cost;
+            const uint64_t sq_cost = local_cu_unit[sqi].cost;
+            const uint64_t h_cost  = local_cu_unit[sqi + 1].cost + local_cu_unit[sqi + 2].cost;
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and H blocks
             skip_nsq = (h_cost > ((sq_cost * sq_weight) / 100));
             // If not skipping, perform a check on the relative H/V costs
             if (!skip_nsq && ctx->avail_blk_flag[sqi + 3] && ctx->avail_blk_flag[sqi + 4]) {
                 //compute the cost of V partition
-                const uint64_t v_cost   = local_cu_unit[sqi + 3].default_cost + local_cu_unit[sqi + 4].default_cost;
+                const uint64_t v_cost   = local_cu_unit[sqi + 3].cost + local_cu_unit[sqi + 4].cost;
                 const uint32_t v_weight = ctx->nsq_search_ctrls.hv_weight;
                 //if the cost of H partition is bigger than the V partition by a certain percentage
                 skip_nsq = (h_cost > ((v_cost * v_weight) / 100));
@@ -9763,15 +9760,15 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
             }
 
             // compute the cost of the SQ block and V block
-            const uint64_t sq_cost = local_cu_unit[sqi].default_cost;
-            const uint64_t v_cost  = local_cu_unit[sqi + 3].default_cost + local_cu_unit[sqi + 4].default_cost;
+            const uint64_t sq_cost = local_cu_unit[sqi].cost;
+            const uint64_t v_cost  = local_cu_unit[sqi + 3].cost + local_cu_unit[sqi + 4].cost;
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
             skip_nsq = (v_cost > ((sq_cost * sq_weight) / 100));
 
             // If not skipping, perform a check on the relative H/V costs
             if (!skip_nsq && ctx->avail_blk_flag[sqi + 1] && ctx->avail_blk_flag[sqi + 2]) {
-                const uint64_t h_cost   = local_cu_unit[sqi + 1].default_cost + local_cu_unit[sqi + 2].default_cost;
+                const uint64_t h_cost   = local_cu_unit[sqi + 1].cost + local_cu_unit[sqi + 2].cost;
                 const uint32_t h_weight = ctx->nsq_search_ctrls.hv_weight;
                 //if the cost of V partition is bigger than the H partition by a certain percentage
                 skip_nsq = (v_cost > ((h_cost * h_weight) / 100));
@@ -10327,7 +10324,7 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
     if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
         pc_tree->rdc.valid                         = 1;
     } else {
-        pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
+        pc_tree->rdc.rd_cost                                        = split_cost;
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
@@ -10398,8 +10395,6 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
             assert(ctx->cost_avail[blk_idx_mds]);
-            pc_tree->block_data[PART_N][0]->cost = pc_tree->block_data[PART_N][0]->default_cost =
-                ctx->md_blk_arr_nsq[blk_idx_mds].cost;
             ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
             pc_tree->block_data[PART_N][0]->qindex         = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx        = ctx->blk_geom->sqi_mds;
@@ -10702,7 +10697,7 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
     if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
         pc_tree->rdc.valid                         = 1;
     } else {
-        pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
+        pc_tree->rdc.rd_cost                                        = split_cost;
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
@@ -10829,7 +10824,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
 
             part_cost += pc_tree->block_data[shape][nsi]->cost;
 
-            if (pc_tree->rdc.valid && part_cost > pc_tree->rdc.rd_cost) {
+            if (pc_tree->rdc.valid && part_cost >= pc_tree->rdc.rd_cost) {
                 valid_part = false;
                 break;
             }
@@ -10857,7 +10852,6 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 pc_tree->rdc.valid   = 1;
 
                 pc_tree->block_data[PART_N][0]->part = from_shape_to_part[shape];
-                pc_tree->block_data[PART_N][0]->cost        = part_cost;
                 ctx->cost_avail[ctx->blk_geom->sqi_mds]     = 1;
             }
         }

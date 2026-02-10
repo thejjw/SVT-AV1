@@ -175,9 +175,6 @@ typedef struct BlkStruct {
     // Used when encdec is bypassed
     EbPictureBufferDesc* recon_tmp;
     uint64_t             cost;
-    // Similar to cost but does not get updated @ svt_aom_d1_non_square_block_decision() and
-    // svt_aom_d2_inter_depth_block_decision()
-    uint64_t     default_cost;
     uint64_t     total_rate;
     uint64_t     full_dist;
     QuantDcData  quant_dc;
