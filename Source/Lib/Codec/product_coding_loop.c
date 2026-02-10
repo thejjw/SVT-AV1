@@ -6932,15 +6932,15 @@ static void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *ct
 
     dst->part = src->part;
     //dst->use_intrabc = src->use_intrabc;
-    dst->drl_ctx[0]               = src->drl_ctx[0];
-    dst->drl_ctx[1]               = src->drl_ctx[1];
-    dst->drl_ctx_near[0]          = src->drl_ctx_near[0];
-    dst->drl_ctx_near[1]          = src->drl_ctx_near[1];
-    dst->cnt_nz_coeff             = src->cnt_nz_coeff;
-    dst->full_dist                = src->full_dist;
-    dst->left_part_ctx            = src->left_part_ctx;
-    dst->above_part_ctx           = src->above_part_ctx;
-    dst->cost                     = src->cost;
+    dst->drl_ctx[0]      = src->drl_ctx[0];
+    dst->drl_ctx[1]      = src->drl_ctx[1];
+    dst->drl_ctx_near[0] = src->drl_ctx_near[0];
+    dst->drl_ctx_near[1] = src->drl_ctx_near[1];
+    dst->cnt_nz_coeff    = src->cnt_nz_coeff;
+    dst->full_dist       = src->full_dist;
+    dst->left_part_ctx   = src->left_part_ctx;
+    dst->above_part_ctx  = src->above_part_ctx;
+    dst->cost            = src->cost;
     // Similar to cost but does not get updated @ svt_aom_d1_non_square_block_decision() and
     // svt_aom_d2_inter_depth_block_decision()
     dst->default_cost = src->default_cost;
@@ -9371,7 +9371,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDeci
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
             ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
         const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
-        if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * lower_depth_split_cost_th)
+        if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].default_cost * lower_depth_split_cost_th) {
             return true;
         }
     }
@@ -10090,8 +10090,9 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
                                                            0, //left_neighbor_partition,
                                                            0); // above_neighbor_partition);
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
-    if (!pcs->ppcs->use_accurate_part_ctx)
+    if (!pcs->ppcs->use_accurate_part_ctx) {
         above_split_rate *= 2;
+    }
     int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
@@ -10153,6 +10154,7 @@ static bool test_split_partition_lpd0(SequenceControlSet *scs, PictureControlSet
     }
     return true;
 }
+
 /*
  * Loop over all passed blocks in an SB and perform mode decision for each block,
  * then output the optimal mode distribution/partitioning for the given SB.
@@ -10231,8 +10233,9 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet *scs, PictureControlSet *pcs
 
     if (mds->split_flag) {
         const bool valid_part = test_split_partition_lpd0(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
-        if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && !valid_part && ctx->cost_avail[mds->mds_idx])
+        if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && !valid_part && ctx->cost_avail[mds->mds_idx]) {
             mode_decision_update_neighbor_arrays_light_pd0(scs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+        }
     } else if (!ctx->skip_intra && !ctx->lpd0_use_src_samples && ctx->cost_avail[mds->mds_idx] && mds->index < 3) {
         mode_decision_update_neighbor_arrays_light_pd0(scs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
     }
@@ -10248,14 +10251,16 @@ static void test_split_partition_lpd1(SequenceControlSet *scs, PictureControlSet
         const int y_idx = (i >> 1) * mi_step;
 
         // if block fully outside pic, don't process
-        if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
+        if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) {
             continue;
+        }
         svt_aom_pick_partition_lpd1(scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
     }
     pc_tree->block_data[PART_N][0]->split_flag = true;
     pc_tree->block_data[PART_N][0]->part       = PARTITION_SPLIT;
     pc_tree->partition                         = PARTITION_SPLIT;
 }
+
 /*
  * Select the best partitioning and modes for the passed block. Recursively search lower subpartitions of the passed block.
  * Output the optimal mode distribution/partitioning for the given SB.
@@ -10403,10 +10408,12 @@ static void update_part_neighs(ModeDecisionContext *ctx, BlkStruct *blk_ptr, con
 void svt_aom_init_sb_data(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx) {
     // Update neighbour arrays for the SB
     if (ctx->pd_pass == PD_PASS_0 && ctx->lpd0_ctrls.pd0_level > REGULAR_PD0) {
-        if (!ctx->skip_intra)
+        if (!ctx->skip_intra) {
             update_neighbour_arrays_light_pd0(pcs, ctx);
-    } else
+        }
+    } else {
         update_neighbour_arrays(pcs, ctx);
+    }
 
     // If high bit-depth, pad the input pic. Done once for SB.
     // If using 8bit MD but bypassing EncDec, will need the 16bit pic for MDS3.
@@ -10463,8 +10470,9 @@ static bool test_split_partition(SequenceControlSet *scs, PictureControlSet *pcs
                                                            pc_tree->block_data[PART_N][0]->above_part_ctx);
 
     // If not using accurate partition rate, bias against splitting by increasing the rate of SPLIT partition
-    if (!pcs->ppcs->use_accurate_part_ctx)
+    if (!pcs->ppcs->use_accurate_part_ctx) {
         above_split_rate *= 2;
+    }
     int64_t split_cost = RDCOST(full_lambda, above_split_rate, 0);
 
     const int mi_step = mi_size_wide[pc_tree->bsize] / 2;
@@ -10603,8 +10611,9 @@ static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDeci
             // If performing NSQ search, take shortcuts to reduce NSQ overhead
             if (shape != PART_N && nsi == 0) {
                 // Update settings for the NSQ(s) for certain speed features
-                if (pcs->slice_type != I_SLICE)
+                if (pcs->slice_type != I_SLICE) {
                     faster_md_settings_nsq(pcs, ctx, mds->is_child);
+                }
 
                 // call nsq-reduction func if NSQ is on
                 if (get_skip_processing_nsq_block(pcs, ctx)) {
@@ -10669,6 +10678,7 @@ static bool test_depth(SequenceControlSet *scs, PictureControlSet *pcs, ModeDeci
 
     return ctx->cost_avail[base_blk_idx_mds];
 }
+
 /*
  * Select the best partitioning and modes for the passed block. Recursively search lower subpartitions of the passed block.
  * Output the optimal mode distribution/partitioning for the given SB.
@@ -10703,13 +10713,14 @@ bool svt_aom_pick_partition(SequenceControlSet *scs, PictureControlSet *pcs, Mod
         }
 
         // Now have checked all d1 blocks, so update d2 info
-        if (ctx->copied_neigh_arrays && mds->split_flag)
+        if (ctx->copied_neigh_arrays && mds->split_flag) {
             svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
                 pcs,
                 ctx,
                 NSQ_NEIGHBOR_ARRAY_INDEX,
                 MD_NEIGHBOR_ARRAY_INDEX,
                 ctx->blk_geom->sqi_mds);
+        }
 
         ctx->copied_neigh_arrays = 0;
     }
@@ -10717,8 +10728,9 @@ bool svt_aom_pick_partition(SequenceControlSet *scs, PictureControlSet *pcs, Mod
     // Test lower depths if flagged to be tested
     if (mds->split_flag) {
         const bool valid_part = test_split_partition(scs, pcs, ctx, mds, pc_tree, mi_row, mi_col);
-        if (!valid_part && ctx->cost_avail[mds->mds_idx])
+        if (!valid_part && ctx->cost_avail[mds->mds_idx]) {
             md_update_all_neighbour_arrays_multiple(pcs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
+        }
     } else if (ctx->cost_avail[mds->mds_idx] && mds->index < 3) {
         md_update_all_neighbour_arrays_multiple(pcs, ctx, pc_tree->block_data[PART_N][0]->best_d1_blk);
     }

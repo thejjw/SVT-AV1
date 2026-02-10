@@ -219,13 +219,13 @@ EB_ALIGN(16) const int16_t svt_aom_warped_filter[WARPEDPIXEL_PREC_SHIFTS * 3 + 1
 #if USE_LIMITED_PREC_MULT
 
 #define MUL_PREC_BITS 16
+
 static uint16_t resolve_multiplier_64(uint64_t D, int16_t *shift) {
     int      msb  = 0;
     uint16_t mult = 0;
     *shift        = 0;
     if (D != 0) {
-        msb =
-            (int16_t)((D >> 32) ? get_msb((unsigned int)(D >> 32)) + 32 : get_msb((unsigned int)D));
+        msb = (int16_t)((D >> 32) ? get_msb((unsigned int)(D >> 32)) + 32 : get_msb((unsigned int)D));
         if (msb >= MUL_PREC_BITS) {
             mult   = (uint16_t)ROUND_POWER_OF_TWO_64(D, msb + 1 - MUL_PREC_BITS);
             *shift = msb + 1 - MUL_PREC_BITS;
@@ -248,9 +248,8 @@ static int32_t get_mult_shift_ndiag(int64_t p_x, int16_t i_det, int shift) {
                               -WARPEDMODEL_NONDIAGAFFINE_CLAMP + 1,
                               WARPEDMODEL_NONDIAGAFFINE_CLAMP - 1);
     } else {
-        return (int32_t)clamp(v * (1 << (-shift)),
-                              -WARPEDMODEL_NONDIAGAFFINE_CLAMP + 1,
-                              WARPEDMODEL_NONDIAGAFFINE_CLAMP - 1);
+        return (int32_t)clamp(
+            v * (1 << (-shift)), -WARPEDMODEL_NONDIAGAFFINE_CLAMP + 1, WARPEDMODEL_NONDIAGAFFINE_CLAMP - 1);
     }
     return ret;
 }

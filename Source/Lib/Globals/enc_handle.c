@@ -1264,6 +1264,7 @@ static ONCE_ROUTINE(init_global_tables) {
     init_ii_masks();
     ONCE_ROUTINE_EPILOG;
 }
+
 DEFINE_ONCE(global_tables_once);
 
 /**********************************
@@ -1429,31 +1430,33 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
     /************************************
         * Picture Control Set: Child
         ************************************/
-        {
-            // The segment Width & Height Arrays are in units of SBs, not samples
-            PictureControlSetInitData input_data;
-            input_data.enc_dec_segment_col = (uint16_t)scs->enc_dec_segment_col_count_array;
-            input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
-            input_data.picture_width = scs->max_input_luma_width;
-            input_data.picture_height = scs->max_input_luma_height;
-            input_data.left_padding = scs->left_padding;
-            input_data.right_padding = scs->right_padding;
-            input_data.top_padding = scs->top_padding;
-            input_data.bot_padding = scs->bot_padding;
-            input_data.bit_depth = scs->encoder_bit_depth;
-            input_data.color_format = color_format;
-            input_data.b64_size = scs->b64_size;
-            input_data.sb_size = scs->super_block_size;
-            input_data.hbd_md = scs->enable_hbd_mode_decision;
-            input_data.mfmv = scs->mfmv_enabled;
-            //Jing: Get tile info from parent_pcs
-            PictureParentControlSet* parent_pcs = (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
-            input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
-            input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
-            input_data.is_16bit_pipeline = scs->is_16bit_pipeline;
-            input_data.av1_cm = parent_pcs->av1_cm;
-            input_data.enc_mode = scs->static_config.enc_mode;
-            input_data.static_config = scs->static_config;
+    {
+        // The segment Width & Height Arrays are in units of SBs, not samples
+        PictureControlSetInitData input_data;
+        input_data.enc_dec_segment_col = (uint16_t)scs->enc_dec_segment_col_count_array;
+        input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
+        input_data.picture_width       = scs->max_input_luma_width;
+        input_data.picture_height      = scs->max_input_luma_height;
+        input_data.left_padding        = scs->left_padding;
+        input_data.right_padding       = scs->right_padding;
+        input_data.top_padding         = scs->top_padding;
+        input_data.bot_padding         = scs->bot_padding;
+        input_data.bit_depth           = scs->encoder_bit_depth;
+        input_data.color_format        = color_format;
+        input_data.b64_size            = scs->b64_size;
+        input_data.sb_size             = scs->super_block_size;
+        input_data.hbd_md              = scs->enable_hbd_mode_decision;
+        input_data.mfmv                = scs->mfmv_enabled;
+        //Jing: Get tile info from parent_pcs
+        PictureParentControlSet *parent_pcs =
+            (PictureParentControlSet *)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]
+                ->object_ptr;
+        input_data.tile_row_count    = parent_pcs->av1_cm->tiles_info.tile_rows;
+        input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
+        input_data.is_16bit_pipeline = scs->is_16bit_pipeline;
+        input_data.av1_cm            = parent_pcs->av1_cm;
+        input_data.enc_mode          = scs->static_config.enc_mode;
+        input_data.static_config     = scs->static_config;
 
         input_data.input_resolution = scs->input_resolution;
         input_data.is_scale         = scs->static_config.superres_mode > SUPERRES_NONE ||

@@ -5490,8 +5490,9 @@ static EbErrorType write_modes_b(PictureControlSet *pcs, EntropyCodingContext *e
 void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, PictureControlSet *pcs, uint16_t tile_idx,
                             EntropyCoder *ec, EbPictureBufferDesc *coeff_ptr, PARTITION_TREE *ptree, int mi_row,
                             int mi_col) {
-    if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols)
+    if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols) {
         return;
+    }
     FRAME_CONTEXT     *frame_context        = ec->fc;
     AomWriter         *ec_writer            = &ec->ec_writer;
     NeighborArrayUnit *partition_context_na = pcs->partition_context_na[tile_idx];
@@ -5541,23 +5542,28 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
     assert(IMPLIES(bsize == BLOCK_4X4, partition == PARTITION_NONE));
     assert(IMPLIES(partition != PARTITION_SPLIT, (mi_row + hbs < cm->mi_rows) || (mi_col + hbs < cm->mi_cols)));
     switch (partition) {
-    case PARTITION_NONE: write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr); break;
+    case PARTITION_NONE:
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
+        break;
     case PARTITION_HORZ:
         write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
-        if (mi_row + hbs < cm->mi_rows)
+        if (mi_row + hbs < cm->mi_rows) {
             write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
+        }
         break;
     case PARTITION_VERT:
         write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
-        if (mi_col + hbs < cm->mi_cols)
+        if (mi_col + hbs < cm->mi_cols) {
             write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
+        }
         break;
     case PARTITION_SPLIT:
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             const int x_idx = (i & 1) * hbs;
             const int y_idx = (i >> 1) * hbs;
-            if (mi_row + y_idx >= cm->mi_rows || mi_col + x_idx >= cm->mi_cols)
+            if (mi_row + y_idx >= cm->mi_rows || mi_col + x_idx >= cm->mi_cols) {
                 continue;
+            }
             svt_aom_write_modes_sb(
                 ec_ctx, sb_ptr, pcs, tile_idx, ec, coeff_ptr, ptree->sub_tree[i], mi_row + y_idx, mi_col + x_idx);
         }
@@ -5594,6 +5600,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext *ec_ctx, SuperBlock *sb_ptr, Pi
             write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[i], tile_idx, coeff_ptr);
         }
         break;
-    default: assert(0);
+    default:
+        assert(0);
     }
 }

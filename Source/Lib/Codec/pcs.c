@@ -1562,7 +1562,9 @@ void free_sb_geoms(SbGeom *geom) {
 }
 
 void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height) {
-    for (int i = 0; i < width * height; i++) { dst_geom[i] = src_geom[i]; }
+    for (int i = 0; i < width * height; i++) {
+        dst_geom[i] = src_geom[i];
+    }
 }
 
 EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms) {
@@ -1575,13 +1577,13 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
     }
 
     for (int sb_index = 0; sb_index < picture_sb_width * picture_sb_height; ++sb_index) {
-        SbGeom  *sb_geom        = &(*sb_geoms)[sb_index];
-        uint16_t hor_index      = sb_index % picture_sb_width;
-        uint16_t ver_index      = sb_index / picture_sb_width;
-        sb_geom->org_x          = hor_index * scs->sb_size;
-        sb_geom->org_y          = ver_index * scs->sb_size;
-        sb_geom->width          = (uint8_t)MIN(width - sb_geom->org_x, scs->sb_size);
-        sb_geom->height         = (uint8_t)MIN(height - sb_geom->org_y, scs->sb_size);
+        SbGeom  *sb_geom   = &(*sb_geoms)[sb_index];
+        uint16_t hor_index = sb_index % picture_sb_width;
+        uint16_t ver_index = sb_index / picture_sb_width;
+        sb_geom->org_x     = hor_index * scs->sb_size;
+        sb_geom->org_y     = ver_index * scs->sb_size;
+        sb_geom->width     = (uint8_t)MIN(width - sb_geom->org_x, scs->sb_size);
+        sb_geom->height    = (uint8_t)MIN(height - sb_geom->org_y, scs->sb_size);
     }
 
     return EB_ErrorNone;

@@ -1553,8 +1553,7 @@ typedef enum RefreshFrameContextMode {
 //**********************************************************************************************************************//
 // aom_codec.h
 /*!\brief Algorithm return codes */
-typedef enum AomCodecErr
-{
+typedef enum AomCodecErr {
     /*!\brief Operation completed without error */
     AOM_CODEC_OK,
     /*!\brief Unspecified error */
@@ -1601,58 +1600,70 @@ typedef enum AomCodecErr
 //**********************************************************************************************************************//
 // Common_data.h
 static const uint8_t intra_mode_context[INTRA_MODES] = {
-    0, 1, 2, 3, 4, 4, 4, 4, 3, 0, 1, 2, 0,
+    0,
+    1,
+    2,
+    3,
+    4,
+    4,
+    4,
+    4,
+    3,
+    0,
+    1,
+    2,
+    0,
 };
 
 static const TxSize txsize_sqr_map[TX_SIZES_ALL] = {
-    TX_4X4,    // TX_4X4
-    TX_8X8,    // TX_8X8
-    TX_16X16,  // TX_16X16
-    TX_32X32,  // TX_32X32
-    TX_64X64,  // TX_64X64
-    TX_4X4,    // TX_4X8
-    TX_4X4,    // TX_8X4
-    TX_8X8,    // TX_8X16
-    TX_8X8,    // TX_16X8
-    TX_16X16,  // TX_16X32
-    TX_16X16,  // TX_32X16
-    TX_32X32,  // TX_32X64
-    TX_32X32,  // TX_64X32
-    TX_4X4,    // TX_4X16
-    TX_4X4,    // TX_16X4
-    TX_8X8,    // TX_8X32
-    TX_8X8,    // TX_32X8
-    TX_16X16,  // TX_16X64
-    TX_16X16,  // TX_64X16
+    TX_4X4, // TX_4X4
+    TX_8X8, // TX_8X8
+    TX_16X16, // TX_16X16
+    TX_32X32, // TX_32X32
+    TX_64X64, // TX_64X64
+    TX_4X4, // TX_4X8
+    TX_4X4, // TX_8X4
+    TX_8X8, // TX_8X16
+    TX_8X8, // TX_16X8
+    TX_16X16, // TX_16X32
+    TX_16X16, // TX_32X16
+    TX_32X32, // TX_32X64
+    TX_32X32, // TX_64X32
+    TX_4X4, // TX_4X16
+    TX_4X4, // TX_16X4
+    TX_8X8, // TX_8X32
+    TX_8X8, // TX_32X8
+    TX_16X16, // TX_16X64
+    TX_16X16, // TX_64X16
 };
 static const TxSize txsize_sqr_up_map[TX_SIZES_ALL] = {
-    TX_4X4,    // TX_4X4
-    TX_8X8,    // TX_8X8
-    TX_16X16,  // TX_16X16
-    TX_32X32,  // TX_32X32
-    TX_64X64,  // TX_64X64
-    TX_8X8,    // TX_4X8
-    TX_8X8,    // TX_8X4
-    TX_16X16,  // TX_8X16
-    TX_16X16,  // TX_16X8
-    TX_32X32,  // TX_16X32
-    TX_32X32,  // TX_32X16
-    TX_64X64,  // TX_32X64
-    TX_64X64,  // TX_64X32
-    TX_16X16,  // TX_4X16
-    TX_16X16,  // TX_16X4
-    TX_32X32,  // TX_8X32
-    TX_32X32,  // TX_32X8
-    TX_64X64,  // TX_16X64
-    TX_64X64,  // TX_64X16
+    TX_4X4, // TX_4X4
+    TX_8X8, // TX_8X8
+    TX_16X16, // TX_16X16
+    TX_32X32, // TX_32X32
+    TX_64X64, // TX_64X64
+    TX_8X8, // TX_4X8
+    TX_8X8, // TX_8X4
+    TX_16X16, // TX_8X16
+    TX_16X16, // TX_16X8
+    TX_32X32, // TX_16X32
+    TX_32X32, // TX_32X16
+    TX_64X64, // TX_32X64
+    TX_64X64, // TX_64X32
+    TX_16X16, // TX_4X16
+    TX_16X16, // TX_16X4
+    TX_32X32, // TX_8X32
+    TX_32X32, // TX_32X8
+    TX_64X64, // TX_16X64
+    TX_64X64, // TX_64X16
 };
 
 // above and left partition
-typedef struct PartitionContext
-{
+typedef struct PartitionContext {
     PartitionContextType above;
     PartitionContextType left;
-}PartitionContext;
+} PartitionContext;
+
 // Generates 5 bit field in which each bit set to 1 represents
 // a BlockSize partition  11111 means we split 128x128, 64x64, 32x32, 16x16
 // and 8x8.  10000 means we just split the 128x128 to 64x64
@@ -1923,15 +1934,15 @@ typedef enum TransformationType {
 //       1]       0  0 1)    1]
 typedef struct WarpedMotionParams {
     TransformationType wmtype;
-    int32_t wmmat[MAX_PARAMDIM];
-    int16_t alpha, beta, gamma, delta;
-    int8_t invalid;
+    int32_t            wmmat[MAX_PARAMDIM];
+    int16_t            alpha, beta, gamma, delta;
+    int8_t             invalid;
 } WarpedMotionParams;
 
 /*! Scale factors and scaling function pointers  when reference and current frame dimensions are not equal */
 typedef struct ScaleFactors {
-    int32_t x_scale_fp;  // horizontal fixed point scale factor
-    int32_t y_scale_fp;  // vertical fixed point scale factor
+    int32_t x_scale_fp; // horizontal fixed point scale factor
+    int32_t y_scale_fp; // vertical fixed point scale factor
     int32_t x_step_q4;
     int32_t y_step_q4;
 

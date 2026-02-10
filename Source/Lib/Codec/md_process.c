@@ -164,8 +164,9 @@ static void setup_mds(SequenceControlSet *scs, MdScan *mds, uint32_t *mds_idx, i
         int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
         int             blocks_to_skip      = 0;
 
-        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2) {
             blocks_to_skip += blocks_per_subdepth;
+        }
 
         *mds_idx += blk_geom->d1_depth_offset;
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
@@ -189,8 +190,9 @@ static void setup_pc_tree(PC_TREE *pc_tree, int index, BlockSize bsize, const in
         int             blocks_per_subdepth = (sq_subsize / min_sq_size) * (sq_subsize / min_sq_size);
         int             blocks_to_skip      = 0;
 
-        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2)
+        for (int i = min_sq_size; i <= sq_subsize; i <<= 1, blocks_per_subdepth >>= 2) {
             blocks_to_skip += blocks_per_subdepth;
+        }
 
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
@@ -451,7 +453,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     int     blocks_per_depth = (sb_size / min_bsize) * (sb_size / min_bsize);
     int     blocks_to_alloc  = 0;
 
-    for (int i = min_bsize; i <= sb_size; i <<= 1, blocks_per_depth >>= 2) { blocks_to_alloc += blocks_per_depth; }
+    for (int i = min_bsize; i <= sb_size; i <<= 1, blocks_per_depth >>= 2) {
+        blocks_to_alloc += blocks_per_depth;
+    }
     EB_CALLOC_ARRAY(ctx->mds, blocks_to_alloc);
     uint32_t mds_idx = 0;
     setup_mds(scs, ctx->mds, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);

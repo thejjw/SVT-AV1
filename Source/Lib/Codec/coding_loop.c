@@ -718,6 +718,7 @@ void svt_aom_store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer,
                    sb_w * 2);
     }
 }
+
 void svt_aom_update_mi_map_enc_dec(BlkStruct *blk_ptr, ModeDecisionContext *ctx, PictureControlSet *pcs);
 
 static void perform_intra_coding_loop(PictureControlSet *pcs, EncDecContext *ed_ctx) {
@@ -1530,10 +1531,11 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
         uint16_t *ep_recon = ((uint16_t *)(recon_buffer->buffer_y)) + recon_luma_offset;
         uint16_t *md_recon = (uint16_t *)(blk_ptr->recon_tmp->buffer_y);
 
-        for (uint32_t i = 0; i < ctx->blk_geom->bheight; i++)
+        for (uint32_t i = 0; i < ctx->blk_geom->bheight; i++) {
             svt_memcpy(ep_recon + i * recon_buffer->stride_y,
                        md_recon + i * blk_ptr->recon_tmp->stride_y,
                        ctx->blk_geom->bwidth * sizeof(uint16_t));
+        }
 
         if (ctx->blk_geom->has_uv) {
             uint32_t round_origin_x = (ctx->blk_org_x >> 3) << 3; // for Chroma blocks with size of 4
@@ -1545,10 +1547,11 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
             uint16_t *ep_recon_cr = ((uint16_t *)(recon_buffer->buffer_cr)) + recon_cr_offset;
             uint16_t *md_recon_cr = (uint16_t *)(blk_ptr->recon_tmp->buffer_cr);
 
-            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++)
+            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++) {
                 svt_memcpy(ep_recon_cr + i * recon_buffer->stride_cr,
                            md_recon_cr + i * blk_ptr->recon_tmp->stride_cr,
                            ctx->blk_geom->bwidth_uv * sizeof(uint16_t));
+            }
 
             // Cb
             uint32_t recon_cb_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cb) +
@@ -1556,10 +1559,11 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
             uint16_t *ep_recon_cb = ((uint16_t *)(recon_buffer->buffer_cb)) + recon_cb_offset;
             uint16_t *md_recon_cb = (uint16_t *)(blk_ptr->recon_tmp->buffer_cb);
 
-            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++)
+            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++) {
                 svt_memcpy(ep_recon_cb + i * recon_buffer->stride_cb,
                            md_recon_cb + i * blk_ptr->recon_tmp->stride_cb,
                            ctx->blk_geom->bwidth_uv * sizeof(uint16_t));
+            }
         }
     } else {
         uint32_t recon_luma_offset = (recon_buffer->org_y + ctx->blk_org_y) * recon_buffer->stride_y +
@@ -1567,10 +1571,11 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
         uint8_t *ep_recon = recon_buffer->buffer_y + recon_luma_offset;
         uint8_t *md_recon = blk_ptr->recon_tmp->buffer_y;
 
-        for (uint32_t i = 0; i < ctx->blk_geom->bheight; i++)
+        for (uint32_t i = 0; i < ctx->blk_geom->bheight; i++) {
             svt_memcpy(ep_recon + i * recon_buffer->stride_y,
                        md_recon + i * blk_ptr->recon_tmp->stride_y,
                        ctx->blk_geom->bwidth * sizeof(uint8_t));
+        }
 
         if (ctx->blk_geom->has_uv) {
             uint32_t round_origin_x = (ctx->blk_org_x >> 3) << 3; // for Chroma blocks with size of 4
@@ -1582,10 +1587,11 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
             uint8_t *ep_recon_cr = recon_buffer->buffer_cr + recon_cr_offset;
             uint8_t *md_recon_cr = blk_ptr->recon_tmp->buffer_cr;
 
-            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++)
+            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++) {
                 svt_memcpy(ep_recon_cr + i * recon_buffer->stride_cr,
                            md_recon_cr + i * blk_ptr->recon_tmp->stride_cr,
                            ctx->blk_geom->bwidth_uv * sizeof(uint8_t));
+            }
 
             // Cb
             uint32_t recon_cb_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cb) +
@@ -1593,13 +1599,15 @@ static void copy_recon(PictureControlSet *pcs, ModeDecisionContext *ctx, BlkStru
             uint8_t *ep_recon_cb = recon_buffer->buffer_cb + recon_cb_offset;
             uint8_t *md_recon_cb = blk_ptr->recon_tmp->buffer_cb;
 
-            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++)
+            for (uint32_t i = 0; i < ctx->blk_geom->bheight_uv; i++) {
                 svt_memcpy(ep_recon_cb + i * recon_buffer->stride_cb,
                            md_recon_cb + i * blk_ptr->recon_tmp->stride_cb,
                            ctx->blk_geom->bwidth_uv * sizeof(uint8_t));
+            }
         }
     }
 }
+
 // Copy quantized coeffs to EncDec buffers if EncDec was bypassed. If pred depth only was used and NSQ is OFF data
 // was copied directly to EncDec buffers in MD.
 static void copy_qcoeffs(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_ptr, uint32_t blk_coded_area,
@@ -1613,25 +1621,28 @@ static void copy_qcoeffs(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *
     int32_t *ep_coeff = ((int32_t *)coeff_buffer_sb->buffer_y) + ctx->coded_area_sb_update;
     int32_t *md_coeff = ((int32_t *)blk_ptr->coeff_tmp->buffer_y) + blk_coded_area;
 
-    if ((blk_ptr->y_has_coeff & (1 << txb_itr)))
+    if ((blk_ptr->y_has_coeff & (1 << txb_itr))) {
         svt_memcpy(ep_coeff, md_coeff, sizeof(int32_t) * blk_geom->tx_height[tx_depth] * blk_geom->tx_width[tx_depth]);
+    }
 
     if (blk_geom->has_uv && uv_pass) {
         int32_t *ep_coeff_cb = ((int32_t *)coeff_buffer_sb->buffer_cb) + ctx->coded_area_sb_uv_update;
         int32_t *md_coeff_cb = ((int32_t *)blk_ptr->coeff_tmp->buffer_cb) + blk_coded_area_uv;
 
-        if ((blk_ptr->u_has_coeff & (1 << txb_itr)))
+        if ((blk_ptr->u_has_coeff & (1 << txb_itr))) {
             svt_memcpy(ep_coeff_cb,
                        md_coeff_cb,
                        sizeof(int32_t) * blk_geom->tx_height_uv[tx_depth] * blk_geom->tx_width_uv[tx_depth]);
+        }
 
         int32_t *ep_coeff_cr = ((int32_t *)coeff_buffer_sb->buffer_cr) + ctx->coded_area_sb_uv_update;
         int32_t *md_coeff_cr = ((int32_t *)blk_ptr->coeff_tmp->buffer_cr) + blk_coded_area_uv;
 
-        if ((blk_ptr->v_has_coeff & (1 << txb_itr)))
+        if ((blk_ptr->v_has_coeff & (1 << txb_itr))) {
             svt_memcpy(ep_coeff_cr,
                        md_coeff_cr,
                        sizeof(int32_t) * blk_geom->tx_height_uv[tx_depth] * blk_geom->tx_width_uv[tx_depth]);
+        }
     }
 }
 
@@ -1784,18 +1795,22 @@ static void update_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
                 if (!hp && has_second_ref(&blk_ptr->block_mi)) {
                     hp = (blk_ptr->block_mi.mv[1].x % 2 != 0 || blk_ptr->block_mi.mv[1].y % 2 != 0);
                 }
-                if (hp)
+                if (hp) {
                     ctx->tot_hp_coded_area += blk_geom->bwidth * blk_geom->bheight;
+                }
             }
             bool is_zero_mv = 0;
-            if (blk_ptr->block_mi.mv[0].x < 8 && blk_ptr->block_mi.mv[0].y < 8)
+            if (blk_ptr->block_mi.mv[0].x < 8 && blk_ptr->block_mi.mv[0].y < 8) {
                 is_zero_mv = 1;
-            if (has_second_ref(&blk_ptr->block_mi)) {
-                if (blk_ptr->block_mi.mv[1].x < 8 && blk_ptr->block_mi.mv[1].y < 8)
-                    is_zero_mv = 1;
             }
-            if (is_zero_mv)
+            if (has_second_ref(&blk_ptr->block_mi)) {
+                if (blk_ptr->block_mi.mv[1].x < 8 && blk_ptr->block_mi.mv[1].y < 8) {
+                    is_zero_mv = 1;
+                }
+            }
+            if (is_zero_mv) {
                 ctx->tot_cnt_zero_mv += blk_geom->bwidth * blk_geom->bheight;
+            }
             if (blk_geom->sqi_mds == 0 && blk_ptr->block_mi.mode != NEWMV && blk_ptr->block_mi.mode != NEW_NEWMV) {
                 pcs->sb_64x64_mvp[sb_index] = 1;
             }
@@ -1817,8 +1832,9 @@ static void update_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
     if (pcs->cdf_ctrl.update_coef || (md_ctx->bypass_encdec && !(md_ctx->fixed_partition))) {
         // Copy recon to EncDec buffers if EncDec was bypassed; if pred depth only was used
         // and NSQ is OFF data was copied directly to EncDec buffers in MD
-        if (md_ctx->bypass_encdec && !(md_ctx->fixed_partition))
+        if (md_ctx->bypass_encdec && !(md_ctx->fixed_partition)) {
             copy_recon(pcs, md_ctx, blk_ptr);
+        }
 
         // Initialize the Transform Loop
         const uint8_t  tx_depth          = blk_ptr->block_mi.tx_depth;
@@ -1830,12 +1846,14 @@ static void update_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
 
             // Copy quantized coeffs to EncDec buffers if EncDec was bypassed; if pred depth only was used
             // and NSQ is OFF data was copied directly to EncDec buffers in MD
-            if (md_ctx->bypass_encdec && !(md_ctx->fixed_partition))
+            if (md_ctx->bypass_encdec && !(md_ctx->fixed_partition)) {
                 copy_qcoeffs(pcs, ctx, blk_ptr, blk_coded_area, blk_coded_area_uv);
+            }
 
             // Perform CDF update (MD feature) if enabled
-            if (pcs->cdf_ctrl.update_coef)
+            if (pcs->cdf_ctrl.update_coef) {
                 update_coeff_cdf(pcs, ctx, blk_ptr);
+            }
 
             blk_coded_area += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
             ctx->coded_area_sb_update += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
@@ -1893,10 +1911,11 @@ static void update_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
     sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt].av1xd = NULL;
     // ENCDEC palette info buffer
     {
-        if (svt_av1_allow_palette(pcs->ppcs->palette_level, blk_geom->bsize))
+        if (svt_av1_allow_palette(pcs->ppcs->palette_level, blk_geom->bsize)) {
             ec_rtime_alloc_palette_info(&sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt]);
-        else
+        } else {
             sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt].palette_info = NULL;
+        }
     }
     BlkStruct   *src_cu            = blk_ptr; // &md_ctx->md_blk_arr_nsq[d1_itr];
     EcBlkStruct *dst_cu            = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
@@ -1963,8 +1982,9 @@ static void encode_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
         if (pcs->scs->static_config.encoder_bit_depth > EB_EIGHT_BIT && pcs->hbd_md == 0 &&
             blk_ptr->palette_size[0] > 0) {
             //MD was done on 8bit, scale  palette colors to 10bit
-            for (uint8_t col = 0; col < blk_ptr->palette_size[0]; col++)
+            for (uint8_t col = 0; col < blk_ptr->palette_size[0]; col++) {
                 blk_ptr->palette_info->pmi.palette_colors[col] *= 4;
+            }
         }
         perform_intra_coding_loop(pcs, ctx);
     } else {
@@ -1982,8 +2002,9 @@ static void encode_b(PictureControlSet *pcs, EncDecContext *ctx, BlkStruct *blk_
 
 void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecContext *ctx, SuperBlock *sb_ptr,
                        PC_TREE *pc_tree, PARTITION_TREE *ptree, int mi_row, int mi_col) {
-    if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols)
+    if (mi_row >= pcs->ppcs->av1_cm->mi_rows || mi_col >= pcs->ppcs->av1_cm->mi_cols) {
         return;
+    }
 
     const BlockSize bsize = pc_tree->bsize;
     assert(bsize < BlockSizeS_ALL);
@@ -2000,7 +2021,9 @@ void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecCo
     }
 
     switch (partition) {
-    case PARTITION_NONE: encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], ptree); break;
+    case PARTITION_NONE:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], ptree);
+        break;
     case PARTITION_VERT:
         encode_b(pcs, ctx, pc_tree->block_data[PART_V][0], ptree);
         if (mi_col + hbs < pcs->ppcs->av1_cm->mi_cols) {
@@ -2017,8 +2040,9 @@ void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecCo
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             const int x_idx = (i & 1) * hbs;
             const int y_idx = (i >> 1) * hbs;
-            if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols)
+            if (mi_row + y_idx >= pcs->ppcs->av1_cm->mi_rows || mi_col + x_idx >= pcs->ppcs->av1_cm->mi_cols) {
                 continue;
+            }
             svt_aom_encode_sb(
                 scs, pcs, ctx, sb_ptr, pc_tree->split[i], ptree->sub_tree[i], mi_row + y_idx, mi_col + x_idx);
         }
@@ -2067,6 +2091,8 @@ void svt_aom_encode_sb(SequenceControlSet *scs, PictureControlSet *pcs, EncDecCo
             encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i], ptree);
         }
         break;
-    default: assert(0 && "Invalid partition type."); break;
+    default:
+        assert(0 && "Invalid partition type.");
+        break;
     }
 }
