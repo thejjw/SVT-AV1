@@ -3685,7 +3685,7 @@ uint8_t av1_drl_ctx(const CandidateMv* ref_mv_stack, int32_t ref_idx);
 /***************************************
 * Update symbols for light-PD1 path
 ***************************************/
-void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t sb_addr,
+void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                                   ModeDecisionCandidateBuffer* cand_bf) {
     BlkStruct*             blk_ptr = ctx->blk_ptr;
     ModeDecisionCandidate* cand    = cand_bf->cand;
@@ -3778,7 +3778,7 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // only one TX unit, so no need to bitmask
         if (blk_ptr->y_has_coeff) {
             src_ptr = &(((int32_t*)cand_bf->quant->buffer_y)[txb_1d_offset]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_y) + ctx->coded_area_sb;
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) + ctx->coded_area_sb;
             svt_memcpy(dst_ptr, src_ptr, bheight * bwidth * sizeof(int32_t));
         }
         ctx->coded_area_sb += bwidth * bheight;
@@ -3790,7 +3790,7 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // only one TX unit, so no need to bitmask
         if (blk_ptr->u_has_coeff) {
             src_ptr = &(((int32_t*)cand_bf->quant->buffer_cb)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_cb) + ctx->coded_area_sb_uv;
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) + ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
         }
 
@@ -3798,7 +3798,7 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // only one TX unit, so no need to bitmask
         if (blk_ptr->v_has_coeff) {
             src_ptr = &(((int32_t*)cand_bf->quant->buffer_cr)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_cr) + ctx->coded_area_sb_uv;
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) + ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
         }
         ctx->coded_area_sb_uv += bwidth_uv * bheight_uv;
@@ -3812,7 +3812,7 @@ static INLINE double derive_ssim_threshold_factor_for_full_md(SequenceControlSet
 /***************************************
 * Full Mode Decision
 ***************************************/
-uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t sb_addr,
+uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                             ModeDecisionCandidateBuffer** buffer_ptr_array,
                                             uint32_t candidate_total_count, uint32_t* best_candidate_index_array) {
     SequenceControlSet* scs                = pcs->scs;
@@ -3994,7 +3994,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
             int32_t* dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_y)[txb_1d_offset]);
 
             if (ctx->fixed_partition) {
-                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_y) + ctx->coded_area_sb;
+                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) + ctx->coded_area_sb;
                 ctx->coded_area_sb += bwidth * bheight;
             }
 
@@ -4012,7 +4012,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                 dst_ptr             = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_cb)[txb_1d_offset_uv]);
 
                 if (ctx->fixed_partition) {
-                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_cb) +
+                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) +
                         ctx->coded_area_sb_uv;
                 }
 
@@ -4025,7 +4025,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                 dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_cr)[txb_1d_offset_uv]);
 
                 if (ctx->fixed_partition) {
-                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[sb_addr]->buffer_cr) +
+                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) +
                         ctx->coded_area_sb_uv;
                     ctx->coded_area_sb_uv += bwidth_uv * bheight_uv;
                 }

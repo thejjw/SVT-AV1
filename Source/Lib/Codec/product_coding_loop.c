@@ -8661,7 +8661,7 @@ static void lpd1_tx_shortcut_detector(ModeDecisionContext* ctx, ModeDecisionCand
     }
 }
 
-static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t sb_addr,
+static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                       EbPictureBufferDesc* input_pic) {
     ModeDecisionCandidateBuffer** cand_bf_ptr_array_base = ctx->cand_bf_ptr_array;
     ModeDecisionCandidateBuffer** cand_bf_ptr_array;
@@ -8803,7 +8803,7 @@ static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContex
     cand_bf = cand_bf_ptr_array[ctx->mds0_best_idx];
 
     // Full Mode Decision (choose the best mode)
-    svt_aom_product_full_mode_decision_light_pd1(pcs, ctx, sb_addr, cand_bf);
+    svt_aom_product_full_mode_decision_light_pd1(pcs, ctx, cand_bf);
     // Perform inverse transform recon when needed
     if (perform_md_recon) {
         av1_perform_inverse_transform_recon(pcs, ctx, cand_bf, ctx->blk_geom);
@@ -8997,7 +8997,7 @@ static bool get_enable_use_best_me(PictureControlSet* pcs, ModeDecisionContext* 
     return enable_best_me;
 }
 
-static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t sb_addr,
+static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, const MdScan* const mds,
                             EbPictureBufferDesc* input_pic) {
     ModeDecisionCandidateBuffer** cand_bf_ptr_array_base = ctx->cand_bf_ptr_array;
     ModeDecisionCandidateBuffer** cand_bf_ptr_array;
@@ -9380,7 +9380,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, ui
 
     // Full Mode Decision (choose the best mode)
     uint32_t candidate_index = svt_aom_product_full_mode_decision(
-        pcs, ctx, sb_addr, cand_bf_ptr_array, ctx->md_stage_3_total_count, ctx->best_candidate_index_array);
+        pcs, ctx, cand_bf_ptr_array, ctx->md_stage_3_total_count, ctx->best_candidate_index_array);
     ModeDecisionCandidateBuffer* cand_bf = cand_bf_ptr_array[candidate_index];
     //perform inverse transform recon when needed
     if (perform_md_recon) {
@@ -9390,7 +9390,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, ui
         ((!ctx->md_disallow_nsq_search && ctx->nsq_search_ctrls.max_part0_to_part1_dev &&
           ctx->blk_geom->bsize >= BLOCK_8X8 && ctx->blk_geom->sq_size > ctx->nsq_geom_ctrls.min_nsq_block_size) ||
          (ctx->skip_sub_depth_ctrls.enabled && ctx->blk_geom->sq_size <= ctx->skip_sub_depth_ctrls.max_size &&
-          ctx->blk_ptr->split_flag &&
+          mds->split_flag &&
           (ctx->blk_geom->bsize >= BLOCK_16X16 || (!ctx->disallow_4x4 && ctx->blk_geom->bsize == BLOCK_8X8))))) {
         calc_scr_to_recon_dist_per_quadrant(ctx,
                                             input_pic,
@@ -9420,7 +9420,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, ui
     ctx->cost_avail[blk_ptr->mds_idx]     = true;
 }
 
-static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+static bool update_skip_nsq_based_on_split_rate(PictureControlSet *pcs, ModeDecisionContext *ctx, const MdScan* const mds) {
     bool             skip_nsq = false;
     const BlockGeom* blk_geom = ctx->blk_geom;
 
@@ -9525,7 +9525,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
     }
     uint32_t lower_depth_split_cost_th = ctx->nsq_search_ctrls.lower_depth_split_cost_th;
     // Skip testing NSQ shapes at this depth if the rate cost of splitting is very low (assuming a lower depth is available for splitting)
-    if (lower_depth_split_cost_th && ctx->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag) {
+    if (lower_depth_split_cost_th && mds->split_flag) {
         if (blk_geom->sq_size <= 16) {
             lower_depth_split_cost_th += ctx->nsq_search_ctrls.rate_th_offset_lte16;
         }
@@ -9959,8 +9959,7 @@ static EbErrorType md_rtime_alloc_palette_info(BlkStruct* md_blk_arr_nsq) {
  * Initialize data needed for processing each block.  Update neighbour array if the block
  * is the first d1 block.  Called before process each block.
  */
-static void init_block_data(PictureControlSet* pcs, ModeDecisionContext* ctx, const uint8_t blk_split_flag,
-                            uint32_t blk_idx_mds) {
+static void init_block_data(PictureControlSet* pcs, ModeDecisionContext* ctx, const uint32_t blk_idx_mds) {
     const BlockGeom* blk_geom = ctx->blk_geom;
     BlkStruct*       blk_ptr  = ctx->blk_ptr;
     ctx->scale_palette        = 0;
@@ -9969,7 +9968,6 @@ static void init_block_data(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     ctx->round_origin_x       = ((ctx->blk_org_x >> 3) << 3);
     ctx->round_origin_y       = ((ctx->blk_org_y >> 3) << 3);
     blk_ptr->mds_idx          = blk_idx_mds;
-    blk_ptr->split_flag       = blk_split_flag; //mdc indicates smallest or non valid CUs with split flag=
     blk_ptr->qindex           = ctx->qp_index;
     //  MD palette info buffer
     if (svt_av1_allow_palette(pcs->ppcs->palette_level, blk_geom->bsize)) {
@@ -10113,12 +10111,11 @@ static bool update_redundant(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     return 0;
 }
 
-static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionContext* ctx, const MdScan* const mds) {
     int skip_processing_block = false;
-    if (update_skip_nsq_based_on_split_rate(pcs, ctx)) {
+    if (update_skip_nsq_based_on_split_rate(pcs, ctx, mds)) {
         return true;
     }
-
     if (update_skip_nsq_based_on_sq_txs(ctx)) {
         return true;
     }
@@ -10291,7 +10288,6 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
         if (mi_row + y_idx >= mi_rows || mi_col + x_idx >= mi_cols) {
             pc_tree->split[i]->block_data[PART_N][0]              = &ctx->md_blk_arr_nsq[mds->split[i]->mds_idx];
             pc_tree->split[i]->block_data[PART_N][0]->mds_idx     = mds->split[i]->mds_idx;
-            pc_tree->split[i]->block_data[PART_N][0]->split_flag  = false;
             // If any quadrant is out of bounds, the last quadrant will be
             last_quad_valid = false;
             continue;
@@ -10308,7 +10304,6 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
                     : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000
                                                                       : ctx->depth_early_exit_ctrls.early_exit_th);
                 if ((pc_tree->rdc.rd_cost * th * ctx->parent_cost_bias) <= (split_cost * 1000 * 1000)) {
-                    pc_tree->block_data[PART_N][0]->split_flag = false;
                     return false;
                 }
             }
@@ -10319,9 +10314,8 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
             scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
 
         if (!valid_split_partition) {
-            // If split is invalid, set split to false and exit (all
+            // If split is invalid, then exit (all
             // split quadrants must be valid for split to be selected).
-            pc_tree->block_data[PART_N][0]->split_flag = false;
             return false;
         }
 
@@ -10331,14 +10325,12 @@ static bool test_split_partition_lpd0(SequenceControlSet* scs, PictureControlSet
     // Only get here if all partitions are valid (and/or out of bounds).
     PC_TREE* array_update_part = pc_tree;
     if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
-        pc_tree->block_data[PART_N][0]->split_flag = false;
         pc_tree->rdc.valid                         = 1;
     } else {
         pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
-        pc_tree->block_data[PART_N][0]->split_flag                  = true;
         ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
         array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
     }
@@ -10371,7 +10363,6 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
     // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
-    pc_tree->block_data[PART_N][0]->split_flag = false;
     pc_tree->rdc.valid                         = 0;
 
     // Check that shape is valid, and adjust tested blocks so only valid blocks are tested
@@ -10391,7 +10382,6 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
     if (mds->tot_shapes) {
         const Part     shape          = mds->shapes[0];
         const uint32_t blk_idx_mds    = mds->mds_idx + ns_blk_offset_md[shape];
-        const uint8_t  blk_split_flag = mds->split_flag;
 
         ctx->blk_geom                 = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
         pc_tree->block_data[shape][0] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
@@ -10399,7 +10389,7 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         // Neighbour partition array is not updated in PD0, so set neighbour info to invalid.
         ctx->blk_ptr->left_part_ctx  = 0;
         ctx->blk_ptr->above_part_ctx = 0;
-        init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
+        init_block_data(pcs, ctx, blk_idx_mds);
         md_encode_block_light_pd0(pcs, ctx, input_pic);
 
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
@@ -10413,17 +10403,15 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
             ctx->cost_avail[ctx->blk_geom->sqi_mds] = 1;
             pc_tree->block_data[PART_N][0]->qindex         = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx        = ctx->blk_geom->sqi_mds;
-            pc_tree->block_data[PART_N][0]->split_flag     = blk_split_flag;
             pc_tree->block_data[PART_N][0]->left_part_ctx  = 0;
             pc_tree->block_data[PART_N][0]->above_part_ctx = 0;
         }
 #if !CLN_REMOVE_VAR_SUB_DEPTH
-        if (ctx->var_skip_sub_depth_ctrls.enabled && ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].split_flag &&
+        if (ctx->var_skip_sub_depth_ctrls.enabled && mds->split_flag &&
             ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
             if (ctx->blk_geom->sq_size <= ctx->var_skip_sub_depth_ctrls.max_size &&
                 ctx->blk_geom->sq_size >= ctx->var_skip_sub_depth_ctrls.min_size && var_skip_sub_depth(pcs, ctx)) {
                 mds->split_flag                            = false;
-                pc_tree->block_data[PART_N][0]->split_flag = false;
             }
         }
 #endif
@@ -10455,7 +10443,6 @@ static void test_split_partition_lpd1(SequenceControlSet* scs, PictureControlSet
         }
         svt_aom_pick_partition_lpd1(scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
     }
-    pc_tree->block_data[PART_N][0]->split_flag = true;
     pc_tree->block_data[PART_N][0]->part       = PARTITION_SPLIT;
     pc_tree->partition                         = PARTITION_SPLIT;
 }
@@ -10478,7 +10465,6 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs
     // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
-    pc_tree->block_data[PART_N][0]->split_flag = false;
     pc_tree->rdc.valid                         = 0;
 
     // Check that shape is valid, and adjust tested blocks so only valid blocks are tested.
@@ -10509,18 +10495,14 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs
         // LPD1 assumes a fixed partition structure, so partition neighbour arrays (blk_ptr->left_neighbor_partition and
         // blk_ptr->above_neighbor_partition) are not updated, and the neighbour arrays will not be accessed, since the
         // partition rate is not needed (i.e. no calls to svt_aom_partition_rate_cost).
-        init_block_data(pcs,
-                        ctx,
-                        false, // blk_split_flag, - pred depth only; NSQ off
-                        blk_idx_mds);
+        init_block_data(pcs, ctx, blk_idx_mds);
 
         // Encode the block
-        md_encode_block_light_pd1(pcs, ctx, ctx->sb_index, input_pic);
+        md_encode_block_light_pd1(pcs, ctx, input_pic);
 
         // LPD1 uses a fixed partition structure, so no need to update cost
         pc_tree->block_data[PART_N][0]->part        = from_shape_to_part[ctx->blk_geom->shape];
         pc_tree->partition                          = from_shape_to_part[ctx->blk_geom->shape];
-        pc_tree->block_data[PART_N][0]->split_flag  = false;
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
             pc_tree->block_data[PART_N][0]->qindex  = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx = ctx->blk_geom->sqi_mds;
@@ -10687,7 +10669,6 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
         if (mi_row + y_idx >= mi_rows || mi_col + x_idx >= mi_cols) {
             pc_tree->split[i]->block_data[PART_N][0]              = &ctx->md_blk_arr_nsq[mds->split[i]->mds_idx];
             pc_tree->split[i]->block_data[PART_N][0]->mds_idx     = mds->split[i]->mds_idx;
-            pc_tree->split[i]->block_data[PART_N][0]->split_flag  = false;
             // If any quadrant is out of bounds, the last quadrant will be
             last_quad_valid = false;
             continue;
@@ -10701,7 +10682,6 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
                 ? (ctx->depth_early_exit_ctrls.split_cost_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.split_cost_th)
                 : (ctx->depth_early_exit_ctrls.early_exit_th == 0 ? 1000 : ctx->depth_early_exit_ctrls.early_exit_th);
             if ((pc_tree->rdc.rd_cost * th * ctx->parent_cost_bias) <= (split_cost * 1000 * 1000)) {
-                pc_tree->block_data[PART_N][0]->split_flag = false;
                 return false;
             }
         }
@@ -10710,9 +10690,8 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
             scs, pcs, ctx, mds->split[i], pc_tree->split[i], mi_row + y_idx, mi_col + x_idx);
 
         if (!valid_split_partition) {
-            // If split is invalid, set split to false and exit (all
+            // If split is invalid, then exit (all
             // split quadrants must be valid for split to be selected).
-            pc_tree->block_data[PART_N][0]->split_flag = false;
             return false;
         }
         split_cost += pc_tree->split[i]->rdc.rd_cost;
@@ -10721,14 +10700,12 @@ static bool test_split_partition(SequenceControlSet* scs, PictureControlSet* pcs
     // Only get here if all partitions are valid (and/or out of bounds).
     PC_TREE* array_update_part = pc_tree;
     if (pc_tree->rdc.valid && (ctx->parent_cost_bias * pc_tree->rdc.rd_cost <= split_cost * 1000)) {
-        pc_tree->block_data[PART_N][0]->split_flag = false;
         pc_tree->rdc.valid                         = 1;
     } else {
         pc_tree->rdc.rd_cost = pc_tree->block_data[PART_N][0]->cost = split_cost;
         pc_tree->rdc.valid                                          = 1;
         pc_tree->partition                                          = PARTITION_SPLIT;
         pc_tree->block_data[PART_N][0]->part                        = PARTITION_SPLIT;
-        pc_tree->block_data[PART_N][0]->split_flag                  = true;
         ctx->cost_avail[pc_tree->block_data[PART_N][0]->mds_idx]    = 1; // TODO: should be unneeded eventually
         array_update_part = last_quad_valid ? pc_tree->split[3] : NULL;
     }
@@ -10752,7 +10729,6 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
 #endif
     EbPictureBufferDesc* input_pic        = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
     uint32_t             base_blk_idx_mds = mds->mds_idx;
-    const uint8_t        blk_split_flag   = mds->split_flag;
     ctx->blk_geom                         = get_blk_geom_mds(scs->blk_geom_mds, base_blk_idx_mds);
     ctx->blk_ptr                          = &ctx->md_blk_arr_nsq[base_blk_idx_mds];
 
@@ -10770,7 +10746,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
         ctx->params_status = 0;
     }
 
-    init_block_data(pcs, ctx, blk_split_flag, base_blk_idx_mds);
+    init_block_data(pcs, ctx, base_blk_idx_mds);
 
     // Copy neighbour arrays to temp buffer for later reuse if testing more than 1 NSQ shape
     // or will be splitting (SQ doesn't need to update neighbour arrays)
@@ -10820,7 +10796,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
             ctx->blk_geom                   = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
             pc_tree->block_data[shape][nsi] = ctx->blk_ptr = &ctx->md_blk_arr_nsq[blk_idx_mds];
 
-            init_block_data(pcs, ctx, blk_split_flag, blk_idx_mds);
+            init_block_data(pcs, ctx, blk_idx_mds);
 
             // If performing NSQ search, take shortcuts to reduce NSQ overhead
             if (shape != PART_N && nsi == 0) {
@@ -10830,7 +10806,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 }
 
                 // call nsq-reduction func if NSQ is on
-                if (get_skip_processing_nsq_block(pcs, ctx)) {
+                if (get_skip_processing_nsq_block(pcs, ctx, mds)) {
                     valid_part = false;
                     break;
                 }
@@ -10848,7 +10824,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 }
 
                 // Encode the block
-                md_encode_block(pcs, ctx, ctx->sb_index, input_pic);
+                md_encode_block(pcs, ctx, mds, input_pic);
             }
 
             part_cost += pc_tree->block_data[shape][nsi]->cost;
@@ -10904,7 +10880,6 @@ bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, Mod
     // TODO: temporarily ensure the SQ is always allocated since it is currently used to track cost for the whole depth
     pc_tree->block_data[PART_N][0]             = &ctx->md_blk_arr_nsq[mds->mds_idx];
     pc_tree->block_data[PART_N][0]->mds_idx    = mds->mds_idx;
-    pc_tree->block_data[PART_N][0]->split_flag = false;
     pc_tree->rdc.valid                         = 0;
 
     // Update the left and above partition neighbours for the square block, which are used to derive
@@ -10919,7 +10894,6 @@ bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, Mod
             mds->split_flag && // could be further splitted
             ctx->avail_blk_flag[ctx->blk_geom->sqi_mds] && // valid block
             eval_sub_depth_skip_cond1(ctx)) {
-            pc_tree->block_data[PART_N][0]->split_flag = false;
             mds->split_flag                            = false;
         }
 

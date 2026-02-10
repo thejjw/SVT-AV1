@@ -1640,14 +1640,9 @@ static void set_child_to_be_tested(PictureControlSet* pcs, ModeDecisionContext* 
         const int y_idx           = (i >> 1) * mi_step;
         mds->split[i]->is_child   = true;
         mds->split[i]->split_flag = false;
+        // Set tot_shapes to 1 because the actual number of shapes must be set later in
+        // set_blocks_to_be_tested once the proper NSQ settings are applied.
         mds->split[i]->tot_shapes = 1;
-        //set_blocks_to_test(pcs,
-        //    ctx,
-        //    mds->split[i],
-        //    mi_row + y_idx,
-        //    mi_col + x_idx,
-        //    mds->split[i]->shapes,
-        //    &mds->split[i]->tot_shapes);
         if (e_depth > 1) {
             set_child_to_be_tested(pcs, ctx, mds->split[i], e_depth - 1, mi_row + y_idx, mi_col + x_idx);
         }
@@ -2059,8 +2054,6 @@ static int refine_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TRE
     }
 
     int s_depth = 0;
-    assert(IMPLIES(pc_tree->partition == PARTITION_SPLIT, ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
-    assert(IMPLIES(pc_tree->partition != PARTITION_SPLIT, !ctx->md_blk_arr_nsq[mds->mds_idx].split_flag));
     if (pc_tree->partition != PARTITION_SPLIT) {
         // Add current pred depth to be tested. tot_shapes = 1 signals to test this depth;
         // the blocks to be tested will be updated in set_blocks_to_be_tested after

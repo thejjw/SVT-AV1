@@ -202,7 +202,6 @@ typedef struct BlkStruct {
     uint16_t mds_idx;
 
     uint8_t qindex;
-    uint8_t split_flag;
     uint8_t drl_index;
     // Store the drl ctx in coding loop to avoid storing final_ref_mv_stack and ref_mv_count for EC
     int8_t drl_ctx[2];

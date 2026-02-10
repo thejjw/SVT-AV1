@@ -126,8 +126,8 @@ uint32_t product_full_mode_decision_light_pd0(struct ModeDecisionContext* ctx, B
                                               ModeDecisionCandidateBuffer** buffer_ptr_array);
 
 void     svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
-                                                      uint32_t sb_addr, ModeDecisionCandidateBuffer* cand_bf);
-uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, struct ModeDecisionContext* ctx, uint32_t sb_addr,
+                                                      ModeDecisionCandidateBuffer* cand_bf);
+uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
                                             ModeDecisionCandidateBuffer** buffer_ptr_array,
                                             uint32_t candidate_total_count, uint32_t* best_candidate_index_array);
 uint8_t  svt_aom_wm_motion_refinement(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
