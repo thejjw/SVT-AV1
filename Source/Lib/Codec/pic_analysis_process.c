@@ -46,6 +46,7 @@ static void picture_analysis_context_dctor(EbPtr p) {
     PictureAnalysisContext *obj        = (PictureAnalysisContext *)thread_ctx->priv;
     EB_FREE_ARRAY(obj);
 }
+
 /************************************************
  * Picture Analysis Context Constructor
  ************************************************/
@@ -62,6 +63,7 @@ EbErrorType svt_aom_picture_analysis_context_ctor(EbThreadContext *thread_ctx, c
         enc_handle_ptr->picture_analysis_results_resource_ptr, index);
     return EB_ErrorNone;
 }
+
 void svt_aom_down_sample_chroma(EbPictureBufferDesc *input_pic, EbPictureBufferDesc *outputPicturePtr) {
     uint32_t       input_color_format  = input_pic->color_format;
     const uint16_t input_subsampling_x = (input_color_format == EB_YUV444 ? 0 : 1);
@@ -207,6 +209,7 @@ uint64_t svt_compute_mean_c(uint8_t *input_samples, /**< input parameter, input 
 
     return block_mean;
 }
+
 /*******************************************
  * svt_compute_mean_squared_values_c
  *   returns the Mean of Squared Values
@@ -579,6 +582,7 @@ static void sub_sample_luma_generate_pixel_intensity_histogram_bins(SequenceCont
 
     return;
 }
+
 /************************************************
  * compute_picture_spatial_statistics
  ** Compute Block Variance

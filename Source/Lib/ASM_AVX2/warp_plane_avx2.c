@@ -367,6 +367,7 @@ static INLINE void horizontal_filter_avx2(const __m256i src, __m256i *horz_out, 
     prepare_horizontal_filter_coeff_avx2(alpha, beta, sx, coeff);
     filter_src_pixels_avx2(src, horz_out, coeff, shuffle_src, round_const, shift, row);
 }
+
 static INLINE void prepare_horizontal_filter_coeff(int alpha, int sx, __m256i *coeff) {
     //AVX2 Calculation: idx_final[i] = (sx + i * alpha) >> WARPEDDIFF_PREC_BITS
     const __m256i idx       = _mm256_setr_epi32(0, 1, 2, 3, 4, 5, 6, 7);

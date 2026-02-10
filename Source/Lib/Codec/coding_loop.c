@@ -30,12 +30,14 @@
 #include "enc_inter_prediction.h"
 
 void aom_av1_set_ssim_rdmult(ModeDecisionContext *ctx, PictureControlSet *pcs, const int mi_row, const int mi_col);
+
 static EbErrorType ec_rtime_alloc_palette_info(EcBlkStruct *md_blk_arr_nsq) {
     EB_MALLOC_ARRAY(md_blk_arr_nsq->palette_info, 1);
     EB_MALLOC_ARRAY(md_blk_arr_nsq->palette_info->color_idx_map, MAX_PALETTE_SQUARE);
 
     return EB_ErrorNone;
 }
+
 /*******************************************
 * set Penalize Skip Flag
 *
@@ -1188,6 +1190,7 @@ static void perform_intra_coding_loop(PictureControlSet *pcs, EncDecContext *ed_
     assert(IMPLIES(!ed_ctx->blk_geom->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
     blk_ptr->block_has_coeff = (blk_ptr->y_has_coeff || blk_ptr->u_has_coeff || blk_ptr->v_has_coeff);
 }
+
 #define REFMVS_LIMIT ((1 << 12) - 1)
 
 static void av1_copy_frame_mvs(PictureControlSet *pcs, const Av1Common *const cm, MbModeInfo mi, int mi_row, int mi_col,

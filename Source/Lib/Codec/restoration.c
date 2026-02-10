@@ -47,6 +47,7 @@ const SgrParamsType svt_aom_eb_sgr_params[SGRPROJ_PARAMS] = {
     {{2, 0}, {56, -1}}, // 14 { 2, 30, 0, 0  }
     {{2, 0}, {22, -1}}, // 15 { 2, 75, 0, 0  }
 };
+
 static Av1PixelRect whole_frame_rect(FrameSize *frm_size, int32_t sub_x, int32_t sub_y, int32_t is_uv) {
     Av1PixelRect rect;
 
@@ -1265,6 +1266,7 @@ void svt_aom_foreach_rest_unit_in_frame(Av1Common *cm, int32_t plane, RestTileSt
                               on_rest_unit,
                               priv);
 }
+
 static void foreach_rest_unit_in_tile_seg(const Av1PixelRect *tile_rect, int32_t tile_row, int32_t tile_col,
                                           int32_t tile_cols, int32_t hunits_per_tile, int32_t units_per_tile,
                                           int32_t unit_size, int32_t ss_y, RestUnitVisitor on_rest_unit, void *priv,
@@ -1340,6 +1342,7 @@ static void foreach_rest_unit_in_tile_seg(const Av1PixelRect *tile_rect, int32_t
         ++i;
     }
 }
+
 /* For each restoration unit in the frame, get the best filter parameters and distortions
    for the passed filter type.
 */

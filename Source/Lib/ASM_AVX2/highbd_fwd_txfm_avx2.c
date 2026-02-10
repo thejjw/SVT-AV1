@@ -256,6 +256,7 @@ static INLINE void transpose_8nx8n_N2_quad(const __m256i *input, __m256i *output
         }
     }
 }
+
 static INLINE void transpose_4x8_avx2(const __m256i *in, __m256i *out) {
     __m256i perm = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
 
@@ -434,6 +435,7 @@ static INLINE void load_buffer_8x8_N2(const int16_t *input, __m256i *in, int32_t
     in[12] = _mm256_slli_epi32(in[12], shift);
     in[14] = _mm256_slli_epi32(in[14], shift);
 }
+
 static INLINE void load_buffer_4x4_avx2(const int16_t *input, __m256i *in, int32_t stride, int32_t flipud,
                                         int32_t fliplr, int32_t shift) {
     if (!flipud) {
@@ -1180,6 +1182,7 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_half(const int16_t *input, __m
     // load first 8 columns
     load_buffer_8x8_N2(top_l, out /*& in[0]*/, stride, flipud, fliplr, shift);
 }
+
 static INLINE void col_txfm_16x16_rounding(__m256i *in, int32_t shift) {
     col_txfm_8x8_rounding(&in[0], shift);
     col_txfm_8x8_rounding(&in[8], shift);
@@ -3840,6 +3843,7 @@ static INLINE void load_buffer_32x16_N2_avx2(const int16_t *input, __m256i *outp
         output += 4;
     }
 }
+
 static INLINE void fwd_txfm2d_32x32_avx2(const int16_t *input, int32_t *output, const int32_t stride,
                                          const Txfm2dFlipCfg *cfg, int32_t *txfm_buf) {
     assert(cfg->tx_size < TX_SIZES);
@@ -4022,6 +4026,7 @@ static AOM_FORCE_INLINE void load_buffer_16x8n(const int16_t *input, __m256i *ou
         load_buffer_16_avx2(in, output, 8, flipud, fliplr, shift);
     }
 }
+
 static INLINE void load_buffer_8x16(const int16_t *input, __m256i *out, int32_t stride, int32_t flipud, int32_t fliplr,
                                     int32_t shift) {
     const int16_t *top_l = input;

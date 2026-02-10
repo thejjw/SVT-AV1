@@ -26,6 +26,7 @@ void svt_print_alloc_fail_impl(const char* file, int line) {
 static EbHandle g_malloc_mutex;
 
 static void malloc_mutex_cleanup(void) { svt_destroy_mutex(g_malloc_mutex); }
+
 static ONCE_ROUTINE(create_malloc_mutex) {
     g_malloc_mutex = svt_create_mutex();
     atexit(malloc_mutex_cleanup);
@@ -33,6 +34,7 @@ static ONCE_ROUTINE(create_malloc_mutex) {
 }
 
 DEFINE_ONCE(g_malloc_once);
+
 static EbHandle get_malloc_mutex() {
     svt_run_once(&g_malloc_once, create_malloc_mutex);
     return g_malloc_mutex;

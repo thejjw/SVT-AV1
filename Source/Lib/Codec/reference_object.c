@@ -90,6 +90,7 @@ static void svt_reference_object_dctor(EbPtr p) {
         }
     }
 }
+
 /*
 svt_reference_param_update: update the parameters in EbReferenceObject for changing the resolution on the fly
 */
@@ -139,6 +140,7 @@ EbErrorType svt_reference_param_update(EbReferenceObject *ref_object, SequenceCo
     ref_object->mi_cols = ref_object->reference_picture->width >> MI_SIZE_LOG2;
     return EB_ErrorNone;
 }
+
 /*****************************************
  * svt_picture_buffer_desc_ctor
  *  Initializes the Buffer Descriptor's
@@ -240,6 +242,7 @@ static void svt_tpl_reference_object_dctor(EbPtr p) {
     EbTplReferenceObject *obj = (EbTplReferenceObject *)p;
     EB_DELETE(obj->ref_picture_ptr);
 }
+
 /*
 svt_pa_reference_param_update: update the parameters in EbPaReferenceObject for changing the resolution on the fly
 */
@@ -302,6 +305,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject *pa_ref_obj, Seque
                                    (EbPtr)&sixteenth_pic_buf_desc_init_data);
     return EB_ErrorNone;
 }
+
 /*****************************************
  * svt_pa_reference_object_ctor
  *  Initializes the Buffer Descriptor's
@@ -338,6 +342,7 @@ EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_, EbPtr
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_pa_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
     EbPaReferenceObject *obj;
 
@@ -347,6 +352,7 @@ EbErrorType svt_pa_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_
 
     return EB_ErrorNone;
 }
+
 /*
 svt_tpl_reference_param_update: update the parameters in tpl_ref_obj for changing the resolution on the fly
 */
@@ -378,6 +384,7 @@ EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject *tpl_ref_obj, Se
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_tpl_reference_object_ctor(EbTplReferenceObject *tpl_ref_obj_, EbPtr object_init_data_ptr) {
     EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData *)
         object_init_data_ptr;
@@ -389,6 +396,7 @@ EbErrorType svt_tpl_reference_object_ctor(EbTplReferenceObject *tpl_ref_obj_, Eb
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_tpl_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
     EbTplReferenceObject *obj;
 

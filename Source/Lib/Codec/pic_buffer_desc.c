@@ -119,6 +119,7 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc *pictureBuffe
 
     return EB_ErrorNone;
 }
+
 /*****************************************
  * svt_picture_buffer_desc_noy8b_update
  * update the parameters in EbPictureBufferDesc for changing the resolution
@@ -171,6 +172,7 @@ EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc *pictureBuf
 
     return EB_ErrorNone;
 }
+
 /*
 svt_picture_buffer_desc_update: update the parameters in EbPictureBufferDesc for changing the resolution on the fly
 similar to svt_picture_buffer_desc_ctor, but no allocation is done.
@@ -305,6 +307,7 @@ static void svt_recon_picture_buffer_desc_dctor(EbPtr p) {
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG)
         EB_FREE_ALIGNED_ARRAY(obj->buffer_cr);
 }
+
 /*****************************************
 Update the parameters in pictureBufferDescPtr for changing the resolution on the fly
 similar to svt_recon_picture_buffer_desc_ctor, but no allocation is done.
@@ -345,6 +348,7 @@ EbErrorType svt_recon_picture_buffer_desc_update(EbPictureBufferDesc *pictureBuf
 
     return EB_ErrorNone;
 }
+
 /*****************************************
  * svt_recon_picture_buffer_desc_ctor
  *  Initializes the Buffer Descriptor's
@@ -399,6 +403,7 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBuffe
     }
     return EB_ErrorNone;
 }
+
 void svt_aom_link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc) {
     //forces an 8 bit version
     //NOTe:  Not all fileds are connected. add more connections as needed.

@@ -34,6 +34,7 @@ enum {
     MV_COST_OPT,
     MV_COST_NONE // Use 0 as as cost irrespective of the current mv
 } UENUM1BYTE(MV_COST_TYPE);
+
 typedef struct svt_mv_cost_param {
     // The reference mv used to compute the mv cost
     const Mv    *ref_mv;
@@ -64,6 +65,7 @@ typedef struct {
     // The source and predictors/mask used by translational search
     svt_buf_2d *src;
 } MSBuffers;
+
 // =============================================================================
 //  Subpixel Motion Search
 // =============================================================================
@@ -101,6 +103,7 @@ typedef struct {
     // Distortion calculation params
     SUBPEL_SEARCH_VAR_PARAMS var_params;
 } SUBPEL_MOTION_SEARCH_PARAMS;
+
 typedef int(fractional_mv_step_fp)(void *ictx, MacroBlockD *xd, const struct AV1Common *const cm,
                                    SUBPEL_MOTION_SEARCH_PARAMS *ms_params, Mv start_mv, Mv *bestmv, int *distortion,
                                    unsigned int *sse1, int qp, BlockSize bsize, uint8_t is_intra_bordered);

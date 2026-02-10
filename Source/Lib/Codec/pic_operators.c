@@ -44,6 +44,7 @@ void svt_residual_kernel16bit_c(uint16_t *input, uint32_t input_stride, uint16_t
 
     return;
 }
+
 /*******************************************
 * Residual Kernel
 Computes the residual data
@@ -158,6 +159,7 @@ void svt_aom_picture_full_distortion32_bits_single(int32_t *coeff, int32_t *reco
         svt_full_distortion_kernel_cbf_zero32_bits(coeff, stride, distortion, bwidth, bheight);
     }
 }
+
 void svt_aom_un_pack2d(uint16_t *in16_bit_buffer, uint32_t in_stride, uint8_t *out8_bit_buffer, uint32_t out8_stride,
                        uint8_t *outn_bit_buffer, uint32_t outn_stride, uint32_t width, uint32_t height) {
     if (((width & 3) == 0) && ((height & 1) == 0)) {
@@ -186,6 +188,7 @@ void svt_aom_compressed_pack_sb(uint8_t *in8_bit_buffer, uint32_t in8_stride, ui
     svt_compressed_packmsb(
         in8_bit_buffer, in8_stride, inn_bit_buffer, inn_stride, out16_bit_buffer, out_stride, width, height);
 }
+
 // Copies the source image into the destination image and updates the
 // destination's UMV borders.
 // Note: The frames are assumed to be identical in size.
@@ -308,6 +311,7 @@ void svt_aom_generate_padding(
 
     return;
 }
+
 void svt_aom_generate_padding_compressed_10bit(
     EbByte   src_pic, //output paramter, pointer to the source picture to be padded.
     uint32_t src_stride, //input paramter, the stride of the source picture to be padded.
@@ -348,6 +352,7 @@ void svt_aom_generate_padding_compressed_10bit(
         --vertical_idx;
     }
 }
+
 /** svt_aom_generate_padding16_bit()
 is used to pad the target picture. The horizontal padding happens first and then the vertical padding.
 */
@@ -566,6 +571,7 @@ void svt_aom_convert_pic_8bit_to_16bit(EbPictureBufferDesc *src_8bit, EbPictureB
     dst_16bit->width  = src_8bit->width;
     dst_16bit->height = src_8bit->height;
 }
+
 void svt_aom_copy_buffer_info(EbPictureBufferDesc *src_ptr, EbPictureBufferDesc *dst_ptr) {
     dst_ptr->width             = src_ptr->width;
     dst_ptr->height            = src_ptr->height;

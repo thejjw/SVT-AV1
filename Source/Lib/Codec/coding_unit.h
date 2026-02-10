@@ -43,6 +43,7 @@ typedef struct {
     Mv      mfmv0;
     uint8_t ref_frame_offset;
 } TPL_MV_REF;
+
 typedef struct {
     Mv               mv;
     MvReferenceFrame ref_frame;
@@ -147,6 +148,7 @@ typedef struct IntraBcContext {
     // be removed)
     uint8_t approx_inter_rate;
 } IntraBcContext;
+
 typedef struct EobData {
     uint16_t y[MAX_TXB_COUNT];
     uint16_t u[MAX_TXB_COUNT_UV];
@@ -224,6 +226,7 @@ typedef struct BlkStruct {
     // ec; skip coeff only. as defined in section 6.10.11 of the av1 text
     unsigned block_has_coeff : 1;
 } BlkStruct;
+
 typedef struct EcBlkStruct {
     MacroBlockD *av1xd;
     EobData      eob;
@@ -269,6 +272,7 @@ typedef struct TplSrcStats {
     int32_t        best_rf_idx;
     PredictionMode best_intra_mode;
 } TplSrcStats;
+
 typedef struct SuperBlock {
     EbDctor                   dctor;
     struct PictureControlSet *pcs;
@@ -283,6 +287,7 @@ typedef struct SuperBlock {
     TileInfo               tile_info;
     uint16_t               final_blk_cnt; // number of block(s) posted from EncDec to EC
 } SuperBlock;
+
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,
                                              bool allintra, ResolutionRange input_resolution,

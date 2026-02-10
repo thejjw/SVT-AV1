@@ -3117,4 +3117,5 @@ EbErrorType svt_aom_motion_estimation_b64(
     }
     return return_error;
 }
+
 // clang-format on

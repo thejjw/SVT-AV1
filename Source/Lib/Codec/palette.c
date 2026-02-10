@@ -149,6 +149,7 @@ static void palette_add_to_cache(uint16_t *cache, int *n, uint16_t val) {
 
     cache[(*n)++] = val;
 }
+
 // Get palette cache for luma only
 int svt_get_palette_cache_y(const MacroBlockD *const xd, uint16_t *cache) {
     const int row = -xd->mb_to_top_edge >> 3;
@@ -193,6 +194,7 @@ int svt_get_palette_cache_y(const MacroBlockD *const xd, uint16_t *cache) {
     assert(n <= 2 * PALETTE_MAX_SIZE);
     return n;
 }
+
 // Returns sub-sampled dimensions of the given block.
 // The output values for 'rows_within_bounds' and 'cols_within_bounds' will
 // differ from 'height' and 'width' when part of the block is outside the
@@ -247,6 +249,7 @@ static AOM_INLINE void optimize_palette_colors(uint16_t *color_cache, int n_cach
             centroids[i] = color_cache[idx];
     }
 }
+
 // Extends 'color_map' array from 'orig_width x orig_height' to 'new_width x
 // new_height'. Extra rows and columns are filled in by copying last valid
 // row/column.
@@ -269,6 +272,7 @@ static AOM_INLINE void extend_palette_color_map(uint8_t *const color_map, int or
         svt_memcpy(color_map + j * new_width, color_map + (orig_height - 1) * new_width, new_width);
     }
 }
+
 static void palette_rd_y(PaletteInfo *palette_info, uint8_t *palette_size_array, ModeDecisionContext *ctx,
                          BlockSize bsize, const int *data, int *centroids, int n, uint16_t *color_cache, int n_cache,
                          int bit_depth) {
@@ -297,6 +301,7 @@ static void palette_rd_y(PaletteInfo *palette_info, uint8_t *palette_size_array,
 
 int svt_av1_count_colors(const uint8_t *src, int stride, int rows, int cols, int *val_count);
 int svt_av1_count_colors_highbd(uint16_t *src, int stride, int rows, int cols, int bit_depth, int *val_count);
+
 /****************************************
    determine all palette luma candidates
  ****************************************/
@@ -443,6 +448,7 @@ typedef struct {
     MapCdf    map_cdf;
     ColorCost color_cost;
 } Av1ColorMapParam;
+
 static void get_palette_params(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_ptr, int plane, BlockSize bsize,
                                Av1ColorMapParam *params) {
     const MacroBlockD *const xd = blk_ptr->av1xd;
@@ -452,6 +458,7 @@ static void get_palette_params(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_pt
     params->n_colors   = blk_ptr->palette_size[plane];
     svt_aom_get_block_dimensions(bsize, plane, xd, &params->plane_width, NULL, &params->rows, &params->cols);
 }
+
 static void get_color_map_params(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_ptr, int plane, BlockSize bsize,
                                  TxSize tx_size, COLOR_MAP_TYPE type, Av1ColorMapParam *params) {
     (void)tx_size;
@@ -461,6 +468,7 @@ static void get_color_map_params(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_
     default: assert(0 && "Invalid color map type"); return;
     }
 }
+
 static void get_palette_params_rate(ModeDecisionCandidate *cand, MdRateEstimationContext *rate_table,
                                     BlkStruct *blk_ptr, int plane, BlockSize bsize, Av1ColorMapParam *params) {
     PaletteInfo *palette_info = cand->palette_info;
@@ -525,6 +533,7 @@ static int cost_and_tokenize_map(Av1ColorMapParam *param, TOKENEXTRA **t, int pl
     }
     return this_rate;
 }
+
 void svt_av1_tokenize_color_map(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_ptr, int plane, TOKENEXTRA **t,
                                 BlockSize bsize, TxSize tx_size, COLOR_MAP_TYPE type, int allow_update_cdf) {
     assert(plane == 0 || plane == 1);
@@ -537,6 +546,7 @@ void svt_av1_tokenize_color_map(FRAME_CONTEXT *frame_context, EcBlkStruct *blk_p
     MapCdf map_pb_cdf = plane ? frame_context->palette_uv_color_index_cdf : frame_context->palette_y_color_index_cdf;
     cost_and_tokenize_map(&color_map_params, t, plane, 0, allow_update_cdf, map_pb_cdf);
 }
+
 int svt_av1_cost_color_map(ModeDecisionCandidate *cand, MdRateEstimationContext *rate_table, BlkStruct *blk_ptr,
                            int plane, BlockSize bsize, COLOR_MAP_TYPE type) {
     assert(plane == 0 || plane == 1);

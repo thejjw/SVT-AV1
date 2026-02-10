@@ -73,19 +73,24 @@ static bool check_mv_validity(int16_t x_mv, int16_t y_mv, uint8_t need_shift) {
     }
     return true;
 }
+
 int svt_is_interintra_allowed(uint8_t enable_inter_intra, BlockSize bsize, PredictionMode mode,
                               const MvReferenceFrame ref_frame[2]) {
     return enable_inter_intra && svt_aom_is_interintra_allowed_bsize((const BlockSize)bsize) &&
         svt_aom_is_interintra_allowed_mode(mode) && svt_aom_is_interintra_allowed_ref(ref_frame);
 }
+
 int svt_aom_filter_intra_allowed_bsize(BlockSize bs) { return block_size_wide[bs] <= 32 && block_size_high[bs] <= 32; }
+
 int svt_aom_filter_intra_allowed(uint8_t enable_filter_intra, BlockSize bsize, uint8_t palette_size, uint32_t mode) {
     return enable_filter_intra && mode == DC_PRED && palette_size == 0 && svt_aom_filter_intra_allowed_bsize(bsize);
 }
+
 // returns the max inter-inter compound type based on settings and block size
 static MD_COMP_TYPE get_tot_comp_types_bsize(MD_COMP_TYPE tot_comp_types, BlockSize bsize) {
     return (svt_aom_get_wedge_params_bits(bsize) == 0) ? MIN(tot_comp_types, MD_COMP_WEDGE) : tot_comp_types;
 }
+
 /*
 Get the ME offset for a given block(the offset used to locate the PA MVs from the parent PCS).
 */
@@ -154,6 +159,7 @@ uint32_t svt_aom_get_me_block_offset(const BlockGeom *const blk_geom, uint8_t en
 
     return me_block_offset;
 }
+
 //Given one reference frame identified by the pair (list_index,ref_index)
 //indicate if ME data is valid
 uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_offset, const MeSbResults *me_results,
@@ -174,6 +180,7 @@ uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_of
     }
     return 0;
 }
+
 /********************************************
 * Constants
 ********************************************/
@@ -227,11 +234,13 @@ int32_t svt_aom_have_newmv_in_inter_mode(PredictionMode mode) {
     return (mode == NEWMV || mode == NEW_NEWMV || mode == NEAREST_NEWMV || mode == NEW_NEARESTMV ||
             mode == NEAR_NEWMV || mode == NEW_NEARMV);
 }
+
 static MvReferenceFrame to_ref_frame[2][4] = {{LAST_FRAME, LAST2_FRAME, LAST3_FRAME, GOLDEN_FRAME},
                                               {BWDREF_FRAME, ALTREF2_FRAME, ALTREF_FRAME, INVALID_REF}};
 
 MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx) { return to_ref_frame[list][ref_idx]; };
-uint8_t          svt_aom_get_max_drl_index(uint8_t refmvCnt, PredictionMode mode) {
+
+uint8_t svt_aom_get_max_drl_index(uint8_t refmvCnt, PredictionMode mode) {
     uint8_t max_drl = 0;
 
     if (mode == NEWMV || mode == NEW_NEWMV) {
@@ -254,7 +263,9 @@ uint8_t          svt_aom_get_max_drl_index(uint8_t refmvCnt, PredictionMode mode
 
     return max_drl;
 }
+
 #define MV_COST_WEIGHT 108
+
 static int64_t pick_interintra_wedge(PictureControlSet *pcs, ModeDecisionContext *ctx, const BlockSize bsize,
                                      const uint8_t *const p0, const uint8_t *const p1, uint8_t *src_buf,
                                      uint32_t src_stride, int8_t *wedge_index_out) {
@@ -283,6 +294,7 @@ static int64_t pick_interintra_wedge(PictureControlSet *pcs, ModeDecisionContext
 
     return rd;
 }
+
 static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand) {
     SequenceControlSet *scs = pcs->scs;
     DECLARE_ALIGNED(16, uint8_t, tmp_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
@@ -584,6 +596,7 @@ static void mode_decision_cand_bf_dctor(EbPtr p) {
     EB_DELETE(obj->rec_coeff);
     EB_DELETE(obj->quant);
 }
+
 static void mode_decision_scratch_cand_bf_dctor(EbPtr p) {
     ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
     EB_DELETE(obj->pred);
@@ -592,6 +605,7 @@ static void mode_decision_scratch_cand_bf_dctor(EbPtr p) {
     EB_DELETE(obj->recon);
     EB_DELETE(obj->quant);
 }
+
 /***************************************
 * Mode Decision Candidate Ctor
 ***************************************/
@@ -648,6 +662,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer *buff
     buffer_ptr->full_cost_ssim = full_cost_ssim;
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, uint8_t sb_size,
                                                        EbBitDepth max_bitdepth) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data;
@@ -703,6 +718,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     EB_NEW(buffer_ptr->recon, svt_picture_buffer_desc_ctor, (EbPtr)&picture_buffer_desc_init_data);
     return EB_ErrorNone;
 }
+
 /***************************************
 * return true if the MV candidate is already injected
 ***************************************/
@@ -753,6 +769,7 @@ static bool mv_is_already_injected(ModeDecisionContext *ctx, Mv mv0, Mv mv1, uin
     }
     return false;
 }
+
 bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
                                   uint8_t ref_idx) {
     if (!ctx->ref_pruning_ctrls.enabled)
@@ -764,6 +781,7 @@ bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_g
         return true;
     }
 }
+
 // Determine if the MV-to-MVP difference satisfies the mv_diff restriction
 static bool is_valid_mv_diff(Mv best_pred_mv[2], Mv mv0, Mv mv1, uint8_t is_compound) {
     const uint8_t mv_diff_max_bit = MV_IN_USE_BITS;
@@ -799,6 +817,7 @@ static bool is_valid_bipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_gro
     }
     return true;
 }
+
 #define BIPRED_3x3_REFINMENT_POSITIONS 8
 
 static int8_t allow_refinement_flag[BIPRED_3x3_REFINMENT_POSITIONS] = {1, 0, 1, 0, 1, 0, 1, 0};
@@ -925,6 +944,7 @@ static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ct
 
     *total_cand_count = cand_count;
 }
+
 // Determines if inter MVP compound modes should be skipped based on info from neighbouring blocks/ref frame types.
 static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFrame rf[2]) {
     if (!ctx->inter_comp_ctrls.skip_on_ref_info)
@@ -1018,6 +1038,7 @@ static void inj_comp_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uin
     }
     *total_cand_count = cand_count;
 }
+
 static void unipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                              uint32_t *candidate_total_cnt) {
     uint32_t               cand_total_cnt          = (*candidate_total_cnt);
@@ -1095,6 +1116,7 @@ static void unipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisio
 
     return;
 }
+
 static void bipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                             uint32_t *candidate_total_cnt) {
     uint32_t               cand_total_cnt          = (*candidate_total_cnt);
@@ -1242,6 +1264,7 @@ static void bipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecision
 
     return;
 }
+
 /*********************************************************************
 **********************************************************************
         Upto 12 inter Candidated injected
@@ -1572,6 +1595,7 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
     //update tot Candidate count
     *cand_total_cnt = cand_idx;
 }
+
 static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                    uint32_t *cand_tot_cnt) {
     uint32_t               cand_idx   = *cand_tot_cnt;
@@ -1927,6 +1951,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
 
     return 0;
 }
+
 static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, int width, int height, int stride,
                                     int mi_row, int mi_col, int subsampling_x, int subsampling_y) {
     // Offset the buffer pointer
@@ -1943,6 +1968,7 @@ static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, i
     dst->height = height;
     dst->stride = stride;
 }
+
 void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig *src, int mi_row,
                               int mi_col) {
     dst[0].buf    = src->y_buffer;
@@ -1973,6 +1999,7 @@ static void init_me_luts_bd(int *bit16lut, int range, EbBitDepth bit_depth) {
         bit16lut[i]    = (int)(0.0418 * q + 2.4107);
     }
 }
+
 void svt_av1_init_me_luts(void) {
     init_me_luts_bd(sad_per_bit_lut_8, QINDEX_RANGE, EB_EIGHT_BIT);
     init_me_luts_bd(sad_per_bit_lut_10, QINDEX_RANGE, EB_TEN_BIT);
@@ -2712,6 +2739,7 @@ static void inject_pme_candidates(PictureControlSet *pcs, ModeDecisionContext *c
     }
     (*candidate_total_cnt) = cand_total_cnt;
 }
+
 static void inject_inter_candidates_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                               uint32_t *candidate_total_cnt) {
     FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
@@ -2724,6 +2752,7 @@ static void inject_inter_candidates_light_pd0(PictureControlSet *pcs, ModeDecisi
 
     inject_new_candidates_light_pd0(pcs, ctx, candidate_total_cnt, allow_bipred);
 }
+
 static void inject_inter_candidates_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                               uint32_t *cand_total_cnt) {
     FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
@@ -2752,6 +2781,7 @@ static void inject_inter_candidates_light_pd1(PictureControlSet *pcs, ModeDecisi
     if (ctx->inject_new_me)
         inject_new_candidates_light_pd1(pcs, ctx, cand_total_cnt, allow_bipred);
 }
+
 static void svt_aom_inject_inter_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                             uint32_t *cand_total_cnt) {
     FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
@@ -2802,6 +2832,7 @@ static void svt_aom_inject_inter_candidates(PictureControlSet *pcs, ModeDecision
     if (ctx->inject_new_pme && ctx->updated_enable_pme)
         inject_pme_candidates(pcs, ctx, cand_total_cnt, allow_bipred);
 }
+
 /* For intra prediction, the chroma transform type may not follow the luma type.
 This function will return the intra chroma TX type to be used, which is based on TX size and chroma mode.
 Refer to section 5.11.40 of the AV1 spec (compute_tx_type). */
@@ -2818,6 +2849,7 @@ TxType svt_aom_get_intra_uv_tx_type(UvPredictionMode pred_mode_uv, TxSize tx_siz
     const TxSetType tx_set_type = get_ext_tx_set_type(tx_size, /*is_inter*/ 0, reduced_tx_set);
     return !av1_ext_tx_used[tx_set_type][tx_type] ? DCT_DCT : tx_type;
 }
+
 double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
 
 // Values are now correlated to quantizer.
@@ -2825,6 +2857,7 @@ static INLINE int mv_check_bounds(const MvLimits *mv_limits, const Mv *mv) {
     return (mv->y >> 3) < mv_limits->row_min || (mv->y >> 3) > mv_limits->row_max ||
         (mv->x >> 3) < mv_limits->col_min || (mv->x >> 3) > mv_limits->col_max;
 }
+
 static void assert_release(int statement) {
     if (statement == 0)
         SVT_LOG("ASSERT_ERRRR\n");
@@ -2967,6 +3000,7 @@ static void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *ctx, co
 
     for (int i = 0; i < 2; i++) EB_FREE_ARRAY(x->hash_value_buffer[i]);
 }
+
 static void inject_intra_bc_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx, const SequenceControlSet *scs,
                                        BlkStruct *blk_ptr, uint32_t *cand_cnt) {
     Mv      dv_cand[2];

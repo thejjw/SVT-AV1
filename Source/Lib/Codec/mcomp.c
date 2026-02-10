@@ -38,6 +38,7 @@
 // Returns the cost of using the current mv during the motion search. This is
 // used when var is used as the error metric.
 #define PIXEL_TRANSFORM_ERROR_SCALE 4
+
 static INLINE int svt_mv_err_cost(const Mv *mv, const Mv *ref_mv, const int *mvjcost, const int *const mvcost[2],
                                   int error_per_bit, MV_COST_TYPE mv_cost_type) {
     const Mv diff     = {{mv->x - ref_mv->x, mv->y - ref_mv->y}};
@@ -160,6 +161,7 @@ static INLINE int svt_estimated_pref_error(const Mv *this_mv, const SUBPEL_SEARC
     // TODO: port other variance-related functions
     return vfp->svf(ref, ref_stride, subpel_x_q3, subpel_y_q3, src, src_stride, sse);
 }
+
 // Estimates whether this_mv is better than best_mv. This function incorporates
 // both prediction error and residue into account. It is suffixed "fast" because
 // it uses bilinear filter to estimate the prediction.
@@ -578,7 +580,9 @@ static AOM_FORCE_INLINE void two_level_checks_fast(MacroBlockD *xd, const struct
                                     is_scaled);
         }
 }
+
 extern const uint8_t svt_aom_eb_av1_var_offs[MAX_SB_SIZE];
+
 int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const struct AV1Common *const cm,
                                             SUBPEL_MOTION_SEARCH_PARAMS *ms_params, Mv start_mv, Mv *bestmv,
                                             int *distortion, unsigned int *sse1, int qp, BlockSize bsize,
@@ -591,7 +595,7 @@ int svt_av1_find_best_sub_pixel_tree_pruned(void *ictx, MacroBlockD *xd, const s
     const SubpelMvLimits           *mv_limits      = &ms_params->mv_limits;
     const svt_mv_cost_param        *mv_cost_params = &ms_params->mv_cost_params;
     const SUBPEL_SEARCH_VAR_PARAMS *var_params     = &ms_params->var_params;
-    int                             hstep = INIT_SUBPEL_STEP_SIZE; // Step size, initialized to 4/8=1/2 pel
+    int                             hstep          = INIT_SUBPEL_STEP_SIZE; // Step size, initialized to 4/8=1/2 pel
     unsigned int                    besterr;
     unsigned int                    org_error;
     *bestmv = start_mv;
@@ -752,6 +756,7 @@ int svt_av1_find_best_sub_pixel_tree(void *ictx, MacroBlockD *xd, const struct A
 
     return besterr;
 }
+
 // =============================================================================
 //  SVT Functions
 // =============================================================================

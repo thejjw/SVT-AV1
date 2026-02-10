@@ -140,5 +140,6 @@ void RENAME(svt_av1_k_means)(const int *data, int *centroids, uint8_t *indices, 
         }
     }
 }
+
 #undef RENAME_
 #undef RENAME

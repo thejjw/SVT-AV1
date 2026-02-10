@@ -703,6 +703,7 @@ static void prediction_structure_group_dctor(EbPtr p) {
     PredictionStructureGroup *obj = (PredictionStructureGroup *)p;
     EB_DELETE_PTR_ARRAY(obj->prediction_structure_ptr_array, obj->prediction_structure_count);
 }
+
 /*************************************************
  * Prediction Structure Group Ctor
  *

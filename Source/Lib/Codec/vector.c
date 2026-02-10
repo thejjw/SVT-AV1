@@ -28,6 +28,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "vector.h"
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 int svt_aom_vector_setup(Vector *vector, uint32_t capacity, uint32_t element_size) {
     assert(vector != NULL);
 
@@ -97,7 +98,8 @@ Iterator svt_aom_vector_iterator(Vector *vector, size_t index) {
 }
 
 void *svt_aom_iterator_get(Iterator *iterator) { return iterator->pointer; }
-void  svt_aom_iterator_increment(Iterator *iterator) {
+
+void svt_aom_iterator_increment(Iterator *iterator) {
     assert(iterator != NULL);
     iterator->pointer = (unsigned char *)iterator->pointer + iterator->element_size;
 }
@@ -112,6 +114,7 @@ bool _vector_should_grow(Vector *vector) {
 void *_vector_offset(Vector *vector, size_t index) {
     return (unsigned char *)vector->data + (index * vector->element_size);
 }
+
 void _vector_assign(Vector *vector, size_t index, void *element) {
     /* Insert the element */
     void *offset = _vector_offset(vector, index);

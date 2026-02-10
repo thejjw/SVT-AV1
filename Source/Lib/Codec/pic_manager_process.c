@@ -41,6 +41,7 @@ static INLINE unsigned int get_token_alloc(int mb_rows, int mb_cols, int sb_size
 
     return sb_rows * sb_cols * sb_palette_toks;
 }
+
 static EbErrorType rtime_alloc_palette_tokens(SequenceControlSet *scs, PictureControlSet *child_pcs) {
     if (child_pcs->ppcs->frm_hdr.allow_screen_content_tools) {
         if (scs->static_config.screen_content_mode) {
@@ -55,6 +56,7 @@ static EbErrorType rtime_alloc_palette_tokens(SequenceControlSet *scs, PictureCo
     }
     return EB_ErrorNone;
 }
+
 // Min-Heap Utilities
 
 // Swap two elements in the heap
@@ -97,6 +99,7 @@ static void heap_sift_down(uint64_t *heap, int count, int index) {
 
 // Get smallest element (top of heap) without removing it
 static inline uint64_t heap_min(const uint64_t *heap, int count) { return (count > 0) ? heap[0] : UINT64_MAX; }
+
 // Remove and return smallest element (top of heap)
 static inline uint64_t heap_pop_min(uint64_t *heap, int *count_io) {
     int      count = *count_io;
@@ -131,6 +134,7 @@ static void picture_manager_context_dctor(EbPtr p) {
     obj->started_pics_dec_order_size = 0;
     EB_FREE_ARRAY(obj);
 }
+
 /************************************************
  * Picture Manager Context Constructor
  ************************************************/
@@ -158,6 +162,7 @@ EbErrorType svt_aom_picture_manager_context_ctor(EbThreadContext *thread_ctx, co
 }
 
 void svt_aom_set_tile_info(PictureParentControlSet *pcs);
+
 /*
   walks the ref picture list, and looks for a particular pic
   return NULL if not found.
@@ -697,14 +702,14 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
 
             svt_aom_init_enc_dec_segement(entry_ppcs);
 
-            int                             sb_size_log2 = entry_scs_ptr->seq_header.sb_size_log2;
-            PictureParentControlSet        *ppcs         = child_pcs->ppcs;
-            const int                       tile_cols    = ppcs->av1_cm->tiles_info.tile_cols;
-            const int                       tile_rows    = ppcs->av1_cm->tiles_info.tile_rows;
-            Av1Common *const                cm           = ppcs->av1_cm;
-            uint16_t                        tile_row, tile_col;
-            uint32_t                        x_sb_index, y_sb_index;
-            TileInfo                        tile_info;
+            int                      sb_size_log2 = entry_scs_ptr->seq_header.sb_size_log2;
+            PictureParentControlSet *ppcs         = child_pcs->ppcs;
+            const int                tile_cols    = ppcs->av1_cm->tiles_info.tile_cols;
+            const int                tile_rows    = ppcs->av1_cm->tiles_info.tile_rows;
+            Av1Common *const         cm           = ppcs->av1_cm;
+            uint16_t                 tile_row, tile_col;
+            uint32_t                 x_sb_index, y_sb_index;
+            TileInfo                 tile_info;
 
             child_pcs->sb_total_count = pic_width_in_sb * pic_height_in_sb;
 

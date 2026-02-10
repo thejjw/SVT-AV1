@@ -44,11 +44,13 @@ typedef enum rate_factor_level {
     KF_STD             = 5,
     RATE_FACTOR_LEVELS = 6
 } rate_factor_level;
+
 #define CODED_FRAMES_STAT_QUEUE_MAX_DEPTH 2000
 // max bit rate average period
 #define MAX_RATE_AVG_PERIOD (CODED_FRAMES_STAT_QUEUE_MAX_DEPTH >> 1)
 #define CRITICAL_BUFFER_LEVEL 15
 #define OPTIMAL_BUFFER_LEVEL 70
+
 /**************************************
  * Coded Frames Stats
  **************************************/
@@ -83,6 +85,7 @@ typedef struct {
 
 EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry *entry_ptr,
                                                                  uint64_t                  picture_number);
+
 typedef struct {
     int     last_boosted_qindex; // Last boosted GF/KF/ARF q
     int     gfu_boost;
@@ -196,10 +199,12 @@ typedef enum PicMgrInputPortTypes {
     PIC_MGR_INPUT_PORT_TOTAL_COUNT   = 3,
     PIC_MGR_INPUT_PORT_INVALID       = ~0,
 } PicMgrInputPortTypes;
+
 typedef struct PicMgrPorts {
     PicMgrInputPortTypes type;
     uint32_t             count;
 } PicMgrPorts;
+
 /**************************************
  * Context
  **************************************/

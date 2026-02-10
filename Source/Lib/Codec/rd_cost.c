@@ -50,12 +50,14 @@ MvJointType svt_av1_get_mv_joint(const Mv *mv) {
     else
         return mv->x == 0 ? MV_JOINT_HZVNZ : MV_JOINT_HNZVNZ;
 }
+
 static int32_t mv_cost(const Mv *mv, const int32_t *joint_cost, const int32_t *const comp_cost[2]) {
     int32_t jn_c = svt_av1_get_mv_joint(mv);
     int32_t res  = joint_cost[jn_c] + comp_cost[0][CLIP3(MV_LOW, MV_UPP, mv->y)] +
         comp_cost[1][CLIP3(MV_LOW, MV_UPP, mv->x)];
     return res;
 }
+
 int32_t svt_av1_mv_bit_cost_light(const Mv *mv, const Mv *ref) {
     const uint32_t factor     = 50;
     const uint32_t absmvdiffx = ABS(mv->x - ref->x);
@@ -63,6 +65,7 @@ int32_t svt_av1_mv_bit_cost_light(const Mv *mv, const Mv *ref) {
     const uint32_t mv_rate    = 1296 + (factor * (absmvdiffx + absmvdiffy));
     return mv_rate;
 }
+
 int32_t svt_av1_mv_bit_cost(const Mv *mv, const Mv *ref, const int32_t *mvjcost, const int32_t *const mvcost[2],
                             int32_t weight) {
     // Restrict the size of the MV diff to be within the max AV1 range.  If the MV diff
@@ -146,6 +149,7 @@ static int32_t av1_transform_type_rate_estimation(ModeDecisionContext *ctx, uint
     }
     return 0;
 }
+
 // Update the eob-related CDFs. Function assumes allow_update_cdf is true
 // as the only action of the function is to update the CDFs.
 static void update_eob_context(int eob, TxSize tx_size, TxClass tx_class, PlaneType plane, FRAME_CONTEXT *ec_ctx) {
@@ -194,6 +198,7 @@ int get_eob_cost(int eob, const LvMapEobCost *txb_eob_costs, const LvMapCoeffCos
     }
     return eob_cost;
 }
+
 static INLINE int32_t av1_cost_skip_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
                                         TxSize transform_size, PlaneType plane_type, int16_t txb_skip_ctx) {
     const TxSize txs_ctx = (TxSize)((txsize_sqr_map[transform_size] + txsize_sqr_up_map[transform_size] + 1) >> 1);
@@ -454,6 +459,7 @@ uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_
         ctx, eob, scan, qcoeff, coeff_contexts, coeff_costs, dc_sign_ctx, levels, bwl, transform_type);
     return cost;
 }
+
 uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                         ModeDecisionCandidateBuffer *cand_bf, bool use_accurate_cfl) {
     const BlockGeom *const blk_geom = ctx->blk_geom;
@@ -503,6 +509,7 @@ uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionCont
 
     return chroma_rate;
 }
+
 uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
                                  uint64_t lambda, uint64_t luma_distortion) {
     const BlockGeom       *blk_geom = ctx->blk_geom;
@@ -758,8 +765,9 @@ uint64_t estimate_ref_frame_type_bits(ModeDecisionContext *ctx, BlkStruct *blk_p
     return ref_rate_bits;
 }
 
-int                    svt_aom_get_comp_group_idx_context_enc(const MacroBlockD *xd);
-int                    is_any_masked_compound_used(BlockSize bsize);
+int svt_aom_get_comp_group_idx_context_enc(const MacroBlockD *xd);
+int is_any_masked_compound_used(BlockSize bsize);
+
 static INLINE uint32_t get_compound_mode_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                               ModeDecisionCandidate *cand, BlockSize bsize) {
     BlkStruct          *blk_ptr   = ctx->blk_ptr;
@@ -823,6 +831,7 @@ static INLINE uint32_t get_compound_mode_rate(PictureControlSet *pcs, ModeDecisi
 
     return comp_rate;
 }
+
 int32_t svt_aom_get_switchable_rate(BlockModeInfo *block_mi, const FrameHeader *const frm_hdr, ModeDecisionContext *ctx,
                                     const bool enable_dual_filter) {
     if (frm_hdr->interpolation_filter != SWITCHABLE)
@@ -840,7 +849,9 @@ int32_t svt_aom_get_switchable_rate(BlockModeInfo *block_mi, const FrameHeader *
     }
     return inter_filter_cost;
 }
-int             svt_aom_is_interintra_wedge_used(BlockSize bsize);
+
+int svt_aom_is_interintra_wedge_used(BlockSize bsize);
+
 static uint64_t av1_inter_fast_cost_light(ModeDecisionContext *ctx, BlkStruct *blk_ptr,
                                           ModeDecisionCandidateBuffer *cand_bf, uint64_t luma_distortion,
                                           uint64_t lambda, PictureControlSet *pcs, CandidateMv *ref_mv_stack) {
@@ -971,6 +982,7 @@ static uint64_t av1_inter_fast_cost_light(ModeDecisionContext *ctx, BlkStruct *b
     }
     return (RDCOST(lambda, luma_rate, luma_distortion));
 }
+
 uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
                                  uint64_t lambda, uint64_t luma_distortion) {
     const BlockGeom       *blk_geom       = ctx->blk_geom;
@@ -1163,6 +1175,7 @@ uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ct
     }
     return (RDCOST(lambda, luma_rate, luma_distortion));
 }
+
 /*
  */
 EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
@@ -1191,6 +1204,7 @@ EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, 
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
                                             PictureControlSet *pcs, ModeDecisionCandidateBuffer *cand_bf,
                                             uint32_t txb_origin_index, uint32_t txb_chroma_origin_index,
@@ -1302,6 +1316,7 @@ EbErrorType svt_aom_full_cost_light_pd0(ModeDecisionContext *ctx, ModeDecisionCa
         lambda, coeff_rate + ctx->md_rate_est_ctx->partition_fac_bits[0][PARTITION_NONE], y_distortion[0]);
     return return_error;
 }
+
 /*********************************************************************************
  * svt_aom_av1_full_cost function is used to estimate the cost of a candidate mode
  * for full mode decision module.
@@ -1503,6 +1518,7 @@ static INLINE TxSize get_sqr_tx_size(int tx_dim) {
     default: return TX_4X4;
     }
 }
+
 static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx, TXFM_CONTEXT *left_ctx, BlockSize bsize,
                                          TxSize tx_size) {
     const uint8_t txw      = tx_size_wide[tx_size];
@@ -1644,6 +1660,7 @@ static INLINE int get_tx_size_context(const MacroBlockD *xd) {
     else
         return 0;
 }
+
 static uint64_t cost_selected_tx_size(const MacroBlockD *xd, MdRateEstimationContext *md_rate_est_ctx, TxSize tx_size,
                                       FRAME_CONTEXT *ec_ctx, uint8_t allow_update_cdf) {
     const MbModeInfo *const mbmi  = xd->mi[0];

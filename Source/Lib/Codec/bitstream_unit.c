@@ -410,6 +410,7 @@ uint32_t svt_od_ec_tell_frac(uint32_t nbits_total, uint32_t rng) {
           This will always be slightly larger than the exact value (e.g., all
            rounding error is in the positive direction).*/
 uint32_t svt_od_ec_enc_tell_frac(const OdEcEnc* enc) { return svt_od_ec_tell_frac(svt_od_ec_enc_tell(enc), enc->rng); }
+
 /********************************************************************************************************************************/
 /********************************************************************************************************************************/
 /********************************************************************************************************************************/

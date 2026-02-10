@@ -5723,4 +5723,5 @@ EB_API EbErrorType svt_av1_enc_get_stream_info(EbComponentType *    svt_enc_comp
     first_pass_stats->sz = context->stats_out.size * sizeof(FIRSTPASS_STATS);
     return EB_ErrorNone;
 }
+
 // clang-format on

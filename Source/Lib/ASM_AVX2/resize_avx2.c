@@ -26,14 +26,17 @@ static INLINE __m256i RightShiftWithRounding_S32(const __m256i v_val_d, int bits
     const __m256i v_tmp_d  = _mm256_add_epi32(v_val_d, v_bias_d);
     return _mm256_srai_epi32(v_tmp_d, bits);
 }
+
 static INLINE void mm256_clamp_epi32(__m256i *x, __m256i min, __m256i max) {
     *x = _mm256_min_epi32(*x, max);
     *x = _mm256_max_epi32(*x, min);
 }
+
 static INLINE void mm256_clamp_epi16(__m256i *x, __m256i min, __m256i max) {
     *x = _mm256_min_epi16(*x, max);
     *x = _mm256_max_epi16(*x, min);
 }
+
 static INLINE void mm_blend_load_lo(const uint8_t *const input, int blend_len, __m128i *dst) {
     const int      bits_to_mask = blend_len * 8;
     const uint64_t mask_c       = (1LL << bits_to_mask) - 1;
@@ -45,6 +48,7 @@ static INLINE void mm_blend_load_lo(const uint8_t *const input, int blend_len, _
     *dst                        = _mm_cvtepu8_epi16(*dst);
     return;
 }
+
 static INLINE void mm_blend_load_hi(const uint8_t *const input, int blend_len, __m128i *dst) {
     const int      bits_to_mask = blend_len * 8;
     const uint64_t mask_c       = ~((1LL << (64 - bits_to_mask)) - 1);
@@ -56,6 +60,7 @@ static INLINE void mm_blend_load_hi(const uint8_t *const input, int blend_len, _
     *dst                        = _mm_cvtepu8_epi16(*dst);
     return;
 }
+
 static INLINE void interpolate_core_w16_avx2(__m128i short_src[16], __m128i short_filter[16], uint8_t *optr) {
     const __m256i min = _mm256_set1_epi16(0);
     const __m256i max = _mm256_set1_epi16(255);
@@ -115,6 +120,7 @@ static INLINE void interpolate_core_w16_avx2(__m128i short_src[16], __m128i shor
 
     _mm_storeu_si128((__m128i *)optr, m128_0to15);
 }
+
 static INLINE void highbd_interpolate_core_w8_avx2(__m256i src[8], __m256i filter[8], uint16_t *optr, __m256i max) {
     const int     steps = 8;
     const __m256i min   = _mm256_set1_epi32(0);
@@ -147,6 +153,7 @@ static INLINE void highbd_interpolate_core_w8_avx2(__m256i src[8], __m256i filte
 
     _mm_storeu_si128((__m128i *)optr, m128_sum8);
 }
+
 static INLINE void highbd_interpolate_core_w8_mid_part_avx2(const uint16_t *const input, uint16_t **output,
                                                             const int16_t *interp_filters, int *py, const int delta,
                                                             int length, __m256i max) {
@@ -175,6 +182,7 @@ static INLINE void highbd_interpolate_core_w8_mid_part_avx2(const uint16_t *cons
     *output = optr;
     *py     = y;
 }
+
 static INLINE void mm256_blend_load_lo(const uint16_t *const input, int blend_len, __m256i *dst) {
     uint16_t tmp[8];
     for (int i = 0; i < blend_len; ++i) { tmp[i] = input[0]; }
@@ -184,6 +192,7 @@ static INLINE void mm256_blend_load_lo(const uint16_t *const input, int blend_le
     *dst            = _mm256_cvtepu16_epi32(src_128);
     return;
 }
+
 static INLINE void mm256_blend_load_hi(const uint16_t *const input, int blend_len, __m256i *dst) {
     uint16_t tmp[8];
     memcpy(tmp, input, (8 - blend_len) * sizeof(uint16_t));
@@ -193,6 +202,7 @@ static INLINE void mm256_blend_load_hi(const uint16_t *const input, int blend_le
     *dst            = _mm256_cvtepu16_epi32(src_128);
     return;
 }
+
 static INLINE void highbd_interpolate_core_w8_init_part_avx2(const uint16_t *const input, uint16_t **output,
                                                              const int16_t *interp_filters, int *py, const int delta,
                                                              __m256i max) {
@@ -226,6 +236,7 @@ static INLINE void highbd_interpolate_core_w8_init_part_avx2(const uint16_t *con
     *output = optr;
     *py     = y;
 }
+
 static INLINE void highbd_interpolate_core_w8_end_part_avx2(const uint16_t *const input, int in_length,
                                                             uint16_t **output, const int16_t *interp_filters, int *py,
                                                             const int delta, __m256i max) {
@@ -260,6 +271,7 @@ static INLINE void highbd_interpolate_core_w8_end_part_avx2(const uint16_t *cons
     *output = optr;
     *py     = y;
 }
+
 static INLINE void interpolate_core_w16_mid_part_avx2(const uint8_t *const input, uint8_t **output,
                                                       const int16_t *interp_filters, int *py, const int delta,
                                                       int length) {
@@ -295,6 +307,7 @@ static INLINE void interpolate_core_w16_mid_part_avx2(const uint8_t *const input
     *output = optr;
     *py     = y;
 }
+
 static INLINE void interpolate_core_w16_init_part_avx2(const uint8_t *const input, uint8_t **output,
                                                        const int16_t *interp_filters, int *py, const int delta) {
     uint8_t *optr = *output;
@@ -337,6 +350,7 @@ static INLINE void interpolate_core_w16_init_part_avx2(const uint8_t *const inpu
     *output = optr;
     *py     = y;
 }
+
 static INLINE void interpolate_core_w16_end_part_avx2(const uint8_t *const input, int in_length, uint8_t **output,
                                                       const int16_t *interp_filters, int *py, const int delta) {
     uint8_t *optr = *output;
@@ -386,6 +400,7 @@ static INLINE __m256i mm256_load2_m128i(__m128i hi, __m128i lo) {
     __m256i c = _mm256_castsi128_si256(lo);
     return _mm256_inserti128_si256(c, hi, 1);
 }
+
 static INLINE void down2_symeven_prepare_4vec(const __m128i *src, __m256i *dst) {
     __m128i tmp = _mm_alignr_epi8(src[1], src[0], 4);
     dst[0]      = mm256_load2_m128i(tmp, src[0]);
@@ -393,6 +408,7 @@ static INLINE void down2_symeven_prepare_4vec(const __m128i *src, __m256i *dst) 
     dst[2]      = mm256_load2_m128i(_mm_alignr_epi8(src[2], src[1], 4), src[1]);
     dst[3]      = mm256_load2_m128i(_mm_alignr_epi8(src[2], src[1], 12), _mm_alignr_epi8(src[2], src[1], 8));
 }
+
 static INLINE __m256i down2_get_8sum(__m256i *vec, const __m256i *filter_4x, const __m256i *subtrahend) {
     vec[0]       = _mm256_shufflelo_epi16(vec[0], _MM_SHUFFLE(0, 1, 2, 3));
     vec[0]       = _mm256_shufflehi_epi16(vec[0], _MM_SHUFFLE(0, 1, 2, 3));
@@ -418,6 +434,7 @@ static INLINE __m256i down2_get_8sum(__m256i *vec, const __m256i *filter_4x, con
     sum01 = _mm256_permute4x64_epi64(sum01, _MM_SHUFFLE(3, 1, 2, 0));
     return sum01;
 }
+
 static INLINE void down2_symeven_w16_avx2(const __m128i *load, const __m256i *filter_4x, uint8_t *optr) {
     const __m256i min         = _mm256_set1_epi16(0);
     const __m256i max         = _mm256_set1_epi16(255);
@@ -448,6 +465,7 @@ static INLINE void down2_symeven_w16_avx2(const __m128i *load, const __m256i *fi
     __m128i       m128_0to15 = _mm_packus_epi16(lo_lane, hi_lane);
     _mm_storeu_si128((__m128i *)optr, m128_0to15);
 }
+
 static INLINE void down2_symeven_w16_mid_part_avx2(const uint8_t *const input, int length, uint8_t **output,
                                                    const __m256i *filter_4x) {
     assert((length % 32) == 0);
@@ -473,6 +491,7 @@ static INLINE void down2_symeven_w16_mid_part_avx2(const uint8_t *const input, i
     } while (i < length);
     *output = optr;
 }
+
 static INLINE void down2_symeven_w16_init_part_avx2(const uint8_t *const input, uint8_t **output,
                                                     const __m256i *filter_4x) {
     const uint8_t *in   = input - 3;
@@ -489,6 +508,7 @@ static INLINE void down2_symeven_w16_init_part_avx2(const uint8_t *const input, 
 
     *output = optr;
 }
+
 static INLINE void down2_symeven_w16_end_part_avx2(const uint8_t *const input, uint8_t **output,
                                                    const __m256i *filter_4x, int len_to_end) {
     const uint8_t *in   = input - 3;
@@ -508,6 +528,7 @@ static INLINE void down2_symeven_w16_end_part_avx2(const uint8_t *const input, u
 
     *output = optr;
 }
+
 static INLINE void highbd_down2_symeven_prepare_4pt(const __m128i load_0, const __m128i load_1, __m256i filter_2x,
                                                     __m256i *vec_4pt) {
     // -3 -2 -1 00 01 02 03 04
@@ -546,6 +567,7 @@ static INLINE void highbd_down2_symeven_prepare_4pt(const __m128i load_0, const 
     // P00ab P00cd P01ab P01cd P02ab P02cd P03ab P03cd
     *vec_4pt = _mm256_permute4x64_epi64(*vec_4pt, _MM_SHUFFLE(3, 1, 2, 0));
 }
+
 static INLINE void highbd_down2_symeven_prepare_2pt(const __m256i a, const __m256i b, __m256i filter_2x,
                                                     __m256i *vec_2pt) {
     // a: -3 -2 -1 00 01 02 03 04
@@ -563,6 +585,7 @@ static INLINE void highbd_down2_symeven_prepare_2pt(const __m256i a, const __m25
     // P00a P00b P00c P00d P01a P01b P01c P01d
     *vec_2pt = _mm256_mullo_epi32(*vec_2pt, filter_2x);
 }
+
 static INLINE void highbd_down2_symeven_w8_mid_part_avx2(const uint16_t *const input, int length, uint16_t **output,
                                                          __m256i filter_2x, __m256i max) {
     const int     steps    = 8; // output 8 pt by each loop
@@ -616,6 +639,7 @@ static INLINE void highbd_down2_symeven_w8_mid_part_avx2(const uint16_t *const i
 
     *output = optr;
 }
+
 static INLINE void highbd_down2_symeven_w8_init_part_avx2(const uint16_t *const input, uint16_t **output,
                                                           __m256i filter_2x, __m256i max) {
     const int     steps    = 8;
@@ -666,6 +690,7 @@ static INLINE void highbd_down2_symeven_w8_init_part_avx2(const uint16_t *const 
 
     *output = optr;
 }
+
 static INLINE void highbd_down2_symeven_w8_end_part_avx2(const uint16_t *const input, uint16_t **output,
                                                          const __m256i filter_2x, int len_to_end, __m256i max) {
     const int     steps    = 8;
@@ -891,6 +916,7 @@ void svt_av1_highbd_interpolate_core_avx2(const uint16_t *const input, int in_le
         *optr++ = clip_pixel_highbd(ROUND_POWER_OF_TWO(sum, FILTER_BITS), bd);
     }
 }
+
 static inline int32_t hsums_epi32(const __m256i v) {
     // v = a b c d e f g h
     // x = e f g h a b c d
@@ -907,6 +933,7 @@ static inline int32_t hsums_epi32(const __m256i v) {
     x = _mm256_add_epi32(x, y);
     return _mm256_extract_epi32(x, 0);
 }
+
 static INLINE void highbd_interpolate_gather_load_8x8(const uint16_t *const in, const __m256i vindex, __m256i dst[8]) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex, 2);
     dst[0]       = _mm256_and_si256(load, _mm256_set1_epi32(0xffff)); // col 0
@@ -924,6 +951,7 @@ static INLINE void highbd_interpolate_gather_load_8x8(const uint16_t *const in, 
     dst[6] = _mm256_and_si256(load, _mm256_set1_epi32(0xffff)); // col 6
     dst[7] = _mm256_srli_epi32(load, 16); // col 7
 }
+
 static INLINE uint16_t highbd_interpolate_compute_1pt(const uint16_t *in, const int16_t *filter, int bd) {
     const __m256i vec_filter = _mm256_cvtepi16_epi32(_mm_lddqu_si128((const __m128i *)filter));
     const __m256i vec_src    = _mm256_cvtepu16_epi32(_mm_lddqu_si128((const __m128i *)in));
@@ -931,6 +959,7 @@ static INLINE uint16_t highbd_interpolate_compute_1pt(const uint16_t *in, const 
     const int32_t sum        = hsums_epi32(one_pt);
     return clip_pixel_highbd(ROUND_POWER_OF_TWO(sum, FILTER_BITS), bd);
 }
+
 static EbErrorType svt_av1_highbd_interpolate_core_col_avx2(const uint16_t *const input, int in_width, int in_height,
                                                             int in_stride, uint16_t *output, int out_height,
                                                             int out_stride, int bd, const int16_t *interp_filters) {
@@ -1182,6 +1211,7 @@ static EbErrorType svt_av1_highbd_interpolate_core_col_avx2(const uint16_t *cons
 
     return EB_ErrorNone;
 }
+
 // Transpose 32x 8bit src in the form of 8r x 4c to 32x 16bit dst in the form of 4r x 8c. Each row is stored in one __m128i
 static INLINE void interpolate_transpose_8x4(const __m256i src, __m128i dst[4]) {
     __m256i tmp     = _mm256_and_si256(src, _mm256_set1_epi32(0xff)); // col 0
@@ -1207,6 +1237,7 @@ static INLINE void interpolate_transpose_8x4(const __m256i src, __m128i dst[4]) 
     hi_lane = _mm256_extracti128_si256(tmp, 1);
     dst[3]  = _mm_packus_epi32(lo_lane, hi_lane);
 }
+
 static INLINE void interpolate_gather_load_8x16(const uint8_t *const in, const __m256i vindex, __m128i dst[16]) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex, 1);
     interpolate_transpose_8x4(load, &dst[0]);
@@ -1220,10 +1251,12 @@ static INLINE void interpolate_gather_load_8x16(const uint8_t *const in, const _
     load = _mm256_i32gather_epi32((const int *)(in + 12), vindex, 1);
     interpolate_transpose_8x4(load, &dst[12]);
 }
+
 static INLINE void down2_symeven_gather_load_8x4(const uint8_t *const in, const __m256i vindex, __m128i dst[4]) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex, 1);
     interpolate_transpose_8x4(load, &dst[0]);
 }
+
 static INLINE uint8_t interpolate_compute_1pt(const uint8_t *in, const int16_t *filter) {
     const __m256i vec_filter = _mm256_cvtepi16_epi32(_mm_lddqu_si128((const __m128i *)filter));
     const __m128i src_16bit  = _mm_cvtepu8_epi16(_mm_loadl_epi64((const __m128i *)in));
@@ -1232,6 +1265,7 @@ static INLINE uint8_t interpolate_compute_1pt(const uint8_t *in, const int16_t *
     const int32_t sum        = hsums_epi32(one_pt);
     return clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
 }
+
 static INLINE void interpolate_core_col_4pt(const uint8_t *in, const __m256i filter_2x, const __m256i vindex,
                                             const __m256i max, uint8_t *output) {
     __m128i       vec_src[4];
@@ -1264,6 +1298,7 @@ static INLINE void interpolate_core_col_4pt(const uint8_t *in, const __m256i fil
     __m128i vec_4x8i = _mm_packus_epi16(_mm256_castsi256_si128(vec_4pt), _mm256_castsi256_si128(zero));
     _mm_storeu_si32(output, vec_4x8i);
 }
+
 static INLINE void interpolate_core_col_w16_avx2(__m128i short_src[16], __m256i filter_x2, uint8_t *optr) {
     const __m256i min = _mm256_setzero_si256();
     const __m256i max = _mm256_set1_epi16(255);
@@ -1321,6 +1356,7 @@ static INLINE void interpolate_core_col_w16_avx2(__m128i short_src[16], __m256i 
 
     _mm_storeu_si128((__m128i *)optr, m128_0to15);
 }
+
 static EbErrorType svt_av1_interpolate_core_col_avx2(const uint8_t *const input, int in_width, int in_height,
                                                      int in_stride, uint8_t *output, int out_height, int out_stride,
                                                      const int16_t *interp_filters) {
@@ -1597,11 +1633,13 @@ void svt_av1_highbd_down2_symeven_avx2(const uint16_t *const input, int length, 
         *optr++ = clip_pixel_highbd(sum, bd);
     }
 }
+
 static INLINE __m128i mm_32i_to_16i(__m256i a) {
     __m128i lo_lane = _mm256_castsi256_si128(a);
     __m128i hi_lane = _mm256_extracti128_si256(a, 1);
     return _mm_packus_epi32(lo_lane, hi_lane); // 8x 16-bit
 }
+
 static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t *in, __m128i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex, 2);
     dst[0]       = mm_32i_to_16i(_mm256_and_si256(load,
@@ -1623,6 +1661,7 @@ static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t *in, _
                                             _mm256_set1_epi32(0xffff))); // col 6
     dst[7] = mm_32i_to_16i(_mm256_srli_epi32(load, 16)); // col 7
 }
+
 static INLINE void highbd_down2_symeven_mm256_gather_load_8x8(const uint16_t *in, __m256i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex, 2);
     dst[0]       = _mm256_and_si256(load,
@@ -1644,6 +1683,7 @@ static INLINE void highbd_down2_symeven_mm256_gather_load_8x8(const uint16_t *in
                               _mm256_set1_epi32(0xffff)); // col 6
     dst[7] = _mm256_srli_epi32(load, 16); // col 7
 }
+
 static INLINE void highbd_down2_symeven_mm_gather_load_16x2(const uint16_t *in, int32_t stride, __m128i dst[4],
                                                             __m256i vindex_0, __m256i vindex_1, int32_t row_offset) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex_0, 2);
@@ -1655,6 +1695,7 @@ static INLINE void highbd_down2_symeven_mm_gather_load_16x2(const uint16_t *in, 
     dst[1] = mm_32i_to_16i(_mm256_and_si256(load, _mm256_set1_epi32(0xffff))); // col 0
     dst[3] = mm_32i_to_16i(_mm256_srli_epi32(load, 16)); // col 1
 }
+
 static INLINE void highbd_down2_symeven_mm256_gather_load_16x2(const uint16_t *in, int32_t stride, __m256i dst[4],
                                                                __m256i vindex_0, __m256i vindex_1, int32_t row_offset) {
     __m256i load = _mm256_i32gather_epi32((const int *)in, vindex_0, 2);
@@ -1666,6 +1707,7 @@ static INLINE void highbd_down2_symeven_mm256_gather_load_16x2(const uint16_t *i
     dst[1] = _mm256_and_si256(load, _mm256_set1_epi32(0xffff)); // col 0
     dst[3] = _mm256_srli_epi32(load, 16); // col 1
 }
+
 static INLINE void highbd_down2_symeven_obtain_4x8(const __m256i vec_4pt[8], const __m256i base, const __m256i min,
                                                    const __m256i max, __m128i vec_8pt_i16[4]) {
     __m256i vec_8pt_i32[4];
@@ -1715,6 +1757,7 @@ static INLINE void highbd_down2_symeven_obtain_4x8(const __m256i vec_4pt[8], con
         vec_8pt_i16[k] = mm_32i_to_16i(vec_8pt_i32[k]);
     }
 }
+
 static INLINE void down2_symeven_obtain_4x16(const __m256i vec_4pt[16], const __m256i base, const __m256i min,
                                              const __m256i max, __m128i vec_16pt_i8[4]) {
     __m256i vec_8pt_i32[8];
@@ -1788,6 +1831,7 @@ static INLINE void down2_symeven_obtain_4x16(const __m256i vec_4pt[16], const __
     vec_16pt_i8[2] = _mm_packus_epi16(vec_8pt_i16[1], vec_8pt_i16[5]);
     vec_16pt_i8[3] = _mm_packus_epi16(vec_8pt_i16[3], vec_8pt_i16[7]);
 }
+
 static INLINE void down2_symeven_obtain_4x4(const __m256i vec_4pt[4], const __m256i base, const __m256i min,
                                             const __m256i max, __m128i *vec_16pt_i8) {
     __m256i vec_8pt_i32[2];
@@ -1827,6 +1871,7 @@ static INLINE void down2_symeven_obtain_4x4(const __m256i vec_4pt[4], const __m2
 static INLINE void assign_vec(__m128i *dst, const __m128i *src, int32_t n) {
     for (int i = 0; i < n; i++) { dst[i] = src[i]; }
 }
+
 static INLINE void assign_vec_i16_to_i32(__m256i *dst, const __m128i *src, int32_t n) {
     for (int i = 0; i < n; i++) { dst[i] = _mm256_cvtepu16_epi32(src[i]); }
 }
@@ -1845,6 +1890,7 @@ static INLINE void highbd_down2_symeven_output_4x8_kernel(const __m128i vec_src[
     highbd_down2_symeven_obtain_4x8(vec_4pt, base_sum, min, max, vec_8pt_i16);
     for (int k = 0; k < 4; ++k) { _mm_storeu_si128((__m128i *)(optr + out_stride * k), vec_8pt_i16[k]); }
 }
+
 static INLINE void highbd_down2_symeven_output_4x2_kernel(const __m128i vec_src[4], const __m256i filter_2x,
                                                           const __m256i base_sum, const __m256i min, const __m256i max,
                                                           uint16_t *optr, int32_t out_stride) {
@@ -1873,6 +1919,7 @@ static INLINE void highbd_down2_symeven_output_4x2_kernel(const __m128i vec_src[
     *(uint32_t *)(optr + out_stride * 2) = _mm_extract_epi32(vec_8pt_i16, 2);
     *(uint32_t *)(optr + out_stride * 3) = _mm_extract_epi32(vec_8pt_i16, 3);
 }
+
 static INLINE void highbd_down2_symeven_output_2x2_kernel(const __m256i vec_src[4], const __m256i filter_2x,
                                                           const __m256i base_sum, const __m256i min, const __m256i max,
                                                           uint16_t *optr, int32_t out_stride) {
@@ -1898,6 +1945,7 @@ static INLINE void highbd_down2_symeven_output_2x2_kernel(const __m256i vec_src[
     *(uint32_t *)(optr + 0)          = _mm_extract_epi32(vec_4pt_i16, 0); // write 2x 16-bit
     *(uint32_t *)(optr + out_stride) = _mm_extract_epi32(vec_4pt_i16, 2);
 }
+
 static INLINE void highbd_down2_symeven_output_2x8_kernel(const __m256i vec_src[16], const __m256i filter_2x,
                                                           const __m256i base_sum, const __m256i min, const __m256i max,
                                                           uint16_t *optr, int32_t out_stride) {
@@ -2123,6 +2171,7 @@ static INLINE void down2_symeven_output_4x16_kernel(const __m128i vec_src[32], c
     down2_symeven_obtain_4x16(vec_4pt, base_sum, min, max, vec_8pt_i8);
     for (int k = 0; k < 4; ++k) { _mm_storeu_si128((__m128i *)(optr + out_stride * k), vec_8pt_i8[k]); }
 }
+
 static INLINE void down2_symeven_output_4x4_kernel(const __m128i vec_src[8], const __m256i filter_2x,
                                                    const __m256i base_sum, const __m256i min, const __m256i max,
                                                    uint8_t *optr, int32_t out_stride) {
@@ -2141,6 +2190,7 @@ static INLINE void down2_symeven_output_4x4_kernel(const __m128i vec_src[8], con
     *(uint32_t *)(optr + out_stride * 2) = _mm_extract_epi32(vec_16pt_i8, 2);
     *(uint32_t *)(optr + out_stride * 3) = _mm_extract_epi32(vec_16pt_i8, 3);
 }
+
 static INLINE void down2_symeven_output_2x16_kernel(const __m256i vec_src[32], const __m256i filter_2x,
                                                     const __m256i base_sum, const __m256i min, const __m256i max,
                                                     uint8_t *optr, int32_t out_stride) {
@@ -2185,6 +2235,7 @@ static INLINE void down2_symeven_output_2x16_kernel(const __m256i vec_src[32], c
     _mm_storeu_si128((__m128i *)(optr), _mm256_castsi256_si128(vec_32pt));
     _mm_storeu_si128((__m128i *)(optr + out_stride), _mm256_extracti128_si256(vec_32pt, 1));
 }
+
 static INLINE void down2_symeven_output_2x4_kernel(const __m256i vec_src[8], const __m256i filter_2x,
                                                    const __m256i base_sum, const __m256i min, const __m256i max,
                                                    uint8_t *optr, int32_t out_stride) {
@@ -2222,6 +2273,7 @@ static void fill_arr_to_col(uint8_t *img, int stride, int len, const uint8_t *ar
     const uint8_t *aptr = arr;
     for (i = 0; i < len; ++i, iptr += stride) { *iptr = *aptr++; }
 }
+
 static void fill_col_to_arr(const uint8_t *img, int stride, int len, uint8_t *arr) {
     int            i;
     const uint8_t *iptr = img;
@@ -2429,6 +2481,7 @@ static int get_down2_length(int length, int steps) {
     for (int s = 0; s < steps; ++s) length = (length + 1) >> 1;
     return length;
 }
+
 static int get_down2_steps(int in_length, int out_length) {
     int steps = 0;
     int proj_in_length;
@@ -2444,6 +2497,7 @@ static int get_down2_steps(int in_length, int out_length) {
     }
     return steps;
 }
+
 static const InterpKernel *choose_interp_filter(int in_length, int out_length) {
     int out_length16 = out_length * 16;
     if (out_length16 >= in_length * 16)

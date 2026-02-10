@@ -29,6 +29,7 @@ extern "C" {
 //prob.h
 
 typedef uint16_t AomCdfProb;
+
 typedef struct {
     AomCdfProb *color_map_cdf;
     uint8_t     token;
@@ -494,6 +495,7 @@ static INLINE void update_cdf(AomCdfProb *cdf, int8_t val, int nsymbs) {
     } while (++i < nsymbs - 1);
     cdf[nsymbs] += (count < 32);
 }
+
 /**********************************************************************************************************************/
 // entropy.h
 #define TOKEN_CDF_Q_CTXS 4
@@ -541,6 +543,7 @@ extern const TxClass tx_type_to_class[TX_TYPES];
 
 /* Symbols for coding which components are zero jointly */
 #define MV_JOINTS 4
+
 typedef enum MvJointType {
     MV_JOINT_ZERO   = 0, /* zero vector */
     MV_JOINT_HNZVZ  = 1, /* Vert zero, hor nonzero */
@@ -556,6 +559,7 @@ static INLINE int32_t mv_joint_horizontal(MvJointType type) {
 
 /* Symbols for coding magnitude class of nonzero components */
 #define MV_CLASSES 11
+
 typedef enum MvClassType {
     MV_CLASS_0  = 0, /* (0, 2]     integer pel */
     MV_CLASS_1  = 1, /* (2, 4]     integer pel */
@@ -607,6 +611,7 @@ typedef enum MvSubpelPrecision {
     MV_SUBPEL_LOW_PRECISION = 0,
     MV_SUBPEL_HIGH_PRECISION,
 } MvSubpelPrecision;
+
 /**********************************************************************************************************************/
 // entropymode.h
 #define BlockSize_GROUPS 4

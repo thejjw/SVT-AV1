@@ -338,6 +338,7 @@ static inline uint16x8_t quantize_b_logscale1_8(int16x8_t coeff, int16x8_t abs, 
 
     return nz_mask;
 }
+
 static inline void aom_quantize_b_helper_32x32_neon(const TranLow *coeff_ptr, intptr_t n_coeffs,
                                                     const int16_t *zbin_ptr, const int16_t *round_ptr,
                                                     const int16_t *quant_ptr, const int16_t *quant_shift_ptr,

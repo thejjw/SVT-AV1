@@ -55,7 +55,8 @@ static const uint8_t bilinear_filters_2t[BIL_SUBPEL_SHIFTS][2] = {
 // setting a (pair of) filters.
 //
 // Without CONFIG_DUAL_FILTER,
-typedef uint32_t           InterpFilters;
+typedef uint32_t InterpFilters;
+
 static INLINE InterpFilter av1_extract_interp_filter(InterpFilters filters, int32_t x_filter) {
     return (InterpFilter)((filters >> (x_filter ? 16 : 0)) & 0xffff);
 }

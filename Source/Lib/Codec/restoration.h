@@ -189,6 +189,7 @@ typedef struct WienerUnitInfo {
     RestorationType restoration_type;
     WienerInfo      wiener_info;
 } WienerUnitInfo;
+
 typedef struct Av1PixelRect {
     int32_t left, top, right, bottom;
 } Av1PixelRect;

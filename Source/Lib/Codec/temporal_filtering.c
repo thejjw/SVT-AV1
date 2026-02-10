@@ -4233,4 +4233,5 @@ EbErrorType svt_av1_init_temporal_filtering(
 
     return EB_ErrorNone;
 }
+
 // clang-format on

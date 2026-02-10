@@ -24,6 +24,7 @@ static void neighbor_array_unit_dctor32(EbPtr p) {
     EB_FREE(obj->top_array);
     EB_FREE(obj->top_left_array);
 }
+
 /*************************************************
  * Neighbor Array Unit Ctor
  *************************************************/
@@ -124,6 +125,7 @@ void svt_aom_neighbor_array_unit_reset32(NeighborArrayUnit32 *na_unit_ptr) {
 
     return;
 }
+
 void svt_aom_neighbor_array_unit_reset(NeighborArrayUnit *na_unit_ptr) {
     if (na_unit_ptr->left_array) {
         svt_memset(na_unit_ptr->left_array, ~0, na_unit_ptr->unit_size * na_unit_ptr->left_array_size);
@@ -569,6 +571,7 @@ void svt_aom_neighbor_array_unit16bit_sample_write(NeighborArrayUnit *na_unit_pt
 
     return;
 }
+
 /*************************************************
  * Neighbor Array Unit Mode Write
  *************************************************/

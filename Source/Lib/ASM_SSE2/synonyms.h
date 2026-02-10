@@ -15,6 +15,7 @@
 #include <immintrin.h>
 #include "definitions.h"
 #include "common_dsp_rtcd.h"
+
 //#define EB_TEST_SIMD_ALIGN
 
 /**
@@ -29,6 +30,7 @@ static INLINE __m128i xx_loadl_32(const void *a) {
     svt_memcpy_intrin_sse(&val, a, sizeof(val));
     return _mm_cvtsi32_si128(val);
 }
+
 static INLINE __m128i xx_loadl_64(const void *a) { return _mm_loadl_epi64((const __m128i *)a); }
 
 static INLINE __m128i xx_loadu_128(const void *a) { return _mm_loadu_si128((const __m128i *)a); }

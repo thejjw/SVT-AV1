@@ -57,9 +57,12 @@ void svt_aom_fft_2d_gen(const float *input, float *temp, float *output, int32_t 
     unpack(temp, output, n);
 }
 
-static INLINE void  store_float(float *output, float input) { *output = input; }
+static INLINE void store_float(float *output, float input) { *output = input; }
+
 static INLINE float add_float(float a, float b) { return a + b; }
+
 static INLINE float sub_float(float a, float b) { return a - b; }
+
 static INLINE float mul_float(float a, float b) { return a * b; }
 
 GEN_FFT_2(void, float, float, float, *, store_float);

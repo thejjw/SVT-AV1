@@ -44,6 +44,7 @@ typedef struct PacketizationContext {
     uint64_t tot_shown_frames;
     uint64_t disp_order_continuity_count;
 } PacketizationContext;
+
 void        free_temporal_filtering_buffer(PictureControlSet *pcs, SequenceControlSet *scs);
 void        svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs);
 void        svt_aom_init_resize_picture(SequenceControlSet *scs, PictureParentControlSet *pcs);
@@ -76,6 +77,7 @@ EbErrorType svt_aom_packetization_context_ctor(EbThreadContext *thread_ctx, cons
 
     return EB_ErrorNone;
 }
+
 static inline int get_reorder_queue_pos(const EncodeContext *enc_ctx, int delta) {
     return (enc_ctx->packetization_reorder_queue_head_index + delta) % enc_ctx->packetization_reorder_queue_size;
 }
@@ -367,6 +369,7 @@ static void release_frames(EncodeContext *enc_ctx, int frames) {
     }
     enc_ctx->packetization_reorder_queue_head_index = get_reorder_queue_pos(enc_ctx, frames);
 }
+
 // Release the pd_dpb and ref_pic_list at the end of the sequence
 void release_references_eos(SequenceControlSet *scs) {
     EncodeContext *enc_ctx = scs->enc_ctx;
@@ -426,9 +429,11 @@ static inline EbErrorType malloc_p_buffer(EbBufferHeaderType *output_stream_ptr)
     EB_MALLOC(output_stream_ptr->p_buffer, output_stream_ptr->n_alloc_len);
     return EB_ErrorNone;
 }
+
 void update_firstpass_stats(PictureParentControlSet *pcs, const int frame_number, const double ts_duration,
                             StatStruct *stat_struct);
 void svt_av1_end_first_pass(PictureParentControlSet *pcs);
+
 /* Realloc when bitstream pointer size is not enough to write data of size sz */
 static EbErrorType realloc_output_bitstream(Bitstream *bitstream_ptr, uint32_t sz) {
     if (bitstream_ptr && sz > 0) {
@@ -441,6 +446,7 @@ static EbErrorType realloc_output_bitstream(Bitstream *bitstream_ptr, uint32_t s
     }
     return EB_ErrorNone;
 }
+
 void *svt_aom_packetization_kernel(void *input_ptr) {
     // Context
     EbThreadContext      *thread_ctx  = (EbThreadContext *)input_ptr;

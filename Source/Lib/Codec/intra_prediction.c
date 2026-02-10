@@ -412,6 +412,7 @@ void svt_av1_dr_prediction_z2_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
 }
 
 /* clang-format on */
+
 /************************************************************************************************
 * svt_cfl_luma_subsampling_420_lbd_c
 * Subsample luma samples to match chroma size. Low bit depth and C
@@ -427,6 +428,7 @@ void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t *input, int32_t input_stri
         output_q3 += CFL_BUF_LINE;
     }
 }
+
 /************************************************************************************************
 * svt_cfl_luma_subsampling_420_hbd_c
 * Subsample luma samples to match chroma size. High bit depth and C
@@ -440,6 +442,7 @@ void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t *input, int32_t input_str
         }
     }
 }
+
 /************************************************************************************************
 * svt_subtract_average_c
 * Calculate the DC value by averaging over all sample. Subtract DC value to get AC values In C
@@ -1043,6 +1046,7 @@ static INLINE void dc_left_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw,
         dst += stride;
     }
 }
+
 static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
                                     const uint8_t *left) {
     int32_t sum = 0;
@@ -1056,6 +1060,7 @@ static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
         dst += stride;
     }
 }
+
 static INLINE void dc_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
                                 const uint8_t *left) {
     int32_t       sum   = 0;
@@ -1070,6 +1075,7 @@ static INLINE void dc_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
         dst += stride;
     }
 }
+
 static INLINE void v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
                                const uint8_t *left) {
     (void)left;
@@ -1156,6 +1162,7 @@ static INLINE void smooth_h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw
         }
     }
 }
+
 #undef DC_MULTIPLIER_1X2
 #undef DC_MULTIPLIER_1X4
 
@@ -1180,7 +1187,8 @@ static INLINE void highbd_h_predictor(uint16_t *dst, ptrdiff_t stride, int32_t b
     }
 }
 #endif
-static INLINE int      abs_diff(int a, int b) { return (a > b) ? a - b : b - a; }
+static INLINE int abs_diff(int a, int b) { return (a > b) ? a - b : b - a; }
+
 static INLINE uint16_t paeth_predictor_single(uint16_t left, uint16_t top, uint16_t top_left) {
     const int base       = top + left - top_left;
     const int p_left     = abs_diff(base, left);
@@ -2269,6 +2277,7 @@ void svt_aom_init_intra_dc_predictors_c_internal(void) {
     svt_aom_dc_pred_high[1][1][TX_64X32] = svt_aom_highbd_dc_predictor_64x32;
 #endif
 }
+
 void svt_aom_dr_predictor(uint8_t *dst, ptrdiff_t stride, TxSize tx_size, const uint8_t *above, const uint8_t *left,
                           int32_t upsample_above, int32_t upsample_left, int32_t angle) {
     const int32_t dx = get_dx(angle);

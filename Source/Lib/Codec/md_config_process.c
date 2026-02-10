@@ -49,6 +49,7 @@ static const MeshPattern intrabc_mesh_patterns[MAX_MESH_SPEED + 1][MAX_MESH_STEP
     {{64, 4}, {16, 1}, {0, 0}, {0, 0}},
     {{64, 4}, {16, 1}, {0, 0}, {0, 0}},
 };
+
 static void set_global_motion_field(PictureControlSet *pcs) {
     // Init Global Motion Vector
     uint8_t frame_index;
@@ -302,6 +303,7 @@ static void svt_av1_qm_init(PictureParentControlSet *pcs) {
 #endif
     }
 }
+
 // Initialize the rate cost tables for the frame
 static void init_frame_rate_tables(PictureControlSet *pcs) {
     PictureParentControlSet *ppcs            = pcs->ppcs;
@@ -351,6 +353,7 @@ void mdc_init_qp_update(PictureControlSet *pcs) {
     // Initialize the frame rate estimation tables
     init_frame_rate_tables(pcs);
 }
+
 /******************************************************
  * Compute Tc, and Beta offsets for a given picture
  ******************************************************/
@@ -361,6 +364,7 @@ static void mode_decision_configuration_context_dctor(EbPtr p) {
 
     EB_FREE_ARRAY(obj);
 }
+
 /******************************************************
  * Mode Decision Configuration Context Constructor
  ******************************************************/
@@ -500,6 +504,7 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
 
     return 1;
 }
+
 static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
     const OrderHintInfo *const order_hint_info = &pcs->ppcs->scs->seq_header.order_hint_info;
     memset(pcs->ref_frame_side, 0, sizeof(pcs->ref_frame_side));
@@ -571,8 +576,10 @@ static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
     if (ref_stamp >= 0)
         motion_field_projection(cm, pcs, LAST2_FRAME, 2);
 }
+
 EbErrorType svt_av1_hash_table_create(HashTable *p_hash_table);
 int32_t     svt_aom_noise_log1p_fp16(int32_t noise_level_fp16);
+
 static void generate_ibc_data(PictureControlSet *pcs) {
     if (!pcs->ppcs->frm_hdr.allow_intrabc)
         return;
@@ -627,6 +634,7 @@ static void generate_ibc_data(PictureControlSet *pcs) {
 
     svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->stride_y);
 }
+
 /* Determine the frame complexity level (stored under pcs->coeff_lvl) based
 on the ME distortion and QP. */
 static void set_frame_coeff_lvl(PictureControlSet *pcs) {

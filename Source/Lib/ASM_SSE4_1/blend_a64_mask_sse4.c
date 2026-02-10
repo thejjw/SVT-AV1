@@ -1050,6 +1050,7 @@ void svt_aom_highbd_blend_a64_mask_16bit_sse4_1(uint16_t *dst, uint32_t dst_stri
             dst, dst_stride, src0, src0_stride, src1, src1_stride, mask, mask_stride, w, h);
     }
 }
+
 void svt_aom_highbd_blend_a64_hmask_16bit_sse4_1(uint16_t *dst, uint32_t dst_stride, const uint16_t *src0,
                                                  uint32_t src0_stride, const uint16_t *src1, uint32_t src1_stride,
                                                  const uint8_t *mask, int w, int h, int bd) {

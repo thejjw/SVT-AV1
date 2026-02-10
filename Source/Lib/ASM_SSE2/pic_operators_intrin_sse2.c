@@ -205,6 +205,7 @@ void svt_residual_kernel16bit_sse2_intrin(uint16_t *input, uint32_t input_stride
     }
     return;
 }
+
 /********************************************************************************************
 * faster memcopy for <= 64B blocks, great w/ inlining and size known at compile time (or w/ PGO)
 * THIS NEEDS TO STAY IN A HEADER FOR BEST PERFORMANCE

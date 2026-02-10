@@ -2679,6 +2679,7 @@ static void shift_avx2(const __m256i *in, __m256i *out, const __m256i *clamp_lo,
         out[i + 3] = _mm256_min_epi32(a1, *clamp_hi);
     }
 }
+
 static void iidentity8_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     (void)bit;
     const int32_t log_range = AOMMAX(16, bd + (do_cols ? 6 : 8));
@@ -2705,6 +2706,7 @@ static void iidentity8_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_c
     } else
         highbd_clamp_epi32_avx2(v, out, &clamp_lo, &clamp_hi, 8);
 }
+
 static void idct16_low1_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     const int32_t *cospi     = cospi_arr(bit);
     const __m256i  cospi32   = _mm256_set1_epi32(cospi[32]);
@@ -3924,6 +3926,7 @@ static void iadst16_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols
         }
     }
 }
+
 static void iidentity16_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     (void)bit;
     const int32_t log_range = AOMMAX(16, bd + (do_cols ? 6 : 8));
@@ -3975,6 +3978,7 @@ static void iidentity16_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_
     } else
         highbd_clamp_epi32_avx2(v, out, &clamp_lo, &clamp_hi, 16);
 }
+
 static void idct32_low1_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     const int32_t *cospi     = cospi_arr(bit);
     const __m256i  cospi32   = _mm256_set1_epi32(cospi[32]);
@@ -4611,6 +4615,7 @@ static void idct32_avx2_new(__m256i *in, __m256i *out, int32_t bit, int32_t do_c
         }
     }
 }
+
 static void iidentity32_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     (void)bit;
     const int32_t log_range = AOMMAX(16, bd + (do_cols ? 6 : 8));
@@ -4646,6 +4651,7 @@ static void iidentity32_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_
     } else
         highbd_clamp_epi32_avx2(v, out, &clamp_lo, &clamp_hi, 32);
 }
+
 static void idct64_low1_avx2(__m256i *in, __m256i *out, int32_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     const int32_t *cospi     = cospi_arr(bit);
     const __m256i  rnding    = _mm256_set1_epi32(1 << (bit - 1));
@@ -5882,6 +5888,7 @@ static void highbd_inv_txfm2d_add_idtx_avx2(const int32_t *input, uint16_t *outp
         highbd_write_buffer_8xn_avx2(buf1, output_r, stride_r, output_w, stride_w, ud_flip, txfm_size_row, bd);
     }
 }
+
 static void highbd_inv_txfm2d_add_v_identity_avx2(const int32_t *input, uint16_t *output_r, int32_t stride_r,
                                                   uint16_t *output_w, int32_t stride_w, TxType tx_type, TxSize tx_size,
                                                   int32_t eob, const int8_t bd) {
@@ -5950,6 +5957,7 @@ static void highbd_inv_txfm2d_add_v_identity_avx2(const int32_t *input, uint16_t
         highbd_write_buffer_8xn_avx2(buf1, output_r, stride_r, output_w, stride_w, ud_flip, txfm_size_row, bd);
     }
 }
+
 static void highbd_inv_txfm2d_add_h_identity_avx2(const int32_t *input, uint16_t *output_r, int32_t stride_r,
                                                   uint16_t *output_w, int32_t stride_w, TxType tx_type, TxSize tx_size,
                                                   int32_t eob, const int32_t bd) {
@@ -6017,6 +6025,7 @@ static void highbd_inv_txfm2d_add_h_identity_avx2(const int32_t *input, uint16_t
         highbd_write_buffer_8xn_avx2(buf1, output_r, stride_r, output_w, stride_w, ud_flip, txfm_size_row, bd);
     }
 }
+
 void svt_av1_highbd_inv_txfm2d_add_universe_avx2(const int32_t *input, uint16_t *output_r, int32_t stride_r,
                                                  uint16_t *output_w, int32_t stride_w, TxType tx_type, TxSize tx_size,
                                                  int32_t eob, const int32_t bd) {
@@ -6049,6 +6058,7 @@ void svt_av1_highbd_inv_txfm2d_add_universe_avx2(const int32_t *input, uint16_t 
     default: break;
     }
 }
+
 void svt_av1_highbd_inv_txfm_add_avx2(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
                                       int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     //assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);

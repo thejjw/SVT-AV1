@@ -214,6 +214,7 @@ static void vfilter8(const int16_t *src, int src_stride, uint8_t *dst, int dst_s
         }
     }
 }
+
 void svt_av1_convolve_2d_scale_sse4_1(const uint8_t *src, int src_stride, uint8_t *dst8, int dst8_stride, int w, int h,
                                       const InterpFilterParams *filter_params_x,
                                       const InterpFilterParams *filter_params_y, const int subpel_x_qn,
@@ -308,6 +309,7 @@ static void highbd_hfilter8(const uint16_t *src, int src_stride, int16_t *dst, i
         }
     }
 }
+
 // A specialised version of vfilter, the vertical filter for
 // av1_highbd_convolve_2d_scale_sse4_1. This version only supports 8 tap
 // filters.

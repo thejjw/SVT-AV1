@@ -2471,6 +2471,7 @@ static inline void idct32_low16_neon(int16x8_t *in, int16x8_t *out, int8_t cos_b
     out[30] = vqsubq_s16(step2[1], step2[30]);
     out[31] = vqsubq_s16(step2[0], step2[31]);
 }
+
 static inline void idct64_stage9_neon(int16x8_t *step2, int16x8_t *step1, int8_t cos_bit) {
     const int32_t  *cospi = cospi_arr(cos_bit);
     const int16x4_t c3 = set_s16x4_neon((int16_t)cospi[32], (int16_t)cospi[32], (int16_t)cospi[16], (int16_t)cospi[48]);

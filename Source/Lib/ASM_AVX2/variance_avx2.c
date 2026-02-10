@@ -56,6 +56,7 @@ static INLINE __m256i neg_sum_to_32bit_avx2(const __m256i sum) {
     __m256i adj_neg_add = _mm256_set1_epi16(-1);
     return _mm256_madd_epi16(sum, adj_neg_add);
 }
+
 static INLINE void variance16_kernel_no_sum_avx2(const uint8_t *const src, const int32_t src_stride,
                                                  const uint8_t *const ref, const int32_t ref_stride,
                                                  __m256i *const sse) {

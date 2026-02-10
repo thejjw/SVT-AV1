@@ -64,6 +64,7 @@ static INLINE void highbd_transpose16x4_8x8_sse2(__m128i *x, __m128i *d) {
     d[6] = _mm_unpackhi_epi64(r1, r3);
     d[7] = _mm_unpackhi_epi64(r5, r7);
 }
+
 static INLINE void highbd_transpose4x16_avx2(__m256i *x, __m256i *d) {
     __m256i w0, w1, w2, w3, ww0, ww1;
 
@@ -151,6 +152,7 @@ static INLINE __m256i dc_sum_32(const uint8_t *ref) {
     u                  = _mm256_unpackhi_epi64(y, y);
     return _mm256_add_epi16(y, u);
 }
+
 static INLINE void row_store_32xh(const __m256i *r, int32_t height, uint8_t *dst, ptrdiff_t stride) {
     for (int32_t i = 0; i < height; ++i) {
         _mm256_storeu_si256((__m256i *)dst, *r);
@@ -165,6 +167,7 @@ static INLINE void row_store_64xh(const __m256i *r, int32_t height, uint8_t *dst
         dst += stride;
     }
 }
+
 static INLINE __m256i dc_sum_64(const uint8_t *ref) {
     const __m256i x0   = _mm256_loadu_si256((const __m256i *)ref);
     const __m256i x1   = _mm256_loadu_si256((const __m256i *)(ref + 32));
@@ -177,6 +180,7 @@ static INLINE __m256i dc_sum_64(const uint8_t *ref) {
     u0                 = _mm256_unpackhi_epi64(y0, y0);
     return _mm256_add_epi16(y0, u0);
 }
+
 void svt_aom_dc_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i sum_above = dc_sum_64(above);
     __m256i       sum_left  = dc_sum_64(left);
@@ -199,6 +203,7 @@ void svt_aom_dc_left_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const 
     __m256i       row       = _mm256_shuffle_epi8(sum, zero);
     row_store_64xh(&row, 64, dst, stride);
 }
+
 void svt_aom_dc_top_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     __m256i sum = dc_sum_64(above);
     (void)left;
@@ -210,6 +215,7 @@ void svt_aom_dc_top_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const u
     __m256i       row       = _mm256_shuffle_epi8(sum, zero);
     row_store_64xh(&row, 64, dst, stride);
 }
+
 void svt_aom_dc_top_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     __m256i sum = dc_sum_32(above);
     (void)left;
@@ -221,6 +227,7 @@ void svt_aom_dc_top_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const u
     __m256i       row     = _mm256_shuffle_epi8(sum, zero);
     row_store_32xh(&row, 32, dst, stride);
 }
+
 void svt_aom_dc_left_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     __m256i sum = dc_sum_32(left);
     (void)above;
@@ -232,12 +239,14 @@ void svt_aom_dc_left_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const 
     __m256i       row     = _mm256_shuffle_epi8(sum, zero);
     row_store_32xh(&row, 32, dst, stride);
 }
+
 void svt_aom_dc_128_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     (void)left;
     const __m256i row = _mm256_set1_epi8((uint8_t)0x80);
     row_store_64xh(&row, 64, dst, stride);
 }
+
 void svt_aom_dc_128_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     (void)left;
@@ -393,18 +402,21 @@ void svt_aom_dc_128_predictor_32x16_avx2(uint8_t *dst, ptrdiff_t stride, const u
     const __m256i row = _mm256_set1_epi8((uint8_t)0x80);
     row_store_32xh(&row, 16, dst, stride);
 }
+
 void svt_aom_dc_128_predictor_32x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     (void)left;
     const __m256i row = _mm256_set1_epi8((uint8_t)0x80);
     row_store_32xh(&row, 64, dst, stride);
 }
+
 void svt_aom_dc_128_predictor_64x16_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     (void)left;
     const __m256i row = _mm256_set1_epi8((uint8_t)0x80);
     row_store_64xh(&row, 16, dst, stride);
 }
+
 void svt_aom_dc_128_predictor_64x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     (void)left;
@@ -456,6 +468,7 @@ void svt_aom_h_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_
     v = _mm256_unpackhi_epi8(u, u);
     h_predictor_32x8line(&v, dst, stride);
 }
+
 static INLINE void row_store_32x2xh(const __m256i *r0, const __m256i *r1, int32_t height, uint8_t *dst,
                                     ptrdiff_t stride) {
     for (int32_t i = 0; i < height; ++i) {
@@ -464,12 +477,14 @@ static INLINE void row_store_32x2xh(const __m256i *r0, const __m256i *r1, int32_
         dst += stride;
     }
 }
+
 void svt_aom_v_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i row0 = _mm256_loadu_si256((const __m256i *)above);
     const __m256i row1 = _mm256_loadu_si256((const __m256i *)(above + 32));
     (void)left;
     row_store_32x2xh(&row0, &row1, 64, dst, stride);
 }
+
 void svt_aom_v_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i row = _mm256_loadu_si256((const __m256i *)above);
     (void)left;
@@ -481,17 +496,20 @@ void svt_aom_v_predictor_32x16_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_
     (void)left;
     row_store_32xh(&row, 16, dst, stride);
 }
+
 void svt_aom_v_predictor_32x64_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i row = _mm256_loadu_si256((const __m256i *)above);
     (void)left;
     row_store_32xh(&row, 64, dst, stride);
 }
+
 void svt_aom_v_predictor_64x16_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i row0 = _mm256_loadu_si256((const __m256i *)above);
     const __m256i row1 = _mm256_loadu_si256((const __m256i *)(above + 32));
     (void)left;
     row_store_32x2xh(&row0, &row1, 16, dst, stride);
 }
+
 void svt_aom_v_predictor_64x32_avx2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m256i row0 = _mm256_loadu_si256((const __m256i *)above);
     const __m256i row1 = _mm256_loadu_si256((const __m256i *)(above + 32));

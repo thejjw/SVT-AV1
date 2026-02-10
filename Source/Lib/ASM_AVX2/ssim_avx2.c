@@ -39,9 +39,11 @@ static INLINE uint32_t sum8(__m256i x) {
     const __m128i sum = _mm_add_epi32(lo, hi);
     return _mm_extract_epi32(sum, 0);
 }
+
 extern double similarity(uint32_t sum_s, uint32_t sum_r, uint32_t sum_sq_s, uint32_t sum_sq_r, uint32_t sum_sxr,
                          int count, uint32_t bd);
-double        svt_ssim_8x8_avx2(const uint8_t *s, uint32_t sp, const uint8_t *r, uint32_t rp) {
+
+double svt_ssim_8x8_avx2(const uint8_t *s, uint32_t sp, const uint8_t *r, uint32_t rp) {
     __m256i vec_sum_s    = _mm256_setzero_si256();
     __m256i vec_sum_r    = _mm256_setzero_si256();
     __m256i vec_sum_sq_s = _mm256_setzero_si256();
@@ -75,6 +77,7 @@ double        svt_ssim_8x8_avx2(const uint8_t *s, uint32_t sp, const uint8_t *r,
     double   score    = similarity(sum_s, sum_r, sum_sq_s, sum_sq_r, sum_sxr, 64, 8);
     return score;
 }
+
 double svt_ssim_4x4_avx2(const uint8_t *s, uint32_t sp, const uint8_t *r, uint32_t rp) {
     __m256i vec_sum_s    = _mm256_setzero_si256();
     __m256i vec_sum_r    = _mm256_setzero_si256();
@@ -109,6 +112,7 @@ double svt_ssim_4x4_avx2(const uint8_t *s, uint32_t sp, const uint8_t *r, uint32
     double   score    = similarity(sum_s, sum_r, sum_sq_s, sum_sq_r, sum_sxr, 16, 8);
     return score;
 }
+
 double svt_ssim_8x8_hbd_avx2(const uint16_t *s, uint32_t sp, const uint16_t *r, uint32_t rp) {
     __m256i vec_sum_s    = _mm256_setzero_si256();
     __m256i vec_sum_r    = _mm256_setzero_si256();
@@ -143,6 +147,7 @@ double svt_ssim_8x8_hbd_avx2(const uint16_t *s, uint32_t sp, const uint16_t *r, 
     double   score    = similarity(sum_s, sum_r, sum_sq_s, sum_sq_r, sum_sxr, 64, 10);
     return score;
 }
+
 double svt_ssim_4x4_hbd_avx2(const uint16_t *s, uint32_t sp, const uint16_t *r, uint32_t rp) {
     __m256i vec_sum_s    = _mm256_setzero_si256();
     __m256i vec_sum_r    = _mm256_setzero_si256();

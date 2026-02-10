@@ -41,6 +41,7 @@ bool        svt_aom_warped_motion_parameters(struct ModeDecisionContext *ctx, co
                                              uint8_t *num_samples, uint16_t lower_band_th, uint16_t upper_band_th,
                                              bool shut_approx);
 void        svt_aom_init_wm_samples(PictureControlSet *pcs, struct ModeDecisionContext *ctx);
+
 static INLINE bool has_overlappable_candidates(const BlkStruct *blk_ptr) {
     return (blk_ptr->overlappable_neighbors != 0);
 }

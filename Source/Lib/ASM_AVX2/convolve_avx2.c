@@ -1243,6 +1243,7 @@ static INLINE __m256i calc_mask_avx2(const __m256i mask_base, const __m256i s0, 
     return _mm256_abs_epi16(_mm256_add_epi16(mask_base, _mm256_srli_epi16(diff, 4)));
     // clamp(diff, 0, 64) can be skipped for diff is always in the range ( 38, 54)
 }
+
 void svt_av1_build_compound_diffwtd_mask_highbd_avx2(uint8_t *mask, DIFFWTD_MASK_TYPE mask_type, const uint8_t *src0,
                                                      int src0_stride, const uint8_t *src1, int src1_stride, int h,
                                                      int w, int bd) {
@@ -1438,6 +1439,7 @@ void svt_av1_build_compound_diffwtd_mask_avx2(uint8_t *mask, DIFFWTD_MASK_TYPE m
         } while (i < h);
     }
 }
+
 ////////
 
 #define MAX_MASK_VALUE (1 << WEDGE_WEIGHT_BITS)
@@ -1539,6 +1541,7 @@ static INLINE void aom_subtract_block_32xn_avx2(int rows, int16_t *diff_ptr, ptr
         diff_ptr += diff_stride;
     }
 }
+
 static INLINE void aom_subtract_block_64xn_avx2(int rows, int16_t *diff_ptr, ptrdiff_t diff_stride,
                                                 const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr,
                                                 ptrdiff_t pred_stride) {
@@ -1550,6 +1553,7 @@ static INLINE void aom_subtract_block_64xn_avx2(int rows, int16_t *diff_ptr, ptr
         diff_ptr += diff_stride;
     }
 }
+
 static INLINE void aom_subtract_block_128xn_avx2(int rows, int16_t *diff_ptr, ptrdiff_t diff_stride,
                                                  const uint8_t *src_ptr, ptrdiff_t src_stride, const uint8_t *pred_ptr,
                                                  ptrdiff_t pred_stride) {
@@ -1563,6 +1567,7 @@ static INLINE void aom_subtract_block_128xn_avx2(int rows, int16_t *diff_ptr, pt
         diff_ptr += diff_stride;
     }
 }
+
 void svt_aom_subtract_block_avx2(int rows, int cols, int16_t *diff_ptr, ptrdiff_t diff_stride, const uint8_t *src_ptr,
                                  ptrdiff_t src_stride, const uint8_t *pred_ptr, ptrdiff_t pred_stride) {
     switch (cols) {
@@ -1637,6 +1642,7 @@ static INLINE int64_t summary_all_avx2(const __m256i *sum_all) {
     xx_storel_64(&sum, sum_1x64);
     return sum;
 }
+
 int64_t svt_aom_sse_avx2(const uint8_t *a, int a_stride, const uint8_t *b, int b_stride, int width, int height) {
     int32_t y    = 0;
     int64_t sse  = 0;
@@ -1962,6 +1968,7 @@ void svt_av1_wedge_compute_delta_squares_avx2(int16_t *d, const int16_t *a, cons
         N -= 64;
     } while (N);
 }
+
 static INLINE int32_t sum_to_int32(__m256i sum_256) {
     __m128i sum_128 = _mm_add_epi32(_mm256_castsi256_si128(sum_256), _mm256_extractf128_si256(sum_256, 1));
     sum_128         = _mm_hadd_epi32(sum_128, sum_128);

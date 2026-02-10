@@ -141,6 +141,7 @@ static INLINE void av1_get_convolve_filter_params(uint32_t interp_filters, Inter
     *params_x             = av1_get_interp_filter_params_with_block_size(filter_x, w);
     *params_y             = av1_get_interp_filter_params_with_block_size(filter_y, h);
 };
+
 /* Mapping of interintra to intra mode for use in the intra component */
 static const PredictionMode interintra_to_intra_mode[INTERINTRA_MODES] = {DC_PRED, V_PRED, H_PRED, SMOOTH_PRED};
 
@@ -158,13 +159,16 @@ void svt_av1_setup_scale_factors_for_frame(ScaleFactors *sf, int other_w, int ot
 static INLINE int av1_is_valid_scale(const struct ScaleFactors *sf) {
     return sf->x_scale_fp != REF_INVALID_SCALE && sf->y_scale_fp != REF_INVALID_SCALE;
 }
+
 static INLINE int av1_is_scaled(const struct ScaleFactors *sf) {
     return av1_is_valid_scale(sf) && (sf->x_scale_fp != REF_NO_SCALE || sf->y_scale_fp != REF_NO_SCALE);
 }
+
 static INLINE int valid_ref_frame_size(int ref_width, int ref_height, int this_width, int this_height) {
     return 2 * this_width >= ref_width && 2 * this_height >= ref_height && this_width <= 16 * ref_width &&
         this_height <= 16 * ref_height;
 }
+
 void svt_aom_pack_block(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *inn_bit_buffer, uint32_t inn_stride,
                         uint16_t *out16_bit_buffer, uint32_t out_stride, uint32_t width, uint32_t height);
 
@@ -498,6 +502,7 @@ static INLINE void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type
         // assert(ref_frame_type > NONE_FRAME); AMIR
     }
 }
+
 /*
       |----------------------------------------------------------------|
       | ref_idx          0            1           2            3       |
@@ -505,9 +510,12 @@ static INLINE void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type
       | List1            BWD         ALT2         ALT                  |
       |----------------------------------------------------------------|
 */
-static uint8_t        ref_type_to_list_idx[REFS_PER_FRAME + 1] = {0, 0, 0, 0, 0, 1, 1, 1};
+static uint8_t ref_type_to_list_idx[REFS_PER_FRAME + 1] = {0, 0, 0, 0, 0, 1, 1, 1};
+
 static INLINE uint8_t get_list_idx(uint8_t ref_type) { return ref_type_to_list_idx[ref_type]; }
-static uint8_t        ref_type_to_ref_idx[REFS_PER_FRAME + 1] = {0, 0, 1, 2, 3, 0, 1, 2};
+
+static uint8_t ref_type_to_ref_idx[REFS_PER_FRAME + 1] = {0, 0, 1, 2, 3, 0, 1, 2};
+
 static INLINE uint8_t get_ref_frame_idx(uint8_t ref_type) { return ref_type_to_ref_idx[ref_type]; };
 #if CONFIG_ENABLE_OBMC
 int svt_av1_skip_u4x4_pred_in_obmc(BlockSize bsize, int dir, int subsampling_x, int subsampling_y);

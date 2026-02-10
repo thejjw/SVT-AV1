@@ -33,6 +33,7 @@ typedef struct _block_hash {
 typedef struct HashTable {
     Vector **p_lookup_table;
 } HashTable;
+
 void        svt_av1_hash_table_destroy(HashTable *p_hash_table);
 EbErrorType svt_aom_rtime_alloc_svt_av1_hash_table_create(HashTable *p_hash_table);
 int32_t     svt_av1_hash_table_count(const HashTable *p_hash_table, uint32_t hash_value);

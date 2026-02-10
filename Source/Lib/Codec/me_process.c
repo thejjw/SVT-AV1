@@ -320,4 +320,5 @@ void *svt_aom_motion_estimation_kernel(void *input_ptr) {
 
     return NULL;
 }
+
 // clang-format on

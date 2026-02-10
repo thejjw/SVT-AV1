@@ -1191,6 +1191,7 @@ void svt_aom_lpf_vertical_14_sse2(uint8_t *s, int32_t p, const uint8_t *_blimit,
     _mm_storeu_si128((__m128i *)(s - 8 + 2 * p), pq2);
     _mm_storeu_si128((__m128i *)(s - 8 + 3 * p), pq3);
 }
+
 /*********************************************************************************************/
 //highbd_loopfilter_sse2.c
 static AOM_FORCE_INLINE void pixel_clamp(const __m128i *min, const __m128i *max, __m128i *pixel) {
@@ -1218,6 +1219,7 @@ static INLINE void get_limit(const uint8_t *bl, const uint8_t *l, const uint8_t 
 
     *t80_out = _mm_set1_epi16(1 << (bd - 1));
 }
+
 static INLINE void highbd_hev_mask(const __m128i *p0q0, const __m128i *p1q1, const __m128i *t, __m128i *abs_p1p0,
                                    __m128i *hev) {
     *abs_p1p0        = abs_diff16(*p1q1, *p0q0);

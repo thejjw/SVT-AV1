@@ -125,5 +125,6 @@ struct _EbEncHandle {
     bool frame_received; // used to signal we received any frame from the app
     bool is_prev_valid; // whether the previous input is valid or not
 };
+
 void set_segments_numbers(SequenceControlSet *scs);
 #endif // EbEncHandle_h

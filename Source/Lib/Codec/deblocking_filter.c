@@ -101,6 +101,7 @@ static INLINE int32_t scaled_buffer_offset(int32_t x_offset, int32_t y_offset, i
         /*sf ? sf->scale_value_y(y_offset, sf) >> SCALE_EXTRA_BITS :*/ y_offset;
     return y * stride + x;
 }
+
 static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, int32_t width, int32_t height,
                                     int32_t stride, int32_t mi_row, int32_t mi_col,
                                     /*const struct scale_factors *scale,*/
@@ -119,6 +120,7 @@ static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, i
     dst->height     = height;
     dst->stride     = stride;
 }
+
 void svt_av1_setup_dst_planes(PictureControlSet *pcs, MacroblockdPlane *planes, BlockSize bsize,
                               //const Yv12BufferConfig *src,
                               const EbPictureBufferDesc *src, int32_t mi_row, int32_t mi_col, const int32_t plane_start,
@@ -319,6 +321,7 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
 
     return ts;
 }
+
 /*************************************************************************************************
 * svt_av1_filter_block_plane_vert
 * Filter all the vertical edges in the same superblock
@@ -444,6 +447,7 @@ void svt_av1_filter_block_plane_vert(const PictureControlSet *const pcs, const i
         }
     }
 }
+
 /*************************************************************************************************
 * svt_av1_filter_block_plane_horz
 * Filter all the horizontal edges in the same superblock
@@ -579,6 +583,7 @@ void svt_av1_filter_block_plane_horz(const PictureControlSet *const pcs, const i
         }
     }
 }
+
 /*************************************************************************************************
 * svt_aom_loop_filter_sb
 * Loop over all superblocks in the picture and filter each superblock
@@ -656,6 +661,7 @@ void svt_aom_loop_filter_sb(EbPictureBufferDesc *frame_buffer, //reconpicture,
         }
     }
 }
+
 /*************************************************************************************************
 * svt_av1_loop_filter_frame
 * Apply loop filtering to the frame based on the selected loop filter parameters
@@ -752,6 +758,7 @@ void svt_copy_buffer(EbPictureBufferDesc *srcBuffer, EbPictureBufferDesc *dstBuf
         }
     }
 }
+
 uint64_t picture_sse_calculations(PictureControlSet *pcs, EbPictureBufferDesc *recon_ptr, int32_t plane) {
     SequenceControlSet *scs      = pcs->ppcs->scs;
     bool                is_16bit = scs->is_16bit_pipeline;
@@ -870,6 +877,7 @@ uint64_t picture_sse_calculations(PictureControlSet *pcs, EbPictureBufferDesc *r
         return 0;
     }
 }
+
 /*************************************************************************************************
 * try_filter_frame
 * Sett the filter levels, compute the filtering sse, and resett the recon buffer.
@@ -915,6 +923,7 @@ static int64_t try_filter_frame(const EbPictureBufferDesc *sd, EbPictureBufferDe
 
     return filt_err;
 }
+
 /*************************************************************************************************
 * search_filter_level
 * Perform a search for the best filter level for the picture data plane
@@ -1034,6 +1043,7 @@ static int32_t search_filter_level(EbPictureBufferDesc *sd, // source
         *best_cost_ret = (double)best_err; //RDCOST_DBL(x->rdmult, 0, best_err);
     return filt_best;
 }
+
 static void me_based_dlf_skip(PictureControlSet *pcs, uint16_t prev_dlf_dist_th, bool *do_y, bool *do_uv) {
     *do_y  = true;
     *do_uv = true;
@@ -1082,6 +1092,7 @@ static void me_based_dlf_skip(PictureControlSet *pcs, uint16_t prev_dlf_dist_th,
             *do_uv = false;
     }
 }
+
 /*************************************************************************************************
 * svt_av1_pick_filter_level_by_q
 * Choose the optimal loop filter levels by qindex
@@ -1167,6 +1178,7 @@ void svt_av1_pick_filter_level_by_q(PictureControlSet *pcs, uint8_t qindex, int3
         ? clamp(filt_guess_chroma, min_filter_level, max_filter_level)
         : 0;
 }
+
 /*************************************************************************************************
 * svt_av1_pick_filter_level
 * Choose the optimal loop filter levels

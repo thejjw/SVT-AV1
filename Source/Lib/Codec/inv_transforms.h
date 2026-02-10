@@ -99,6 +99,7 @@ typedef enum TxfmType {
     TXFM_TYPES,
     TXFM_TYPE_INVALID,
 } TxfmType;
+
 typedef struct Txfm2dFlipCfg {
     TxSize        tx_size;
     int32_t       ud_flip; // flip upside down
@@ -172,6 +173,7 @@ static INLINE void get_flip_cfg(TxType tx_type, int32_t *ud_flip, int32_t *lr_fl
         assert(0);
     }
 }
+
 static INLINE void set_flip_cfg(TxType tx_type, Txfm2dFlipCfg *cfg) {
     get_flip_cfg(tx_type, &cfg->ud_flip, &cfg->lr_flip);
 }
@@ -254,6 +256,7 @@ static INLINE int32_t round_shift(int64_t value, int32_t bit) {
     assert(bit >= 1);
     return (int32_t)((value + (1ll << (bit - 1))) >> bit);
 }
+
 static INLINE int32_t half_btf(int32_t w0, int32_t in0, int32_t w1, int32_t in1, int bit) {
     int64_t result_64    = (int64_t)(w0 * in0) + (int64_t)(w1 * in1);
     int64_t intermediate = result_64 + (1LL << (bit - 1));
@@ -276,6 +279,7 @@ static INLINE int32_t half_btf(int32_t w0, int32_t in0, int32_t w1, int32_t in1,
 #endif
     return (int32_t)(intermediate >> bit);
 }
+
 static INLINE int32_t get_rect_tx_log_ratio(int32_t col, int32_t row) {
     if (col == row)
         return 0;

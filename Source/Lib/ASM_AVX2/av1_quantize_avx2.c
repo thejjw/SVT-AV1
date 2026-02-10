@@ -338,6 +338,7 @@ static INLINE void update_qp_qm(int log_scale, __m256i *thr, __m256i *qp) {
     qp[2] = _mm256_permute2x128_si256(qp[2], qp[2], 0x11);
     *thr  = _mm256_slli_epi16(qp[2], AOM_QM_BITS - (1 + log_scale));
 }
+
 // 64 bit multiply. return the low 64 bits of the intermediate integers
 static inline __m256i mm256_mullo_epi64(const __m256i a, const __m256i b) {
     // if a 64bit integer 'a' can be represented by its low 32bit part a0 and high 32bit part a1 as: a1<<32+a0,
@@ -355,10 +356,12 @@ static inline __m256i mm256_mullo_epi64(const __m256i a, const __m256i b) {
     const __m256i prod    = _mm256_add_epi64(prod_lo, prod_hi);
     return prod;
 }
+
 static INLINE void clamp_epi32(__m256i *x, __m256i min, __m256i max) {
     *x = _mm256_min_epi32(*x, max);
     *x = _mm256_max_epi32(*x, min);
 }
+
 static INLINE void quantize_qm(const __m256i *thr, const __m256i *qp, __m256i *c, const int16_t *iscan_ptr,
                                TranLow *qcoeff, TranLow *dqcoeff, __m256i *eob, const __m256i qm, const __m256i iqm,
                                int16_t log_scale) {

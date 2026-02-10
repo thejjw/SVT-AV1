@@ -4569,6 +4569,7 @@ uint32_t svt_aom_sad_16bit_kernel_avx2(uint16_t *src, // input parameter, source
     }
     return sad;
 }
+
 #define UPDATE_BEST_PME_32(s, k, offset)                                \
     tem_sum_1 = _mm_extract_epi32(s, k);                                \
     best_mv.x = mvx + (search_position_start_x + j + offset + k) * 8;   \
@@ -4590,6 +4591,7 @@ uint32_t svt_aom_sad_16bit_kernel_avx2(uint16_t *src, // input parameter, source
         x_best  = mvx + (search_position_start_x + j + k) * 8;     \
         y_best  = mvy + (search_position_start_y + i) * 8;         \
     }
+
 void svt_pme_sad_loop_kernel_avx2(const svt_mv_cost_param *mv_cost_params,
                                   uint8_t                 *src, // input parameter, source samples Ptr
                                   uint32_t                 src_stride, // input parameter, source stride

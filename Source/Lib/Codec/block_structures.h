@@ -23,6 +23,7 @@ extern "C" {
 
 #define MAX_TILE_WIDTH (4096) // Max Tile width in pixels
 #define MAX_TILE_AREA (4096 * 2304) // Maximum tile area in pixels
+
 typedef struct TileInfo {
     int32_t mi_row_start, mi_row_end;
     int32_t mi_col_start, mi_col_end;
@@ -92,6 +93,7 @@ typedef struct BlockModeInfo {
     /*! \brief Whether intrabc is used. */
     uint8_t use_intrabc : 1;
 } BlockModeInfo;
+
 typedef struct MbModeInfo {
     BlockModeInfo       block_mi;
     BlockSize           bsize;
@@ -113,6 +115,7 @@ static AOM_INLINE int is_intrabc_block(const BlockModeInfo *block_mi) { return b
 static AOM_INLINE int is_inter_block(const BlockModeInfo *block_mi) {
     return is_intrabc_block(block_mi) || block_mi->ref_frame[0] > INTRA_FRAME;
 }
+
 void svt_av1_tile_set_col(TileInfo *tile, const TilesInfo *tiles_info, int32_t mi_cols, int col);
 void svt_av1_tile_set_row(TileInfo *tile, TilesInfo *tiles_info, int32_t mi_rows, int row);
 

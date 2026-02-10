@@ -90,6 +90,7 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 #define INVALID_LUMA 256
 
 #define NEAREST_NEAR_MV_CNT 4 // 1 nearest + 3 near
+
 typedef struct SharpnessCtrls {
     uint8_t scene_transition;
     uint8_t tf;
@@ -99,9 +100,11 @@ typedef struct SharpnessCtrls {
     uint8_t restoration;
     uint8_t rdoq;
 } SharpnessCtrls;
+
 typedef struct VqCtrls {
     SharpnessCtrls sharpness_ctrls;
 } VqCtrls;
+
 typedef struct MrpCtrls {
     /*
      * Referencing_scheme [0, 2] used only in 3L-5L
@@ -152,6 +155,7 @@ typedef struct MrpCtrls {
     uint8_t flat_max_refs;
 
 } MrpCtrls;
+
 typedef struct TfControls {
     // Filtering set
     uint8_t enabled; // Specifies whether the current input will be filtered or not (0: OFF, 1: ON)
@@ -228,6 +232,7 @@ typedef struct TfControls {
     // Specifies whether to tune the params using qp (0: OFF, 1: ON)
     uint8_t qp_opt;
 } TfControls;
+
 typedef enum GM_LEVEL {
     GM_FULL   = 0, // Exhaustive search mode.
     GM_DOWN   = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
@@ -239,6 +244,7 @@ typedef enum GM_LEVEL {
     // average ME distortion, and the picture variance
     GM_ADAPT_1 = 4,
 } GM_LEVEL;
+
 typedef enum SqWeightOffsets {
     CONSERVATIVE_OFFSET_0 = 5,
     CONSERVATIVE_OFFSET_1 = 10,
@@ -249,6 +255,7 @@ typedef enum SqWeightOffsets {
 #define COEFF_LVL_TH_0 (5833 / 96)
 #define COEFF_LVL_TH_1 (5833 / 48)
 #define COEFF_LVL_TH_2 (16666 / 48)
+
 typedef enum InputCoeffLvl {
     VLOW_LVL    = 0,
     LOW_LVL     = 1,
@@ -256,6 +263,7 @@ typedef enum InputCoeffLvl {
     HIGH_LVL    = 3,
     INVALID_LVL = ~0,
 } InputCoeffLvl;
+
 typedef struct Buf2D {
     uint8_t *buf;
     uint8_t *buf0;
@@ -263,12 +271,14 @@ typedef struct Buf2D {
     int      height;
     int      stride;
 } Buf2D;
+
 typedef struct MvLimits {
     int col_min;
     int col_max;
     int row_min;
     int row_max;
 } MvLimits;
+
 typedef struct {
     uint8_t by;
     uint8_t bx;
@@ -547,6 +557,7 @@ static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
     mem[2] = (MAU_T)((val >> 16) & 0xff);
     mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
+
 /* clang-format on */
 
 typedef uint16_t ConvBufType;
@@ -588,6 +599,7 @@ static INLINE int64_t clamp64(int64_t value, int64_t low, int64_t high) {
 static INLINE double fclamp(double value, double low, double high) {
     return value < low ? low : (value > high ? high : value);
 }
+
 static INLINE uint8_t clip_pixel(int32_t val) { return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val); }
 
 static INLINE uint16_t clip_pixel_highbd(int32_t val, int32_t bd) {
@@ -643,16 +655,21 @@ typedef enum ATTRIBUTE_PACKED {
     LPD1_LVL_5 = 5, // Light-PD1 path, with most aggressive feature levels
     LPD1_LEVELS // Number of light-PD1 paths (regular PD1 isn't a light-PD1 path)
 } Pd1Level;
+
 // If adding/removing a class, must also update is_intra_class func and MD_STAGE_NICS array
 typedef enum CandClass { CAND_CLASS_0, CAND_CLASS_1, CAND_CLASS_2, CAND_CLASS_3, CAND_CLASS_TOTAL } CandClass;
+
 typedef enum MdStage { MD_STAGE_0, MD_STAGE_1, MD_STAGE_2, MD_STAGE_3, MD_STAGE_TOTAL, INVALID_MD_STAGE } MdStage;
+
 typedef enum MdStagingMode {
     MD_STAGING_MODE_0,
     MD_STAGING_MODE_1,
     MD_STAGING_MODE_2,
     MD_STAGING_MODE_TOTAL
 } MdStagingMode;
+
 static INLINE bool is_intra_class(CandClass c) { return (c == CAND_CLASS_0 || c == CAND_CLASS_3); }
+
 #define NICS_PIC_TYPE 3
 #define NICS_SCALING_LEVELS 16
 static const uint32_t MD_STAGE_NICS[NICS_PIC_TYPE][CAND_CLASS_TOTAL] =
@@ -685,6 +702,7 @@ static const uint32_t MD_STAGE_NICS_SCAL_NUM[NICS_SCALING_LEVELS][MD_STAGE_TOTAL
     {0, 2, 0, 0}, // LEVEL 14
     {0, 0, 0, 0} // LEVEL 15
 };
+
 typedef enum {
     EIGHTTAP_REGULAR,
     EIGHTTAP_SMOOTH,
@@ -700,6 +718,7 @@ enum {
     SPEL_ME, //ME
     SPEL_PME, //PME
 } UENUM1BYTE(SUBPEL_STAGE);
+
 enum {
     USE_2_TAPS_ORIG = 0, // This is used in temporal filtering.
     USE_2_TAPS,
@@ -713,13 +732,16 @@ enum {
     //SUBPEL_TREE_PRUNED_MORE = 2,      // Not supported - (from libaom: Prunes 1/2-pel searches more aggressively)
     //SUBPEL_TREE_PRUNED_EVENMORE = 3,  // Not supported - (from libaom: Prunes 1/2- and 1/4-pel searches)
 } UENUM1BYTE(SUBPEL_SEARCH_METHODS);
+
 enum { EIGHTH_PEL, QUARTER_PEL, HALF_PEL, FULL_PEL } UENUM1BYTE(SUBPEL_FORCE_STOP);
+
 typedef struct InterpFilterParams {
     const int16_t *filter_ptr;
     uint16_t       taps;
     uint16_t       subpel_shifts;
     InterpFilter   interp_filter;
 } InterpFilterParams;
+
 typedef enum IfsLevel {
     IFS_OFF, // IFS OFF
     IFS_MDS0, // IFS @ md_stage_0()
@@ -727,18 +749,22 @@ typedef enum IfsLevel {
     IFS_MDS2, // IFS @ md_stage_2()
     IFS_MDS3, // IFS @ md_stage_3()
 } IfsLevel;
+
 typedef enum SpatialSseLevel {
     SSSE_MDS1, // Spatial SSE @ md_stage_1() and beyond
     SSSE_MDS2, // Spatial SSE @ md_stage_2() and beyond
     SSSE_MDS3, // Spatial SSE @ md_stage_3() and beyond
     SSSE_OFF // Spatial SSE OFF
 } SpatialSseLevel;
+
 typedef enum DistortionType { SAD, VAR, SSD, DIST_TYPES } DistortionType;
+
 // Profile 0.  8-bit and 10-bit 4:2:0 and 4:0:0 only.
 // Profile 1.  8-bit and 10-bit 4:4:4
 // Profile 2.  8-bit and 10-bit 4:2:2
 //            12 bit  4:0:0, 4:2:2 and 4:4:4
 typedef enum BitstreamProfile { PROFILE_0, PROFILE_1, PROFILE_2, MAX_PROFILES } BitstreamProfile;
+
 // Note: Some enums use the attribute 'packed' to use smallest possible integer
 // type, so that we can save memory when they are used in structs/arrays.
 
@@ -788,6 +814,7 @@ typedef enum ATTRIBUTE_PACKED {
 } PartitionType;
 
 #define MAX_NUM_BLOCKS_ALLOC 4421
+
 typedef enum ATTRIBUTE_PACKED {
     PART_N,
     PART_H,
@@ -908,6 +935,7 @@ typedef char PartitionContextType;
 // block transform size
 #ifdef _MSC_VER
 typedef uint8_t TxSize;
+
 enum ATTRIBUTE_PACKED {
 #else
 typedef enum ATTRIBUTE_PACKED {
@@ -1031,6 +1059,7 @@ typedef enum ATTRIBUTE_PACKED {
 
 #ifdef _MSC_VER
 typedef uint8_t TxType;
+
 enum ATTRIBUTE_PACKED {
 #else
 typedef enum ATTRIBUTE_PACKED {
@@ -1088,6 +1117,7 @@ static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, I
                                                                       V_FLIPADST,
                                                                       H_FLIPADST,
                                                                       INVALID_TX_TYPE}};
+
 typedef enum ATTRIBUTE_PACKED {
     // DCT only
     EXT_TX_SET_DCTONLY,
@@ -1226,6 +1256,7 @@ typedef enum ATTRIBUTE_PACKED {
     INTRA_MODES             = PAETH_PRED + 1, // PAETH_PRED has to be the last intra mode.
     INTRA_INVALID           = MB_MODE_COUNT, // For uv_mode in inter blocks
 } PredictionMode;
+
 #define MAX_UPSAMPLE_SZ 16
 
 typedef enum ATTRIBUTE_PACKED {
@@ -1281,6 +1312,7 @@ typedef uint16_t CONV_BUF_TYPE;
 #define WEDGE_WEIGHT_BITS 6
 #define MASK_PRIMARY_SIZE ((MAX_WEDGE_SIZE) << 1)
 #define MASK_PRIMARY_STRIDE (MASK_PRIMARY_SIZE)
+
 enum {
     MD_COMP_AVG,
     MD_COMP_DIST,
@@ -1288,13 +1320,16 @@ enum {
     MD_COMP_WEDGE,
     MD_COMP_TYPES,
 } UENUM1BYTE(MD_COMP_TYPE);
+
 #define COMPOUND_TYPE CompoundType
 #define MAX_DIFFWTD_MASK_BITS 1
+
 enum {
     DIFFWTD_38 = 0,
     DIFFWTD_38_INV,
     DIFFWTD_MASK_TYPES,
 } UENUM1BYTE(DIFFWTD_MASK_TYPE);
+
 typedef struct {
     /*!< Specifies how the two predictions should be blended together. */
     CompoundType type;
@@ -1308,6 +1343,7 @@ typedef struct {
     /*!< Specifies the type of mask to be used during blending. */
     DIFFWTD_MASK_TYPE mask_type;
 } InterInterCompoundData;
+
 typedef enum ATTRIBUTE_PACKED {
     FILTER_DC_PRED,
     FILTER_V_PRED,
@@ -1316,6 +1352,7 @@ typedef enum ATTRIBUTE_PACKED {
     FILTER_PAETH_PRED,
     FILTER_INTRA_MODES,
 } FilterIntraMode;
+
 static const PredictionMode fimode_to_intramode[FILTER_INTRA_MODES] = {DC_PRED, V_PRED, H_PRED, D157_PRED, PAETH_PRED};
 #define DIRECTIONAL_MODES 8
 #define MAX_ANGLE_DELTA 3
@@ -1405,6 +1442,7 @@ enum {
 
 #define FWD_RF_OFFSET(ref) (ref - LAST_FRAME)
 #define BWD_RF_OFFSET(ref) (ref - BWDREF_FRAME)
+
 typedef enum ATTRIBUTE_PACKED {
     LAST_LAST2_FRAMES, // { LAST_FRAME, LAST2_FRAME }
     LAST_LAST3_FRAMES, // { LAST_FRAME, LAST3_FRAME }
@@ -1635,6 +1673,7 @@ static const struct
 { 28, 16 },  // 16X64 - {0b11100, 0b10000}
 { 16, 28 },  // 64X16 - {0b10000, 0b11100}
 };
+
 /* clang-format on */
 
 // Width/height lookup tables in units of various block sizes
@@ -1698,10 +1737,12 @@ static INLINE TxSetType get_ext_tx_set_type(TxSize tx_size, int32_t is_inter, in
         return (tx_size_sqr == TX_16X16 ? EXT_TX_SET_DTT4_IDTX : EXT_TX_SET_DTT4_IDTX_1DDCT);
     }
 }
+
 static INLINE int32_t get_ext_tx_types(TxSize tx_size, int32_t is_inter, int32_t use_reduced_set) {
     const int32_t set_type = get_ext_tx_set_type(tx_size, is_inter, use_reduced_set);
     return av1_num_ext_tx_set[set_type];
 }
+
 // Maps tx set types to the indices.
 extern const int32_t ext_tx_set_index[2][EXT_TX_SET_TYPES];
 
@@ -1709,15 +1750,19 @@ static INLINE int32_t get_ext_tx_set(TxSize tx_size, int32_t is_inter, int32_t u
     const TxSetType set_type = get_ext_tx_set_type(tx_size, is_inter, use_reduced_set);
     return ext_tx_set_index[is_inter][set_type];
 }
+
 static INLINE bool is_intra_mode(PredictionMode mode) {
     return mode < INTRA_MODE_END; // && mode >= INTRA_MODE_START; // mode is always greater than INTRA_MODE_START
 }
+
 static INLINE bool is_inter_mode(PredictionMode mode) {
     return mode >= SINGLE_INTER_MODE_START && mode < COMP_INTER_MODE_END;
 }
+
 static INLINE int32_t is_inter_compound_mode(PredictionMode mode) {
     return mode >= NEAREST_NEARESTMV && mode <= NEW_NEWMV;
 }
+
 static INLINE int is_inter_singleref_mode(PredictionMode mode) {
     return mode >= SINGLE_INTER_MODE_START && mode < SINGLE_INTER_MODE_END;
 }
@@ -1794,6 +1839,7 @@ typedef struct LoopFilterInfoN {
     LoopFilterThresh lfthr[MAX_LOOP_FILTER + 1];
     uint8_t          lvl[MAX_MB_PLANE][MAX_SEGMENTS][2][REF_FRAMES][MAX_MODE_LF_DELTAS];
 } LoopFilterInfoN;
+
 #define CDEF_PRI_STRENGTHS 16
 #define CDEF_SEC_STRENGTHS 4
 // Bits of precision used for the model
@@ -1844,6 +1890,7 @@ typedef struct LoopFilterInfoN {
 
 #define GM_TRANS_MIN -GM_TRANS_MAX
 #define GM_ALPHA_MIN -GM_ALPHA_MAX
+
 /* clang-format off */
 typedef enum TransformationType {
     IDENTITY = 0,      // identity transformation, 0-parameter

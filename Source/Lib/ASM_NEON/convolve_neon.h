@@ -423,6 +423,7 @@ static inline void convolve_x_sr_2tap_neon(const uint8_t *src_ptr, int src_strid
         h -= 4;
     } while (h != 0);
 }
+
 static inline void convolve_2d_sr_2tap_neon(const uint8_t *src_ptr, int32_t src_stride, uint8_t *dst_ptr,
                                             int dst_stride, int w, int h, const int16_t *x_filter,
                                             const int16_t *y_filter) {

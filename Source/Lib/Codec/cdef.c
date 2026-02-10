@@ -14,6 +14,7 @@
 #include "bitstream_unit.h"
 
 static INLINE int32_t sign(int32_t i) { return i < 0 ? -1 : 1; }
+
 static INLINE int32_t constrain(int32_t diff, int32_t threshold, int32_t damping) {
     if (!threshold)
         return 0;

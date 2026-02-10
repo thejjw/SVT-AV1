@@ -24,6 +24,7 @@
 #include "svt_log.h"
 #include "pd_process.h"
 #include "firstpass.h"
+
 /**************************************
  * Context
  **************************************/
@@ -155,6 +156,7 @@ static void irc_send_picture_out(InitialRateControlContext *ctx, PictureParentCo
     out_results->superres_recode = superres_recode;
     svt_post_full_object(out_results_wrapper);
 }
+
 static uint8_t is_frame_already_exists(PictureParentControlSet *pcs, uint32_t end_index, uint64_t pic_num) {
     for (uint32_t i = 0; i < end_index; i++)
         if (pcs->tpl_group[i]->picture_number == pic_num)
@@ -181,6 +183,7 @@ void validate_pic_for_tpl(PictureParentControlSet *pcs, uint32_t pic_index) {
         }
     }
 }
+
 uint8_t svt_aom_get_tpl_group_level(uint8_t tpl, int8_t enc_mode) {
     uint8_t tpl_group_level;
     if (!tpl)
@@ -281,6 +284,7 @@ uint8_t svt_aom_set_tpl_group(PictureParentControlSet *pcs, uint8_t tpl_group_le
     memcpy(&pcs->tpl_ctrls, tpl_ctrls, sizeof(TplControls));
     return tpl_ctrls->synth_blk_size;
 }
+
 static uint8_t get_tpl_params_level(int8_t enc_mode) {
     uint8_t tpl_params_level;
     if (enc_mode <= ENC_M2) {
@@ -597,9 +601,11 @@ static void process_lad_queue(InitialRateControlContext *ctx, uint8_t pass_thru)
         }
     }
 }
+
 #define HIGH_8x8_DIST_VAR_TH 50000
 #define MIN_AVG_ME_DIST 1000
 #define VBR_CODED_ERROR_FACTOR 30
+
 /*
  set_1pvbr_param: Set the 1 Pass VBR parameters based on the look ahead data
 */

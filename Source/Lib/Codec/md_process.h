@@ -56,10 +56,12 @@ typedef struct RefResults {
     // to process this ref or not
     uint8_t do_ref;
 } RefResults;
+
 typedef struct PmeResults {
     // distortion
     uint32_t dist;
 } PmeResults;
+
 typedef enum InterCandGroup {
     // elementary-groups
     PA_ME_GROUP,
@@ -76,6 +78,7 @@ typedef enum InterCandGroup {
     INTER_COMP_GROUP, // dist, diff, wedge
     TOT_INTER_GROUP
 } InterCandGroup;
+
 typedef struct InterCompCtrls {
     // total compound types to test; 0: OFF, 1: AVG, 2: AVG/DIST, 3: AVG/DIST/DIFF/WEDGE, 4:
     // AVG/DIST/DIFF/WEDGE
@@ -106,6 +109,7 @@ typedef struct InterCompCtrls {
     // no distance for symteric refs
     bool no_sym_dist;
 } InterCompCtrls;
+
 typedef struct InterIntraCompCtrls {
     uint8_t enabled;
     // if 1 use curvefit model to estimate RD cost; if 0 use SSE
@@ -115,6 +119,7 @@ typedef struct InterIntraCompCtrls {
     // 0: no wedge, 1: inj. wedge II as separate candidate to MDS0, 2: only inj. wedge if better than non-wedge at II search
     uint8_t wedge_mode_nsq;
 } InterIntraCompCtrls;
+
 typedef struct ObmcControls {
     uint8_t enabled;
     // Specifies max block size to refine
@@ -131,6 +136,7 @@ typedef struct ObmcControls {
     // Whether to search diagonal positions @ the full-pel of OBMC
     uint8_t fpel_search_diag;
 } ObmcControls;
+
 typedef struct TxtControls {
     uint8_t enabled;
 
@@ -162,6 +168,7 @@ typedef struct TxtControls {
     // Whether to perform QP-based SATD-threshold pruning
     uint16_t satd_th_q_weight;
 } TxtControls;
+
 typedef struct TxsCycleRControls {
     // On/Off feature control
     uint8_t enabled;
@@ -179,6 +186,7 @@ typedef struct NearCountCtrls {
     // max # of near_near to consider
     uint8_t near_near_count;
 } NearCountCtrls;
+
 typedef struct Bipred3x3Controls {
     // Specifies whether to refine the ME-MV(s) of bipred @ mds0 or not (0: OFF, 1: ON)
     uint8_t enabled;
@@ -190,6 +198,7 @@ typedef struct Bipred3x3Controls {
     uint8_t use_l0_l1_dev;
 
 } Bipred3x3Controls;
+
 typedef struct RefPruningControls {
     // 0: OFF; 1: use inter to inter distortion deviation to derive best_refs
     uint8_t enabled;
@@ -200,6 +209,7 @@ typedef struct RefPruningControls {
     // 0: OFF; 1: limit the injection to the closest references based on distance (LAST/BWD)
     uint8_t closest_refs[TOT_INTER_GROUP];
 } RefPruningControls;
+
 typedef struct DepthRemovalCtrls {
     uint8_t enabled;
     // remove 32x32 blocks and below based on the sb_64x64 (me_distortion, variance)
@@ -211,11 +221,13 @@ typedef struct DepthRemovalCtrls {
     // remove 8x8 blocks and below based on the sb_64x64 (me_distortion, variance)
     uint8_t disallow_4x4;
 } DepthRemovalCtrls;
+
 #define MAX_RANGE_CNT 8
 
 #define PD0_DEPTH_NO_RESTRICTION 0 // No depth restriction
 #define PD0_DEPTH_ADAPTIVE 1 // Adaptive depth control
 #define PD0_DEPTH_PRED_PART_ONLY 2 // Pred-part only
+
 typedef struct DepthRefinementCtrls {
     // Mode selection:
     // 0 - No depth restriction
@@ -262,6 +274,7 @@ typedef struct DepthRefinementCtrls {
     // 2 - set s_depth and e_depth to 0
     uint32_t pd0_unavail_mode_depth;
 } DepthRefinementCtrls;
+
 typedef struct SubresCtrls {
     // Residual sub-sampling step (0:OFF)
     uint8_t step;
@@ -270,9 +283,11 @@ typedef struct SubresCtrls {
     // odd_to_even_deviation_th when 0, the detection is OFF
     uint8_t odd_to_even_deviation_th;
 } SubresCtrls;
+
 typedef struct PfCtrls {
     EB_TRANS_COEFF_SHAPE pf_shape;
 } PfCtrls;
+
 typedef struct MdNsqMotionSearchCtrls {
     // 0: NSQ motion search @ MD OFF; 1: NSQ motion search @ MD ON
     uint8_t enabled;
@@ -285,6 +300,7 @@ typedef struct MdNsqMotionSearchCtrls {
     // Enable pSad
     uint8_t enable_psad;
 } MdNsqMotionSearchCtrls;
+
 typedef struct MdSqMotionSearchCtrls {
     // 0: SQ motion search @ MD OFF; 1: SQ motion search @ MD ON
     uint8_t enabled;
@@ -334,6 +350,7 @@ typedef struct MdSqMotionSearchCtrls {
     // Enable pSad
     uint8_t enable_psad;
 } MdSqMotionSearchCtrls;
+
 typedef struct MdPmeCtrls {
     // 0: PME search @ MD OFF; 1: PME search @ MD ON
     uint8_t enabled;
@@ -363,6 +380,7 @@ typedef struct MdPmeCtrls {
     // Whether to perform QP-based search-area pruning
     uint8_t sa_q_weight;
 } MdPmeCtrls;
+
 typedef struct MdSubPelSearchCtrls {
     // Specifies whether the Sub-Pel search will be performed or not (0: OFF, 1: ON)
     uint8_t enabled;
@@ -401,6 +419,7 @@ typedef struct MdSubPelSearchCtrls {
     int32_t
         bias_fp; // Bias towards fpel at the MD subpel-search: apply a penalty to the cost of fractional positions during the subpel-search each time we check against a full-pel MV
 } MdSubPelSearchCtrls;
+
 typedef struct NsqPsqTxsCtrls {
     uint8_t enabled;
     uint32_t
@@ -409,6 +428,7 @@ typedef struct NsqPsqTxsCtrls {
         h_to_v_th; // Skip H/V if min(H0-nz,H1-nz)/min(V0-nz,V1-nz) is higher than min(V0-nz,V1-nz)/min(H0-nz,H1-nz),
     // and min(H0-nz,H1-nz)/min(V0-nz,V1-nz) is higher than h_to_v_th * sq-nz
 } NsqPsqTxsCtrls;
+
 typedef struct RdoqCtrls {
     uint8_t enabled;
     // 0: do not use cut off div; >=1: limit rdoq to a fixed low-frequency cut-off (DC + first AC coefficients) and skip rdoq on all higher frequencies
@@ -437,6 +457,7 @@ typedef struct RdoqCtrls {
     uint8_t eob_th;
     uint8_t eob_fast_th;
 } RdoqCtrls;
+
 typedef struct NicScalingCtrls {
     // Scaling numerator for post-stage 0 NICS: <x>/16
     uint8_t stage1_scaling_num;
@@ -445,6 +466,7 @@ typedef struct NicScalingCtrls {
     // Scaling numerator for post-stage 2 NICS: <x>/16
     uint8_t stage3_scaling_num;
 } NicScalingCtrls;
+
 typedef struct NicPruningCtrls {
     // class pruning signal(s)
     // mdsx_class_th (for class removal); reduce cand if deviation to the best_cand is higher than mdsx_cand_th
@@ -504,12 +526,14 @@ typedef struct NicPruningCtrls {
     bool    enable_skipping_mds1;
     uint8_t merge_inter_cands_mult;
 } NicPruningCtrls;
+
 typedef struct NicCtrls {
     NicPruningCtrls pruning_ctrls;
     NicScalingCtrls scaling_ctrls;
     // to specify the number of md-stage(s)
     uint8_t md_staging_mode;
 } NicCtrls;
+
 typedef struct CandEliminationCtlrs {
     uint32_t enabled;
     // if inter distortion is below dc_only_th * block_area then test DC only for intra candidates
@@ -521,6 +545,7 @@ typedef struct CandEliminationCtlrs {
     // 0: off, higher is more aggressive
     uint16_t skip_dc_th;
 } CandEliminationCtlrs;
+
 typedef struct NsqGeomCtrls {
     // Enable or disable nsq signal. 0: disabled, 1: enabled
     bool enabled;
@@ -531,6 +556,7 @@ typedef struct NsqGeomCtrls {
     // Disallow HA/HB/VA/VB NSQ blocks when off. 0: OFF, 1: ON
     uint8_t allow_HVA_HVB;
 } NsqGeomCtrls;
+
 typedef struct NsqSearchCtrls {
     // If enabled, allow multiple NSQ shapes to be searched at MD, and use the below search features (if on) to reduce the
     // compute overhead. If not enabled, NSQ shapes may still be allowed by nsq_geom_ctrls, but no search will be performed
@@ -570,6 +596,7 @@ typedef struct NsqSearchCtrls {
     // Whether to use the default or aggressive settings for the sub-Pred_depth block(s) (i.e. not applicable when PRED only)
     uint8_t sub_depth_block_lvl;
 } NsqSearchCtrls;
+
 typedef struct DepthEarlyExitCtrls {
     // If the rate cost of splitting into lower depths is greater than the percentage threshold of the cost of the parent block, skip testing the lower depth.
     // split_cost_th is specified as a perentage * 10 (i.e. a value of 70 corresponds to skipping the lower depth if the split rate cost is > 7% of the parent cost).
@@ -580,6 +607,7 @@ typedef struct DepthEarlyExitCtrls {
     // more aggressive.
     uint16_t early_exit_th;
 } DepthEarlyExitCtrls;
+
 typedef struct TxsControls {
     uint8_t enabled;
     // Skip current depth if previous depth has coeff count below the TH
@@ -601,6 +629,7 @@ typedef struct TxsControls {
     int32_t quadrant_th_sf;
 
 } TxsControls;
+
 typedef struct WmCtrls {
     uint8_t enabled;
     // allow/disallow MW for MVP candidates
@@ -620,6 +649,7 @@ typedef struct WmCtrls {
     // Shut the approximation(s) if refinement @ mds1 or mds3
     bool shut_approx_if_not_mds0;
 } WmCtrls;
+
 typedef struct UvCtrls {
     uint8_t enabled;
     // Indicates the chroma search mode
@@ -640,6 +670,7 @@ typedef struct UvCtrls {
     // is less than TH% of the inter cost. 0 is off.
     uint32_t inter_vs_intra_cost_th;
 } UvCtrls;
+
 typedef struct InterpolationSearchCtrls {
     // Specifies the MD Stage where the interpolation filter search will take place (IFS_MDS0,
     // IFS_MDS1, IFS_MDS2, or IFS_MDS3 for respectively MD Stage 0, MD Stage 1, MD Stage 2, and MD
@@ -652,6 +683,7 @@ typedef struct InterpolationSearchCtrls {
     // 1: estimate rate from distortion)
     uint8_t skip_sse_rd_model;
 } InterpolationSearchCtrls;
+
 typedef struct SpatialSSECtrls {
     // Specifies the MD Stage where the spatial SSE will start being used in the full loop (SSSE_MDS1, SSSE_MDS2, or
     // SSSE_MDS3 for respectively MD Stage 1, MD Stage 2, and MD Stage 3).  Spatial SSE will also be enabled
@@ -659,13 +691,16 @@ typedef struct SpatialSSECtrls {
     // spatial SSE would be enabled in MDS2 and MDS3.
     SpatialSseLevel level;
 } SpatialSSECtrls;
+
 typedef struct RedundantCandCtrls {
     int score_th;
     int mag_th;
 } RedundantCandCtrls;
+
 typedef struct UseNeighbouringModeCtrls {
     uint8_t enabled;
 } UseNeighbouringModeCtrls;
+
 typedef struct BlockLocation {
     // luma block location in picture
     uint32_t input_origin_index;
@@ -737,12 +772,14 @@ typedef struct Lpd1TxCtrls {
     // Apply shortcuts to the chroma TX path if luma has few coeffs
     uint8_t use_uv_shortcuts_on_y_coeffs;
 } Lpd1TxCtrls;
+
 typedef struct CflCtrls {
     bool enabled;
     // Early exit to reduce the number of iterations to compute CFL parameters
     uint8_t itr_th;
     uint8_t cplx_th;
 } CflCtrls;
+
 typedef struct MdRateEstCtrls {
     // If true, update skip context and dc_sign context (updates are done in the same func, so
     // control together)
@@ -757,6 +794,7 @@ typedef struct MdRateEstCtrls {
     // estimate the rate of the first (eob/N) coeff(s) and last coeff only
     uint8_t pd0_fast_coeff_est_level;
 } MdRateEstCtrls;
+
 typedef struct IntraCtrls {
     uint8_t enable_intra;
     // the last intra prediciton mode generated starting from DC_PRED, min: DC_PRED, max: PAETH_PRED
@@ -768,6 +806,7 @@ typedef struct IntraCtrls {
     int8_t  skip_angular_delta2_th;
     int8_t  skip_angular_delta3_th;
 } IntraCtrls;
+
 typedef struct TxShortcutCtrls {
     // Skip TX at MDS3 if the prev MD stage gave 0 coeffs and MDS0 Distortion is less than the TH. 0 is off, lower is more aggressive
     uint32_t bypass_tx_th;
@@ -780,6 +819,7 @@ typedef struct TxShortcutCtrls {
     // aggressive
     uint32_t use_mds3_shortcuts_th;
 } TxShortcutCtrls;
+
 typedef struct Mds0Ctrls {
     // 0: disabled, > 0: switch between: (1) reset reference cost for each subsequent class, (2) continuously update reference cost, (uint8_t) ~0: continuously update reference cost
     uint8_t pruning_method_th;
@@ -787,6 +827,7 @@ typedef struct Mds0Ctrls {
     uint16_t per_class_dist_to_cost_th[CAND_CLASS_TOTAL];
     uint16_t dist_to_cost_th;
 } Mds0Ctrls;
+
 typedef struct CandReductionCtrls {
     RedundantCandCtrls redundant_cand_ctrls;
     NearCountCtrls     near_count_ctrls;
@@ -797,6 +838,7 @@ typedef struct CandReductionCtrls {
     uint8_t                  reduce_unipred_candidates;
     uint8_t                  reduce_filter_intra;
 } CandReductionCtrls;
+
 typedef struct SkipSubDepthCtrls {
     uint8_t enabled;
     // Use the 4 quad(s) src-to-recon cost deviation to skip sub-depth(s)
@@ -808,6 +850,7 @@ typedef struct SkipSubDepthCtrls {
     uint8_t coeff_perc;
 
 } SkipSubDepthCtrls;
+
 typedef struct VarSkipSubDepthCtrls {
     uint8_t  enabled;
     uint32_t coeff_th;
@@ -815,6 +858,7 @@ typedef struct VarSkipSubDepthCtrls {
     uint8_t  max_size;
     uint32_t edge_th[4][3];
 } VarSkipSubDepthCtrls;
+
 typedef struct FilterIntraCtrls {
     bool enabled;
     // Set the max filter intra mode to test. The max filter intra level will also depend on ctx->intra_ctrls.intra_mode_end.

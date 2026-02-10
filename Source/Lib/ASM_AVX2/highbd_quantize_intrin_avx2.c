@@ -106,6 +106,7 @@ static INLINE void quantize(const __m256i *qp, __m256i c, const int16_t *iscan_p
         _mm256_store_si256((__m256i *)dqcoeff, zero);
     }
 }
+
 static INLINE void quantize_qm(const __m256i *qp, __m256i c, const int16_t *iscan_ptr, TranLow *qcoeff,
                                TranLow *dqcoeff, __m256i *eob, __m256i min, __m256i max, __m256i qm, __m256i iqm,
                                int shift_dq, const __m256i shift16) {
@@ -299,6 +300,7 @@ static INLINE void quantize_highbd_qm(const __m256i *qp, __m256i c, const int16_
         _mm256_store_si256((__m256i *)dqcoeff, zero);
     }
 }
+
 void svt_av1_highbd_quantize_b_qm_avx2(const TranLow *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr,
                                        const int16_t *round_ptr, const int16_t *quant_ptr,
                                        const int16_t *quant_shift_ptr, TranLow *qcoeff_ptr, TranLow *dqcoeff_ptr,

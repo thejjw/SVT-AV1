@@ -38,6 +38,7 @@ typedef enum AppExitConditionType {
 the App.
 */
 typedef enum AppPortActiveType { APP_PortActive = 0, APP_PortInactive } AppPortActiveType;
+
 typedef enum EncPass {
     ENC_SINGLE_PASS, //single pass mode
     ENC_FIRST_PASS, // first pass of multi pass mode
@@ -209,6 +210,7 @@ typedef enum MultiPassModes {
 typedef struct EncApp {
     SvtAv1FixedBuf rc_twopasses_stats;
 } EncApp;
+
 EbConfig *svt_config_ctor();
 void      svt_config_dtor(EbConfig *app_cfg);
 

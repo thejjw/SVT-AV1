@@ -244,6 +244,7 @@ EbErrorType svt_aom_cdef_context_ctor(EbThreadContext *thread_ctx, const EbEncHa
 }
 
 #define default_mse_uv 1040400
+
 static uint64_t compute_cdef_dist(const EbByte dst, int32_t doffset, int32_t dstride, const uint8_t *src,
                                   const CdefList *dlist, int32_t cdef_count, BlockSize bsize, int32_t coeff_shift,
                                   uint8_t subsampling_factor, bool is_16bit) {
@@ -271,14 +272,14 @@ static uint64_t compute_cdef_dist(const EbByte dst, int32_t doffset, int32_t dst
  * Call cdef_filter_fb() to perform filtering, then compute the MSE for each pair.
 */
 static void cdef_seg_search(PictureControlSet *pcs, SequenceControlSet *scs, uint32_t segment_index) {
-    PictureParentControlSet        *ppcs     = pcs->ppcs;
-    FrameHeader                    *frm_hdr  = &ppcs->frm_hdr;
-    Av1Common                      *cm       = ppcs->av1_cm;
-    const bool                      is_16bit = scs->is_16bit_pipeline;
-    uint32_t                        x_seg_idx;
-    uint32_t                        y_seg_idx;
-    const uint32_t                  b64_pic_width  = (ppcs->aligned_width + 64 - 1) / 64;
-    const uint32_t                  b64_pic_height = (ppcs->aligned_height + 64 - 1) / 64;
+    PictureParentControlSet *ppcs     = pcs->ppcs;
+    FrameHeader             *frm_hdr  = &ppcs->frm_hdr;
+    Av1Common               *cm       = ppcs->av1_cm;
+    const bool               is_16bit = scs->is_16bit_pipeline;
+    uint32_t                 x_seg_idx;
+    uint32_t                 y_seg_idx;
+    const uint32_t           b64_pic_width  = (ppcs->aligned_width + 64 - 1) / 64;
+    const uint32_t           b64_pic_height = (ppcs->aligned_height + 64 - 1) / 64;
     SEGMENT_CONVERT_IDX_TO_XY(segment_index, x_seg_idx, y_seg_idx, pcs->cdef_segments_column_count);
     const uint32_t x_b64_start_idx = SEGMENT_START_IDX(x_seg_idx, b64_pic_width, pcs->cdef_segments_column_count);
     const uint32_t x_b64_end_idx   = SEGMENT_END_IDX(x_seg_idx, b64_pic_width, pcs->cdef_segments_column_count);

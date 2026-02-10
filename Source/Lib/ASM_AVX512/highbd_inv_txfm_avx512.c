@@ -1718,6 +1718,7 @@ void svt_av1_inv_txfm2d_add_32x32_avx512(const int32_t *coeff, uint16_t *output_
     default: assert(0);
     }
 }
+
 static void write_buffer_64x64_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
                                       int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t shift, int32_t bd) {
     __m512i   in32x32[32 * 32 / 16];

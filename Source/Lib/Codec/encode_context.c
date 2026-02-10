@@ -51,6 +51,7 @@ static void destroy_stats_buffer(STATS_BUFFER_CTX *stats_buf_context, FIRSTPASS_
     EB_FREE_ARRAY(frame_stats_buffer);
     EB_DESTROY_MUTEX(stats_buf_context->stats_in_write_mutex);
 }
+
 static void encode_context_dctor(EbPtr p) {
     EncodeContext *obj = (EncodeContext *)p;
     EB_DESTROY_MUTEX(obj->total_number_of_recon_frame_mutex);

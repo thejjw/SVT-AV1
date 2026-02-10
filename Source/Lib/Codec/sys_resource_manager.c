@@ -23,6 +23,7 @@ static void svt_fifo_dctor(EbPtr p) {
     EB_DESTROY_SEMAPHORE(obj->counting_semaphore);
     EB_DESTROY_MUTEX(obj->lockout_mutex);
 }
+
 /**************************************
  * svt_fifo_ctor
  **************************************/

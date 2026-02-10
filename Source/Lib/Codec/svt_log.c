@@ -118,6 +118,7 @@ static ONCE_ROUTINE(logger_create) {
 }
 
 DEFINE_ONCE(g_logger_once);
+
 static struct Logger* get_logger() {
     svt_run_once(&g_logger_once, logger_create);
     return g_logger;

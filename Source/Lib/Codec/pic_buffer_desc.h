@@ -83,38 +83,48 @@ typedef struct Yv12BufferConfig {
             int32_t uv_width;
             int32_t alpha_width;
         };
+
         int32_t widths[3];
     };
+
     union {
         struct {
             int32_t y_height;
             int32_t uv_height;
             int32_t alpha_height;
         };
+
         int32_t heights[3];
     };
+
     union {
         struct {
             int32_t y_crop_width;
             int32_t uv_crop_width;
         };
+
         int32_t crop_widths[2];
     };
+
     union {
         struct {
             int32_t y_crop_height;
             int32_t uv_crop_height;
         };
+
         int32_t crop_heights[2];
     };
+
     union {
         struct {
             int32_t y_stride;
             int32_t uv_stride;
             int32_t alpha_stride;
         };
+
         int32_t strides[3];
     };
+
     union {
         struct {
             uint8_t *y_buffer;
@@ -122,6 +132,7 @@ typedef struct Yv12BufferConfig {
             uint8_t *v_buffer;
             uint8_t *alpha_buffer;
         };
+
         uint8_t *buffers[4];
     };
 

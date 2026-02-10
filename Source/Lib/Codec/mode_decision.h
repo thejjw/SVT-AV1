@@ -152,6 +152,7 @@ static INLINE int svt_aom_is_interintra_allowed_mode(const PredictionMode mode) 
 static INLINE int svt_aom_is_interintra_allowed_ref(const MvReferenceFrame rf[2]) {
     return (rf[0] > INTRA_FRAME) && (rf[1] <= INTRA_FRAME);
 }
+
 int  svt_is_interintra_allowed(uint8_t enable_inter_intra, BlockSize bsize, PredictionMode mode,
                                const MvReferenceFrame ref_frame[2]);
 int  svt_aom_filter_intra_allowed_bsize(BlockSize bs);

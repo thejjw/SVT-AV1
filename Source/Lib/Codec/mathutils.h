@@ -85,6 +85,7 @@ static INLINE void least_squares_init(double *mat, double *y, int n) {
     memset(mat, 0, n * n * sizeof(double));
     memset(y, 0, n * sizeof(double));
 }
+
 static INLINE void least_squares_accumulate(double *mat, double *y, const double *a, double b, int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) { mat[i * n + j] += a[i] * a[j]; }

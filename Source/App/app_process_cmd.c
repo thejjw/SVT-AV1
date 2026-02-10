@@ -128,6 +128,7 @@ static void *svt_mmap(MemMapFile *h, size_t offset, size_t size) {
 #endif
     return NULL;
 }
+
 /* release  memory mapped file  */
 static void svt_munmap(MemMapFile *h, void *addr, int64_t size) {
     void *base = (void *)((intptr_t)addr & ~h->align_mask);
@@ -138,6 +139,7 @@ static void svt_munmap(MemMapFile *h, void *addr, int64_t size) {
     munmap(base, size + (intptr_t)addr - (intptr_t)base);
 #endif
 }
+
 /* release  memory mapped file  */
 static void release_memory_mapped_file(EbConfig *app_cfg, uint8_t is_16bit, EbBufferHeaderType *header_ptr) {
     const uint32_t input_padded_width  = app_cfg->input_padded_width;
@@ -180,6 +182,7 @@ static long get_next_qp_from_qp_file(FILE *const qp_file, int *const qp_read_fro
         *qp_read_from_file = 1;
     return qp;
 }
+
 static unsigned char send_qp_on_the_fly(FILE *const qp_file, bool *use_qp_file) {
     long tmp_qp            = 0;
     int  qp_read_from_file = 0;
@@ -294,6 +297,7 @@ static EbErrorType test_update_rate_info(uint64_t pic_num, EbBufferHeaderType *h
 
     return EB_ErrorNone;
 }
+
 // test_update_rate_info: sample test case for updating the QP on the fly
 static EbErrorType test_update_qp_info(uint64_t pic_num, EbBufferHeaderType *header_ptr) {
     SvtAv1RateInfo *data;
@@ -531,6 +535,7 @@ static EbErrorType retrieve_roi_map_event(SvtAv1RoiMap *roi_map, uint64_t pic_nu
 
     return EB_ErrorNone;
 }
+
 static void free_private_data_list(void *node_head) {
     while (node_head) {
         EbPrivDataNode *node = (EbPrivDataNode *)node_head;
@@ -1065,6 +1070,7 @@ void process_output_stream_buffer(EncChannel *channel, EncApp *enc_app, int32_t 
     }
     channel->exit_cond_output = return_value;
 }
+
 void process_output_recon_buffer(EncChannel *channel) {
     EbConfig            *app_cfg          = channel->app_cfg;
     EbBufferHeaderType  *header_ptr       = app_cfg->recon_buffer; // needs to change for buffered input

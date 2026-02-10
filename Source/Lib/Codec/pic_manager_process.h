@@ -35,6 +35,7 @@ typedef struct PictureManagerContext {
     int       started_pics_dec_order_size; // Maximum heap capacity
     int       started_pics_dec_order_count; // Current number of elements in the heap
 } PictureManagerContext;
+
 /***************************************
  * Extern Function Declaration
  ***************************************/

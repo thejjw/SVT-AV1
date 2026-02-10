@@ -34,6 +34,7 @@ static void svt_sequence_control_set_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->static_config.sframe_posi.sframe_posis);
     obj->static_config.sframe_posi.sframe_num = 0;
 }
+
 /**************************************************************************************************
     General notes on how Sequence Control Sets (SCS) are used.
 
@@ -104,6 +105,7 @@ EbErrorType svt_sequence_control_set_ctor(SequenceControlSet *scs, EbPtr object_
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
     SequenceControlSet *obj;
 
@@ -113,6 +115,7 @@ EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_dat
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution, uint32_t inputSize) {
     EbErrorType return_error = EB_ErrorNone;
     if (inputSize < INPUT_SIZE_240p_TH)

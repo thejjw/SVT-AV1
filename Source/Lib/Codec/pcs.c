@@ -39,6 +39,7 @@ static void set_restoration_unit_size(int32_t width, int32_t height, int32_t sx,
     rst[1].restoration_unit_size = rst[0].restoration_unit_size >> s;
     rst[2].restoration_unit_size = rst[1].restoration_unit_size;
 }
+
 static void dg_detector_seg_dctor(EbPtr p) {
     DGDetectorSeg *obj = (DGDetectorSeg *)p;
 
@@ -81,6 +82,7 @@ static void me_sb_results_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->me_mv_array);
     EB_FREE_ARRAY(obj->total_me_candidate_index);
 }
+
 /*
   controls how many references are needed for ME results allocation
 */
@@ -114,6 +116,7 @@ EbErrorType svt_aom_me_sb_results_ctor(MeSbResults *obj_ptr, PictureControlSetIn
     EB_MALLOC_ARRAY(obj_ptr->total_me_candidate_index, number_of_pus);
     return EB_ErrorNone;
 }
+
 void recon_coef_dctor(EbPtr p) {
     EncDecSet *obj = (EncDecSet *)p;
 
@@ -124,6 +127,7 @@ void recon_coef_dctor(EbPtr p) {
     }
     EB_DELETE_PTR_ARRAY(obj->quantized_coeff, obj->init_b64_total_count);
 }
+
 static void picture_control_set_dctor(EbPtr p) {
     PictureControlSet *obj      = (PictureControlSet *)p;
     uint16_t           tile_cnt = obj->tile_row_count * obj->tile_column_count;
@@ -222,6 +226,7 @@ typedef struct InitData {
 } InitData;
 
 #define DIM(array) (sizeof(array) / sizeof(array[0]))
+
 static EbErrorType create_neighbor_array_units(InitData *data, size_t count) {
     for (size_t i = 0; i < count; i++) {
         EB_NEW(*data[i].na_unit_dbl_ptr,
@@ -275,6 +280,7 @@ EbErrorType recon_coef_update_param(EncDecSet *object_ptr, SequenceControlSet *s
 
     return EB_ErrorNone;
 }
+
 static EbErrorType recon_coef_ctor(EncDecSet *object_ptr, EbPtr object_init_data_ptr) {
     PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
 
@@ -355,6 +361,7 @@ static EbErrorType recon_coef_ctor(EncDecSet *object_ptr, EbPtr object_init_data
 
     return EB_ErrorNone;
 }
+
 uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_height) {
     uint32_t frame_size = picture_width * picture_height * 3 / 2; //assuming 4:2:0;
     if (frame_size > INPUT_SIZE_4K_TH)
@@ -362,6 +369,7 @@ uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_he
     else
         return BITSTREAM_BUFFER_SIZE(picture_width * picture_height);
 }
+
 /*
 pcs_update_param: update the parameters in PictureParentControlSet for changing the resolution on the fly
 */
@@ -1119,6 +1127,7 @@ EbErrorType svt_aom_recon_coef_creator(EbPtr *object_dbl_ptr, EbPtr object_init_
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_picture_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
     PictureControlSet *obj;
 
@@ -1188,6 +1197,7 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     if (obj->dg_detector)
         EB_DELETE(obj->dg_detector);
 }
+
 /*
 ppcs_update_param: update the parameters in PictureParentControlSet for changing the resolution on the fly
 */
@@ -1230,6 +1240,7 @@ EbErrorType ppcs_update_param(PictureParentControlSet *ppcs) {
 
     return return_error;
 }
+
 static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr, EbPtr object_init_data_ptr) {
     PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
 
@@ -1399,6 +1410,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
     EB_NEW(object_ptr->dg_detector, svt_aom_dg_detector_seg_ctor);
     return return_error;
 }
+
 static void me_dctor(EbPtr p) {
     MotionEstimationData *obj = (MotionEstimationData *)p;
     EB_DELETE_PTR_ARRAY(obj->me_results, obj->init_b64_total_count);
@@ -1415,6 +1427,7 @@ static void me_dctor(EbPtr p) {
     if (obj->ssim_rdmult_scaling_factors)
         EB_FREE_ARRAY(obj->ssim_rdmult_scaling_factors);
 }
+
 /*
 me_update_param: update the parameters in MotionEstimationData for changing the resolution on the fly
 */
@@ -1424,6 +1437,7 @@ EbErrorType me_update_param(MotionEstimationData *me_data, SequenceControlSet *s
 
     return return_error;
 }
+
 static EbErrorType me_ctor(MotionEstimationData *object_ptr, EbPtr object_init_data_ptr) {
     PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
 
@@ -1558,6 +1572,7 @@ EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr *object_dbl_ptr, Eb
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_me_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
     MotionEstimationData *obj;
 

@@ -570,6 +570,7 @@ void svt_aom_update_sharpness(LoopFilterInfoN *lfi, int32_t sharpness_lvl) {
         memset(lfi->lfthr[lvl].mblim, (2 * (lvl + 2) + block_inside_limit), SIMD_WIDTH);
     }
 }
+
 static INLINE void highbd_filter14(int8_t mask, uint8_t thresh, int8_t flat, int8_t flat2, uint16_t *op6, uint16_t *op5,
                                    uint16_t *op4, uint16_t *op3, uint16_t *op2, uint16_t *op1, uint16_t *op0,
                                    uint16_t *oq0, uint16_t *oq1, uint16_t *oq2, uint16_t *oq3, uint16_t *oq4,
@@ -607,6 +608,7 @@ static INLINE void highbd_filter14(int8_t mask, uint8_t thresh, int8_t flat, int
         highbd_filter8(mask, thresh, flat, op3, op2, op1, op0, oq0, oq1, oq2, oq3, bd);
     }
 }
+
 static void highbd_mb_lpf_horizontal_edge_w(uint16_t *s, int p, const uint8_t *blimit, const uint8_t *limit,
                                             const uint8_t *thresh, int count, int bd) {
     int i;
@@ -651,10 +653,12 @@ static void highbd_mb_lpf_horizontal_edge_w(uint16_t *s, int p, const uint8_t *b
         ++s;
     }
 }
+
 void svt_aom_highbd_lpf_horizontal_14_c(uint16_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit,
                                         const uint8_t *thresh, int bd) {
     highbd_mb_lpf_horizontal_edge_w(s, pitch, blimit, limit, thresh, 1, bd);
 }
+
 static INLINE int8_t highbd_filter_mask3_chroma(uint8_t limit, uint8_t blimit, uint16_t p2, uint16_t p1, uint16_t p0,
                                                 uint16_t q0, uint16_t q1, uint16_t q2, int bd) {
     int8_t  mask     = 0;
@@ -667,6 +671,7 @@ static INLINE int8_t highbd_filter_mask3_chroma(uint8_t limit, uint8_t blimit, u
     mask |= (abs(p0 - q0) * 2 + abs(p1 - q1) / 2 > blimit16) * -1;
     return ~mask;
 }
+
 static INLINE void highbd_filter6(int8_t mask, uint8_t thresh, int8_t flat, uint16_t *op2, uint16_t *op1, uint16_t *op0,
                                   uint16_t *oq0, uint16_t *oq1, uint16_t *oq2, int bd) {
     if (flat && mask) {
@@ -682,6 +687,7 @@ static INLINE void highbd_filter6(int8_t mask, uint8_t thresh, int8_t flat, uint
         highbd_filter4(mask, thresh, op1, op0, oq0, oq1, bd);
     }
 }
+
 void svt_aom_highbd_lpf_vertical_6_c(uint16_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit,
                                      const uint8_t *thresh, int bd) {
     int i;
@@ -696,6 +702,7 @@ void svt_aom_highbd_lpf_vertical_6_c(uint16_t *s, int pitch, const uint8_t *blim
         s += pitch;
     }
 }
+
 void svt_aom_highbd_lpf_horizontal_6_c(uint16_t *s, int p, const uint8_t *blimit, const uint8_t *limit,
                                        const uint8_t *thresh, int bd) {
     int i;
@@ -753,6 +760,7 @@ static void highbd_mb_lpf_vertical_edge_w(uint16_t *s, int p, const uint8_t *bli
         s += p;
     }
 }
+
 void svt_aom_highbd_lpf_vertical_14_c(uint16_t *s, int p, const uint8_t *blimit, const uint8_t *limit,
                                       const uint8_t *thresh, int bd) {
     highbd_mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 4, bd);

@@ -679,6 +679,7 @@ static INLINE uint64_t xx_cvtsi128_si64(__m128i a) {
     }
 #endif
 }
+
 static uint64_t aom_sum_squares_i16_64n_sse2(const int16_t *src, uint32_t n) {
     const __m128i v_zext_mask_q = xx_set1_64_from_32i(0xffffffff);
     __m128i       v_acc0_q      = _mm_setzero_si128();

@@ -44,11 +44,13 @@ EbErrorType svt_aom_prediction_structure_group_ctor(PredictionStructureGroup *pr
 bool        svt_aom_is_pic_used_as_ref(unsigned hierarchical_levels, unsigned temporal_layer, unsigned picture_index,
                                        unsigned referencing_scheme, bool is_overlay);
 bool        svt_aom_is_incomp_mg_frame(PictureParentControlSet *pcs);
+
 typedef struct DpbEntry {
     uint64_t picture_number;
     uint64_t decode_order;
     uint8_t  temporal_layer_index;
 } DpbEntry;
+
 /**************************************
  * Context
  **************************************/

@@ -6796,6 +6796,7 @@ static INLINE void highbd_write_buffer_8xn_sse4_1(__m128i *in, uint16_t *output_
         _mm_storeu_si128((__m128i *)(output_w + i * stride_w), u);
     }
 }
+
 void svt_av1_inv_txfm2d_add_8x4_sse4_1(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
                                        int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t bd) {
     __m128i                buf1[8];

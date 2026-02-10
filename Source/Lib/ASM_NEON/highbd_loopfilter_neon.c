@@ -152,6 +152,7 @@ void svt_aom_highbd_lpf_horizontal_4_neon(uint16_t *s, int pitch, const uint8_t 
                   vget_high_u16(p0q0_output),
                   vget_high_u16(p1q1_output));
 }
+
 void svt_aom_highbd_lpf_vertical_4_neon(uint16_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit,
                                         const uint8_t *thresh, int bd) {
     // Offset by 2 uint16_t values to load from first p1 position.

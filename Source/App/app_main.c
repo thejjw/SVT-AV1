@@ -361,6 +361,7 @@ static void enc_channel_step(EncChannel* c, EncApp* enc_app, EncContext* enc_con
             c->exit_cond = (AppExitConditionType)(c->exit_cond_output | c->exit_cond_input);
     }
 }
+
 static const char* get_pass_name(EncPass enc_pass) {
     switch (enc_pass) {
     case ENC_FIRST_PASS: return "Pass 1/2 ";
@@ -368,6 +369,7 @@ static const char* get_pass_name(EncPass enc_pass) {
     default: return "";
     }
 }
+
 static void enc_channel_start(EncChannel* c) {
     if (c->return_error == EB_ErrorNone) {
         EbConfig* app_cfg   = c->app_cfg;

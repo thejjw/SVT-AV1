@@ -315,6 +315,7 @@ void svt_av1_fwd_txfm2d_4x4_sse4_1(int16_t *input, int32_t *coeff, uint32_t stri
     }
     (void)bd;
 }
+
 static void fdct4x4_N2_sse4_1(__m128i *in, __m128i *out, int32_t bit, const int32_t num_col) {
     const int32_t *cospi   = cospi_arr(bit);
     const __m128i  cospi32 = _mm_set1_epi32(cospi[32]);
@@ -739,6 +740,7 @@ void svt_av1_fwd_txfm2d_4x4_N4_sse4_1(int16_t *input, int32_t *coeff, uint32_t s
     }
     (void)bd;
 }
+
 void svt_aom_transform_config(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg *cfg);
 
 typedef void (*TxfmFuncSSE2)(__m128i *input, __m128i *output, const int8_t cos_bit, const int8_t *stage_range);
@@ -4448,6 +4450,7 @@ static INLINE void transpose_8nx8n_N2_quad_sse4_1(const __m128i *input, __m128i 
         }
     }
 }
+
 static INLINE void transpose_4x8_sse4_1(const __m128i *in, __m128i *out) {
     __m128i out1[8];
     TRANSPOSE_2X4X4_SSE4_1(in, 0, 2, 4, 6, out1, 0, 1, 2, 3, 4, 5, 6, 7);
@@ -14721,6 +14724,7 @@ void svt_av1_fwd_txfm2d_64x16_N4_sse4_1(int16_t *input, int32_t *output, uint32_
     clear_buffer_wxh_N4(outcoeff, num_col, txfm_size_row);
     (void)bd;
 }
+
 static inline void transpose_32bit_4x4(const __m128i *const in, __m128i *const out) {
     // Unpack 32 bit elements. Goes from:
     // in[0]: 00 01 02 03

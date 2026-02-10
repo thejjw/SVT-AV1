@@ -199,6 +199,7 @@ static int compare_seg_qp(const void *qp_first, const void *qp_second) {
         return -1;
     }
 }
+
 static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
     const int32_t MAX_SEGMENTS = 8;
     FILE         *file         = app_cfg->roi_map_file;
@@ -371,6 +372,7 @@ fail:
     free(roi_map);
     return ret;
 }
+
 static void deallocate_buffers(EbConfig *app_cfg) {
     // Deallocate input buffers
     if (app_cfg->input_buffer_pool) {

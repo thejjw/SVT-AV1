@@ -624,6 +624,7 @@ uint64_t svt_search_one_dual_c(int *lev0, int *lev1, int nb_strengths, uint64_t 
     lev1[nb_strengths] = best_id1; // Add the identified chroma strength to the list of selected chroma strengths
     return best_tot_mse;
 }
+
 /*
  * Search for the set of luma+chroma strengths that minimizes mse.
  *
@@ -668,12 +669,13 @@ static uint64_t joint_strength_search_dual(int32_t *best_lev0, int32_t *best_lev
     }
     return best_tot_mse;
 }
+
 void finish_cdef_search(PictureControlSet *pcs) {
-    PictureParentControlSet        *ppcs    = pcs->ppcs;
-    FrameHeader                    *frm_hdr = &ppcs->frm_hdr;
-    Av1Common                      *cm      = ppcs->av1_cm;
-    int32_t                         mi_rows = ppcs->av1_cm->mi_rows;
-    int32_t                         mi_cols = ppcs->av1_cm->mi_cols;
+    PictureParentControlSet *ppcs    = pcs->ppcs;
+    FrameHeader             *frm_hdr = &ppcs->frm_hdr;
+    Av1Common               *cm      = ppcs->av1_cm;
+    int32_t                  mi_rows = ppcs->av1_cm->mi_rows;
+    int32_t                  mi_cols = ppcs->av1_cm->mi_cols;
 
     int32_t  fbr, fbc;
     uint64_t best_tot_mse = (uint64_t)1 << 63;

@@ -192,6 +192,7 @@ static const uint16_t sm_weights_64[128] = {
     12,  244, 10,  246, 9,   247, 8,   248, // 52 53 54 55
     5,   251, 4,   252, 4,   252, 4,   252 // 60 61 62 63
 };
+
 // =============================================================================
 
 // DC RELATED PRED
@@ -1195,6 +1196,7 @@ static INLINE void smooth_v_pred_32x4(const uint16_t *const sm_weights_h, const 
     smooth_v_pred_32(weights, rep[2], ab, dst, stride);
     smooth_v_pred_32(weights, rep[3], ab, dst, stride);
 }
+
 // 32x8
 
 static INLINE void smooth_v_pred_32x8(const uint16_t *const sm_weights_h, const __m512i *const rep,
@@ -1314,6 +1316,7 @@ void aom_highbd_smooth_v_predictor_64x16_avx512(uint16_t *dst, ptrdiff_t stride,
 
     for (int32_t i = 0; i < 2; i++) { smooth_v_pred_64x8(sm_weights_d_16 + 64 * i, rep, ab, &dst, stride); }
 }
+
 // 64x32
 
 void aom_highbd_smooth_v_predictor_64x32_avx512(uint16_t *dst, ptrdiff_t stride, const uint16_t *above,
@@ -1424,6 +1427,7 @@ void aom_highbd_smooth_h_predictor_32x64_avx512(uint16_t *dst, ptrdiff_t stride,
     (void)bd;
     smooth_h_pred_32x8(dst, stride, above, left, 8);
 }
+
 static INLINE void smooth_h_pred_64(const __m512i *const weights, __m512i *const lr, uint16_t **const dst,
                                     const ptrdiff_t stride) {
     const __m512i rep = _mm512_set1_epi32(0x03020100);

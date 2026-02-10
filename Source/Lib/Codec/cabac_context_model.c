@@ -824,6 +824,7 @@ void svt_aom_init_mode_probs(FRAME_CONTEXT *fc) {
     fc->nmvc = default_nmv_context;
     fc->ndvc = default_nmv_context;
 }
+
 /********************************************************************************************************************************/
 // token_cdfs.h
 static const AomCdfProb av1_default_dc_sign_cdfs[TOKEN_CDF_Q_CTXS][PLANE_TYPES][DC_SIGN_CONTEXTS][CDF_SIZE(2)] = {
@@ -2756,6 +2757,7 @@ void svt_av1_reset_cdf_symbol_counters(FRAME_CONTEXT *fc) {
 int svt_aom_palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1] = {-1, -1, 0, -1, -1, 4, 3, 2, 1};
 
 #define NUM_PALETTE_NEIGHBORS 3 // left, top-left and top.
+
 int svt_aom_get_palette_color_index_context_optimized(const uint8_t *color_map, int stride, int r, int c,
                                                       int *color_idx) {
     assert(r > 0 || c > 0);
@@ -2858,6 +2860,7 @@ int svt_aom_get_palette_color_index_context_optimized(const uint8_t *color_map, 
     assert(color_index_ctx < PALETTE_COLOR_INDEX_CONTEXTS);
     return color_index_ctx;
 }
+
 #undef NUM_PALETTE_NEIGHBORS
 #undef MAX_COLOR_CONTEXT_HASH
 

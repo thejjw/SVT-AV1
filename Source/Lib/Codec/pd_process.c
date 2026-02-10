@@ -5342,4 +5342,5 @@ void* svt_aom_picture_decision_kernel(void *input_ptr) {
 
     return NULL;
 }
+
 // clang-format on

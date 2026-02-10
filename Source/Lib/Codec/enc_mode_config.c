@@ -12,8 +12,9 @@
 static uint8_t pf_gi[16] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60};
 #define MAX_INTRA_LEVEL 9
 static const uint8_t angular_pred_level[MAX_INTRA_LEVEL] = {0, 1, 2, 2, 3, 4, 4, 4, 0};
-void                 svt_aom_get_qp_based_th_scaling_factors(bool enable_qp_based_th_scaling, uint32_t *ret_q_weight,
-                                                             uint32_t *ret_q_weight_denom, uint32_t qp) {
+
+void svt_aom_get_qp_based_th_scaling_factors(bool enable_qp_based_th_scaling, uint32_t *ret_q_weight,
+                                             uint32_t *ret_q_weight_denom, uint32_t qp) {
     if (enable_qp_based_th_scaling) {
         // limit scaling for low QPs to 10/63 to avoid extreme actions. 10 chosen arbitrarily.
         uint32_t q_weight       = MAX(10, qp);
@@ -102,6 +103,7 @@ static void get_sb128_me_data(PictureControlSet *pcs, ModeDecisionContext *ctx, 
     *me_8x8_dist     = dist_8;
     *me_8x8_cost_var = me_8x8_cost_variance;
 }
+
 /*
 * Estimate the variance of the 128x128 by averaging the variances of the sub-64x64 blocks
 */
@@ -129,6 +131,7 @@ static void get_sb128_variance(PictureControlSet *pcs, ModeDecisionContext *ctx,
     var_64 /= count;
     *variance = var_64;
 }
+
 // use this function to set the enable_me_8x8 level
 uint8_t svt_aom_get_enable_me_8x8(EncMode enc_mode, EbInputResolution input_resolution, const bool rtc_tune,
                                   const bool flat_rtc_tune) {
@@ -146,6 +149,7 @@ uint8_t svt_aom_get_enable_me_8x8(EncMode enc_mode, EbInputResolution input_reso
 
     return enable_me_8x8;
 }
+
 uint8_t svt_aom_get_enable_me_16x16(EncMode enc_mode) {
     UNUSED(enc_mode);
     uint8_t enable_me_16x16 = 1;
@@ -179,6 +183,7 @@ uint8_t svt_aom_derive_gm_level(PictureParentControlSet *pcs, bool super_res_off
         gm_level = svt_aom_get_gm_core_level(enc_mode, super_res_off);
     return gm_level;
 }
+
 /************************************************
  * Set ME/HME Params from Config
  ************************************************/
@@ -390,6 +395,7 @@ static void set_me_search_params(SequenceControlSet *scs, PictureParentControlSe
     me_ctx->me_sa.sa_max.width  = MAX(8, DIVIDE_AND_ROUND(me_ctx->me_sa.sa_max.width * q_weight, q_weight_denom));
     me_ctx->me_sa.sa_max.height = MAX(3, DIVIDE_AND_ROUND(me_ctx->me_sa.sa_max.height * q_weight, q_weight_denom));
 }
+
 static void svt_aom_set_me_hme_ref_prune_ctrls(MeContext *me_ctx, uint8_t prune_level) {
     MeHmeRefPruneCtrls *me_hme_prune_ctrls = &me_ctx->me_hme_prune_ctrls;
 
@@ -560,6 +566,7 @@ static void svt_aom_set_me_sr_adjustment_ctrls(MeContext *me_ctx, uint8_t sr_adj
         }
     }
 }
+
 static void svt_aom_set_me_8x8_var_ctrls(MeContext *me_ctx, uint8_t level) {
     Me8x8VarCtrls *me_8x8_var_ctrls = &me_ctx->me_8x8_var_ctrls;
 
@@ -580,6 +587,7 @@ static void svt_aom_set_me_8x8_var_ctrls(MeContext *me_ctx, uint8_t level) {
     default: assert(0);
     }
 }
+
 /*configure PreHme control*/
 static void svt_aom_set_prehme_ctrls(MeContext *me_ctx, uint8_t level) {
     PreHmeCtrls *ctrl = &me_ctx->prehme_ctrl;
@@ -718,6 +726,7 @@ static void tf_set_me_hme_params_oq(MeContext *me_ctx, PictureParentControlSet *
         me_ctx->me_sa.sa_max.height = MAX(8, DIVIDE_AND_ROUND(me_ctx->me_sa.sa_max.height * q_weight, q_weight_denom));
     }
 };
+
 /******************************************************
 * Derive ME Settings for OQ
   Input   : encoder mode and tune
@@ -879,6 +888,7 @@ void svt_aom_sig_deriv_me(SequenceControlSet *scs, PictureParentControlSet *pcs,
         me_ctx->prev_me_stage_based_exit_th = 0;
     }
 };
+
 /******************************************************
 * Derive ME Settings for OQ for Altref Temporal Filtering
   Input   : encoder mode and tune
@@ -926,6 +936,7 @@ void svt_aom_sig_deriv_me_tf(PictureParentControlSet *pcs, MeContext *me_ctx) {
     me_ctx->reduce_hme_l0_sr_th_max     = 0;
     me_ctx->prev_me_stage_based_exit_th = pcs->tf_ctrls.hme_me_level <= 1 ? 0 : BLOCK_SIZE_64 * BLOCK_SIZE_64 * 4;
 };
+
 static void set_cdef_search_controls(PictureParentControlSet *pcs, uint8_t cdef_search_level) {
     CdefSearchControls *cdef_ctrls           = &pcs->cdef_search_ctrls;
     const bool          is_base              = pcs->temporal_layer_index == 0;
@@ -1380,6 +1391,7 @@ static uint8_t svt_aom_get_sg_filter_level(EncMode enc_mode, uint8_t input_resol
 
     return sg_filter_lvl;
 }
+
 static void dlf_level_modulation(PictureControlSet *pcs, uint8_t *default_dlf_level, uint8_t modulation_mode) {
     uint8_t dlf_level = *default_dlf_level;
 
@@ -1505,6 +1517,7 @@ static uint8_t get_dlf_level(PictureControlSet *pcs, EncMode enc_mode, uint8_t i
 
     return dlf_level;
 }
+
 static void svt_aom_set_dlf_controls(PictureParentControlSet *pcs, uint8_t dlf_level) {
     DlfCtrls *ctrls = &pcs->dlf_ctrls;
 
@@ -1647,6 +1660,7 @@ static void set_intrabc_level(PictureParentControlSet *pcs, SequenceControlSet *
     default: assert(0); break;
     }
 }
+
 /*
     set controls for Palette prediction
 */
@@ -2063,6 +2077,7 @@ void svt_aom_set_gm_controls(PictureParentControlSet *pcs, uint8_t gm_level) {
     if (gm_level)
         assert((gm_ctrls->match_sz & 1) == 1);
 }
+
 static void set_inter_comp_controls(ModeDecisionContext *ctx, uint8_t inter_comp_mode) {
     InterCompCtrls *inter_comp_ctrls = &ctx->inter_comp_ctrls;
 
@@ -2144,11 +2159,13 @@ static void set_inter_comp_controls(ModeDecisionContext *ctx, uint8_t inter_comp
     default: assert(0); break;
     }
 }
+
 uint8_t svt_aom_get_enable_sg(EncMode enc_mode, uint8_t input_resolution, uint8_t fast_decode, bool allintra) {
     uint8_t sg = 0;
     sg         = svt_aom_get_sg_filter_level(enc_mode, input_resolution, fast_decode, allintra);
     return (sg > 0);
 }
+
 /*
 * return true if restoration filtering is enabled; false otherwise
   Used by signal_derivation_pre_analysis_oq and memory allocation
@@ -2286,6 +2303,7 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet *scs) {
 
     scs->seq_header.enable_warped_motion = 1;
 }
+
 /*
 * check if the reference picture is in same frame size
 * true -- in same frame size
@@ -2307,6 +2325,7 @@ bool svt_aom_is_ref_same_size(PictureControlSet *pcs, uint8_t list_idx, uint8_t 
     return ref_obj->reference_picture->width == pcs->ppcs->frame_width &&
         ref_obj->reference_picture->height == pcs->ppcs->frame_height;
 }
+
 static void set_obmc_controls(ModeDecisionContext *ctx, uint8_t obmc_mode) {
     ObmcControls *obmc_ctrls = &ctx->obmc_ctrls;
     switch (obmc_mode) {
@@ -2388,6 +2407,7 @@ static bool dimensions_require_8x8(const uint16_t aligned_width, const uint16_t 
     // No allowable block size from 16x16-64x64 was found; therefore, require 8x8
     return true;
 }
+
 static void set_depth_removal_level_controls(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                              uint8_t depth_removal_level) {
     DepthRemovalCtrls *depth_removal_ctrls = &ctx->depth_removal_ctrls;
@@ -2764,6 +2784,7 @@ static void set_depth_removal_level_controls(PictureControlSet *pcs, ModeDecisio
         }
     }
 }
+
 /*
  * Control NSQ search
  */
@@ -2789,6 +2810,7 @@ static void md_nsq_motion_search_controls(ModeDecisionContext *ctx, uint8_t md_n
     default: assert(0); break;
     }
 }
+
 void svt_aom_md_pme_search_controls(ModeDecisionContext *ctx, uint8_t md_pme_level) {
     MdPmeCtrls *md_pme_ctrls = &ctx->md_pme_ctrls;
 
@@ -2862,6 +2884,7 @@ void svt_aom_md_pme_search_controls(ModeDecisionContext *ctx, uint8_t md_pme_lev
     default: assert(0); break;
     }
 }
+
 static void set_subres_controls(ModeDecisionContext *ctx, uint8_t subres_level) {
     SubresCtrls *subres_ctrls = &ctx->subres_ctrls;
 
@@ -2877,6 +2900,7 @@ static void set_subres_controls(ModeDecisionContext *ctx, uint8_t subres_level) 
     else
         subres_ctrls->odd_to_even_deviation_th = 5;
 }
+
 static void set_pf_controls(ModeDecisionContext *ctx, uint8_t pf_level) {
     PfCtrls *pf_ctrls = &ctx->pf_ctrls;
 
@@ -2888,6 +2912,7 @@ static void set_pf_controls(ModeDecisionContext *ctx, uint8_t pf_level) {
     default: assert(0); break;
     }
 }
+
 /*
  * Control Adaptive ME search
  */
@@ -3008,6 +3033,7 @@ static void md_sq_motion_search_controls(ModeDecisionContext *ctx, uint8_t md_sq
     default: assert(0); break;
     }
 }
+
 /*
  * Control Subpel search of ME MV(s)
  */
@@ -3252,6 +3278,7 @@ static void md_subpel_pme_controls(ModeDecisionContext *ctx, uint8_t md_subpel_p
     default: assert(0); break;
     }
 }
+
 /*
  * Control RDOQ
  */
@@ -3343,6 +3370,7 @@ static void set_rdoq_controls(ModeDecisionContext *ctx, uint8_t rdoq_level) {
     default: assert(0); break;
     }
 }
+
 static void set_sq_txs_ctrls(ModeDecisionContext *ctx, uint8_t psq_txs_lvl) {
     NsqPsqTxsCtrls *nsq_psq_txs_ctrls = &ctx->nsq_psq_txs_ctrls;
     switch (psq_txs_lvl) {
@@ -3365,6 +3393,7 @@ static void set_sq_txs_ctrls(ModeDecisionContext *ctx, uint8_t psq_txs_lvl) {
     default: assert(0); break;
     }
 }
+
 void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
     TxtControls *txt_ctrls = &ctx->txt_ctrls;
 
@@ -3537,6 +3566,7 @@ void svt_aom_set_txt_controls(ModeDecisionContext *ctx, uint8_t txt_level) {
     default: assert(0); break;
     }
 }
+
 static void set_interpolation_search_level_ctrls(ModeDecisionContext *ctx, uint8_t interpolation_search_level) {
     InterpolationSearchCtrls *ifs_ctrls = &ctx->ifs_ctrls;
 
@@ -3574,6 +3604,7 @@ static void set_interpolation_search_level_ctrls(ModeDecisionContext *ctx, uint8
     default: assert(0); break;
     }
 }
+
 static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t cand_reduction_level,
                                      const uint32_t picture_qp, uint32_t me_8x8_cost_variance,
                                      uint32_t me_64x64_distortion, uint8_t l0_was_skip, uint8_t l1_was_skip,
@@ -3802,6 +3833,7 @@ static void set_cand_reduction_ctrls(PictureControlSet *pcs, ModeDecisionContext
           pcs->ppcs->use_best_me_unipred_cand_only))
         cand_reduction_ctrls->lpd1_mvp_best_me_list = 0;
 }
+
 uint8_t svt_aom_set_chroma_controls(ModeDecisionContext *ctx, uint8_t uv_level) {
     UvCtrls *uv_ctrls = ctx ? &ctx->uv_ctrls : NULL;
     uint8_t  uv_mode  = 0;
@@ -3868,7 +3900,9 @@ uint8_t svt_aom_set_chroma_controls(ModeDecisionContext *ctx, uint8_t uv_level) 
 
     return uv_mode;
 }
+
 #define MAX_WARP_LVL 4
+
 void svt_aom_set_wm_controls(ModeDecisionContext *ctx, uint8_t wm_level) {
     WmCtrls *wm_ctrls = &ctx->wm_ctrls;
 
@@ -3917,6 +3951,7 @@ void svt_aom_set_wm_controls(ModeDecisionContext *ctx, uint8_t wm_level) {
     default: assert(0); break;
     }
 }
+
 // Get the nic_level used for each preset (to be passed to setting function: svt_aom_set_nic_controls())
 uint8_t svt_aom_get_nic_level(SequenceControlSet *scs, EncMode enc_mode, uint8_t is_base, bool rtc_tune,
                               uint8_t sc_class1) {
@@ -3998,6 +4033,7 @@ uint8_t svt_aom_get_nic_level(SequenceControlSet *scs, EncMode enc_mode, uint8_t
         nic_level = 11;
     return nic_level;
 }
+
 /*
 * Set the NIC scaling and pruning controls.
 *
@@ -4388,6 +4424,7 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext *ctx, uint8_t nic_level) {
     // return NIC scaling level that can be used for memory allocation
     return nic_scaling_level;
 }
+
 void svt_aom_set_nsq_geom_ctrls(ModeDecisionContext *ctx, uint8_t nsq_geom_level, uint8_t *allow_HVA_HVB,
                                 uint8_t *allow_HV4, uint8_t *min_nsq_bsize) {
     NsqGeomCtrls  nsq_geom_ctrls_struct = {0};
@@ -4789,6 +4826,7 @@ static void set_nsq_search_ctrls(PictureControlSet *pcs, ModeDecisionContext *ct
 
     set_sq_txs_ctrls(ctx, ctx->nsq_search_ctrls.psq_txs_lvl);
 }
+
 void svt_aom_get_intra_mode_levels(EncMode enc_mode, uint32_t input_resolution, bool allintra, bool rtc_tune,
                                    bool is_islice, bool is_base, bool sc_class1, int transition_present,
                                    bool low_latency_kf, bool flat_rtc_tune, uint32_t *intra_level_ptr,
@@ -4895,6 +4933,7 @@ static void set_inter_intra_ctrls(ModeDecisionContext *ctx, uint8_t inter_intra_
     default: assert(0); break;
     }
 }
+
 static void set_lpd0_ctrls(ModeDecisionContext *ctx, uint8_t lpd0_lvl) {
     Lpd0Ctrls *ctrls = &ctx->lpd0_ctrls;
     // Light-PD0 only compatible with 8bit MD
@@ -5006,6 +5045,7 @@ static void set_lpd0_ctrls(ModeDecisionContext *ctx, uint8_t lpd0_lvl) {
     default: assert(0); break;
     }
 }
+
 static void set_lpd1_ctrls(ModeDecisionContext *ctx, uint8_t lpd1_lvl) {
     Lpd1Ctrls *ctrls = &ctx->lpd1_ctrls;
     switch (lpd1_lvl) {
@@ -5256,6 +5296,7 @@ static void set_lpd1_ctrls(ModeDecisionContext *ctx, uint8_t lpd1_lvl) {
     default: assert(0); break;
     }
 }
+
 /*
  * Generate per-SB/per-PD MD settings
  */
@@ -5291,6 +5332,7 @@ void svt_aom_set_bipred3x3_controls(ModeDecisionContext *ctx, uint8_t bipred3x3_
     default: assert(0); break;
     }
 }
+
 void svt_aom_set_dist_based_ref_pruning_controls(ModeDecisionContext *ctx, uint8_t dist_based_ref_pruning_level) {
     RefPruningControls *ref_pruning_ctrls = &ctx->ref_pruning_ctrls;
 
@@ -5543,6 +5585,7 @@ void svt_aom_set_dist_based_ref_pruning_controls(ModeDecisionContext *ctx, uint8
     default: assert(0); break;
     }
 }
+
 static void set_txs_controls(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t txs_level) {
     TxsControls *txs_ctrls = &ctx->txs_ctrls;
 
@@ -5609,6 +5652,7 @@ static void set_txs_controls(PictureControlSet *pcs, ModeDecisionContext *ctx, u
     default: txs_ctrls->enabled = 0; break;
     }
 }
+
 static void set_filter_intra_ctrls(ModeDecisionContext *ctx, uint8_t fi_lvl) {
     FilterIntraCtrls *filter_intra_ctrls = &ctx->filter_intra_ctrls;
 
@@ -5625,6 +5669,7 @@ static void set_filter_intra_ctrls(ModeDecisionContext *ctx, uint8_t fi_lvl) {
     default: assert(0); break;
     }
 }
+
 static void set_spatial_sse_full_loop_level(ModeDecisionContext *ctx, uint8_t spatial_sse_full_loop_level) {
     SpatialSSECtrls *spatial_sse_ctrls = &ctx->spatial_sse_ctrls;
 
@@ -5636,6 +5681,7 @@ static void set_spatial_sse_full_loop_level(ModeDecisionContext *ctx, uint8_t sp
     default: assert(0); break;
     }
 }
+
 // Compute a qp-aware threshold based on the variance of the SB, used to apply selectively INTRA at PD0
 static uint64_t compute_intra_pd0_th(SequenceControlSet *scs, ModeDecisionContext *ctx) {
     uint32_t fast_lambda      = ctx->hbd_md ? ctx->fast_lambda_md[EB_10_BIT_MD] : ctx->fast_lambda_md[EB_8_BIT_MD];
@@ -5646,6 +5692,7 @@ static uint64_t compute_intra_pd0_th(SequenceControlSet *scs, ModeDecisionContex
     use_intra_pd0_th = RDCOST(fast_lambda, cost_th_rate, sb_size * 6);
     return use_intra_pd0_th;
 }
+
 // Compute a qp-aware threshold based on the variance of the SB, used to apply selectively subres
 static uint64_t compute_subres_th(SequenceControlSet *scs, ModeDecisionContext *ctx) {
     uint32_t fast_lambda   = ctx->hbd_md ? ctx->fast_lambda_md[EB_10_BIT_MD] : ctx->fast_lambda_md[EB_8_BIT_MD];
@@ -5656,6 +5703,7 @@ static uint64_t compute_subres_th(SequenceControlSet *scs, ModeDecisionContext *
     use_subres_th = RDCOST(fast_lambda, cost_th_rate, sb_size * 6);
     return use_subres_th;
 }
+
 static void set_lpd1_tx_ctrls(ModeDecisionContext *ctx, uint8_t lpd1_tx_level) {
     Lpd1TxCtrls *ctrls = &ctx->lpd1_tx_ctrls;
 
@@ -5732,6 +5780,7 @@ static void set_lpd1_tx_ctrls(ModeDecisionContext *ctx, uint8_t lpd1_tx_level) {
     default: assert(0); break;
     }
 }
+
 static void set_cfl_ctrls(ModeDecisionContext *ctx, uint8_t cfl_level) {
     CflCtrls *ctrls = &ctx->cfl_ctrls;
 
@@ -5765,6 +5814,7 @@ static void set_cfl_ctrls(ModeDecisionContext *ctx, uint8_t cfl_level) {
     default: assert(0); break;
     }
 }
+
 static void set_rate_est_ctrls(ModeDecisionContext *ctx, uint8_t rate_est_level) {
     MdRateEstCtrls *ctrls = &ctx->rate_est_ctrls;
 
@@ -5807,6 +5857,7 @@ static void set_rate_est_ctrls(ModeDecisionContext *ctx, uint8_t rate_est_level)
     default: assert(0); break;
     }
 }
+
 /*
 Loop over TPL blocks in the SB to update intra information.  Return 1 if the stats for the SB are valid; else return 0.
 
@@ -5868,6 +5919,7 @@ static bool get_sb_tpl_intra_stats(PictureControlSet *pcs, ModeDecisionContext *
     }
     return 0;
 }
+
 static void set_intra_ctrls(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t intra_level,
                             uint8_t dist_based_ang_intra_level) {
     IntraCtrls              *ctrls = &ctx->intra_ctrls;
@@ -6034,6 +6086,7 @@ static void set_intra_ctrls(PictureControlSet *pcs, ModeDecisionContext *ctx, ui
         assert(IMPLIES(ctx->lpd0_ctrls.pd0_level == VERY_LIGHT_PD0, ctx->skip_intra == 1));
     }
 }
+
 static void set_tx_shortcut_ctrls(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t tx_shortcut_level) {
     PictureParentControlSet *ppcs  = pcs->ppcs;
     TxShortcutCtrls         *ctrls = &ctx->tx_shortcut_ctrls;
@@ -6072,6 +6125,7 @@ static void set_tx_shortcut_ctrls(PictureControlSet *pcs, ModeDecisionContext *c
                "Chroma detector should be used for ref frames in low presets to prevent blurring "
                "artifacts.");
 }
+
 static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level) {
     Mds0Ctrls *ctrls = &ctx->mds0_ctrls;
     switch (mds0_level) {
@@ -6090,6 +6144,7 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level) {
     default: assert(0); break;
     }
 }
+
 static void set_skip_sub_depth_ctrls(SkipSubDepthCtrls *skip_sub_depth_ctrls, uint8_t skip_sub_depth_lvl) {
     switch (skip_sub_depth_lvl) {
     case 0: skip_sub_depth_ctrls->enabled = 0; break;
@@ -6114,6 +6169,7 @@ static void set_skip_sub_depth_ctrls(SkipSubDepthCtrls *skip_sub_depth_ctrls, ui
     default: assert(0); break;
     }
 }
+
 static void set_var_skip_sub_depth_ctrls(VarSkipSubDepthCtrls *var_skip_sub_depth_ctrls,
                                          uint8_t               var_skip_sub_depth_lvl) {
     switch (var_skip_sub_depth_lvl) {
@@ -6147,6 +6203,7 @@ static void set_var_skip_sub_depth_ctrls(VarSkipSubDepthCtrls *var_skip_sub_dept
     default: assert(0); break;
     }
 }
+
 void set_block_based_depth_refinement_controls(ModeDecisionContext *ctx, uint8_t block_based_depth_refinement_level) {
     DepthRefinementCtrls *depth_refinement_ctrls = &ctx->depth_refinement_ctrls;
     switch (block_based_depth_refinement_level) {
@@ -6294,6 +6351,7 @@ void set_block_based_depth_refinement_controls(ModeDecisionContext *ctx, uint8_t
     case 9: depth_refinement_ctrls->mode = PD0_DEPTH_PRED_PART_ONLY; break;
     }
 }
+
 static void get_max_block_size(PictureControlSet *pcs, ModeDecisionContext *ctx, bool allintra) {
     EncMode enc_mode = pcs->enc_mode;
     if (allintra) {
@@ -6329,6 +6387,7 @@ static void get_max_block_size(PictureControlSet *pcs, ModeDecisionContext *ctx,
         ctx->max_block_size = pcs->scs->super_block_size;
     }
 }
+
 /*
  * Generate per-SB MD settings (do not change per-PD)
  */
@@ -6429,6 +6488,7 @@ void svt_aom_sig_deriv_enc_dec_common(SequenceControlSet *scs, PictureControlSet
         ctx->depth_removal_ctrls.disallow_below_64x64 = false;
     }
 }
+
 static void set_depth_early_exit_ctrls(ModeDecisionContext *ctx, uint8_t early_exit_level) {
     DepthEarlyExitCtrls *ctrls = &ctx->depth_early_exit_ctrls;
 
@@ -6449,6 +6509,7 @@ static void set_depth_early_exit_ctrls(ModeDecisionContext *ctx, uint8_t early_e
     default: assert(0); break;
     }
 }
+
 // Set signals used for light-pd0 path; only PD0 should call this function
 // assumes NSQ OFF, no 4x4, no chroma, no TXT/TXS/RDOQ/SSSE, SB_64x64
 void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx) {
@@ -6828,6 +6889,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd1(PictureControlSet *pcs, ModeDecisionCon
     ctx->subres_ctrls.odd_to_even_deviation_th      = 0;
     set_inter_intra_ctrls(ctx, 0);
 }
+
 void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx) {
     EncMode                  enc_mode             = pcs->enc_mode;
     uint8_t                  pd_pass              = ctx->pd_pass;
@@ -7042,6 +7104,7 @@ void svt_aom_sig_deriv_enc_dec(SequenceControlSet *scs, PictureControlSet *pcs, 
     set_skip_sub_depth_ctrls(&ctx->skip_sub_depth_ctrls, skip_sub_depth_lvl);
     ctx->tune_ssim_level = SSIM_LVL_0;
 }
+
 /*
 * return the 4x4 level
 Used by svt_aom_sig_deriv_enc_dec and memory allocation
@@ -7052,6 +7115,7 @@ bool svt_aom_get_disallow_4x4(EncMode enc_mode) {
     else
         return true;
 }
+
 /*
 * return the 8x8 level
 Used by svt_aom_sig_deriv_enc_dec and memory allocation
@@ -7073,6 +7137,7 @@ bool svt_aom_get_disallow_8x8(EncMode enc_mode, bool allintra, bool rtc_tune, co
     } else
         return false;
 }
+
 uint8_t svt_aom_get_nsq_geom_level(bool allintra, ResolutionRange input_resolution, EncMode enc_mode,
                                    InputCoeffLvl coeff_lvl, bool rtc) {
     uint8_t nsq_geom_level;
@@ -7247,6 +7312,7 @@ uint8_t svt_aom_get_nsq_search_level(PictureControlSet *pcs, EncMode enc_mode, I
     }
     return nsq_search_level;
 }
+
 /*
 * return by-pass encdec
 */
@@ -7267,6 +7333,7 @@ uint8_t svt_aom_get_bypass_encdec(EncMode enc_mode, uint8_t encoder_bit_depth) {
     }
     return bypass_encdec;
 }
+
 static void set_cdf_controls(PictureControlSet *pcs, uint8_t update_cdf_level) {
     CdfControls *ctrl = &pcs->cdf_ctrl;
     switch (update_cdf_level) {
@@ -7296,6 +7363,7 @@ static void set_cdf_controls(PictureControlSet *pcs, uint8_t update_cdf_level) {
     ctrl->update_mv = pcs->slice_type == I_SLICE ? 0 : ctrl->update_mv;
     ctrl->enabled   = ctrl->update_coef | ctrl->update_mv | ctrl->update_se;
 }
+
 /******************************************************
 * Derive Mode Decision Config Settings for OQ
 Input   : encoder mode and tune
@@ -7305,6 +7373,7 @@ static EbErrorType rtime_alloc_ec_ctx_array(PictureControlSet *pcs, uint16_t all
     EB_MALLOC_ARRAY(pcs->ec_ctx_array, all_sb);
     return EB_ErrorNone;
 }
+
 uint8_t svt_aom_get_update_cdf_level(EncMode enc_mode, SliceType is_islice, uint8_t is_base, uint8_t sc_class1,
                                      const EbInputResolution input_resolution, bool allintra) {
     uint8_t update_cdf_level = 0;
@@ -7338,6 +7407,7 @@ uint8_t svt_aom_get_update_cdf_level(EncMode enc_mode, SliceType is_islice, uint
     }
     return update_cdf_level;
 }
+
 uint8_t svt_aom_get_chroma_level(EncMode enc_mode, const uint8_t is_islice, bool allintra) {
     uint8_t chroma_level = 0;
     if (allintra) {
@@ -7625,6 +7695,7 @@ static void mfmv_controls(PictureControlSet *pcs, uint8_t mfmv_level) {
         }
     }
 }
+
 void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet *scs, PictureControlSet *pcs) {
     PictureParentControlSet *ppcs                = pcs->ppcs;
     EncMode                  enc_mode            = pcs->enc_mode;

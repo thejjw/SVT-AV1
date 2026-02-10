@@ -33,7 +33,9 @@ static const int8_t fwd_cos_bit_row[MAX_TXWH_IDX /*txw_idx*/][MAX_TXWH_IDX /*txh
 extern const int8_t *fwd_txfm_shift_ls[TX_SIZES_ALL];
 
 #define BLOCK_SIZES_ALL 22
+
 static INLINE int is_rect_tx(TxSize tx_size) { return tx_size >= TX_SIZES; }
+
 static INLINE int is_rect_tx_allowed_bsize(BlockSize bsize) {
     static const char lut[BLOCK_SIZES_ALL] = {
         0, // BLOCK_4X4
@@ -62,6 +64,7 @@ static INLINE int is_rect_tx_allowed_bsize(BlockSize bsize) {
 
     return lut[bsize];
 }
+
 static INLINE int is_rect_tx_allowed(/*const MacroBlockD *xd,*/
                                      const MbModeInfo *mbmi) {
     return is_rect_tx_allowed_bsize(mbmi->bsize) /*&&

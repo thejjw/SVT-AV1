@@ -198,22 +198,39 @@ static void subtract_8x8(int16_t *diff, ptrdiff_t diff_stride, const uint16_t *s
                                 ptrdiff_t       pred_stride)
 
 SUBTRACT_FUN(8x16) { STACK_V(8, subtract_8x8); }
+
 SUBTRACT_FUN(16x8) { STACK_H(8, subtract_8x8); }
+
 SUBTRACT_FUN(16x16) { STACK_V(8, subtract_16x8); }
+
 SUBTRACT_FUN(16x32) { STACK_V(16, subtract_16x16); }
+
 SUBTRACT_FUN(32x16) { STACK_H(16, subtract_16x16); }
+
 SUBTRACT_FUN(32x32) { STACK_V(16, subtract_32x16); }
+
 SUBTRACT_FUN(32x64) { STACK_V(32, subtract_32x32); }
+
 SUBTRACT_FUN(64x32) { STACK_H(32, subtract_32x32); }
+
 SUBTRACT_FUN(64x64) { STACK_V(32, subtract_64x32); }
+
 SUBTRACT_FUN(64x128) { STACK_V(64, subtract_64x64); }
+
 SUBTRACT_FUN(128x64) { STACK_H(64, subtract_64x64); }
+
 SUBTRACT_FUN(128x128) { STACK_V(64, subtract_128x64); }
+
 SUBTRACT_FUN(4x16) { STACK_V(8, subtract_4x8); }
+
 SUBTRACT_FUN(16x4) { STACK_H(8, subtract_8x4); }
+
 SUBTRACT_FUN(8x32) { STACK_V(16, subtract_8x16); }
+
 SUBTRACT_FUN(32x8) { STACK_H(16, subtract_16x8); }
+
 SUBTRACT_FUN(16x64) { STACK_V(32, subtract_16x32); }
+
 SUBTRACT_FUN(64x16) { STACK_H(32, subtract_32x16); }
 
 static SubtractWxHFuncType get_subtract_func(int rows, int cols) {

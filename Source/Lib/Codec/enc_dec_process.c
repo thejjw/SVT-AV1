@@ -1489,6 +1489,7 @@ static void copy_neighbour_arrays_light_pd0(PictureControlSet *pcs, ModeDecision
                            64,
                            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
 }
+
 void svt_aom_copy_neighbour_arrays(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t src_idx, uint32_t dst_idx,
                                    uint32_t blk_mds);
 
@@ -2211,6 +2212,7 @@ static void exaustive_light_pd1_features(ModeDecisionContext *md_ctx, PicturePar
         svt_aom_assert_err(light_pd1 == use_light_pd1, "Warning: light PD1 feature assumption is broken \n");
     }
 }
+
 /* Light-PD1 classifier used when cost/coeff info is available.  If PD0 is skipped, or the trasnsform is
 not performed, a separate detector (lpd1_detector_skip_pd0) is used. */
 static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *md_ctx) {
@@ -2781,13 +2783,13 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
         // Get Mode Decision Results
         EB_GET_FULL_OBJECT(ed_ctx->mode_decision_input_fifo_ptr, &enc_dec_tasks_wrapper);
 
-        EncDecTasks                    *enc_dec_tasks = (EncDecTasks *)enc_dec_tasks_wrapper->object_ptr;
-        PictureControlSet              *pcs           = (PictureControlSet *)enc_dec_tasks->pcs_wrapper->object_ptr;
-        SequenceControlSet             *scs           = pcs->scs;
-        ModeDecisionContext            *md_ctx        = ed_ctx->md_ctx;
-        PictureParentControlSet        *ppcs          = pcs->ppcs;
-        md_ctx->encoder_bit_depth                     = (uint8_t)scs->static_config.encoder_bit_depth;
-        md_ctx->corrupted_mv_check                    = (pcs->ppcs->aligned_width >= (1 << (MV_IN_USE_BITS - 3))) ||
+        EncDecTasks             *enc_dec_tasks = (EncDecTasks *)enc_dec_tasks_wrapper->object_ptr;
+        PictureControlSet       *pcs           = (PictureControlSet *)enc_dec_tasks->pcs_wrapper->object_ptr;
+        SequenceControlSet      *scs           = pcs->scs;
+        ModeDecisionContext     *md_ctx        = ed_ctx->md_ctx;
+        PictureParentControlSet *ppcs          = pcs->ppcs;
+        md_ctx->encoder_bit_depth              = (uint8_t)scs->static_config.encoder_bit_depth;
+        md_ctx->corrupted_mv_check             = (pcs->ppcs->aligned_width >= (1 << (MV_IN_USE_BITS - 3))) ||
             (pcs->ppcs->aligned_height >= (1 << (MV_IN_USE_BITS - 3)));
         ed_ctx->tile_group_index = enc_dec_tasks->tile_group_index;
         ed_ctx->coded_sb_count   = 0;

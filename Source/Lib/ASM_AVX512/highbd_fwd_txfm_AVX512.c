@@ -308,6 +308,7 @@ static void fadst16x16_avx512(const __m512i *in, __m512i *out, const int8_t bit,
         out[14 * col_num + col] = half_btf_avx512(&cospi6, &u[14], &cospim58, &u[15], &rnding, bit);
     }
 }
+
 static void fdct16x16_avx512(const __m512i *in, __m512i *out, const int8_t bit, const int32_t col_num) {
     const int32_t *cospi    = cospi_arr(bit);
     const __m512i  cospi32  = _mm512_set1_epi32(cospi[32]);
@@ -3238,6 +3239,7 @@ void av1_fwd_txfm2d_64x32_N2_avx512(int16_t *input, int32_t *output, uint32_t st
     clear_buffer_wxh_N2_avx512(outcoef512, 64, 32);
     (void)bd;
 }
+
 /******************************END*N2***************************************/
 
 /********************************N4****************************************/

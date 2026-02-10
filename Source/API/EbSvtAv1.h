@@ -246,17 +246,20 @@ typedef enum {
     COMPUTE_QUALITY_EVENT, // Compute quality per frame
     PRIVATE_DATA_TYPES // end of private data types
 } PrivDataType;
+
 typedef struct EbPrivDataNode {
     PrivDataType           node_type;
     void                  *data; // pointer to data structure e.g. EbRefFrameScale or AomFilmGrain
     uint32_t               size; // size of data being sent for the library to know how much to copy
     struct EbPrivDataNode *next; // pointer to the next node, NULL if done.
 } EbPrivDataNode;
+
 typedef struct EbRefFrameScale {
     uint8_t  scale_mode; // scaling mode, support for RESIZE_NONE, RESIZE_FIXED and RESIZE_RANDOM
     uint32_t scale_denom; // scaling denominator for non-key frame, from 8~16
     uint32_t scale_kf_denom; // scaling denominator for key frame, from 8~16
 } EbRefFrameScale;
+
 typedef struct SvtAv1RoiMapEvt {
     uint64_t                start_picture_number;
     uint8_t                *b64_seg_map;
@@ -264,6 +267,7 @@ typedef struct SvtAv1RoiMapEvt {
     int8_t                  max_seg_id;
     struct SvtAv1RoiMapEvt *next;
 } SvtAv1RoiMapEvt;
+
 typedef struct SvtAv1RoiMap {
     uint32_t         evt_num;
     SvtAv1RoiMapEvt *evt_list;
@@ -278,11 +282,13 @@ typedef struct SvtAv1InputPicDef {
     uint16_t input_pad_bottom;
     uint16_t input_pad_right;
 } SvtAv1InputPicDef;
+
 typedef struct SvtAv1RateInfo {
     // Sequence QP used in CRF/CQP algorithm. Over writes the sequence QP.
     uint32_t seq_qp;
     uint32_t target_bit_rate;
 } SvtAv1RateInfo;
+
 typedef struct SvtAv1FrameRateInfo {
     // Sequence frame rate which over writes the sequence frame rate.
     uint32_t frame_rate_numerator;

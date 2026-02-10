@@ -235,6 +235,7 @@ void svt_av1_highbd_wiener_convolve_add_src_c(const uint8_t *const src, const pt
                                              conv_params->round_1,
                                              bd);
 }
+
 static INLINE int vert_scalar_product(const uint8_t *a, ptrdiff_t a_stride, const int16_t *b) {
     int sum = 0;
     for (int k = 0; k < SUBPEL_TAPS; ++k) sum += a[k * a_stride] * b[k];

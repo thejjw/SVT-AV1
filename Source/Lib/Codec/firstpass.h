@@ -52,6 +52,7 @@ typedef struct {
 /*!\cond */
 
 #define FC_ANIMATION_THRESH 0.15
+
 enum { FC_NORMAL = 0, FC_GRAPHICS_ANIMATION = 1, FRAME_CONTENT_TYPES = 2 } UENUM1BYTE(FRAME_CONTENT_TYPE);
 
 typedef struct {

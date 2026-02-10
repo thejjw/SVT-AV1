@@ -36,6 +36,7 @@ static INLINE __m512i constrain16_avx512(const __m512i in0, const __m512i in1, c
     const __m512i d    = _mm512_add_epi16(sign, m);
     return _mm512_xor_si512(d, sign);
 }
+
 static INLINE void cdef_filter_block_8xn_16_pri_avx512(const uint16_t *const in, const __m128i damping,
                                                        const int32_t po, const __m512i row, const __m512i strength,
                                                        const __m512i pri_taps, __m512i *const max, __m512i *const min,

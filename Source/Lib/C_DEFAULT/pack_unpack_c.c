@@ -33,6 +33,7 @@ void svt_enc_msb_pack2_d(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *
         }
     }
 }
+
 /************************************************
 * pack 8 and 2 bit 2D data into 10 bit data
 2bit data storage : 4 2bit-pixels in one byte
@@ -172,6 +173,7 @@ void svt_c_unpack_compressed_10bit(const uint8_t *inn_bit_buffer, uint32_t inn_s
         }
     }
 }
+
 /************************************************
 * unpack 10 bit data into  8 and 2 bit 2D data
 ************************************************/

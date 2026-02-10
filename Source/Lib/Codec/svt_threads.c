@@ -286,6 +286,7 @@ EbErrorType svt_destroy_semaphore(EbHandle semaphore_handle) {
 
     return return_error;
 }
+
 /***************************************
  * svt_create_mutex
  ***************************************/
@@ -355,6 +356,7 @@ EbErrorType svt_destroy_mutex(EbHandle mutex_handle) {
 
     return return_error;
 }
+
 /*
     set an atomic variable to an input value
 */
@@ -387,6 +389,7 @@ EbErrorType svt_create_cond_var(CondVar *cond_var) {
 #endif
     return return_error;
 }
+
 /*
     set a  condition variable to the new value
 */
@@ -406,6 +409,7 @@ EbErrorType svt_set_cond_var(CondVar *cond_var, int32_t newval) {
 #endif
     return return_error;
 }
+
 /*
     wait until the cond variable changes to a value
     different than input

@@ -135,7 +135,9 @@ EB_API size_t svt_metadata_size(SvtMetadataArrayT *metadata, const EbAv1Metadata
 }
 
 static inline uint16_t intswap16(uint16_t x) { return x << 8 | x >> 8; }
+
 static inline uint32_t intswap32(uint32_t x) { return x >> 24 | (x >> 8 & 0xff00) | (x << 8 & 0xff0000) | x << 24; }
+
 static inline uint16_t clip16be(double x) { return intswap16(x > 65535 ? 65535 : (uint16_t)x); }
 
 // Parses "(d1,d2)" into two double values and returns the pointer to after the closing parenthesis.

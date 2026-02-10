@@ -55,6 +55,7 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t al
 EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
                                                       uint32_t txb_origin_index, EbPictureBufferDesc *coeff_buffer_sb,
                                                       uint32_t y_eob, uint64_t *y_txb_coeff_bits, TxSize txsize);
+
 //**********************************************************************************************************//
 // onyxc_int.h
 static INLINE int32_t frame_is_intra_only(const PictureParentControlSet *const pcs) {
@@ -86,6 +87,7 @@ static INLINE void set_dc_sign(int32_t *cul_level, int32_t dc_val) {
     else if (dc_val > 0)
         *cul_level += 2 << COEFF_CONTEXT_BITS;
 }
+
 static const uint8_t eob_to_pos_small[33] = {
     0, 1, 2, // 0-2
     3, 3, // 3-4
@@ -128,6 +130,7 @@ static INLINE int get_eob_pos_token(const int eob, int *const extra) {
 
     return t;
 }
+
 //**********************************************************************************************************//
 //encoder.h
 static INLINE int32_t get_ref_frame_map_idx(const PictureParentControlSet *pcs, MvReferenceFrame ref_frame) {

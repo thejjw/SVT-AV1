@@ -95,6 +95,7 @@ static void reset_rsc(RestSearchCtxt *rsc) {
     rsc->sse  = 0;
     rsc->bits = 0;
 }
+
 static void init_rsc_seg(Yv12BufferConfig *org_fts, const Yv12BufferConfig *src, Av1Common *cm, const Macroblock *x,
                          int32_t plane, RestUnitSearchInfo *rusi, Yv12BufferConfig *dst, RestSearchCtxt *rsc) {
     rsc->src   = src;
@@ -117,6 +118,7 @@ static void init_rsc_seg(Yv12BufferConfig *org_fts, const Yv12BufferConfig *src,
     assert(src->crop_widths[is_uv] == dgd->crop_widths[is_uv]);
     assert(src->crop_heights[is_uv] == dgd->crop_heights[is_uv]);
 }
+
 static int64_t try_restoration_unit_seg(const RestSearchCtxt *rsc, const RestorationTileLimits *limits,
                                         const Av1PixelRect *tile_rect, const RestorationUnitInfo *rui) {
     const Av1Common *const cm    = rsc->cm;
@@ -539,6 +541,7 @@ static INLINE void apply_sgr(int32_t sgr_params_idx, const uint8_t *dat8, int32_
         }
     }
 }
+
 static SgrprojInfo search_selfguided_restoration(const uint8_t *dat8, int32_t width, int32_t height, int32_t dat_stride,
                                                  const uint8_t *src8, int32_t src_stride, int32_t use_highbitdepth,
                                                  int32_t bit_depth, int32_t pu_width, int32_t pu_height,
@@ -616,6 +619,7 @@ static SgrprojInfo search_selfguided_restoration(const uint8_t *dat8, int32_t wi
     ret.xqd[1] = bestxqd[1];
     return ret;
 }
+
 int32_t svt_aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t ref, uint16_t v);
 
 static int32_t count_sgrproj_bits(SgrprojInfo *sgrproj_info, SgrprojInfo *ref_sgrproj_info) {
@@ -769,6 +773,7 @@ static int32_t linsolve_wiener(int32_t n, int64_t *A, int32_t stride, int64_t *b
 
     return 1;
 }
+
 // Fix vector b, update vector a
 static void update_a_sep_sym(int32_t wiener_win, int64_t **mc, int64_t **hc, int32_t *a, int32_t *b) {
     int32_t       i, j;
@@ -901,6 +906,7 @@ static void wiener_decompose_sep_sym(int32_t wiener_win, int64_t *M, int64_t *H,
         iter++;
     }
 }
+
 static int64_t compute_score(int32_t wiener_win, int64_t *M, int64_t *H, InterpKernel vfilt, InterpKernel hfilt) {
     int32_t       ab[WIENER_WIN * WIENER_WIN];
     int16_t       a[WIENER_WIN], b[WIENER_WIN];
@@ -1109,6 +1115,7 @@ static int64_t finer_tile_search_wiener_seg(const RestSearchCtxt *rsc, const Res
     }
     return err;
 }
+
 static void search_switchable(const RestorationTileLimits *limits, const Av1PixelRect *tile_rect, int32_t rest_unit_idx,
                               void *priv) {
     (void)limits;
@@ -1323,6 +1330,7 @@ static void search_wiener_seg(const RestorationTileLimits *limits, const Av1Pixe
         assert(rui.wiener_info.hfilter[0] == 0 && rui.wiener_info.hfilter[WIENER_WIN - 1] == 0);
     }
 }
+
 /* Get the cost/SSE/rate of using wiener filtering for a given restoration unit. */
 static void search_wiener_finish(const RestorationTileLimits *limits, const Av1PixelRect *tile_rect,
                                  int32_t rest_unit_idx, void *priv) {
@@ -1371,6 +1379,7 @@ static void search_wiener_finish(const RestorationTileLimits *limits, const Av1P
     if (cost_wiener < cost_none)
         rsc->wiener = rusi->wiener;
 }
+
 static void search_norestore_seg(const RestorationTileLimits *limits, const Av1PixelRect *tile_rect,
                                  int32_t rest_unit_idx, void *priv) {
     (void)tile_rect;
@@ -1381,6 +1390,7 @@ static void search_norestore_seg(const RestorationTileLimits *limits, const Av1P
     const int32_t highbd    = rsc->cm->use_highbitdepth;
     rusi->sse[RESTORE_NONE] = sse_restoration_unit(limits, rsc->src, rsc->cm->frame_to_show, rsc->plane, highbd);
 }
+
 // Get the SSE for a resotration unit with no filtering applied
 static void search_norestore_finish(const RestorationTileLimits *limits, const Av1PixelRect *tile_rect,
                                     int32_t rest_unit_idx, void *priv) {
@@ -1394,6 +1404,7 @@ static void search_norestore_finish(const RestorationTileLimits *limits, const A
 
     rsc->sse += rusi->sse[RESTORE_NONE];
 }
+
 /* Get the cost/SSE/rate for the entire frame associated with using the passed restoration filter type. */
 static double search_rest_type_finish(RestSearchCtxt *rsc, RestorationType rtype) {
     static const RestUnitVisitor funs[RESTORE_TYPES] = {
@@ -1405,6 +1416,7 @@ static double search_rest_type_finish(RestSearchCtxt *rsc, RestorationType rtype
 
     return RDCOST_DBL(rsc->x->rdmult, rsc->bits >> 4, rsc->sse);
 }
+
 /* Search the available type of restoration filters: OFF, Wiener, and self-guided.
 
    The search will return the best parameters for each type of filter and their associated SSEs,
@@ -1491,6 +1503,7 @@ void restoration_seg_search(int32_t *rst_tmpbuf, Yv12BufferConfig *org_fts, cons
                                                    segment_index);
     }
 }
+
 /* Given the best parameters for each type of filter and their associated SSEs,
    decide which filter should be used for each filter block.
 */

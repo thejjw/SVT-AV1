@@ -27,6 +27,7 @@ static void dlf_context_dctor(EbPtr p) {
     DlfContext      *obj        = (DlfContext *)thread_ctx->priv;
     EB_FREE_ARRAY(obj);
 }
+
 /******************************************************
  * Dlf Context Constructor
  ******************************************************/

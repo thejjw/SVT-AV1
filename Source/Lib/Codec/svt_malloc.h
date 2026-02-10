@@ -86,6 +86,7 @@ static inline void* svt_aom_memset16(void* dest, int32_t val, size_t length) {
     for (i = 0; i < length; i++) *dest16++ = (uint16_t)val;
     return dest;
 }
+
 //-------------------------------
 void svt_print_alloc_fail_impl(const char* file, int line);
 

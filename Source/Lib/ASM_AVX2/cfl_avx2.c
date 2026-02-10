@@ -159,14 +159,17 @@ static INLINE __m256i fill_sum_epi32(__m256i a) {
     // Given that A''' == A'' + E''
     // a == [A''', A''', A''', A''', A''', A''', A''', A''']
 }
+
 static INLINE __m128i fill_sum_epi32_sse2(__m128i l0) {
     l0 = _mm_add_epi32(l0, _mm_shuffle_epi32(l0, _MM_SHUFFLE(1, 0, 3, 2)));
     return _mm_add_epi32(l0, _mm_shuffle_epi32(l0, _MM_SHUFFLE(2, 3, 0, 1)));
 }
+
 static INLINE __m256i _mm256_addl_epi16(__m256i a) {
     return _mm256_add_epi32(_mm256_unpacklo_epi16(a, _mm256_setzero_si256()),
                             _mm256_unpackhi_epi16(a, _mm256_setzero_si256()));
 }
+
 /************************************************************************************************
 * svt_subtract_average_avx2
 * Calculate the DC value by averaging over all sample. Subtract DC value to get AC values In AVX2
@@ -261,6 +264,7 @@ static INLINE __m256i _mm256_addl_epi16(__m256i a) {
         } while (src < end);
     }
 }
+
 /************************************************************************************************
 * svt_cfl_luma_subsampling_420_hbd_avx2
 * Subsample luma samples to match chroma size. High bit depth and avx2
@@ -319,6 +323,7 @@ void svt_cfl_luma_subsampling_420_hbd_avx2(const uint16_t *input, int32_t input_
         input += luma_stride;
     } while ((row += CFL_BUF_LINE_I256) < row_end);
 }
+
 /************************************************************************************************
 * svt_cfl_luma_subsampling_420_lbd_avx2
 * Subsample luma samples to match chroma size. Low bit depth and avx2

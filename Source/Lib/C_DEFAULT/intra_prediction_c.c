@@ -11,6 +11,7 @@
 
 //#include "utility.h"
 #include "definitions.h"
+
 void svt_av1_upsample_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t bd) {
     // interpolate half-sample positions
     assert(sz <= MAX_UPSAMPLE_SZ);

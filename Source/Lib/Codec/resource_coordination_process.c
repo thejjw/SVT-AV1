@@ -444,6 +444,7 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet *pcs) {
 
     return EB_ErrorNone;
 }
+
 /***********************************************
 **** Copy the input buffer from the
 **** sample application to the library buffers
@@ -541,6 +542,7 @@ void svt_aom_read_stat(SequenceControlSet *scs) {
 
     enc_ctx->rc_stats_buffer = scs->static_config.rc_stats_buffer;
 }
+
 void svt_aom_setup_two_pass(SequenceControlSet *scs) {
     EncodeContext *enc_ctx     = scs->enc_ctx;
     scs->twopass.passes        = scs->passes;
@@ -595,6 +597,7 @@ static void retrieve_resize_event(SequenceControlSet *scs, uint64_t pic_num, boo
         *rc_reset_flag = true;
     }
 }
+
 /**************************************
 * buffer_update_needed: check if updating the buffer needed based on the current width and height and the scs settings
 **************************************/
@@ -719,6 +722,7 @@ static void update_input_pic_def(ResourceCoordinationContext *ctx, EbBufferHeade
         node = node->next;
     }
 }
+
 // Update the target rate, sequence QP...
 static void update_rate_info(ResourceCoordinationContext *ctx, EbBufferHeaderType *input_ptr, SequenceControlSet *scs) {
     EbPrivDataNode *node = (EbPrivDataNode *)input_ptr->p_app_private;
@@ -736,6 +740,7 @@ static void update_rate_info(ResourceCoordinationContext *ctx, EbBufferHeaderTyp
         node = node->next;
     }
 }
+
 // Update the target rate, sequence QP...
 static void update_frame_rate_info(ResourceCoordinationContext *ctx, EbBufferHeaderType *input_ptr,
                                    SequenceControlSet *scs) {
@@ -754,6 +759,7 @@ static void update_frame_rate_info(ResourceCoordinationContext *ctx, EbBufferHea
         node = node->next;
     }
 }
+
 static void update_frame_event(PictureParentControlSet *pcs, uint64_t pic_num) {
     SequenceControlSet *scs  = pcs->scs;
     EbPrivDataNode     *node = (EbPrivDataNode *)pcs->input_ptr->p_app_private;

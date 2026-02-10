@@ -681,6 +681,7 @@ void svt_av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     bf1[30] = bf0[15];
     bf1[31] = bf0[31];
 }
+
 void svt_av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     const int32_t *cospi;
@@ -2377,6 +2378,7 @@ static INLINE void set_fwd_txfm_non_scale_range(Txfm2dFlipCfg *cfg) {
         }
     }
 }
+
 void svt_aom_transform_config(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg *cfg) {
     assert(cfg != NULL);
     cfg->tx_size = tx_size;
@@ -2440,6 +2442,7 @@ void svt_av1_transform_two_d_32x32_c(int16_t *input, int32_t *output, uint32_t i
 
     av1_tranform_two_d_core_c(input, input_stride, output, &cfg, intermediate_transform_buffer, bit_depth);
 }
+
 void svt_av1_transform_two_d_16x16_c(int16_t *input, int32_t *output, uint32_t input_stride, TxType transform_type,
                                      uint8_t bit_depth) {
     int32_t       intermediate_transform_buffer[16 * 16];
@@ -2577,6 +2580,7 @@ uint64_t svt_handle_transform64x64_N2_N4_c(int32_t *output) {
 
     return 0;
 }
+
 void svt_av1_fwd_txfm2d_32x16_c(int16_t *input, int32_t *output, uint32_t input_stride, TxType transform_type,
                                 uint8_t bit_depth) {
     int32_t       intermediate_transform_buffer[32 * 16];
@@ -2666,6 +2670,7 @@ void svt_av1_fwd_txfm2d_4x8_c(int16_t *input, int32_t *output, uint32_t input_st
     /*fwd_txfm2d_c*/ av1_tranform_two_d_core_c(
         input, input_stride, output, &cfg, intermediate_transform_buffer, bit_depth);
 }
+
 static EbErrorType av1_estimate_transform_N2(int16_t *residual_buffer, uint32_t residual_stride, int32_t *coeff_buffer,
                                              uint32_t coeff_stride, TxSize transform_size, uint64_t *three_quad_energy,
                                              uint32_t bit_depth, TxType transform_type, PlaneType component_type)
@@ -3128,6 +3133,7 @@ static EbErrorType av1_estimate_transform_default(int16_t *residual_buffer, uint
 
     return return_error;
 }
+
 /* 4-point reversible, orthonormal Walsh-Hadamard in 3.5 adds, 0.5 shifts per
    pixel.
    Shared for both high and low bit depth.
@@ -3259,6 +3265,7 @@ EbErrorType svt_aom_estimate_transform(PictureControlSet *pcs, ModeDecisionConte
     assert(0);
     return EB_ErrorBadParameter;
 }
+
 // PF_N4
 static void highbd_fwd_txfm_64x64_n4(int16_t *src_diff, TranLow *coeff, int diff_stride, TxfmParam *txfm_param) {
     assert(txfm_param->tx_type == DCT_DCT);
@@ -3480,6 +3487,7 @@ static void highbd_fwd_txfm_32x8_n2(int16_t *src_diff, TranLow *coeff, int diff_
     int32_t *dst_coeff = (int32_t *)coeff;
     svt_av1_fwd_txfm2d_32x8_N2(src_diff, dst_coeff, diff_stride, txfm_param->tx_type, txfm_param->bd);
 }
+
 static void highbd_fwd_txfm_64x64(int16_t *src_diff, TranLow *coeff, int diff_stride, TxfmParam *txfm_param) {
     assert(txfm_param->tx_type == DCT_DCT);
     int32_t  *dst_coeff = (int32_t *)coeff;
@@ -3589,6 +3597,7 @@ static void highbd_fwd_txfm_32x8(int16_t *src_diff, TranLow *coeff, int diff_str
     int32_t *dst_coeff = (int32_t *)coeff;
     svt_av1_fwd_txfm2d_32x8(src_diff, dst_coeff, diff_stride, txfm_param->tx_type, txfm_param->bd);
 }
+
 void svt_av1_highbd_fwd_txfm_n4(int16_t *src_diff, TranLow *coeff, int diff_stride, TxfmParam *txfm_param) {
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
@@ -3617,6 +3626,7 @@ void svt_av1_highbd_fwd_txfm_n4(int16_t *src_diff, TranLow *coeff, int diff_stri
     default: assert(0); break;
     }
 }
+
 void svt_av1_highbd_fwd_txfm_n2(int16_t *src_diff, TranLow *coeff, int diff_stride, TxfmParam *txfm_param) {
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
@@ -3645,6 +3655,7 @@ void svt_av1_highbd_fwd_txfm_n2(int16_t *src_diff, TranLow *coeff, int diff_stri
     default: assert(0); break;
     }
 }
+
 void svt_av1_highbd_fwd_txfm(int16_t *src_diff, TranLow *coeff, int diff_stride, TxfmParam *txfm_param) {
     assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
@@ -3673,6 +3684,7 @@ void svt_av1_highbd_fwd_txfm(int16_t *src_diff, TranLow *coeff, int diff_stride,
     default: assert(0); break;
     }
 }
+
 void svt_av1_wht_fwd_txfm(int16_t *src_diff, int bw, int32_t *coeff, TxSize tx_size, EB_TRANS_COEFF_SHAPE pf_shape,
                           int bit_depth, int is_hbd) {
     TxfmParam txfm_param;
@@ -3689,6 +3701,7 @@ void svt_av1_wht_fwd_txfm(int16_t *src_diff, int bw, int32_t *coeff, TxSize tx_s
     default: svt_av1_highbd_fwd_txfm(src_diff, coeff, bw, &txfm_param);
     }
 }
+
 void svt_av1_fidentity16_N2_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
     (void)stage_range;
     (void)cos_bit;

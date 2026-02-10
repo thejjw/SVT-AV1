@@ -36,9 +36,11 @@ typedef struct position {
 } Position;
 
 // clang-format on
+
 static INLINE Mv get_block_mv(const MbModeInfo *candidate, int32_t which_mv) {
     return candidate->block_mi.mv[which_mv];
 }
+
 static INLINE int32_t is_inside(const TileInfo *const tile, int32_t mi_col, int32_t mi_row, const Position *mi_pos) {
     return !(mi_row + mi_pos->row < tile->mi_row_start || mi_col + mi_pos->col < tile->mi_col_start ||
              mi_row + mi_pos->row >= tile->mi_row_end || mi_col + mi_pos->col >= tile->mi_col_end);
@@ -249,6 +251,7 @@ static void scan_blk_mbmi(const MacroBlockD *xd, const int32_t mi_row, const int
                              2);
     }
 }
+
 static int32_t has_top_right(const BlockSize sb_size, const MacroBlockD *xd, int32_t mi_row, int32_t mi_col,
                              int32_t bs) {
     if (bs > mi_size_wide[BLOCK_64X64])
@@ -301,6 +304,7 @@ static int32_t has_top_right(const BlockSize sb_size, const MacroBlockD *xd, int
 
     return has_tr;
 }
+
 static INLINE int32_t find_valid_row_offset(const TileInfo *const tile, int32_t mi_row, int32_t row_offset) {
     return clamp(row_offset, tile->mi_row_start - mi_row, tile->mi_row_end - mi_row - 1);
 }
@@ -308,6 +312,7 @@ static INLINE int32_t find_valid_row_offset(const TileInfo *const tile, int32_t 
 static INLINE int32_t find_valid_col_offset(const TileInfo *const tile, int32_t mi_col, int32_t col_offset) {
     return clamp(col_offset, tile->mi_col_start - mi_col, tile->mi_col_end - mi_col - 1);
 }
+
 static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
     if (!oh->enable_order_hint)
         return 0;
@@ -323,6 +328,7 @@ static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
     diff           = (diff & (m - 1)) - (diff & m);
     return diff;
 }
+
 static int add_tpl_ref_mv(const Av1Common *cm, PictureControlSet *pcs, const MacroBlockD *xd, int mi_row, int mi_col,
                           MvReferenceFrame ref_frame, int blk_row, int blk_col, Mv *gm_mv_candidates,
                           uint8_t *const refmv_count, uint8_t two_symetric_refs, Mv *mv_ref0, int cur_offset_0,
@@ -977,6 +983,7 @@ Mv svt_aom_gm_get_motion_vector_enc(const WarpedMotionParams *gm, int32_t allow_
     }
     return res;
 }
+
 void svt_aom_init_xd(PictureControlSet *pcs, ModeDecisionContext *ctx) {
     TileInfo *tile = &ctx->sb_ptr->tile_info;
 
@@ -1135,6 +1142,7 @@ void svt_aom_generate_av1_mvp_table(ModeDecisionContext *ctx, BlkStruct *blk_ptr
                           &ctx->inter_mode_ctx[ref_frame]);
     }
 }
+
 void svt_aom_get_av1_mv_pred_drl(ModeDecisionContext *ctx, BlkStruct *blk_ptr, MvReferenceFrame ref_frame,
                                  uint8_t is_compound, PredictionMode mode,
                                  uint8_t drl_index, //valid value of drl_index
@@ -1182,6 +1190,7 @@ void svt_aom_get_av1_mv_pred_drl(ModeDecisionContext *ctx, BlkStruct *blk_ptr, M
         }
     }
 }
+
 void svt_aom_update_mi_map_enc_dec(BlkStruct *blk_ptr, ModeDecisionContext *ctx, PictureControlSet *pcs) {
     // Update only the data in the top left block of the partition, because all other mi_blocks
     // point to the top left mi block of the partition
@@ -1212,6 +1221,7 @@ void svt_aom_update_mi_map_enc_dec(BlkStruct *blk_ptr, ModeDecisionContext *ctx,
                        blk_ptr->palette_info->pmi.palette_colors,
                        sizeof(mbmi->palette_mode_info.palette_colors[0]) * PALETTE_MAX_SIZE);
 }
+
 void svt_copy_mi_map_grid_c(MbModeInfo **mi_grid_ptr, uint32_t mi_stride, uint8_t num_rows, uint8_t num_cols) {
     MbModeInfo *target = mi_grid_ptr[0];
     if (num_cols == 1) {
@@ -1241,6 +1251,7 @@ void svt_copy_mi_map_grid_c(MbModeInfo **mi_grid_ptr, uint32_t mi_stride, uint8_
         }
     }
 }
+
 MbModeInfo *get_mbmi(PictureControlSet *pcs, uint32_t blk_org_x, uint32_t blk_org_y) {
     uint32_t mi_stride = pcs->mi_stride;
     int32_t  mi_row    = blk_org_y >> MI_SIZE_LOG2;
@@ -1259,6 +1270,7 @@ MbModeInfo *get_mbmi(PictureControlSet *pcs, uint32_t blk_org_x, uint32_t blk_or
 
     return mbmi;
 }
+
 void svt_aom_update_mi_map(BlkStruct *blk_ptr, uint32_t blk_org_x, uint32_t blk_org_y, const BlockGeom *blk_geom,
                            PictureControlSet *pcs, ModeDecisionContext *ctx) {
     uint32_t mi_stride = pcs->mi_stride;
@@ -1311,6 +1323,7 @@ void svt_aom_update_mi_map(BlkStruct *blk_ptr, uint32_t blk_org_x, uint32_t blk_
                          (blk_geom->bheight >> MI_SIZE_LOG2),
                          (blk_geom->bwidth >> MI_SIZE_LOG2));
 }
+
 static INLINE void record_samples(MbModeInfo *mbmi, int *pts, int *pts_inref, int row_offset, int sign_r,
                                   int col_offset, int sign_c) {
     uint8_t bw = block_size_wide[mbmi->bsize];
@@ -1481,6 +1494,7 @@ void svt_aom_init_wm_samples(PictureControlSet *pcs, ModeDecisionContext *ctx) {
         for (int i = 0; i < REF_FRAMES; i++) { ctx->wm_sample_info[i].num = 0; }
     }
 }
+
 bool svt_aom_warped_motion_parameters(ModeDecisionContext *ctx, const Mv mv, const BlockGeom *blk_geom,
                                       const MvReferenceFrame ref_frame, WarpedMotionParams *wm_params,
                                       uint8_t *num_samples, uint16_t lower_band_th, uint16_t upper_band_th,

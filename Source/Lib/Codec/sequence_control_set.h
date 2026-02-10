@@ -314,6 +314,7 @@ typedef struct SequenceControlSet {
     // If true, enables fast anti-alias aware screen detection
     bool fast_aa_aware_screen_detection_mode;
 } SequenceControlSet;
+
 typedef struct EbSequenceControlSetInstance {
     EbDctor             dctor;
     EncodeContext      *enc_ctx;

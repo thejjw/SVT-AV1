@@ -591,6 +591,7 @@ void svt_av1_highbd_quantize_fp_qm_c(const TranLow *coeff_ptr, intptr_t count, c
                                 iqm_ptr,
                                 log_scale);
 }
+
 static INLINE int get_lower_levels_ctx_general(int is_last, int scan_idx, int bwl, int height, const uint8_t *levels,
                                                int coeff_idx, TxSize tx_size, TxClass tx_class) {
     if (is_last) {
@@ -613,10 +614,12 @@ static INLINE int32_t get_golomb_cost(int32_t abs_qc) {
     }
     return 0;
 }
+
 static INLINE int get_br_cost(TranLow level, const int *coeff_lps) {
     const int base_range = AOMMIN(level - 1 - NUM_BASE_LEVELS, COEFF_BASE_RANGE);
     return coeff_lps[base_range] + get_golomb_cost(level);
 }
+
 static INLINE int get_coeff_cost_general(int is_last, int ci, TranLow abs_qc, int sign, int coeff_ctx, int dc_sign_ctx,
                                          const LvMapCoeffCost *txb_costs, int bwl, TxClass tx_class,
                                          const uint8_t *levels) {
@@ -641,9 +644,11 @@ static INLINE int get_coeff_cost_general(int is_last, int ci, TranLow abs_qc, in
     }
     return cost;
 }
+
 static INLINE int64_t get_coeff_dist(TranLow tcoeff, TranLow dqcoeff, int shift) {
     return SQR(((int64_t)tcoeff - dqcoeff) * (int64_t)(1lu << shift));
 }
+
 static INLINE void get_qc_dqc_low(TranLow abs_qc, int sign, int dqv, int shift, TranLow *qc_low, TranLow *dqc_low) {
     TranLow abs_qc_low = abs_qc - 1;
     *qc_low            = (-sign ^ abs_qc_low) + sign;
@@ -652,12 +657,14 @@ static INLINE void get_qc_dqc_low(TranLow abs_qc, int sign, int dqv, int shift, 
     *dqc_low            = (-sign ^ abs_dqc_low) + sign;
     assert((sign ? -abs_dqc_low : abs_dqc_low) == *dqc_low);
 }
-static const int  golomb_bits_cost[32] = {0,       512,     512 * 3, 512 * 3, 512 * 5, 512 * 5, 512 * 5, 512 * 5,
-                                          512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7,
-                                          512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9,
-                                          512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9};
-static const int  golomb_cost_diff[32] = {0,       512, 512 * 2, 0, 512 * 2, 0, 0, 0, 512 * 2, 0, 0, 0, 0, 0, 0, 0,
-                                          512 * 2, 0,   0,       0, 0,       0, 0, 0, 0,       0, 0, 0, 0, 0, 0, 0};
+
+static const int golomb_bits_cost[32] = {0,       512,     512 * 3, 512 * 3, 512 * 5, 512 * 5, 512 * 5, 512 * 5,
+                                         512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7, 512 * 7,
+                                         512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9,
+                                         512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9, 512 * 9};
+static const int golomb_cost_diff[32] = {0,       512, 512 * 2, 0, 512 * 2, 0, 0, 0, 512 * 2, 0, 0, 0, 0, 0, 0, 0,
+                                         512 * 2, 0,   0,       0, 0,       0, 0, 0, 0,       0, 0, 0, 0, 0, 0, 0};
+
 static INLINE int get_br_cost_with_diff(TranLow level, const int *coeff_lps, int *diff) {
     const int base_range  = AOMMIN(level - 1 - NUM_BASE_LEVELS, COEFF_BASE_RANGE);
     int       golomb_bits = 0;
@@ -677,6 +684,7 @@ static INLINE int get_br_cost_with_diff(TranLow level, const int *coeff_lps, int
 
     return coeff_lps[base_range] + golomb_bits;
 }
+
 static AOM_FORCE_INLINE int get_two_coeff_cost_simple(int ci, TranLow abs_qc, int coeff_ctx,
                                                       const LvMapCoeffCost *txb_costs, int bwl, TxClass tx_class,
                                                       const uint8_t *levels, int *cost_low) {
@@ -701,6 +709,7 @@ static AOM_FORCE_INLINE int get_two_coeff_cost_simple(int ci, TranLow abs_qc, in
 
     return cost;
 }
+
 static INLINE int get_coeff_cost_eob(int ci, TranLow abs_qc, int sign, int coeff_ctx, int dc_sign_ctx,
                                      const LvMapCoeffCost *txb_costs, int bwl, TxClass tx_class) {
     int cost = 0;
@@ -827,6 +836,7 @@ static AOM_FORCE_INLINE void update_coeff_eob(int *accu_rate, int64_t *accu_dist
         }
     }
 }
+
 static INLINE void update_coeff_general(int *accu_rate, int64_t *accu_dist, int si, int eob, TxSize tx_size,
                                         TxClass tx_class, int bwl, int height, int64_t rdmult, int shift,
                                         int dc_sign_ctx, const int16_t *dequant, const int16_t *scan,
@@ -925,6 +935,7 @@ static AOM_FORCE_INLINE void update_coeff_simple(int *accu_rate, int si, int eob
             *accu_rate += rate;
     }
 }
+
 static INLINE void update_skip(int *accu_rate, int64_t accu_dist, uint16_t *eob, int nz_num, int *nz_ci, int64_t rdmult,
                                int skip_cost, int non_skip_cost, TranLow *qcoeff, TranLow *dqcoeff, int sharpness) {
     const int64_t rd         = RDCOST(rdmult, *accu_rate + non_skip_cost, accu_dist);
@@ -941,6 +952,7 @@ static INLINE void update_skip(int *accu_rate, int64_t accu_dist, uint16_t *eob,
         *eob       = 0;
     }
 }
+
 enum {
     NO_AQ             = 0,
     VARIANCE_AQ       = 1,
@@ -948,6 +960,7 @@ enum {
     CYCLIC_REFRESH_AQ = 3,
     AQ_MODE_COUNT // This should always be the last member of the enum
 } UENUM1BYTE(AQ_MODE);
+
 enum {
     NO_DELTA_Q   = 0,
     DELTA_Q_ONLY = 1,
@@ -1013,6 +1026,7 @@ static void svt_fast_optimize_b(const TranLow *coeff_ptr, const MacroblockPlane 
     const int              shift      = av1_get_tx_scale_tab[tx_size];
     update_coeff_eob_fast(eob, shift, p->dequant_qtx, scan, coeff_ptr, qcoeff_ptr, dqcoeff_ptr);
 }
+
 static void svt_av1_optimize_b(PictureControlSet *pcs, ModeDecisionContext *ctx, int16_t txb_skip_context,
                                int16_t dc_sign_context, const TranLow *coeff_ptr, const MacroblockPlane *p,
                                TranLow *qcoeff_ptr, TranLow *dqcoeff_ptr, uint16_t *eob, const QuantParam *qparam,
@@ -1240,6 +1254,7 @@ static INLINE TxSize aom_av1_get_adjusted_tx_size(TxSize tx_size) {
     default: return tx_size;
     }
 }
+
 void svt_aom_quantize_inv_quantize_light(PictureControlSet *pcs, int32_t *coeff, int32_t *quant_coeff,
                                          int32_t *recon_coeff, uint32_t qindex, TxSize txsize, uint16_t *eob,
                                          uint32_t bit_depth, TxType tx_type) {
@@ -1601,6 +1616,7 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet *pcs, ModeDecisionContex
     // Derive cul_level
     return svt_av1_compute_cul_level(scan_order->scan, quant_coeff, eob);
 }
+
 void svt_aom_inv_transform_recon_wrapper(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t *pred_buffer,
                                          uint32_t pred_offset, uint32_t pred_stride, uint8_t *rec_buffer,
                                          uint32_t rec_offset, uint32_t rec_stride, int32_t *rec_coeff_buffer,
@@ -1631,6 +1647,7 @@ void svt_aom_inv_transform_recon_wrapper(PictureControlSet *pcs, ModeDecisionCon
                                         svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id));
     }
 }
+
 /*
   tx path for light PD1 chroma
 */
@@ -1829,6 +1846,7 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet *pcs, ModeDecisionCont
                                     cand_bf->cand->transform_type_uv,
                                     component_type);
 }
+
 /****************************************
  ************  Full loop ****************
 ****************************************/
@@ -2343,6 +2361,7 @@ void svt_aom_full_loop_uv(PictureControlSet *pcs, ModeDecisionContext *ctx, Mode
         ++txb_itr;
     } while (txb_itr < tu_count);
 }
+
 /*
   check if we need to do inverse transform and recon
 */

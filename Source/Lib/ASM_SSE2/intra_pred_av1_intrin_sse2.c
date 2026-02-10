@@ -83,11 +83,13 @@ static INLINE void dc_store_8xh(const __m128i *row, int32_t height, uint8_t *dst
         dst += stride;
     }
 }
+
 static INLINE __m128i dc_sum_8(const uint8_t *ref) {
     __m128i       x    = _mm_loadl_epi64((__m128i const *)ref);
     const __m128i zero = _mm_setzero_si128();
     return _mm_sad_epu8(x, zero);
 }
+
 static INLINE __m128i dc_sum_4(const uint8_t *ref) {
     __m128i       x    = _mm_loadl_epi64((__m128i const *)ref);
     const __m128i zero = _mm_setzero_si128();
@@ -117,6 +119,7 @@ static INLINE void h_pred_store_16xh(const __m128i *row, int32_t h, uint8_t *dst
         dst += stride;
     }
 }
+
 static INLINE void repeat_low_4pixels(const __m128i *x, __m128i *row) {
     const __m128i u0 = _mm_shufflelo_epi16(*x, 0);
     const __m128i u1 = _mm_shufflelo_epi16(*x, 0x55);
@@ -128,6 +131,7 @@ static INLINE void repeat_low_4pixels(const __m128i *x, __m128i *row) {
     row[2] = _mm_unpacklo_epi64(u2, u2);
     row[3] = _mm_unpacklo_epi64(u3, u3);
 }
+
 static INLINE void repeat_high_4pixels(const __m128i *x, __m128i *row) {
     const __m128i u0 = _mm_shufflehi_epi16(*x, 0);
     const __m128i u1 = _mm_shufflehi_epi16(*x, 0x55);
@@ -139,6 +143,7 @@ static INLINE void repeat_high_4pixels(const __m128i *x, __m128i *row) {
     row[2] = _mm_unpackhi_epi64(u2, u2);
     row[3] = _mm_unpackhi_epi64(u3, u3);
 }
+
 // Process 16x8, first 4 rows
 // Use first 8 bytes of left register: xxxxxxxx33221100
 static INLINE void h_prediction_16x8_1(const __m128i *left, uint8_t *dst, ptrdiff_t stride) {
@@ -489,9 +494,11 @@ void svt_aom_h_predictor_4x8_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t 
 void svt_aom_h_predictor_8x16_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     h_predictor_8x16xc(dst, stride, above, left, 1);
 }
+
 void svt_aom_h_predictor_8x32_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     h_predictor_8x16xc(dst, stride, above, left, 2);
 }
+
 void svt_aom_h_predictor_8x4_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     (void)above;
     __m128i left_col = _mm_loadl_epi64((__m128i const *)left);
@@ -526,6 +533,7 @@ void svt_aom_v_predictor_16x64_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_
     (void)left;
     dc_store_16xh(&row, 64, dst, stride);
 }
+
 void svt_aom_v_predictor_16x8_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m128i row = _mm_loadu_si128((__m128i const *)above);
     (void)left;
@@ -536,31 +544,37 @@ void svt_aom_v_predictor_32x8_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t
     (void)left;
     v_predictor_32xh(dst, stride, above, 8);
 }
+
 void svt_aom_v_predictor_4x16_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const uint32_t pred = *(uint32_t *)above;
     (void)left;
     dc_store_4xh(pred, 16, dst, stride);
 }
+
 void svt_aom_v_predictor_4x8_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const uint32_t pred = *(uint32_t *)above;
     (void)left;
     dc_store_4xh(pred, 8, dst, stride);
 }
+
 void svt_aom_v_predictor_8x16_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m128i row = _mm_loadl_epi64((__m128i const *)above);
     (void)left;
     dc_store_8xh(&row, 16, dst, stride);
 }
+
 void svt_aom_v_predictor_8x32_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m128i row = _mm_loadl_epi64((__m128i const *)above);
     (void)left;
     dc_store_8xh(&row, 32, dst, stride);
 }
+
 void svt_aom_v_predictor_8x4_sse2(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) {
     const __m128i row = _mm_loadl_epi64((__m128i const *)above);
     (void)left;
     dc_store_8xh(&row, 4, dst, stride);
 }
+
 // -----------------------------------------------------------------------------
 // DC_128
 

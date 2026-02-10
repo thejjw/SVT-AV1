@@ -206,6 +206,7 @@ static const MiniGopStats mini_gop_stats_array[] = {
     {1, 28, 29, 2}, // 29
     {1, 30, 31, 2} // 30
 };
+
 /**************************************************************
 * Get Mini GOP Statistics
 **************************************************************/
@@ -259,6 +260,7 @@ static uint32_t max_sb    = 64;
 static uint32_t max_depth = 5;
 static uint32_t max_part  = 9;
 static uint32_t max_num_active_blocks;
+
 //TODO need to remove above globals for multi-channel support
 
 static INLINE TxSize av1_get_tx_size(BlockSize bsize, int32_t plane /*, const MacroBlockD *xd*/) {
@@ -1017,6 +1019,7 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
         md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y + halfsize, 1, 3, min_nsq_bsize);
     }
 }
+
 static uint32_t count_total_num_of_active_blks(uint8_t min_nsq_bsize) {
     uint32_t depth_it, sq_it_y, sq_it_x, part_it, nsq_it;
 
@@ -1050,6 +1053,7 @@ static uint32_t count_total_num_of_active_blks(uint8_t min_nsq_bsize) {
 
     return depth_scan_idx;
 }
+
 static void log_redundancy_similarity(BlockGeom* blk_geom, uint32_t max_block_count) {
     uint32_t blk_it, s_it;
 
@@ -1155,6 +1159,7 @@ void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom) {
     md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, 0, min_nsq_bsize);
     log_redundancy_similarity(blk_geom, max_block_count);
 }
+
 uint32_t svt_aom_get_mds_idx(const BlockGeom* blk_geom_table, uint32_t max_block_count, uint32_t orgx, uint32_t orgy,
                              uint32_t size) {
     uint32_t mds = 0;

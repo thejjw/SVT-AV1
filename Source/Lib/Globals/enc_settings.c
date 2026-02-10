@@ -1009,6 +1009,7 @@ static const char *tier_to_str(unsigned in) {
     snprintf(ret, 11, "%u", in);
     return ret;
 }
+
 static const char *level_to_str(unsigned in) {
     if (!in)
         return "(auto)";
@@ -1474,6 +1475,7 @@ static EbErrorType str_to_profile(const char *nptr, EbAv1SeqProfile *out) {
         {"high", HIGH_PROFILE},
         {"professional", PROFESSIONAL_PROFILE},
     };
+
     const size_t profiles_size = sizeof(profiles) / sizeof(profiles[0]);
 
     for (size_t i = 0; i < profiles_size; i++) {
@@ -1497,6 +1499,7 @@ static EbErrorType str_to_color_fmt(const char *nptr, EbColorFormat *out) {
         {"422", EB_YUV422},
         {"444", EB_YUV444},
     };
+
     const size_t color_format_size = sizeof(color_formats) / sizeof(color_formats[0]);
 
     for (size_t i = 0; i < color_format_size; i++) {
@@ -1519,6 +1522,7 @@ static EbErrorType str_to_intra_rt(const char *nptr, SvtAv1IntraRefreshType *out
         {"idr", SVT_AV1_KF_REFRESH},
         {"kf", SVT_AV1_KF_REFRESH},
     };
+
     const size_t refresh_type_size = sizeof(refresh_types) / sizeof(refresh_types[0]);
 
     for (size_t i = 0; i < refresh_type_size; i++) {
@@ -1611,6 +1615,7 @@ static EbErrorType str_to_color_primaries(const char *nptr, EbColorPrimaries *ou
         {"smpte432", EB_CICP_CP_SMPTE_432},
         {"ebu3213", EB_CICP_CP_EBU_3213},
     };
+
     const size_t color_primaries_size = sizeof(color_primaries) / sizeof(color_primaries[0]);
 
     for (size_t i = 0; i < color_primaries_size; i++) {
@@ -1645,6 +1650,7 @@ static EbErrorType str_to_transfer_characteristics(const char *nptr, EbTransferC
         {"smpte428", EB_CICP_TC_SMPTE_428},
         {"hlg", EB_CICP_TC_HLG},
     };
+
     const size_t transfer_characteristics_size = sizeof(transfer_characteristics) / sizeof(transfer_characteristics[0]);
 
     for (size_t i = 0; i < transfer_characteristics_size; i++) {
@@ -1676,6 +1682,7 @@ static EbErrorType str_to_matrix_coefficients(const char *nptr, EbMatrixCoeffici
         {"chroma-cl", EB_CICP_MC_CHROMAT_CL},
         {"ictcp", EB_CICP_MC_ICTCP},
     };
+
     const size_t matrix_coefficients_size = sizeof(matrix_coefficients) / sizeof(matrix_coefficients[0]);
 
     for (size_t i = 0; i < matrix_coefficients_size; i++) {
@@ -1696,6 +1703,7 @@ static EbErrorType str_to_color_range(const char *nptr, EbColorRange *out) {
         {"studio", EB_CR_STUDIO_RANGE},
         {"full", EB_CR_FULL_RANGE},
     };
+
     const size_t color_range_size = sizeof(color_range) / sizeof(color_range[0]);
 
     for (size_t i = 0; i < color_range_size; i++) {
@@ -1719,6 +1727,7 @@ static EbErrorType str_to_chroma_sample_position(const char *nptr, EbChromaSampl
         {"colocated", EB_CSP_COLOCATED},
         {"topleft", EB_CSP_COLOCATED},
     };
+
     const size_t chroma_sample_positions_size = sizeof(chroma_sample_positions) / sizeof(chroma_sample_positions[0]);
 
     for (size_t i = 0; i < chroma_sample_positions_size; i++) {
@@ -1741,6 +1750,7 @@ static EbErrorType str_to_sframe_mode(const char *nptr, EbSFrameMode *out) {
         {"flexible", SFRAME_FLEXIBLE_BASE},
         {"decposi", SFRAME_DEC_POSI_BASE},
     };
+
     const size_t sframe_mode_size = sizeof(sframe_mode) / sizeof(sframe_mode[0]);
 
     for (size_t i = 0; i < sframe_mode_size; i++) {
@@ -1752,6 +1762,7 @@ static EbErrorType str_to_sframe_mode(const char *nptr, EbSFrameMode *out) {
 
     return EB_ErrorBadParameter;
 }
+
 static EbErrorType str_to_rc_mode(const char *nptr, uint8_t *out, uint8_t *aq_mode) {
     // separate rc mode enum to distinguish between cqp and crf modes
     enum rc_modes {
@@ -1762,6 +1773,7 @@ static EbErrorType str_to_rc_mode(const char *nptr, uint8_t *out, uint8_t *aq_mo
         RC_MODE_CBR,
         RC_MODE_INVALID,
     };
+
     const struct {
         const char *name;
         uint32_t    mode;
@@ -1774,6 +1786,7 @@ static EbErrorType str_to_rc_mode(const char *nptr, uint8_t *out, uint8_t *aq_mo
         {"vbr", RC_MODE_VBR},
         {"cbr", RC_MODE_CBR},
     };
+
     const size_t rc_mode_size = sizeof(rc_mode) / sizeof(rc_mode[0]);
 
     enum rc_modes mode = RC_MODE_INVALID;
@@ -2047,6 +2060,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"forced-max-frame-width", &config_struct->forced_max_frame_width},
         {"forced-max-frame-height", &config_struct->forced_max_frame_height},
     };
+
     const size_t uint_opts_size = sizeof(uint_opts) / sizeof(uint_opts[0]);
 
     for (size_t i = 0; i < uint_opts_size; i++) {
@@ -2089,6 +2103,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"tf-strength", &config_struct->tf_strength},
         {"max-tx-size", &config_struct->max_tx_size},
     };
+
     const size_t uint8_opts_size = sizeof(uint8_opts) / sizeof(uint8_opts[0]);
 
     for (size_t i = 0; i < uint8_opts_size; i++) {
@@ -2114,6 +2129,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"buf-optimal-sz", &config_struct->optimal_buffer_level_ms},
         {"buf-sz", &config_struct->maximum_buffer_size_ms},
     };
+
     const size_t int64_opts_size = sizeof(int64_opts) / sizeof(int64_opts[0]);
 
     for (size_t i = 0; i < int64_opts_size; i++) {
@@ -2129,6 +2145,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     } double_opts[] = {
         {"ac-bias", &config_struct->ac_bias},
     };
+
     const size_t double_opts_size = sizeof(double_opts) / sizeof(double_opts[0]);
 
     for (size_t i = 0; i < double_opts_size; i++) {
@@ -2158,6 +2175,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"tile-columns", &config_struct->tile_columns},
         {"sframe-dist", &config_struct->sframe_dist},
     };
+
     const size_t int_opts_size = sizeof(int_opts) / sizeof(int_opts[0]);
 
     for (size_t i = 0; i < int_opts_size; i++) {
@@ -2175,6 +2193,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"sharpness", &config_struct->sharpness},
         {"startup-qp-offset", &config_struct->startup_qp_offset},
     };
+
     const size_t int8_opts_size = sizeof(int8_opts) / sizeof(int8_opts[0]);
 
     for (size_t i = 0; i < int8_opts_size; i++) {

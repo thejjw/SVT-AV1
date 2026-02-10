@@ -130,6 +130,7 @@ void svt_aom_upsampled_pred_c(MacroBlockD *xd, const struct AV1Common *const cm,
                                  height);
     }
 }
+
 // functions are from deleted file, associated with this macro
 // Moved from EbComputeVariance_C.c
 static void variance_c(const uint8_t *a, int a_stride, const uint8_t *b, int b_stride, int w, int h, uint32_t *sse,

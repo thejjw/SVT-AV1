@@ -34,6 +34,7 @@
 #include "av1me.h"
 #include "enc_inter_prediction.h"
 #include "resize.h"
+
 /**************************************
  * Context
  **************************************/
@@ -46,6 +47,7 @@ typedef struct SourceBasedOperationsContext {
     uint8_t *cr_mean_ptr;
     uint8_t *cb_mean_ptr;
 } SourceBasedOperationsContext;
+
 typedef struct TplDispenserContext {
     EbDctor  dctor;
     EbFifo  *tpl_disp_input_fifo_ptr;
@@ -80,6 +82,7 @@ EbErrorType svt_aom_source_based_operations_context_ctor(EbThreadContext *thread
 
     return EB_ErrorNone;
 }
+
 /*
      TPL dispenser context dctor
 */
@@ -88,6 +91,7 @@ static void tpl_disp_context_dctor(EbPtr p) {
     TplDispenserContext *obj        = (TplDispenserContext *)thread_ctx->priv;
     EB_FREE_ARRAY(obj);
 }
+
 /*
      TPL dispenser context cctor
 */
@@ -366,6 +370,7 @@ static inline void get_neighbor_samples_dc(uint8_t *src, uint32_t src_stride, ui
         read_ptr += src_stride;
     }
 }
+
 #define MAX_TPL_MODE 3
 #define MAX_TPL_SIZE 32
 #define MAX_TPL_SAMPLES_PER_BLOCK MAX_TPL_SIZE *MAX_TPL_SIZE
@@ -376,8 +381,9 @@ static uint32_t blk_end_array[MAX_TPL_MODE]      = {20, 4, 0};
 static TxSize   tx_size_array[MAX_TPL_MODE]      = {TX_16X16, TX_32X32, TX_64X64};
 static TxSize   sub2_tx_size_array[MAX_TPL_MODE] = {TX_16X8, TX_32X16, TX_64X32};
 static TxSize   sub4_tx_size_array[MAX_TPL_MODE] = {TX_16X4, TX_32X8, TX_64X16};
-static void     svt_tpl_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
-                                            uint32_t rdmult, uint8_t hbd_md) {
+
+static void svt_tpl_init_mv_cost_params(svt_mv_cost_param *mv_cost_params, const Mv *ref_mv, uint8_t base_q_idx,
+                                        uint32_t rdmult, uint8_t hbd_md) {
     mv_cost_params->ref_mv        = ref_mv;
     mv_cost_params->full_ref_mv   = get_fullmv_from_mv(ref_mv);
     mv_cost_params->early_exit_th = 0;
@@ -1190,6 +1196,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 #define TPL_TASKS_MDC_INPUT 0
 #define TPL_TASKS_ENCDEC_INPUT 1
 #define TPL_TASKS_CONTINUE 2
+
 /*
    Assign TPL dispenser segments
 */
@@ -1441,6 +1448,7 @@ static int64_t delta_rate_cost(int64_t delta_rate, int64_t recrf_dist, int64_t s
 
     return rate_cost;
 }
+
 /************************************************
 * Genrate TPL MC Flow Synthesizer
 ************************************************/
@@ -1550,6 +1558,7 @@ void tpl_mc_flow_synthesizer(PictureParentControlSet *pcs_array[MAX_TPL_LA_SW], 
     }
     return;
 }
+
 void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
     Av1Common          *cm                    = pcs->av1_cm;
     SequenceControlSet *scs                   = pcs->scs;
@@ -1738,6 +1747,7 @@ static void init_tpl_segments(SequenceControlSet *scs, PictureParentControlSet *
         }
     }
 }
+
 typedef struct TplRefList {
     EbObjectWrapper *ref;
     int32_t          frame_idx;
@@ -2076,17 +2086,20 @@ static const uint8_t AV1_VAR_OFFS[MAX_SB_SIZE] = {
     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
+
 unsigned int svt_aom_get_perpixel_variance(const uint8_t *buf, uint32_t stride, const int block_size) {
     unsigned int            var, sse;
     const AomVarianceFnPtr *fn_ptr = &svt_aom_mefn_ptr[block_size];
     var                            = fn_ptr->vf(buf, stride, AV1_VAR_OFFS, 0, &sse);
     return ROUND_POWER_OF_TWO(var, eb_num_pels_log2_lookup[block_size]);
 }
+
 static void aom_av1_set_mb_ssim_rdmult_scaling(PictureParentControlSet *pcs) {
     Av1Common *cm       = pcs->av1_cm;
     const int  y_stride = pcs->enhanced_pic->stride_y;
     uint8_t   *y_buffer = pcs->enhanced_pic->buffer_y + pcs->enhanced_pic->org_x + pcs->enhanced_pic->org_y * y_stride;
-    const int  block_size = BLOCK_16X16;
+
+    const int block_size = BLOCK_16X16;
 
     const int num_mi_w = mi_size_wide[block_size];
     const int num_mi_h = mi_size_high[block_size];

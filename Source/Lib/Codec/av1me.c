@@ -118,6 +118,7 @@ void svt_av1_set_mv_search_range(MvLimits *mv_limits, const Mv *mv) {
 }
 
 #define PIXEL_TRANSFORM_ERROR_SCALE 4
+
 int svt_aom_mv_err_cost_light(const Mv *mv, const Mv *ref) {
     const uint32_t factor     = 50;
     const uint32_t absmvdiffx = ABS(mv->x - ref->x);
@@ -133,6 +134,7 @@ static int mvsad_err_cost_light(const Mv *mv, const Mv *ref) {
     const uint32_t mv_rate    = 1296 + (factor * (absmvdiffx + absmvdiffy));
     return mv_rate;
 }
+
 int svt_aom_mv_err_cost(const Mv *mv, const Mv *ref, const int *mvjcost, const int *mvcost[2], int error_per_bit) {
     if (mvcost) {
         const Mv diff = (Mv){{mv->x - ref->x, mv->y - ref->y}};
@@ -203,13 +205,13 @@ int svt_av1_get_mvpred_var(const IntraBcContext *x, const Mv *best_mv, const Mv 
 // step size.
 static int exhaustive_mesh_search(IntraBcContext *x, Mv *ref_mv, Mv *best_mv, int range, int step, int sad_per_bit,
                                   const AomVarianceFnPtr *fn_ptr, const Mv *center_mv) {
-    const Buf2D *const        what       = &x->plane[0].src;
-    const Buf2D *const        in_what    = &x->xdplane[0].pre[0];
-    Mv                        fcenter_mv = {.as_int = center_mv->as_int};
-    unsigned int              best_sad   = INT_MAX;
-    int                       r, c, i;
-    int                       start_col, end_col, start_row, end_row;
-    int                       col_step = (step > 1) ? step : 4;
+    const Buf2D *const what       = &x->plane[0].src;
+    const Buf2D *const in_what    = &x->xdplane[0].pre[0];
+    Mv                 fcenter_mv = {.as_int = center_mv->as_int};
+    unsigned int       best_sad   = INT_MAX;
+    int                r, c, i;
+    int                start_col, end_col, start_row, end_row;
+    int                col_step = (step > 1) ? step : 4;
 
     assert(step >= 1);
 
@@ -471,6 +473,7 @@ static int svt_av1_refining_search_sad(IntraBcContext *x, Mv *ref_mv, int error_
 
     return best_sad;
 }
+
 /* do_refine: If last step (1-away) of n-step search doesn't pick the center
               point as the best match, we will do a final 1-away diamond
               refining search  */
@@ -543,6 +546,7 @@ static int full_pixel_diamond(PictureControlSet *pcs, IntraBcContext /*MACROBLOC
 #define MIN_RANGE 7
 #define MAX_RANGE 256
 #define MIN_INTERVAL 1
+
 // Runs an limited range exhaustive mesh search using a pattern set
 // according to the encode speed profile.
 static int full_pixel_exhaustive(PictureControlSet *pcs, IntraBcContext *x, const Mv *centre_mv_full, int sadpb,
@@ -614,6 +618,7 @@ static int get_obmc_mvpred_var(const IntraBcContext *x, const int32_t *wsrc, con
         return vfp->ovf(get_buf_from_mv((const Buf2D *)in_what, best_mv), in_what->stride, wsrc, mask, &unused) +
             (use_mvcost ? svt_aom_mv_err_cost(&mv, center_mv, x->nmv_vec_cost, x->mv_cost_stack, x->errorperbit) : 0);
 }
+
 static int obmc_refining_search_sad(const IntraBcContext *x, const int32_t *wsrc, const int32_t *mask, Mv *ref_mv,
                                     int error_per_bit, int search_range, const AomVarianceFnPtr *fn_ptr,
                                     const Mv *center_mv, int is_second, uint8_t search_diag) {
@@ -787,6 +792,7 @@ static unsigned int setup_obmc_center_error(const int32_t *mask, const Mv *bestm
         if (br0 != br || bc0 != bc)                          \
             CHECK_BETTER##k(second, br0 + kr, bc0 + kc, lp); \
     } while (0)
+
 static int upsampled_obmc_pref_error(MacroBlockD *xd, const Av1Common *const cm, int mi_row, int mi_col,
                                      const Mv *const mv, const int32_t *mask, const AomVarianceFnPtr *vfp,
                                      const int32_t *const wsrc, const uint8_t *const y, int y_stride, int subpel_x_q3,
@@ -825,6 +831,7 @@ static int upsampled_obmc_pref_error(MacroBlockD *xd, const Av1Common *const cm,
 #endif
     return besterr;
 }
+
 static unsigned int upsampled_setup_obmc_center_error(MacroBlockD *xd, const Av1Common *const cm, int mi_row,
                                                       int mi_col, const int32_t *mask, const Mv *bestmv,
                                                       const Mv *ref_mv, int error_per_bit, const AomVarianceFnPtr *vfp,
@@ -843,7 +850,8 @@ static unsigned int upsampled_setup_obmc_center_error(MacroBlockD *xd, const Av1
 }
 
 // convert motion vector component to offset for sv[a]f calc
-static INLINE int            sp(int x) { return x & 7; }
+static INLINE int sp(int x) { return x & 7; }
+
 static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
     const int offset = (r >> 3) * stride + (c >> 3);
     return buf + offset;

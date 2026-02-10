@@ -79,11 +79,13 @@ static INLINE int32_t av1_is_interp_needed_md(BlockModeInfo *block_mi, PictureCo
 
     return 1;
 }
+
 static INLINE uint8_t av1_drl_ctx(const CandidateMv *ref_mv_stack, int32_t ref_idx) {
     return ref_mv_stack[ref_idx].weight >= REF_CAT_LEVEL   ? ref_mv_stack[ref_idx + 1].weight >= REF_CAT_LEVEL ? 0 : 1
         : ref_mv_stack[ref_idx + 1].weight < REF_CAT_LEVEL ? 2
                                                            : 0;
 }
+
 // Transform end of block bit estimation
 int get_eob_cost(int eob, const LvMapEobCost *txb_eob_costs, const LvMapCoeffCost *txb_costs, TxClass tx_class);
 #ifdef __cplusplus

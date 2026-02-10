@@ -63,6 +63,7 @@ void svt_aom_get_syntax_rate_from_cdf(int32_t *costs, const AomCdfProb *cdf, con
             break;
     }
 }
+
 /*************************************************************
  * svt_aom_estimate_syntax_rate()
  * Estimate the rate for each syntax elements and for
@@ -389,6 +390,7 @@ static void build_nmv_component_cost_table(int32_t *mvcost, const NmvComponent *
         mvcost[-v] = cost + sign_cost[1];
     }
 }
+
 static void svt_av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2], const NmvContext *ctx,
                                          MvSubpelPrecision precision) {
     svt_aom_get_syntax_rate_from_cdf(mvjoint, ctx->joints_cdf, NULL);
@@ -432,6 +434,7 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
         svt_av1_build_nmv_cost_table(md_rate_est_ctx->dv_joint_cost, dvcost, &fc->ndvc, MV_SUBPEL_NONE);
     }
 }
+
 /**************************************************************************
  * svt_aom_estimate_coefficients_rate()
  * Estimate the rate of the quantized coefficient
@@ -514,11 +517,13 @@ void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx
         }
     }
 }
+
 static INLINE AomCdfProb *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx, const MacroBlockD *xd) {
     uint8_t above_ctx, left_ctx;
     svt_aom_get_kf_y_mode_ctx(xd, &above_ctx, &left_ctx);
     return tile_ctx->kf_y_cdf[above_ctx][left_ctx];
 }
+
 AomCdfProb *svt_aom_get_reference_mode_cdf(const MacroBlockD *xd);
 AomCdfProb *svt_aom_get_comp_reference_type_cdf(const MacroBlockD *xd);
 AomCdfProb *svt_aom_get_pred_cdf_uni_comp_ref_p(const MacroBlockD *xd);
@@ -553,6 +558,7 @@ int svt_aom_get_palette_bsize_ctx(BlockSize bsize);
 int svt_aom_get_palette_mode_ctx(const MacroBlockD *xd);
 
 int32_t svt_aom_partition_cdf_length(BlockSize bsize);
+
 /*******************************************************************************
  * Updates all the filter type stats/CDF for the current block
  ******************************************************************************/
@@ -621,6 +627,7 @@ static void av1_update_mv_stats(const Mv *mv, const Mv *ref, NmvContext *mvctx, 
     if (mv_joint_horizontal(j))
         update_mv_component_stats(diff.x, &mvctx->comps[1], precision);
 }
+
 /*******************************************************************************
  * Updates all the Inter mode stats/CDF for the current block
  ******************************************************************************/
@@ -644,6 +651,7 @@ static AOM_INLINE void update_inter_mode_stats(FRAME_CONTEXT *fc, PredictionMode
     assert(mode_ctx < REFMV_MODE_CONTEXTS);
     update_cdf(fc->refmv_cdf[mode_ctx], mode != NEARESTMV, 2);
 }
+
 /*******************************************************************************
  * Updates all the palette stats/CDF for the current block
  ******************************************************************************/
@@ -674,6 +682,7 @@ static AOM_INLINE void update_palette_cdf(SequenceControlSet *scs, MacroBlockD *
             update_cdf(fc->palette_uv_size_cdf[palette_bsize_ctx], n - PALETTE_MIN_SIZE, PALETTE_SIZES);
     }
 }
+
 /*******************************************************************************
  * Updates all the Intra stats/CDF for the current block
  ******************************************************************************/
@@ -739,6 +748,7 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_pt
         update_palette_cdf(pcs->scs, xd, mbmi, blk_ptr, mi_row, mi_col);
     }
 }
+
 /*******************************************************************************
  * Updates all the syntax stats/CDF for the current block
  ******************************************************************************/
@@ -956,6 +966,7 @@ void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row
         }
     }
 }
+
 /*******************************************************************************
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
@@ -1007,6 +1018,7 @@ void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint1
         }
     }
 }
+
 uint8_t svt_aom_get_me_qindex(PictureControlSet *pcs, SuperBlock *sb_ptr, uint8_t is_sb128) {
     if (!is_sb128)
         return pcs->b64_me_qindex[sb_ptr->index];

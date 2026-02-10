@@ -40,6 +40,7 @@ void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_p
         (*recon_ptr)->height = pcs->ppcs->render_height;
     }
 }
+
 EbPictureBufferDesc *svt_aom_get_ref_pic_buffer(PictureControlSet *pcs, MvReferenceFrame rf) {
     if (rf <= INTRA_FRAME || rf >= REF_FRAMES)
         return NULL;
@@ -47,6 +48,7 @@ EbPictureBufferDesc *svt_aom_get_ref_pic_buffer(PictureControlSet *pcs, MvRefere
     const uint8_t ref_idx  = get_ref_frame_idx(rf);
     return ((EbReferenceObject *)(pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr))->reference_picture;
 }
+
 static INLINE Mv clamp_mv_to_umv_border_sb(const MacroBlockD *xd, const Mv *src_mv, int32_t bw, int32_t bh,
                                            int32_t ss_x, int32_t ss_y) {
     // If the MV points so far into the UMV border that no visible pixels
@@ -190,8 +192,10 @@ static void av1_make_masked_scaled_inter_predictor(
 
 static const uint8_t bsize_curvfit_model_cat_lookup[BlockSizeS_ALL] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
                                                                        3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};
-static int           sse_norm_curvfit_model_cat_lookup(double sse_norm) { return (sse_norm > 16.0); }
-static const double  interp_rgrid_curv[4][65] = {
+
+static int sse_norm_curvfit_model_cat_lookup(double sse_norm) { return (sse_norm > 16.0); }
+
+static const double interp_rgrid_curv[4][65] = {
     {
         0.000000,    0.000000,    0.000000,    0.000000,    0.000000,    0.000000,    0.000000,    0.000000,
         0.000000,    0.000000,    0.000000,    23.801499,   28.387688,   33.388795,   42.298282,   41.525408,
@@ -604,6 +608,7 @@ int64_t svt_aom_sse_c(const uint8_t *a, int a_stride, const uint8_t *b, int b_st
     }
     return sse;
 }
+
 void model_rd_for_sb_with_curvfit(PictureControlSet *pcs, ModeDecisionContext *ctx, BlockSize bsize, int bw, int bh,
                                   uint8_t *src_buf, uint32_t src_stride, uint8_t *pred_buf, uint32_t pred_stride,
                                   int plane_from, int plane_to, int mi_row, int mi_col, int *out_rate_sum,
@@ -669,16 +674,16 @@ void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const 
                                        uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader *seq_header_ptr);
 
 struct build_prediction_ctxt {
-    const Av1Common  *cm;
-    int               mi_row;
-    int               mi_col;
-    uint8_t         **tmp_buf;
-    int               tmp_width;
-    int               tmp_height;
-    int              *tmp_stride;
-    int               mb_to_far_edge;
-    int               ss_x;
-    int               ss_y;
+    const Av1Common *cm;
+    int              mi_row;
+    int              mi_col;
+    uint8_t        **tmp_buf;
+    int              tmp_width;
+    int              tmp_height;
+    int             *tmp_stride;
+    int              mb_to_far_edge;
+    int              ss_x;
+    int              ss_y;
 
     PictureControlSet   *pcs;
     Mv                   mv;
@@ -697,6 +702,7 @@ static const int max_neighbor_obmc[6] = {0, 1, 2, 3, 4, 4};
 
 typedef void (*overlappable_nb_visitor_t)(uint8_t is16bit, MacroBlockD *xd, int rel_mi_pos, uint8_t nb_mi_size,
                                           MbModeInfo *nb_mi, void *fun_ctxt);
+
 static INLINE void foreach_overlappable_nb_above(uint8_t is16bit, const Av1Common *cm, MacroBlockD *xd, int mi_col,
                                                  int nb_max, overlappable_nb_visitor_t fun, void *fun_ctxt) {
     if (!xd->up_available)
@@ -755,6 +761,7 @@ static INLINE void foreach_overlappable_nb_left(uint8_t is16bit, const Av1Common
         }
     }
 }
+
 static void av1_setup_build_prediction_by_above_pred(MacroBlockD *xd, int rel_mi_col, uint8_t above_mi_width,
                                                      MbModeInfo *above_mbmi, struct build_prediction_ctxt *ctxt) {
     const int above_mi_col = ctxt->mi_col + rel_mi_col;
@@ -766,6 +773,7 @@ static void av1_setup_build_prediction_by_above_pred(MacroBlockD *xd, int rel_mi
     xd->mb_to_left_edge  = 8 * MI_SIZE * (-above_mi_col);
     xd->mb_to_right_edge = ctxt->mb_to_far_edge + (xd->n4_w - rel_mi_col - above_mi_width) * MI_SIZE * 8;
 }
+
 static void av1_setup_build_prediction_by_left_pred(MacroBlockD *xd, int rel_mi_row, uint8_t left_mi_height,
                                                     MbModeInfo *left_mbmi, struct build_prediction_ctxt *ctxt) {
     const int left_mi_row = ctxt->mi_row + rel_mi_row;
@@ -775,6 +783,7 @@ static void av1_setup_build_prediction_by_left_pred(MacroBlockD *xd, int rel_mi_
     xd->mb_to_top_edge    = 8 * MI_SIZE * (-left_mi_row);
     xd->mb_to_bottom_edge = ctxt->mb_to_far_edge + (xd->n4_h - rel_mi_row - left_mi_height) * MI_SIZE * 8;
 }
+
 static EbErrorType get_single_prediction_for_obmc_luma_hbd(SequenceControlSet *scs, uint32_t interp_filters,
                                                            MacroBlockD *xd, Mv mv, uint16_t pu_origin_x,
                                                            uint16_t pu_origin_y, uint8_t bwidth, uint8_t bheight,
@@ -838,6 +847,7 @@ static EbErrorType get_single_prediction_for_obmc_luma_hbd(SequenceControlSet *s
                                      NULL); // wm_params
     return return_error;
 }
+
 static EbErrorType get_single_prediction_for_obmc_chroma_hbd(SequenceControlSet *scs, uint32_t interp_filters,
                                                              MacroBlockD *xd, Mv mv, uint16_t pu_origin_x,
                                                              uint16_t pu_origin_y, uint8_t bwidth, uint8_t bheight,
@@ -1120,6 +1130,7 @@ static EbErrorType get_single_prediction_for_obmc_chroma(SequenceControlSet *scs
                                      NULL); // wm_params
     return return_error;
 }
+
 static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *xd, int rel_mi_col,
                                                   uint8_t above_mi_width, MbModeInfo *above_mbmi, void *fun_ctxt) {
     struct build_prediction_ctxt *ctxt         = (struct build_prediction_ctxt *)fun_ctxt;
@@ -1220,6 +1231,7 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD *
                                                   ctxt->ss_y);
     }
 }
+
 static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD *xd, int rel_mi_row,
                                                  uint8_t left_mi_height, MbModeInfo *left_mbmi, void *fun_ctxt) {
     struct build_prediction_ctxt *ctxt        = (struct build_prediction_ctxt *)fun_ctxt;
@@ -1363,6 +1375,7 @@ static void build_prediction_by_above_preds(uint32_t component_mask, BlockSize b
     xd->mb_to_right_edge = ctxt.mb_to_far_edge;
     xd->mb_to_bottom_edge -= (this_height - pred_height) * 8;
 }
+
 static void build_prediction_by_left_preds(uint32_t component_mask, BlockSize bsize, PictureControlSet *pcs,
                                            MacroBlockD *xd, int mi_row, int mi_col, uint8_t *tmp_buf[MAX_MB_PLANE],
                                            int tmp_stride[MAX_MB_PLANE], uint8_t is16bit) {
@@ -1406,6 +1419,7 @@ static void build_prediction_by_left_preds(uint32_t component_mask, BlockSize bs
     xd->mb_to_right_edge -= (this_width - pred_width) * 8;
     xd->mb_to_bottom_edge = ctxt.mb_to_far_edge;
 }
+
 struct obmc_inter_pred_ctxt {
     uint8_t **adjacent;
     int      *adjacent_stride;
@@ -1417,6 +1431,7 @@ struct obmc_inter_pred_ctxt {
     uint16_t  final_dst_stride_v;
     uint32_t  component_mask;
 };
+
 static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD *xd, int rel_mi_col, uint8_t above_mi_width,
                                                MbModeInfo *above_mi, void *fun_ctxt) {
     (void)above_mi;
@@ -1464,6 +1479,7 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD *xd,
             svt_aom_blend_a64_vmask(dst, dst_stride, dst, dst_stride, tmp, tmp_stride, mask, bw, bh);
     }
 }
+
 static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD *xd, int rel_mi_row, uint8_t left_mi_height,
                                               MbModeInfo *left_mi, void *fun_ctxt) {
     (void)left_mi;
@@ -1510,6 +1526,7 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD *xd, 
             svt_aom_blend_a64_hmask(dst, dst_stride, dst, dst_stride, tmp, tmp_stride, mask, bw, bh);
     }
 }
+
 // This function combines motion compensated predictions that are generated by
 // top/left neighboring blocks' inter predictors with the regular inter
 // prediction. We assume the original prediction (bmc) is stored in
@@ -1593,6 +1610,7 @@ void svt_av1_calc_target_weighted_pred_above_c(uint8_t is16bit, MacroBlockD *xd,
         }
     }
 }
+
 void svt_av1_calc_target_weighted_pred_left_c(uint8_t is16bit, MacroBlockD *xd, int rel_mi_row, uint8_t nb_mi_height,
                                               MbModeInfo *nb_mi, void *fun_ctxt) {
     (void)nb_mi;
@@ -2239,6 +2257,7 @@ static void interpolation_filter_search(PictureControlSet *pcs, ModeDecisionCont
     // Update fast_luma_rate to take into account switchable_rate
     cand_bf->fast_luma_rate += switchable_rate;
 }
+
 /*
     compound inter-intra:
     perform intra prediction and inter-intra blending
@@ -2506,6 +2525,7 @@ static void compute_subpel_params(SequenceControlSet *scs, int16_t pre_y, int16_
         *pos_x                  = pre_x + (mv_q4.x >> SUBPEL_BITS);
     }
 }
+
 void tf_inter_predictor(SequenceControlSet *scs, uint8_t *src_ptr, uint8_t *dst_ptr, int16_t pre_y, int16_t pre_x,
                         Mv mv, const struct ScaleFactors *const sf, ConvolveParams *conv_params,
                         InterpFilters interp_filters, uint16_t frame_width, uint16_t frame_height, uint8_t blk_width,
@@ -2562,11 +2582,13 @@ void tf_inter_predictor(SequenceControlSet *scs, uint8_t *src_ptr, uint8_t *dst_
                             0); // use_intrabc);
     }
 }
+
 static void enc_make_inter_predictor_light_pd0(uint8_t *src, uint8_t *dst, SubpelParams *subpel_params,
                                                ConvolveParams *conv_params, uint8_t blk_width, uint8_t blk_height,
                                                int32_t src_stride, int32_t dst_stride) {
     svt_inter_predictor_light_pd0(src, src_stride, dst, dst_stride, blk_width, blk_height, subpel_params, conv_params);
 }
+
 void svt_aom_enc_make_inter_predictor(SequenceControlSet *scs, uint8_t *src_ptr, uint8_t *src_ptr_2b, uint8_t *dst_ptr,
                                       int16_t pre_y, int16_t pre_x, Mv mv, const struct ScaleFactors *const sf,
                                       ConvolveParams *conv_params, InterpFilters interp_filters,
@@ -2778,6 +2800,7 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet *scs, ScaleFactors sf
                        subsampling_shift);
     return return_error;
 }
+
 static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, ModeDecisionContext *ctx, BlockModeInfo *block_mi,
                                            EbPictureBufferDesc *ref_pic_0, EbPictureBufferDesc *ref_pic_1,
                                            EbPictureBufferDesc *pred, ScaleFactors *sf0, ScaleFactors *sf1) {
@@ -2832,6 +2855,7 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet *scs, ModeDecision
             src_ptr, dst_ptr, &subpel_params, &conv_params, bwidth, bheight, ref_pic->stride_y, dst_stride);
     }
 }
+
 /*
   inter prediction for light PD1
 */
@@ -3776,6 +3800,7 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet *pcs, ModeDecisionConte
 
     return exit_compound_prep;
 }
+
 void svt_aom_search_compound_diff_wedge(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand) {
     pick_interinter_mask(pcs,
                          ctx,
@@ -3826,6 +3851,7 @@ EbErrorType svt_aom_inter_pu_prediction_av1_light_pd0(uint8_t hbd_md, ModeDecisi
 
     return EB_ErrorNone;
 }
+
 /*
    light mcp path function
 */
@@ -3872,6 +3898,7 @@ EbErrorType svt_aom_inter_pu_prediction_av1_light_pd1(uint8_t hbd_md, ModeDecisi
 
     return EB_ErrorNone;
 }
+
 EbErrorType svt_aom_inter_pu_prediction_av1(uint8_t hbd_md, ModeDecisionContext *ctx, PictureControlSet *pcs,
                                             ModeDecisionCandidateBuffer *cand_bf) {
     ModeDecisionCandidate *const cand        = cand_bf->cand;

@@ -60,6 +60,7 @@ static const int32_t expf_tab_fp16[] = {
     36,    34,    31,    30,    28,    26,    24,    23,    21};
 
 #define SSE_STRIDE (BW + 2)
+
 static uint32_t calculate_squared_errors_sum_no_div_sse4_1(const uint8_t *s, int s_stride, const uint8_t *p,
                                                            int p_stride, unsigned int w, unsigned int h) {
     assert(w % 16 == 0 && "block width must be multiple of 16");
@@ -83,6 +84,7 @@ static uint32_t calculate_squared_errors_sum_no_div_sse4_1(const uint8_t *s, int
 
     return _mm_cvtsi128_si32(sum);
 }
+
 /*This function return 2 separate squared errors for two block 8xh, return value is stored in output array*/
 static void calculate_squared_errors_sum_2x8xh_no_div_sse4_1(const uint8_t *s, int s_stride, const uint8_t *p,
                                                              int p_stride, unsigned int h, uint32_t *output) {
@@ -165,6 +167,7 @@ static void calculate_squared_errors_sum_2x8xh_no_div_highbd_sse4_1(const uint16
     output[0] = _mm_cvtsi128_si32(sum[0]) >> shift_factor;
     output[1] = _mm_cvtsi128_si32(sum[1]) >> shift_factor;
 }
+
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_partial_sse4_1(
     MeContext *me_ctx, const uint8_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
     uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor) {
@@ -260,6 +263,7 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_sse4_1(
                                                                                me_ctx->tf_decay_factor_fp16[C_V]);
     }
 }
+
 static void svt_av1_apply_temporal_filter_planewise_medium_partial_sse4_1(
     MeContext *me_ctx, const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,
@@ -433,6 +437,7 @@ void svt_av1_apply_temporal_filter_planewise_medium_sse4_1(
                                                                       1);
     }
 }
+
 static void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_partial_sse4_1(
     MeContext *me_ctx, const uint16_t *y_pre, int y_pre_stride, unsigned int block_width, unsigned int block_height,
     uint32_t *y_accum, uint16_t *y_count, const uint32_t tf_decay_factor, uint32_t encoder_bit_depth) {
@@ -533,6 +538,7 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_sse4_1(
                                                                                    encoder_bit_depth);
     }
 }
+
 static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_sse4_1(
     MeContext *me_ctx, const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre, int y_pre_stride,
     unsigned int block_width, unsigned int block_height, uint32_t *y_accum, uint16_t *y_count, uint32_t tf_decay_factor,

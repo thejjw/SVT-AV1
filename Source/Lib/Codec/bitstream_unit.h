@@ -67,6 +67,7 @@ static INLINE int32_t get_msb(uint32_t n) {
     _BitScanReverse(&first_set_bit, n);
     return first_set_bit;
 }
+
 #undef USE_MSC_INTRINSICS
 #else
 // Returns (int32_t)floor(log2(n)). n must be > 0.
@@ -308,6 +309,7 @@ typedef struct AomWriter {
     OdEcEnc              ec;
     uint8_t              allow_update_cdf;
 } AomWriter;
+
 static INLINE void aom_start_encode(AomWriter* br, OutputBitstreamUnit* source) {
     br->buffer        = source->buffer_av1;
     br->buffer_size   = source->size;
@@ -315,7 +317,9 @@ static INLINE void aom_start_encode(AomWriter* br, OutputBitstreamUnit* source) 
     br->pos           = 0;
     svt_od_ec_enc_init(&br->ec, 62025);
 }
-EbErrorType           svt_realloc_output_bitstream_unit(OutputBitstreamUnit* output_bitstream_ptr, uint32_t sz);
+
+EbErrorType svt_realloc_output_bitstream_unit(OutputBitstreamUnit* output_bitstream_ptr, uint32_t sz);
+
 static INLINE int32_t aom_stop_encode(AomWriter* w) {
     uint32_t bytes = 0;
     uint8_t* data  = svt_od_ec_enc_done(&w->ec, &bytes);
@@ -340,6 +344,7 @@ static INLINE int32_t aom_stop_encode(AomWriter* w) {
     svt_od_ec_enc_clear(&w->ec);
     return nb_bits;
 }
+
 static INLINE void aom_write(AomWriter* w, int bit, int prob) {
     int p = (0x7FFFFF - (prob << 15) + prob) >> 8;
 #if CONFIG_BITSTREAM_DEBUG

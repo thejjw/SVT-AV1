@@ -64,6 +64,7 @@ static INLINE uint64_t energy_computation_64_avx2(const int32_t *in, const uint3
 
     return hadd64_avx2(sum);
 }
+
 static INLINE void copy_32_bytes_avx2(const int32_t *src, int32_t *dst) {
     const __m256i val = _mm256_loadu_si256((__m256i *)(src + 0 * 8));
     _mm256_storeu_si256((__m256i *)(dst + 0 * 8), val);
@@ -124,6 +125,7 @@ uint64_t svt_handle_transform64x64_avx2(int32_t *output) {
 
     return three_quad_energy;
 }
+
 uint64_t svt_handle_transform16x64_N2_N4_avx2(int32_t *output) {
     (void)output;
     return 0;
@@ -151,6 +153,7 @@ uint64_t svt_handle_transform64x64_N2_N4_avx2(int32_t *output) {
     copy_256x_bytes_avx2(output + 64, output + 32, 31);
     return 0;
 }
+
 static INLINE __m128i compute_sum(__m256i *in, __m256i *prev_in) {
     const __m256i zero    = _mm256_setzero_si256();
     const __m256i round_2 = _mm256_set1_epi16(2);

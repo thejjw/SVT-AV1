@@ -31,6 +31,7 @@ extern const PredictionMode fimode_to_intradir[FILTER_INTRA_MODES];
 static INLINE uint8_t *set_levels(uint8_t *const levels_buf, const int32_t width) {
     return levels_buf + TX_PAD_TOP * (width + TX_PAD_HOR);
 }
+
 static INLINE int get_txb_bwl(TxSize tx_size) {
     tx_size = av1_get_adjusted_tx_size(tx_size);
     return tx_size_wide_log2[tx_size];

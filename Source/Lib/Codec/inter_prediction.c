@@ -28,6 +28,7 @@ void svt_aom_pack_block(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *i
     svt_aom_pack2d_src(
         in8_bit_buffer, in8_stride, inn_bit_buffer, inn_stride, out16_bit_buffer, out_stride, width, height);
 }
+
 static WedgeMasksType wedge_masks[BlockSizeS_ALL][2];
 
 int svt_aom_is_masked_compound_type(COMPOUND_TYPE type) { return (type == COMPOUND_WEDGE || type == COMPOUND_DIFFWTD); }
@@ -68,6 +69,7 @@ static void diffwtd_mask(uint8_t *mask, int which_inverse, int mask_base, const 
         }
     }
 }
+
 static AOM_FORCE_INLINE void diffwtd_mask_highbd(uint8_t *mask, int which_inverse, int mask_base, const uint16_t *src0,
                                                  int src0_stride, const uint16_t *src1, int src1_stride, int h, int w,
                                                  const unsigned int bd) {
@@ -127,6 +129,7 @@ static AOM_FORCE_INLINE void diffwtd_mask_highbd(uint8_t *mask, int which_invers
         }
     }
 }
+
 void svt_av1_build_compound_diffwtd_mask_highbd_c(uint8_t *mask, DIFFWTD_MASK_TYPE mask_type, const uint8_t *src0,
                                                   int src0_stride, const uint8_t *src1, int src1_stride, int h, int w,
                                                   int bd) {
@@ -254,6 +257,7 @@ DECLARE_ALIGNED(256, const InterpKernel, sub_pel_filters_4[SUBPEL_SHIFTS]) = {{0
                                                                               {0, 0, -2, 8, 126, -4, 0, 0}};
 
 #define MAX_FILTER_TAP 8
+
 int svt_aom_get_relative_dist_enc(SeqHeader *seq_header, int ref_hint, int order_hint) {
     int diff, m;
     if (!seq_header->order_hint_info.enable_order_hint)
@@ -1040,6 +1044,7 @@ void svt_av1_highbd_jnt_convolve_2d_c(const uint16_t *src, int32_t src_stride, u
 }
 
 aom_highbd_convolve_fn_t svt_aom_convolveHbd[/*subX*/ 2][/*subY*/ 2][/*bi*/ 2];
+
 void svt_aom_asm_set_convolve_hbd_asm_table(void) {
     svt_aom_convolveHbd[0][0][0] = svt_av1_highbd_convolve_2d_copy_sr;
     svt_aom_convolveHbd[0][0][1] = svt_av1_highbd_jnt_convolve_2d_copy;
@@ -1055,6 +1060,7 @@ void svt_aom_asm_set_convolve_hbd_asm_table(void) {
 }
 
 AomConvolveFn svt_aom_convolve[/*subX*/ 2][/*subY*/ 2][/*bi*/ 2];
+
 void svt_aom_asm_set_convolve_asm_table(void) {
     svt_aom_convolve[0][0][0] = svt_av1_convolve_2d_copy_sr;
     svt_aom_convolve[0][0][1] = svt_av1_jnt_convolve_2d_copy;
@@ -1178,6 +1184,7 @@ void convolve_2d_for_intrabc(const uint8_t *src, int src_stride, uint8_t *dst, i
                               conv_params);
     }
 }
+
 void highbd_convolve_2d_for_intrabc(const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride, int w, int h,
                                     int subpel_x_q4, int subpel_y_q4, ConvolveParams *conv_params, int bd) {
     const InterpFilterParams *filter_params_x = subpel_x_q4 ? &av1_interp_filter_params_list[BILINEAR] : NULL;
@@ -1222,6 +1229,7 @@ void svt_inter_predictor_light_pd0(const uint8_t *src, int32_t src_stride, uint8
             src, src_stride, dst, dst_stride, w, h, 0, 0, 0, 0, conv_params);
     }
 }
+
 void svt_inter_predictor_light_pd1(uint8_t *src, uint8_t *src_2b, int32_t src_stride, uint8_t *dst, int32_t dst_stride,
                                    int32_t w, int32_t h, InterpFilters interp_filters, SubpelParams *subpel_params,
                                    ConvolveParams *conv_params, int32_t bd) {
@@ -1323,6 +1331,7 @@ void svt_inter_predictor_light_pd1(uint8_t *src, uint8_t *src_2b, int32_t src_st
         }
     }
 }
+
 void svt_inter_predictor(const uint8_t *src, int32_t src_stride, uint8_t *dst, int32_t dst_stride,
                          const SubpelParams *subpel_params, const ScaleFactors *sf, int32_t w, int32_t h,
                          ConvolveParams *conv_params, InterpFilters interp_filters, int32_t is_intrabc) {
@@ -2467,6 +2476,7 @@ const uint8_t *svt_av1_get_obmc_mask(int length) {
     default: assert(0); return NULL;
     }
 }
+
 int16_t svt_aom_mode_context_analyzer(int16_t mode_context, const MvReferenceFrame *const rf) {
     static unsigned svt_aom_compound_mode_ctx_map[3][COMP_NEWMV_CTXS] = {
         {0, 1, 1, 1, 1},

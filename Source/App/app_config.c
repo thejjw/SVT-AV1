@@ -366,6 +366,7 @@ static EbErrorType set_cfg_input_file(EbConfig *cfg, const char *token, const ch
     cfg->y4m_input = check_if_y4m(cfg);
     return EB_ErrorNone;
 }
+
 static EbErrorType set_allow_mmap_file(EbConfig *cfg, const char *token, const char *value) {
     (void)token;
     switch (value ? *value : '1') {
@@ -374,6 +375,7 @@ static EbErrorType set_allow_mmap_file(EbConfig *cfg, const char *token, const c
     }
     return EB_ErrorNone;
 }
+
 static EbErrorType set_cfg_stream_file(EbConfig *cfg, const char *token, const char *value) {
     if (!strcmp(value, "stdout") || !strcmp(value, "-")) {
         if (cfg->bitstream_file && cfg->bitstream_file != stdout) {
@@ -384,6 +386,7 @@ static EbErrorType set_cfg_stream_file(EbConfig *cfg, const char *token, const c
     }
     return open_file(&cfg->bitstream_file, token, value, "wb");
 }
+
 static EbErrorType set_cfg_error_file(EbConfig *cfg, const char *token, const char *value) {
     if (!strcmp(value, "stderr")) {
         if (cfg->error_log_file && cfg->error_log_file != stderr) {
@@ -394,15 +397,19 @@ static EbErrorType set_cfg_error_file(EbConfig *cfg, const char *token, const ch
     }
     return open_file(&cfg->error_log_file, token, value, "w+");
 }
+
 static EbErrorType set_cfg_recon_file(EbConfig *cfg, const char *token, const char *value) {
     return open_file(&cfg->recon_file, token, value, "wb");
 }
+
 static EbErrorType set_cfg_qp_file(EbConfig *cfg, const char *token, const char *value) {
     return open_file(&cfg->qp_file, token, value, "r");
 }
+
 static EbErrorType set_cfg_stat_file(EbConfig *cfg, const char *token, const char *value) {
     return open_file(&cfg->stat_file, token, value, "wb");
 }
+
 static EbErrorType set_cfg_roi_map_file(EbConfig *cfg, const char *token, const char *value) {
     return open_file(&cfg->roi_map_file, token, value, "r");
 }
@@ -432,15 +439,18 @@ static EbErrorType set_passes(EbConfig *cfg, const char *token, const char *valu
 static EbErrorType set_cfg_frames_to_be_encoded(EbConfig *cfg, const char *token, const char *value) {
     return str_to_int64(token, value, &cfg->frames_to_be_encoded);
 }
+
 static EbErrorType set_cfg_frames_to_be_skipped(EbConfig *cfg, const char *token, const char *value) {
     EbErrorType ret = str_to_int64(token, value, &cfg->frames_to_be_skipped);
     if (cfg->frames_to_be_skipped > 0)
         cfg->need_to_skip = true;
     return ret;
 }
+
 static EbErrorType set_buffered_input(EbConfig *cfg, const char *token, const char *value) {
     return str_to_int(token, value, &cfg->buffered_input);
 }
+
 static EbErrorType set_cfg_force_key_frames(EbConfig *cfg, const char *token, const char *value) {
     (void)token;
     struct forced_key_frames fkf;
@@ -487,6 +497,7 @@ err:
     free(fkf.specifiers);
     return EB_ErrorBadParameter;
 }
+
 static EbErrorType set_no_progress(EbConfig *cfg, const char *token, const char *value) {
     (void)token;
     switch (value ? *value : '1') {
@@ -495,6 +506,7 @@ static EbErrorType set_no_progress(EbConfig *cfg, const char *token, const char 
     }
     return EB_ErrorNone;
 }
+
 static EbErrorType set_progress(EbConfig *cfg, const char *token, const char *value) {
     (void)token;
     switch (value ? *value : '1') {
@@ -504,6 +516,7 @@ static EbErrorType set_progress(EbConfig *cfg, const char *token, const char *va
     }
     return EB_ErrorNone;
 }
+
 /**
  * @brief split colon separated string into key=value pairs
  *
@@ -585,6 +598,7 @@ static EbErrorType set_level(EbConfig *cfg, const char *token, const char *value
         cfg->config.level = 9999999;
     return EB_ErrorNone;
 };
+
 static EbErrorType set_injector(EbConfig *cfg, const char *token, const char *value) {
     return str_to_uint(token, value, &cfg->injector);
 }
@@ -1242,6 +1256,7 @@ void svt_config_dtor(EbConfig *app_cfg) {
     free(app_cfg);
     return;
 }
+
 EbErrorType enc_channel_ctor(EncChannel *c) {
     c->app_cfg = svt_config_ctor();
     if (!c->app_cfg)
@@ -1436,6 +1451,7 @@ bool load_twopass_stats_in(EbConfig *cfg) {
     }
     return config->rc_stats_buffer.buf != NULL;
 }
+
 EbErrorType handle_stats_file(EbConfig *app_cfg, EncPass enc_pass, const SvtAv1FixedBuf *rc_stats_buffer) {
     switch (enc_pass) {
     case ENC_SINGLE_PASS: {
@@ -1487,6 +1503,7 @@ EbErrorType handle_stats_file(EbConfig *app_cfg, EncPass enc_pass, const SvtAv1F
     }
     return EB_ErrorNone;
 }
+
 /******************************************
 * Verify Settings
 ******************************************/
@@ -1848,6 +1865,7 @@ static bool check_two_pass_conflicts(int32_t argc, char *const argv[]) {
     }
     return false;
 }
+
 /*
 * Returns the number of passes, multi_pass_mode
 */
@@ -1856,6 +1874,7 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncPass enc_pass[MAX_ENC_P
     MultiPassModes multi_pass_mode;
 
     int rc_mode = 0;
+
     // copied from str_to_rc_mode()
     const struct {
         const char *name;
@@ -1869,6 +1888,7 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncPass enc_pass[MAX_ENC_P
         {"vbr", 1},
         {"cbr", 2},
     };
+
     const size_t rc_size  = sizeof(rc) / sizeof(rc[0]);
     int          enc_mode = 0;
     // Read required inputs to decide on the number of passes and check the validity of their ranges
@@ -2067,6 +2087,7 @@ static bool warn_legacy_token(const char *const token) {
         {"-stat-report", STAT_REPORT_NEW_TOKEN},
         {NULL, NULL},
     };
+
     for (struct warn_set *tok = warning_set; tok->old_token; ++tok) {
         if (strcmp(token, tok->old_token))
             continue;

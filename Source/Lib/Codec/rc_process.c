@@ -152,6 +152,7 @@ typedef struct RateControlContext {
     EbFifo *rate_control_output_results_fifo_ptr;
     EbFifo *picture_decision_results_output_fifo_ptr;
 } RateControlContext;
+
 EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry *entry_ptr,
                                                                  uint64_t                  picture_number) {
     entry_ptr->picture_number         = picture_number;
@@ -159,6 +160,7 @@ EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_st
 
     return EB_ErrorNone;
 }
+
 static void rate_control_context_dctor(EbPtr p) {
     EbThreadContext    *thread_ctx = (EbThreadContext *)p;
     RateControlContext *obj        = (RateControlContext *)thread_ctx->priv;
@@ -219,6 +221,7 @@ int32_t svt_av1_compute_qdelta_fp(int32_t qstart_fp8, int32_t qtarget_fp8, EbBit
 
     return target_index - start_index;
 }
+
 double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth) {
     // Convert the index to a real Q value (scaled down to match old Q values)
     switch (bit_depth) {
@@ -228,6 +231,7 @@ double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth) {
     default: assert(0 && "bit_depth should be EB_EIGHT_BIT, EB_TEN_BIT or EB_TWELVE_BIT"); return -1.0;
     }
 }
+
 int32_t svt_av1_compute_qdelta(double qstart, double qtarget, EbBitDepth bit_depth) {
     int32_t start_index  = MAX_Q_INDEX;
     int32_t target_index = MAX_Q_INDEX;
@@ -510,6 +514,7 @@ static int svt_aom_gf_high_tpl_la = 2400;
 static int svt_aom_gf_low_tpl_la  = 300;
 static int svt_aom_kf_high        = 5000;
 static int svt_aom_kf_low         = 400;
+
 static int get_active_quality(int q, int gfu_boost, int low, int high, int *low_motion_minq, int *high_motion_minq) {
     if (gfu_boost > high)
         return low_motion_minq[q];
@@ -523,6 +528,7 @@ static int get_active_quality(int q, int gfu_boost, int low, int high, int *low_
         return low_motion_minq[q] + adjustment;
     }
 }
+
 static int get_kf_active_quality_tpl(const RATE_CONTROL *const rc, int q, EbBitDepth bit_depth) {
     int *kf_low_motion_minq_cqp;
     int *kf_high_motion_minq;
@@ -531,6 +537,7 @@ static int get_kf_active_quality_tpl(const RATE_CONTROL *const rc, int q, EbBitD
     return get_active_quality(
         q, rc->kf_boost, svt_aom_kf_low, svt_aom_kf_high, kf_low_motion_minq_cqp, kf_high_motion_minq);
 }
+
 static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, EbBitDepth bit_depth) {
     int *arfgf_low_motion_minq;
     int *arfgf_high_motion_minq;
@@ -539,6 +546,7 @@ static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, EbB
     return get_active_quality(
         q, rc->gfu_boost, svt_aom_gf_low_tpl_la, svt_aom_gf_high_tpl_la, arfgf_low_motion_minq, arfgf_high_motion_minq);
 }
+
 static int get_gf_high_motion_quality(int q, EbBitDepth bit_depth) {
     int *arfgf_high_motion_minq;
     ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq);
@@ -569,11 +577,13 @@ double svt_av1_get_gfu_boost_projection_factor(double min_factor, double max_fac
 }
 
 #define MAX_GFUBOOST_FACTOR 10.0
+
 static int get_gfu_boost_from_r0_lap(double min_factor, double max_factor, double r0, int frames_to_key) {
     double    factor = svt_av1_get_gfu_boost_projection_factor(min_factor, max_factor, frames_to_key);
     const int boost  = (int)rint(factor / r0);
     return boost;
 }
+
 int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, uint8_t is_intra) {
     assert(beta > 0.0);
     int q = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
@@ -608,6 +618,7 @@ int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, uin
 
 #define MIN_BPB_FACTOR 0.005
 #define MAX_BPB_FACTOR 50
+
 // Gets the appropriate bpmb enumerator based on the frame and content type (CBR)
 static int get_bpmb_enumerator_cbr(FRAME_TYPE frame_type, const int is_screen_content_type) {
     int enumerator;
@@ -620,6 +631,7 @@ static int get_bpmb_enumerator_cbr(FRAME_TYPE frame_type, const int is_screen_co
 
     return enumerator;
 }
+
 // Gets the appropriate bpmb enumerator based on the frame and content type
 static int get_bpmb_enumerator(FRAME_TYPE frame_type, const int is_screen_content_type) {
     int enumerator;
@@ -632,6 +644,7 @@ static int get_bpmb_enumerator(FRAME_TYPE frame_type, const int is_screen_conten
 
     return enumerator;
 }
+
 int svt_av1_rc_bits_per_mb(FrameType frame_type, int qindex, double correction_factor, const int bit_depth,
                            const int is_screen_content_type, int onepass_cbr_mode) {
     const double q          = svt_av1_convert_qindex_to_q(qindex, bit_depth);
@@ -781,6 +794,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs, RATE_CO
     *active_best  = active_best_quality;
     *active_worst = active_worst_quality;
 }
+
 static int svt_av1_get_q_index_from_qstep_ratio(int leaf_qindex, double qstep_ratio, const int bit_depth) {
     const double leaf_qstep   = svt_aom_dc_quant_qtx(leaf_qindex, 0, bit_depth);
     const double target_qstep = leaf_qstep * qstep_ratio;
@@ -800,8 +814,10 @@ static int svt_av1_get_q_index_from_qstep_ratio(int leaf_qindex, double qstep_ra
     }
     return qindex;
 }
+
 static const double r0_weight[3]                = {0.75 /* I_SLICE */, 0.9 /* BASE */, 1 /* NON-BASE */};
 static const double qp_scale_compress_weight[4] = {1, 1.125, 1.25, 1.375};
+
 /******************************************************
  * crf_qindex_calc
  * Assign the q_index per frame.
@@ -980,6 +996,7 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex)
     assert(ppcs->bottom_index <= rc->worst_quality && ppcs->bottom_index >= rc->best_quality);
     return active_best_quality;
 }
+
 /******************************************************
  * non_base_boost
  * Compute a non-base frame boost.
@@ -1071,14 +1088,17 @@ static int cqp_qindex_calc(PictureControlSet *pcs, int qindex) {
 // The function here is a first pass estimate based on data from
 // a previous Vizer run
 static double def_inter_rd_multiplier(int qindex) { return 3.2 + (0.0015 * (double)qindex); }
+
 // Returns the default rd multiplier for ARF/Golden Frames for a given qindex.
 // The function here is a first pass estimate based on data from
 // a previous Vizer run
 static double def_arf_rd_multiplier(int qindex) { return 3.25 + (0.0015 * (double)qindex); }
+
 // Returns the default rd multiplier for key frames for a given qindex.
 // The function here is a first pass estimate based on data from
 // a previous Vizer run
 static double def_kf_rd_multiplier(int qindex) { return 3.3 + (0.0015 * (double)qindex); }
+
 int svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex) {
     const int q      = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
     int64_t   rdmult = q * q;
@@ -1105,9 +1125,11 @@ int svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpd
 
     return rdmult > 0 ? (int)AOMMIN(rdmult, INT_MAX) : 1;
 }
+
 static const int rd_frame_type_factor[2][SVT_AV1_FRAME_UPDATE_TYPES] = {{150, 180, 150, 150, 180, 180, 150},
                                                                         {128, 144, 128, 128, 144, 144, 128}};
 #define RTC_KF_LAMBDA_BOOST 100
+
 /*
  * Set the sse lambda based on the bit_depth, then update based on frame position.
  */
@@ -1281,6 +1303,7 @@ void svt_aom_lambda_assign(PictureControlSet *pcs, uint32_t *fast_lambda, uint32
     *full_lambda                     = (uint32_t)((*full_lambda * scale_factor) >> 7);
     *fast_lambda                     = (uint32_t)((*fast_lambda * scale_factor) >> 7);
 }
+
 /******************************************************************************
 * compute_deltaq
 * Compute delta-q based on the q, bitdepth and cyclic refresh parameters
@@ -1301,8 +1324,10 @@ static int compute_deltaq(PictureParentControlSet *ppcs, RATE_CONTROL *rc, int q
     }
     return deltaq;
 }
+
 static int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs, double correction_factor, EbBitDepth bit_depth,
                                   uint8_t sc_content_detected, int onepass_cbr_mode);
+
 /******************************************************************************
 * svt_av1_cyclic_refresh_rc_bits_per_mb
 * Compute bits per mb for cyclic refresh mode
@@ -1334,6 +1359,7 @@ int svt_av1_cyclic_refresh_rc_bits_per_mb(PictureParentControlSet *ppcs, double 
                                                    scs->enc_ctx->rc.onepass_cbr_mode));
     return bits_per_mb;
 }
+
 /******************************************************
  * cyclic_sb_qp_derivation
  * Calculates the QP per SB based on the ME statistics
@@ -1346,6 +1372,7 @@ int svt_av1_cyclic_refresh_rc_bits_per_mb(PictureParentControlSet *ppcs, double 
 const int BOOST_MAX = 10;
 // Maximum rate target ratio for setting segment delta-qp.
 #define CR_MAX_RATE_TARGET_RATIO 4.0
+
 static void cyclic_sb_qp_derivation(PictureControlSet *pcs) {
     PictureParentControlSet *ppcs = pcs->ppcs;
     SequenceControlSet      *scs  = pcs->ppcs->scs;
@@ -1481,6 +1508,7 @@ void svt_aom_cyclic_refresh_init(PictureParentControlSet *ppcs) {
         cr->rate_ratio_qdelta = 1.50 + rc->rate_ratio_qdelta_adjustment;
     }
 }
+
 /*
 * Derives a qindex per 64x64 using ME distortions (to be used for lambda modulation only; not at Q/Q-1)
 */
@@ -1851,6 +1879,7 @@ static int av1_find_qindex(double desired_q, aom_bit_depth_t bit_depth, int best
     assert(svt_av1_convert_qindex_to_q(low, bit_depth) >= desired_q || low == worst_qindex);
     return low;
 }
+
 void set_rc_buffer_sizes(SequenceControlSet *scs) {
     EncodeContext        *enc_ctx   = scs->enc_ctx;
     RATE_CONTROL         *rc        = &enc_ctx->rc;
@@ -1921,6 +1950,7 @@ static void av1_rc_init(SequenceControlSet *scs) {
 }
 
 #define MIN_BOOST_COMBINE_FACTOR 4.0
+
 /******************************************************************************
 * process_tpl_stats_frame_kf_gfu_boost
 * update r0, calculate kf and gfu boosts for VBR
@@ -2068,6 +2098,7 @@ static int get_bits_per_mb(PictureParentControlSet *ppcs, int use_cyclic_refresh
                                                        ppcs->sc_class1,
                                                        scs->enc_ctx->rc.onepass_cbr_mode);
 }
+
 // Similar to find_qindex_by_rate() function in ratectrl.c, but returns the q
 // index with rate just above or below the desired rate, depending on which of
 // the two rates is closer to the desired rate.
@@ -2112,6 +2143,7 @@ static int find_closest_qindex_by_rate(int desired_bits_per_mb, PictureParentCon
     // the desired rate.
     return (curr_bit_diff <= prev_bit_diff) ? curr_q : prev_q;
 }
+
 static int adjust_q_cbr_flat(PictureParentControlSet *ppcs, int q) {
     SequenceControlSet *scs     = ppcs->scs;
     EncodeContext      *enc_ctx = scs->enc_ctx;
@@ -2181,8 +2213,10 @@ static int adjust_q_cbr_flat(PictureParentControlSet *ppcs, int q) {
 
     return AOMMAX(AOMMIN(q, rc->worst_quality), rc->best_quality);
 }
+
 static int max_delta_per_layer[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = {
     {60}, {60, 5}, {60, 20, 2}, {60, 20, 10, 2}, {60, 20, 10, 5, 2}, {60, 30, 20, 10, 5, 2}};
+
 static int adjust_q_cbr(PictureParentControlSet *ppcs, int q) {
     SequenceControlSet *scs     = ppcs->scs;
     EncodeContext      *enc_ctx = scs->enc_ctx;
@@ -2458,7 +2492,9 @@ void svt_av1_resize_reset_rc(PictureParentControlSet *ppcs, int32_t resize_width
             rc->rate_correction_factors[INTER_NORMAL] *= 2.0;
     }
 }
+
 #define QFACTOR 1.1
+
 static int rc_pick_q_and_bounds_no_stats_cbr(PictureControlSet *pcs) {
     SequenceControlSet *scs     = pcs->ppcs->scs;
     EncodeContext      *enc_ctx = scs->enc_ctx;
@@ -2747,6 +2783,7 @@ static void update_buffer_level(PictureParentControlSet *ppcs, int encoded_frame
     rc->bits_off_target = AOMMIN(rc->bits_off_target, rc->maximum_buffer_size);
     rc->buffer_level    = rc->bits_off_target;
 }
+
 /*********************************************************************************************
 * Reset rate_control_param into default values
 ***********************************************************************************************/
@@ -2831,6 +2868,7 @@ static void av1_rc_postencode_update_gop_const(PictureParentControlSet *ppcs) {
     if (frm_hdr->frame_type == KEY_FRAME)
         rc->frames_since_key = 0;
 }
+
 static void av1_rc_postencode_update(PictureParentControlSet *ppcs) {
     SequenceControlSet *scs           = ppcs->scs;
     EncodeContext      *enc_ctx       = scs->enc_ctx;
@@ -2896,6 +2934,7 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs) {
     if (frm_hdr->frame_type == KEY_FRAME)
         rc->frames_since_key = 0;
 }
+
 void svt_aom_update_rc_counts(PictureParentControlSet *ppcs) {
     SequenceControlSet *scs     = ppcs->scs;
     EncodeContext      *enc_ctx = scs->enc_ctx;
@@ -2908,7 +2947,9 @@ void svt_aom_update_rc_counts(PictureParentControlSet *ppcs) {
         rc->frames_to_key--;
     }
 }
+
 #define VBR_PCT_ADJUSTMENT_LIMIT 50
+
 // For VBR...adjustment to the frame target based on error from previous frames
 static void vbr_rate_correction(PictureControlSet *pcs, int *this_frame_target) {
     SequenceControlSet *scs                 = pcs->ppcs->scs;
@@ -2952,6 +2993,7 @@ static void av1_set_target_rate(PictureControlSet *pcs) {
         vbr_rate_correction(pcs, &target_rate);
     pcs->ppcs->this_frame_target = target_rate;
 }
+
 static double av1_get_compression_ratio(PictureParentControlSet *ppcs, size_t encoded_frame_size) {
     const int             upscaled_width          = ppcs->av1_cm->frm_size.superres_upscaled_width;
     const int             height                  = ppcs->av1_cm->frm_size.frame_height; //cm->height;
@@ -2964,6 +3006,7 @@ static double av1_get_compression_ratio(PictureParentControlSet *ppcs, size_t en
     const size_t uncompressed_frame_size          = (luma_pic_size * pic_size_profile_factor) >> 3;
     return uncompressed_frame_size / (double)encoded_frame_size;
 }
+
 /**************************************************************************************************************
 * get_kf_q_tpl()
 * This function finds the q for a selected active quality for key frame. The functionality is the
@@ -2988,6 +3031,7 @@ static int get_kf_q_tpl(const RATE_CONTROL *const rc, int target_active_quality,
     }
     return q;
 }
+
 /**************************************************************************************************************
 *This function finds the q for a selected active quality for base layer frames. The functionality is the reverse of get_kf_active_quality_tpl()
 **************************************************************************************************************/
@@ -3016,6 +3060,7 @@ static int get_gfu_q_tpl(const RATE_CONTROL *const rc, int target_active_quality
     }
     return q;
 }
+
 /**************************************************************************************************************
  * capped_crf_reencode()
  * This function performs re-encoding for capped CRF. It adjusts the QP, and active_worst_quality
@@ -3104,6 +3149,7 @@ static void capped_crf_reencode(PictureParentControlSet *ppcs, int *const q) {
                                          rc->active_worst_quality);
     }
 }
+
 static void av1_rc_compute_frame_size_bounds(PictureParentControlSet *ppcs, int frame_target,
                                              int *frame_under_shoot_limit, int *frame_over_shoot_limit) {
     EncodeContext *const        enc_ctx = ppcs->scs->enc_ctx;
@@ -3317,6 +3363,7 @@ void recode_loop_update_q(PictureParentControlSet *ppcs, bool *const loop, int *
         rc->active_worst_quality = clamp_qindex(scs, rc->active_worst_quality);
     }
 }
+
 /************************************************************************************************
 * Populate the required parameters in two_pass structure from other structures
 *************************************************************************************************/
@@ -3400,6 +3447,7 @@ static void store_param(PictureParentControlSet *ppcs, RateControlIntervalParamC
     rate_control_param_ptr->kf_group_bits       = ppcs->scs->twopass.kf_group_bits;
     rate_control_param_ptr->kf_group_error_left = ppcs->scs->twopass.kf_group_error_left;
 }
+
 /************************************************************************************************
 * Calculates the stat of coded frames over the averaging period
 *************************************************************************************************/
@@ -3512,6 +3560,7 @@ static void coded_frames_stat_calc(PictureParentControlSet *ppcs) {
         }
     }
 }
+
 /****************************************************************************************
 * reset_rc_param
 * reset RC related variable in PPCS
