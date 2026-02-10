@@ -22,7 +22,7 @@
 #define RENAME_(x, y) AV1_K_MEANS_RENAME(x, y)
 #define RENAME(x) RENAME_(x, AV1_K_MEANS_DIM)
 
-static INLINE int RENAME(calc_dist)(const int *p1, const int *p2) {
+static INLINE int RENAME(calc_dist)(const int* p1, const int* p2) {
     int dist = 0;
     for (int i = 0; i < AV1_K_MEANS_DIM; ++i) {
         dist += SQR(p1[i] - p2[i]);
@@ -30,7 +30,7 @@ static INLINE int RENAME(calc_dist)(const int *p1, const int *p2) {
     return dist;
 }
 
-void RENAME(svt_av1_calc_indices)(const int *data, const int *centroids, uint8_t *indices, int n, int k) {
+void RENAME(svt_av1_calc_indices)(const int* data, const int* centroids, uint8_t* indices, int n, int k) {
     for (int i = 0; i < n; ++i) {
         int min_dist = RENAME(calc_dist)(data + i * AV1_K_MEANS_DIM, centroids);
         indices[i]   = 0;
@@ -44,7 +44,7 @@ void RENAME(svt_av1_calc_indices)(const int *data, const int *centroids, uint8_t
     }
 }
 
-static INLINE void RENAME(calc_centroids)(const int *data, int *centroids, const uint8_t *indices, int n, int k) {
+static INLINE void RENAME(calc_centroids)(const int* data, int* centroids, const uint8_t* indices, int n, int k) {
     int          i, j;
     int          count[PALETTE_MAX_SIZE] = {0};
     unsigned int rand_state              = (unsigned int)data[0];
@@ -87,7 +87,7 @@ static INLINE void RENAME(calc_centroids)(const int *data, int *centroids, const
     }
 }
 
-static INLINE int64_t RENAME(calc_total_dist)(const int *data, const int *centroids, const uint8_t *indices, int n,
+static INLINE int64_t RENAME(calc_total_dist)(const int* data, const int* centroids, const uint8_t* indices, int n,
                                               int k) {
     int64_t dist = 0;
     (void)k;
@@ -97,7 +97,7 @@ static INLINE int64_t RENAME(calc_total_dist)(const int *data, const int *centro
     return dist;
 }
 
-void RENAME(svt_av1_k_means)(const int *data, int *centroids, uint8_t *indices, int n, int k, int max_itr) {
+void RENAME(svt_av1_k_means)(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr) {
     int     pre_centroids[2 * PALETTE_MAX_SIZE];
     uint8_t pre_indices[MAX_SB_SQUARE];
 

@@ -28,7 +28,7 @@ extern "C" {
 /**************************************
      * Threads
      **************************************/
-EbHandle svt_create_thread(void *thread_function(void *), void *thread_context);
+EbHandle svt_create_thread(void* thread_function(void*), void* thread_context);
 
 EbErrorType svt_destroy_thread(EbHandle thread_handle);
 
@@ -90,7 +90,7 @@ EbErrorType svt_destroy_mutex(EbHandle mutex_handle);
         }                                        \
     } while (0)
 
-void svt_aom_atomic_set_u32(AtomicVarU32 *var, uint32_t in);
+void svt_aom_atomic_set_u32(AtomicVarU32* var, uint32_t in);
 
 /*
  Condition variable
@@ -106,15 +106,15 @@ typedef struct CondVar {
 #endif
 } CondVar;
 
-EbErrorType svt_set_cond_var(CondVar *cond_var, int32_t newval);
-EbErrorType svt_wait_cond_var(CondVar *cond_var, int32_t input);
-EbErrorType svt_create_cond_var(CondVar *cond_var);
+EbErrorType svt_set_cond_var(CondVar* cond_var, int32_t newval);
+EbErrorType svt_wait_cond_var(CondVar* cond_var, int32_t input);
+EbErrorType svt_create_cond_var(CondVar* cond_var);
 
 // once related functions and macros
 #ifdef _WIN32
 typedef INIT_ONCE OnceType;
 #define ONCE_INIT INIT_ONCE_STATIC_INIT
-#define ONCE_ROUTINE(name) BOOL CALLBACK name(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)
+#define ONCE_ROUTINE(name) BOOL CALLBACK name(PINIT_ONCE InitOnce, PVOID Parameter, PVOID* lpContext)
 #define ONCE_ROUTINE_EPILOG \
     do {                    \
         return TRUE;        \
@@ -145,7 +145,7 @@ typedef void (*OnceFn)(void);
 
 #define RUN_ONCE_MUTEX(mutex_name) svt_run_once(&mutex_name##_once, init_##mutex_name)
 
-void svt_run_once(OnceType *once_control, OnceFn init_routine);
+void svt_run_once(OnceType* once_control, OnceFn init_routine);
 
 #ifdef __cplusplus
 }

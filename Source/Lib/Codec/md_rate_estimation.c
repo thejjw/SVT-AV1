@@ -45,7 +45,7 @@ static INLINE int32_t av1_cost_symbol(AomCdfProb p15) {
 /*************************************************************
 * svt_aom_get_syntax_rate_from_cdf
 **************************************************************/
-void svt_aom_get_syntax_rate_from_cdf(int32_t *costs, const AomCdfProb *cdf, const int32_t *inv_map) {
+void svt_aom_get_syntax_rate_from_cdf(int32_t* costs, const AomCdfProb* cdf, const int32_t* inv_map) {
     int32_t    i;
     AomCdfProb prev_cdf = 0;
     for (i = 0;; ++i) {
@@ -71,9 +71,9 @@ void svt_aom_get_syntax_rate_from_cdf(int32_t *costs, const AomCdfProb *cdf, con
  * Estimate the rate for each syntax elements and for
  * all scenarios based on the frame CDF
  **************************************************************/
-void svt_aom_estimate_syntax_rate(MdRateEstimationContext *md_rate_est_ctx, bool is_i_slice,
+void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool is_i_slice,
                                   uint8_t pic_filter_intra_level, uint8_t allow_screen_content_tools,
-                                  uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT *fc) {
+                                  uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT* fc) {
     int32_t i, j;
 
     md_rate_est_ctx->initialized = 1;
@@ -192,19 +192,19 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext *md_rate_est_ctx, bool
     int32_t sign_fac_bits[CFL_JOINT_SIGNS];
     svt_aom_get_syntax_rate_from_cdf(sign_fac_bits, fc->cfl_sign_cdf, NULL);
     for (int32_t joint_sign = 0; joint_sign < CFL_JOINT_SIGNS; joint_sign++) {
-        int32_t *fac_bits_u = md_rate_est_ctx->cfl_alpha_fac_bits[joint_sign][CFL_PRED_U];
-        int32_t *fac_bits_v = md_rate_est_ctx->cfl_alpha_fac_bits[joint_sign][CFL_PRED_V];
+        int32_t* fac_bits_u = md_rate_est_ctx->cfl_alpha_fac_bits[joint_sign][CFL_PRED_U];
+        int32_t* fac_bits_v = md_rate_est_ctx->cfl_alpha_fac_bits[joint_sign][CFL_PRED_V];
         if (CFL_SIGN_U(joint_sign) == CFL_SIGN_ZERO) {
             memset(fac_bits_u, 0, CFL_ALPHABET_SIZE * sizeof(*fac_bits_u));
         } else {
-            const AomCdfProb *cdf_u = fc->cfl_alpha_cdf[CFL_CONTEXT_U(joint_sign)];
+            const AomCdfProb* cdf_u = fc->cfl_alpha_cdf[CFL_CONTEXT_U(joint_sign)];
             svt_aom_get_syntax_rate_from_cdf(fac_bits_u, cdf_u, NULL);
         }
         if (CFL_SIGN_V(joint_sign) == CFL_SIGN_ZERO) {
             memset(fac_bits_v, 0, CFL_ALPHABET_SIZE * sizeof(*fac_bits_v));
         } else {
             assert((CFL_CONTEXT_V(joint_sign) < CFL_ALPHA_CONTEXTS) && (CFL_CONTEXT_V(joint_sign) >= 0));
-            const AomCdfProb *cdf_v = fc->cfl_alpha_cdf[CFL_CONTEXT_V(joint_sign)];
+            const AomCdfProb* cdf_v = fc->cfl_alpha_cdf[CFL_CONTEXT_V(joint_sign)];
             svt_aom_get_syntax_rate_from_cdf(fac_bits_v, cdf_v, NULL);
         }
         for (int32_t u = 0; u < CFL_ALPHABET_SIZE; u++) {
@@ -376,7 +376,7 @@ static INLINE int32_t mv_class_base(MvClassType c) {
     return c ? CLASS0_SIZE << (c + 2) : 0;
 }
 
-MvClassType svt_av1_get_mv_class(int32_t z, int32_t *offset) {
+MvClassType svt_av1_get_mv_class(int32_t z, int32_t* offset) {
     const MvClassType c = (z >= CLASS0_SIZE * 4096) ? MV_CLASS_10 : (MvClassType)log_in_base_2[z >> 3];
     if (offset) {
         *offset = z - mv_class_base(c);
@@ -384,7 +384,7 @@ MvClassType svt_av1_get_mv_class(int32_t z, int32_t *offset) {
     return c;
 }
 
-static void build_nmv_component_cost_table(int32_t *mvcost, const NmvComponent *const mvcomp,
+static void build_nmv_component_cost_table(int32_t* mvcost, const NmvComponent* const mvcomp,
                                            MvSubpelPrecision precision) {
     int32_t i, v;
     int32_t sign_cost[2], class_cost[MV_CLASSES], class0_cost[CLASS0_SIZE];
@@ -443,7 +443,7 @@ static void build_nmv_component_cost_table(int32_t *mvcost, const NmvComponent *
     }
 }
 
-static void svt_av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2], const NmvContext *ctx,
+static void svt_av1_build_nmv_cost_table(int32_t* mvjoint, int32_t* mvcost[2], const NmvContext* ctx,
                                          MvSubpelPrecision precision) {
     svt_aom_get_syntax_rate_from_cdf(mvjoint, ctx->joints_cdf, NULL);
     build_nmv_component_cost_table(mvcost[0], &ctx->comps[0], precision);
@@ -455,7 +455,7 @@ static void svt_av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2], c
  * Estimate the rate of motion vectors
  * based on the frame CDF
  ***************************************************************************/
-void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *md_rate_est_ctx, FRAME_CONTEXT *fc) {
+void svt_aom_estimate_mv_rate(PictureControlSet* pcs, MdRateEstimationContext* md_rate_est_ctx, FRAME_CONTEXT* fc) {
     if (pcs->approx_inter_rate) {
         memset(md_rate_est_ctx->nmv_vec_cost, 0, sizeof(int32_t) * MV_JOINTS);
         memset(md_rate_est_ctx->nmv_costs, 0, sizeof(int32_t) * MV_VALS * 2);
@@ -463,9 +463,9 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
         md_rate_est_ctx->nmvcoststack[1] = &md_rate_est_ctx->nmv_costs[1][MV_MAX];
         return;
     }
-    int32_t     *nmvcost[2];
-    int32_t     *nmvcost_hp[2];
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+    int32_t*     nmvcost[2];
+    int32_t*     nmvcost_hp[2];
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
 
     nmvcost[0]                            = &md_rate_est_ctx->nmv_costs[0][MV_MAX];
     nmvcost[1]                            = &md_rate_est_ctx->nmv_costs[1][MV_MAX];
@@ -482,7 +482,7 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
                                                                : &md_rate_est_ctx->nmv_costs[1][MV_MAX];
 
     if (frm_hdr->allow_intrabc) {
-        int32_t *dvcost[2] = {&md_rate_est_ctx->dv_cost[0][MV_MAX], &md_rate_est_ctx->dv_cost[1][MV_MAX]};
+        int32_t* dvcost[2] = {&md_rate_est_ctx->dv_cost[0][MV_MAX], &md_rate_est_ctx->dv_cost[1][MV_MAX]};
         svt_av1_build_nmv_cost_table(md_rate_est_ctx->dv_joint_cost, dvcost, &fc->ndvc, MV_SUBPEL_NONE);
     }
 }
@@ -492,15 +492,15 @@ void svt_aom_estimate_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *m
  * Estimate the rate of the quantized coefficient
  * based on the frame CDF
  ***************************************************************************/
-void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx, FRAME_CONTEXT *fc) {
+void svt_aom_estimate_coefficients_rate(MdRateEstimationContext* md_rate_est_ctx, FRAME_CONTEXT* fc) {
     const int32_t num_planes = 3; // NM - Hardcoded to 3
     const int32_t nplanes    = AOMMIN(num_planes, PLANE_TYPES);
 
     for (int eob_multi_size = 0; eob_multi_size < 7; ++eob_multi_size) {
         for (int plane = 0; plane < nplanes; ++plane) {
-            LvMapEobCost *pcost = &md_rate_est_ctx->eob_frac_bits[eob_multi_size][plane];
+            LvMapEobCost* pcost = &md_rate_est_ctx->eob_frac_bits[eob_multi_size][plane];
             for (int ctx = 0; ctx < 2; ++ctx) {
-                AomCdfProb *pcdf;
+                AomCdfProb* pcdf;
                 switch (eob_multi_size) {
                 case 0:
                     pcdf = fc->eob_flag_cdf16[plane][ctx];
@@ -531,7 +531,7 @@ void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx
     }
     for (int tx_size = 0; tx_size < TX_SIZES; ++tx_size) {
         for (int plane = 0; plane < nplanes; ++plane) {
-            LvMapCoeffCost *pcost = &md_rate_est_ctx->coeff_fac_bits[tx_size][plane];
+            LvMapCoeffCost* pcost = &md_rate_est_ctx->coeff_fac_bits[tx_size][plane];
 
             for (int ctx = 0; ctx < TXB_SKIP_CONTEXTS; ++ctx) {
                 svt_aom_get_syntax_rate_from_cdf(pcost->txb_skip_cost[ctx], fc->txb_skip_cdf[tx_size][ctx], NULL);
@@ -592,35 +592,35 @@ void svt_aom_estimate_coefficients_rate(MdRateEstimationContext *md_rate_est_ctx
     }
 }
 
-static INLINE AomCdfProb *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx, const MacroBlockD *xd) {
+static INLINE AomCdfProb* get_y_mode_cdf(FRAME_CONTEXT* tile_ctx, const MacroBlockD* xd) {
     uint8_t above_ctx, left_ctx;
     svt_aom_get_kf_y_mode_ctx(xd, &above_ctx, &left_ctx);
     return tile_ctx->kf_y_cdf[above_ctx][left_ctx];
 }
 
-AomCdfProb *svt_aom_get_reference_mode_cdf(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_comp_reference_type_cdf(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_uni_comp_ref_p(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_uni_comp_ref_p1(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_uni_comp_ref_p2(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_comp_ref_p(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_comp_ref_p1(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_comp_ref_p2(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_comp_bwdref_p(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_comp_bwdref_p1(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p1(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p2(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p3(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p4(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p5(const MacroBlockD *xd);
-AomCdfProb *svt_aom_get_pred_cdf_single_ref_p6(const MacroBlockD *xd);
+AomCdfProb* svt_aom_get_reference_mode_cdf(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_comp_reference_type_cdf(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_uni_comp_ref_p(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_uni_comp_ref_p1(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_uni_comp_ref_p2(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_comp_ref_p(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_comp_ref_p1(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_comp_ref_p2(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_comp_bwdref_p(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_comp_bwdref_p1(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p1(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p2(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p3(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p4(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p5(const MacroBlockD* xd);
+AomCdfProb* svt_aom_get_pred_cdf_single_ref_p6(const MacroBlockD* xd);
 int         svt_aom_is_interintra_allowed_bsize(const BlockSize bsize);
 int         svt_aom_is_interintra_allowed_mode(const PredictionMode mode);
 int         svt_aom_is_interintra_allowed_ref(const MvReferenceFrame rf[2]);
-int         svt_aom_is_interintra_allowed(const MbModeInfo *mbmi);
-int         svt_aom_get_comp_group_idx_context_enc(const MacroBlockD *xd);
+int         svt_aom_is_interintra_allowed(const MbModeInfo* mbmi);
+int         svt_aom_get_comp_group_idx_context_enc(const MacroBlockD* xd);
 
-int svt_aom_allow_intrabc(const FrameHeader *frm_hdr, SliceType slice_type);
+int svt_aom_allow_intrabc(const FrameHeader* frm_hdr, SliceType slice_type);
 
 INLINE int32_t is_chroma_reference(int32_t mi_row, int32_t mi_col, BlockSize bsize, int32_t subsampling_x,
                                    int32_t subsampling_y);
@@ -629,14 +629,14 @@ int svt_aom_allow_palette(int allow_screen_content_tools, BlockSize bsize);
 
 int svt_aom_get_palette_bsize_ctx(BlockSize bsize);
 
-int svt_aom_get_palette_mode_ctx(const MacroBlockD *xd);
+int svt_aom_get_palette_mode_ctx(const MacroBlockD* xd);
 
 int32_t svt_aom_partition_cdf_length(BlockSize bsize);
 
 /*******************************************************************************
  * Updates all the filter type stats/CDF for the current block
  ******************************************************************************/
-static AOM_INLINE void update_filter_type_cdf(MacroBlockD *xd, const MbModeInfo *const mbmi,
+static AOM_INLINE void update_filter_type_cdf(MacroBlockD* xd, const MbModeInfo* const mbmi,
                                               const bool enable_dual_filter) {
     const int max_dir = enable_dual_filter ? 2 : 1;
     for (int dir = 0; dir < max_dir; ++dir) {
@@ -650,7 +650,7 @@ static AOM_INLINE void update_filter_type_cdf(MacroBlockD *xd, const MbModeInfo 
 /*******************************************************************************
  * Updates all the mv component stats/CDF for the current block
  ******************************************************************************/
-static void update_mv_component_stats(int comp, NmvComponent *mvcomp, MvSubpelPrecision precision) {
+static void update_mv_component_stats(int comp, NmvComponent* mvcomp, MvSubpelPrecision precision) {
     assert(comp != 0);
     int       offset;
     const int sign     = comp < 0;
@@ -677,12 +677,12 @@ static void update_mv_component_stats(int comp, NmvComponent *mvcomp, MvSubpelPr
     }
     // Fractional bits
     if (precision > MV_SUBPEL_NONE) {
-        AomCdfProb *fp_cdf = mv_class == MV_CLASS_0 ? mvcomp->class0_fp_cdf[d] : mvcomp->fp_cdf;
+        AomCdfProb* fp_cdf = mv_class == MV_CLASS_0 ? mvcomp->class0_fp_cdf[d] : mvcomp->fp_cdf;
         update_cdf(fp_cdf, fr, MV_FP_SIZE);
     }
     // High precision bit
     if (precision > MV_SUBPEL_LOW_PRECISION) {
-        AomCdfProb *hp_cdf = mv_class == MV_CLASS_0 ? mvcomp->class0_hp_cdf : mvcomp->hp_cdf;
+        AomCdfProb* hp_cdf = mv_class == MV_CLASS_0 ? mvcomp->class0_hp_cdf : mvcomp->hp_cdf;
         update_cdf(hp_cdf, hp, 2);
     }
 }
@@ -690,7 +690,7 @@ static void update_mv_component_stats(int comp, NmvComponent *mvcomp, MvSubpelPr
 /*******************************************************************************
  * Updates all the mv stats/CDF for the current block
  ******************************************************************************/
-static void av1_update_mv_stats(const Mv *mv, const Mv *ref, NmvContext *mvctx, MvSubpelPrecision precision) {
+static void av1_update_mv_stats(const Mv* mv, const Mv* ref, NmvContext* mvctx, MvSubpelPrecision precision) {
     const Mv          diff = {{mv->x - ref->x, mv->y - ref->y}};
     const MvJointType j    = svt_av1_get_mv_joint(&diff);
 
@@ -709,7 +709,7 @@ static void av1_update_mv_stats(const Mv *mv, const Mv *ref, NmvContext *mvctx, 
 /*******************************************************************************
  * Updates all the Inter mode stats/CDF for the current block
  ******************************************************************************/
-static AOM_INLINE void update_inter_mode_stats(FRAME_CONTEXT *fc, PredictionMode mode, int16_t mode_context) {
+static AOM_INLINE void update_inter_mode_stats(FRAME_CONTEXT* fc, PredictionMode mode, int16_t mode_context) {
     int16_t mode_ctx = mode_context & NEWMV_CTX_MASK;
     assert(mode_ctx < NEWMV_MODE_CONTEXTS);
     if (mode == NEWMV) {
@@ -733,10 +733,10 @@ static AOM_INLINE void update_inter_mode_stats(FRAME_CONTEXT *fc, PredictionMode
 /*******************************************************************************
  * Updates all the palette stats/CDF for the current block
  ******************************************************************************/
-static AOM_INLINE void update_palette_cdf(SequenceControlSet *scs, MacroBlockD *xd, const MbModeInfo *const mbmi,
-                                          BlkStruct *blk_ptr, const int mi_row, const int mi_col) {
-    FRAME_CONTEXT   *fc                = xd->tile_ctx;
-    const BlockGeom *blk_geom          = get_blk_geom_mds(scs->blk_geom_mds, blk_ptr->mds_idx);
+static AOM_INLINE void update_palette_cdf(SequenceControlSet* scs, MacroBlockD* xd, const MbModeInfo* const mbmi,
+                                          BlkStruct* blk_ptr, const int mi_row, const int mi_col) {
+    FRAME_CONTEXT*   fc                = xd->tile_ctx;
+    const BlockGeom* blk_geom          = get_blk_geom_mds(scs->blk_geom_mds, blk_ptr->mds_idx);
     const BlockSize  bsize             = blk_geom->bsize;
     const int        palette_bsize_ctx = svt_aom_get_palette_bsize_ctx(bsize);
 
@@ -765,13 +765,13 @@ static AOM_INLINE void update_palette_cdf(SequenceControlSet *scs, MacroBlockD *
 /*******************************************************************************
  * Updates all the Intra stats/CDF for the current block
  ******************************************************************************/
-static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, const int intraonly,
+static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, const int intraonly,
                                        const int mi_row, const int mi_col) {
-    MacroBlockD            *xd       = blk_ptr->av1xd;
-    const MbModeInfo *const mbmi     = xd->mi[0];
-    FRAME_CONTEXT          *fc       = xd->tile_ctx;
+    MacroBlockD*            xd       = blk_ptr->av1xd;
+    const MbModeInfo* const mbmi     = xd->mi[0];
+    FRAME_CONTEXT*          fc       = xd->tile_ctx;
     const PredictionMode    y_mode   = mbmi->block_mi.mode;
-    const BlockGeom        *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    const BlockGeom*        blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     const BlockSize         bsize    = mbmi->bsize;
     assert(bsize < BlockSizeS_ALL);
     assert(y_mode < 13);
@@ -808,12 +808,12 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_pt
         const uint8_t idx        = blk_ptr->block_mi.cfl_alpha_idx;
         update_cdf(fc->cfl_sign_cdf, joint_sign, CFL_JOINT_SIGNS);
         if (CFL_SIGN_U(joint_sign) != CFL_SIGN_ZERO) {
-            AomCdfProb *cdf_u = fc->cfl_alpha_cdf[CFL_CONTEXT_U(joint_sign)];
+            AomCdfProb* cdf_u = fc->cfl_alpha_cdf[CFL_CONTEXT_U(joint_sign)];
             update_cdf(cdf_u, CFL_IDX_U(idx), CFL_ALPHABET_SIZE);
         }
         if (CFL_SIGN_V(joint_sign) != CFL_SIGN_ZERO) {
             assert(CFL_SIGN_V(joint_sign) > 0);
-            AomCdfProb *cdf_v = fc->cfl_alpha_cdf[CFL_CONTEXT_V(joint_sign)];
+            AomCdfProb* cdf_v = fc->cfl_alpha_cdf[CFL_CONTEXT_V(joint_sign)];
             update_cdf(cdf_v, CFL_IDX_V(idx), CFL_ALPHABET_SIZE);
         }
     }
@@ -832,15 +832,15 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs, BlkStruct *blk_pt
 /*******************************************************************************
  * Updates all the syntax stats/CDF for the current block
  ******************************************************************************/
-void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row, int mi_col) {
-    FrameHeader            *frm_hdr = &pcs->ppcs->frm_hdr;
-    MacroBlockD            *xd      = blk_ptr->av1xd;
-    const MbModeInfo *const mbmi    = xd->mi[0];
+void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row, int mi_col) {
+    FrameHeader*            frm_hdr = &pcs->ppcs->frm_hdr;
+    MacroBlockD*            xd      = blk_ptr->av1xd;
+    const MbModeInfo* const mbmi    = xd->mi[0];
 
-    const BlockGeom *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     BlockSize        bsize    = blk_geom->bsize;
     assert(bsize < BlockSizeS_ALL);
-    FRAME_CONTEXT *fc             = xd->tile_ctx;
+    FRAME_CONTEXT* fc             = xd->tile_ctx;
     const int      seg_ref_active = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled &&
         pcs->ppcs->frm_hdr.segmentation_params.seg_id_pre_skip;
 
@@ -1054,12 +1054,12 @@ void svt_aom_update_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, int mi_row
 /*******************************************************************************
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
-void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint16_t tile_idx, int mi_row, int mi_col) {
-    const Av1Common *const cm       = pcs->ppcs->av1_cm;
-    MacroBlockD           *xd       = blk_ptr->av1xd;
-    const BlockGeom       *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+void svt_aom_update_part_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, uint16_t tile_idx, int mi_row, int mi_col) {
+    const Av1Common* const cm       = pcs->ppcs->av1_cm;
+    MacroBlockD*           xd       = blk_ptr->av1xd;
+    const BlockGeom*       blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     BlockSize              bsize    = blk_geom->bsize;
-    FRAME_CONTEXT         *fc       = xd->tile_ctx;
+    FRAME_CONTEXT*         fc       = xd->tile_ctx;
     assert(bsize < BlockSizeS_ALL);
 
     if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols) {
@@ -1071,22 +1071,22 @@ void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint1
         const PartitionType partition = blk_ptr->part;
         int                 ctx;
 
-        NeighborArrayUnit *partition_context_na        = pcs->ep_partition_context_na[tile_idx];
+        NeighborArrayUnit* partition_context_na        = pcs->ep_partition_context_na[tile_idx];
         uint32_t partition_context_left_neighbor_index = get_neighbor_array_unit_left_index(partition_context_na,
                                                                                             (mi_row << MI_SIZE_LOG2));
         uint32_t partition_context_top_neighbor_index  = get_neighbor_array_unit_top_index(partition_context_na,
                                                                                           (mi_col << MI_SIZE_LOG2));
 
         const PartitionContextType above_ctx =
-            (((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
+            (((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
              (char)INVALID_NEIGHBOR_DATA)
             ? 0
-            : ((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
+            : ((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
         const PartitionContextType left_ctx =
-            (((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
+            (((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
              (char)INVALID_NEIGHBOR_DATA)
             ? 0
-            : ((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
+            : ((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
         const int32_t bsl   = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
         int32_t       above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
 
@@ -1104,7 +1104,7 @@ void svt_aom_update_part_stats(PictureControlSet *pcs, BlkStruct *blk_ptr, uint1
     }
 }
 
-uint8_t svt_aom_get_me_qindex(PictureControlSet *pcs, SuperBlock *sb_ptr, uint8_t is_sb128) {
+uint8_t svt_aom_get_me_qindex(PictureControlSet* pcs, SuperBlock* sb_ptr, uint8_t is_sb128) {
     if (!is_sb128) {
         return pcs->b64_me_qindex[sb_ptr->index];
     }

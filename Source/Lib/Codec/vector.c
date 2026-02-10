@@ -29,7 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "vector.h"
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-int svt_aom_vector_setup(Vector *vector, uint32_t capacity, uint32_t element_size) {
+int svt_aom_vector_setup(Vector* vector, uint32_t capacity, uint32_t element_size) {
     assert(vector != NULL);
 
     if (vector == NULL) {
@@ -44,7 +44,7 @@ int svt_aom_vector_setup(Vector *vector, uint32_t capacity, uint32_t element_siz
     return vector->data == NULL ? VECTOR_ERROR : VECTOR_SUCCESS;
 }
 
-int svt_aom_vector_destroy(Vector *vector) {
+int svt_aom_vector_destroy(Vector* vector) {
     assert(vector != NULL);
 
     if (vector == NULL) {
@@ -58,7 +58,7 @@ int svt_aom_vector_destroy(Vector *vector) {
 }
 
 /* Insertion */
-int svt_aom_vector_push_back(Vector *vector, void *element) {
+int svt_aom_vector_push_back(Vector* vector, void* element) {
     assert(vector != NULL);
     assert(element != NULL);
 
@@ -77,16 +77,16 @@ int svt_aom_vector_push_back(Vector *vector, void *element) {
 
 /* Information */
 
-size_t svt_aom_vector_byte_size(const Vector *vector) {
+size_t svt_aom_vector_byte_size(const Vector* vector) {
     return (size_t)vector->size * vector->element_size;
 }
 
 /* Iterators */
-Iterator svt_aom_vector_begin(Vector *vector) {
+Iterator svt_aom_vector_begin(Vector* vector) {
     return svt_aom_vector_iterator(vector, 0);
 }
 
-Iterator svt_aom_vector_iterator(Vector *vector, size_t index) {
+Iterator svt_aom_vector_iterator(Vector* vector, size_t index) {
     Iterator iterator = {NULL, 0};
 
     assert(vector != NULL && index <= vector->size);
@@ -107,39 +107,39 @@ Iterator svt_aom_vector_iterator(Vector *vector, size_t index) {
     return iterator;
 }
 
-void *svt_aom_iterator_get(Iterator *iterator) {
+void* svt_aom_iterator_get(Iterator* iterator) {
     return iterator->pointer;
 }
 
-void svt_aom_iterator_increment(Iterator *iterator) {
+void svt_aom_iterator_increment(Iterator* iterator) {
     assert(iterator != NULL);
-    iterator->pointer = (unsigned char *)iterator->pointer + iterator->element_size;
+    iterator->pointer = (unsigned char*)iterator->pointer + iterator->element_size;
 }
 
 /***** PRIVATE *****/
 
-bool _vector_should_grow(Vector *vector) {
+bool _vector_should_grow(Vector* vector) {
     assert(vector->size <= vector->capacity);
     return vector->size == vector->capacity;
 }
 
-void *_vector_offset(Vector *vector, size_t index) {
-    return (unsigned char *)vector->data + (index * vector->element_size);
+void* _vector_offset(Vector* vector, size_t index) {
+    return (unsigned char*)vector->data + (index * vector->element_size);
 }
 
-void _vector_assign(Vector *vector, size_t index, void *element) {
+void _vector_assign(Vector* vector, size_t index, void* element) {
     /* Insert the element */
-    void *offset = _vector_offset(vector, index);
+    void* offset = _vector_offset(vector, index);
     svt_memcpy(offset, element, vector->element_size);
 }
 
-int _vector_adjust_capacity(Vector *vector) {
+int _vector_adjust_capacity(Vector* vector) {
     return _vector_reallocate(vector, MAX(1, vector->size * VECTOR_GROWTH_FACTOR));
 }
 
-int _vector_reallocate(Vector *vector, uint32_t new_capacity) {
+int _vector_reallocate(Vector* vector, uint32_t new_capacity) {
     size_t new_capacity_in_bytes;
-    void  *old;
+    void*  old;
     assert(vector != NULL);
 
     if (new_capacity < VECTOR_MINIMUM_CAPACITY) {

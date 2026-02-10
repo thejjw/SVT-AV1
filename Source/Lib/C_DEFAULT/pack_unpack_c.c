@@ -15,8 +15,8 @@
 /************************************************
 * pack 8 and 2 bit 2D data into 10 bit data
 ************************************************/
-void svt_enc_msb_pack2_d(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *inn_bit_buffer,
-                         uint16_t *out16_bit_buffer, uint32_t inn_stride, uint32_t out_stride, uint32_t width,
+void svt_enc_msb_pack2_d(uint8_t* in8_bit_buffer, uint32_t in8_stride, uint8_t* inn_bit_buffer,
+                         uint16_t* out16_bit_buffer, uint32_t inn_stride, uint32_t out_stride, uint32_t width,
                          uint32_t height) {
     uint64_t j, k;
     uint16_t out_pixel;
@@ -38,8 +38,8 @@ void svt_enc_msb_pack2_d(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *
 * pack 8 and 2 bit 2D data into 10 bit data
 2bit data storage : 4 2bit-pixels in one byte
 ************************************************/
-void svt_compressed_packmsb_c(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint8_t *inn_bit_buffer,
-                              uint32_t inn_stride, uint16_t *out16_bit_buffer, uint32_t out_stride, uint32_t width,
+void svt_compressed_packmsb_c(uint8_t* in8_bit_buffer, uint32_t in8_stride, uint8_t* inn_bit_buffer,
+                              uint32_t inn_stride, uint16_t* out16_bit_buffer, uint32_t out_stride, uint32_t width,
                               uint32_t height) {
     uint64_t row, k_idx;
     uint16_t out_pixel;
@@ -75,8 +75,8 @@ void svt_compressed_packmsb_c(uint8_t *in8_bit_buffer, uint32_t in8_stride, uint
   2bit data storage : 4 2bit-pixels in one byte
   width is not necessarily multiple of 4
 ************************************************/
-void svt_unpack_and_2bcompress_c(uint16_t *in16b_buffer, uint32_t in16b_stride, uint8_t *out8b_buffer,
-                                 uint32_t out8b_stride, uint8_t *out2b_buffer, uint32_t out2b_stride, uint32_t width,
+void svt_unpack_and_2bcompress_c(uint16_t* in16b_buffer, uint32_t in16b_stride, uint8_t* out8b_buffer,
+                                 uint32_t out8b_stride, uint8_t* out2b_buffer, uint32_t out2b_stride, uint32_t width,
                                  uint32_t height) {
     uint32_t row, col;
     uint16_t in_pixel;
@@ -149,7 +149,7 @@ void svt_unpack_and_2bcompress_c(uint16_t *in16b_buffer, uint32_t in16b_stride, 
 * convert compressed packed 2bit data to uncompressed 8bit
 data: 4 pixels in 1 byte to 4 1pixel-bytes
 ************************************************/
-void svt_c_unpack_compressed_10bit(const uint8_t *inn_bit_buffer, uint32_t inn_stride, uint8_t *in_compn_bit_buffer,
+void svt_c_unpack_compressed_10bit(const uint8_t* inn_bit_buffer, uint32_t inn_stride, uint8_t* in_compn_bit_buffer,
                                    uint32_t out_stride, uint32_t height) {
     uint32_t row_index, col_index;
 
@@ -177,8 +177,8 @@ void svt_c_unpack_compressed_10bit(const uint8_t *inn_bit_buffer, uint32_t inn_s
 /************************************************
 * unpack 10 bit data into  8 and 2 bit 2D data
 ************************************************/
-void svt_enc_msb_un_pack2_d(uint16_t *in16_bit_buffer, uint32_t in_stride, uint8_t *out8_bit_buffer,
-                            uint8_t *outn_bit_buffer, uint32_t out8_stride, uint32_t outn_stride, uint32_t width,
+void svt_enc_msb_un_pack2_d(uint16_t* in16_bit_buffer, uint32_t in_stride, uint8_t* out8_bit_buffer,
+                            uint8_t* outn_bit_buffer, uint32_t out8_stride, uint32_t outn_stride, uint32_t width,
                             uint32_t height) {
     uint64_t j, k;
     uint16_t in_pixel;
@@ -195,7 +195,7 @@ void svt_enc_msb_un_pack2_d(uint16_t *in16_bit_buffer, uint32_t in_stride, uint8
     }
 }
 
-void svt_convert_8bit_to_16bit_c(uint8_t *src, uint32_t src_stride, uint16_t *dst, uint32_t dst_stride, uint32_t width,
+void svt_convert_8bit_to_16bit_c(uint8_t* src, uint32_t src_stride, uint16_t* dst, uint32_t dst_stride, uint32_t width,
                                  uint32_t height) {
     for (uint32_t j = 0; j < height; j++) {
         for (uint32_t k = 0; k < width; k++) {
@@ -204,7 +204,7 @@ void svt_convert_8bit_to_16bit_c(uint8_t *src, uint32_t src_stride, uint16_t *ds
     }
 }
 
-void svt_convert_16bit_to_8bit_c(uint16_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t width,
+void svt_convert_16bit_to_8bit_c(uint16_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t width,
                                  uint32_t height) {
     for (uint32_t j = 0; j < height; j++) {
         for (uint32_t k = 0; k < width; k++) {

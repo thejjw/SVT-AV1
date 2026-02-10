@@ -33,7 +33,7 @@ const uint8_t uni_psy_bias[64] = {
 };
 
 static void mode_decision_context_dctor(EbPtr p) {
-    ModeDecisionContext *obj = (ModeDecisionContext *)p;
+    ModeDecisionContext* obj = (ModeDecisionContext*)p;
 
     uint32_t block_max_count_sb = obj->init_max_block_cnt;
 
@@ -145,18 +145,18 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->full_cost_ssim_array);
 }
 
-void svt_aom_set_nics(SequenceControlSet *scs, NicScalingCtrls *scaling_ctrls, uint32_t mds1_count[CAND_CLASS_TOTAL],
+void svt_aom_set_nics(SequenceControlSet* scs, NicScalingCtrls* scaling_ctrls, uint32_t mds1_count[CAND_CLASS_TOTAL],
                       uint32_t mds2_count[CAND_CLASS_TOTAL], uint32_t mds3_count[CAND_CLASS_TOTAL], uint8_t pic_type,
                       uint32_t qp);
 
-static void setup_mds(SequenceControlSet *scs, MdScan *mds, uint32_t *mds_idx, int index, BlockSize bsize,
+static void setup_mds(SequenceControlSet* scs, MdScan* mds, uint32_t* mds_idx, int index, BlockSize bsize,
                       const int min_sq_size) {
     mds->mds_idx = *mds_idx;
     mds->bsize   = bsize;
     mds->index   = index;
 
     // If applicable, add split depths
-    const BlockGeom *blk_geom = get_blk_geom_mds(scs->blk_geom_mds, *mds_idx);
+    const BlockGeom* blk_geom = get_blk_geom_mds(scs->blk_geom_mds, *mds_idx);
     const int        sq_size  = block_size_wide[bsize];
     if (sq_size > min_sq_size) {
         const BlockSize subsize             = get_partition_subsize(bsize, PARTITION_SPLIT);
@@ -178,7 +178,7 @@ static void setup_mds(SequenceControlSet *scs, MdScan *mds, uint32_t *mds_idx, i
     }
 }
 
-static void setup_pc_tree(PC_TREE *pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
     pc_tree->bsize = bsize;
     pc_tree->index = index;
 
@@ -204,11 +204,11 @@ static void setup_pc_tree(PC_TREE *pc_tree, int index, BlockSize bsize, const in
 /******************************************************
  * Mode Decision Context Constructor
  ******************************************************/
-EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, SequenceControlSet *scs,
+EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, SequenceControlSet* scs,
                                                EbColorFormat color_format, uint8_t sb_size, EncMode enc_mode,
                                                uint16_t max_block_cnt, uint32_t encoder_bit_depth,
-                                               EbFifo *mode_decision_configuration_input_fifo_ptr,
-                                               EbFifo *mode_decision_output_fifo_ptr, uint8_t enable_hbd_mode_decision,
+                                               EbFifo* mode_decision_configuration_input_fifo_ptr,
+                                               EbFifo* mode_decision_output_fifo_ptr, uint8_t enable_hbd_mode_decision,
                                                uint8_t seq_qp_mod) {
     const EbInputResolution input_resolution = scs->input_resolution;
     const bool              allintra         = scs->allintra;
@@ -465,7 +465,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
     for (coded_leaf_index = 0; coded_leaf_index < block_max_count_sb; ++coded_leaf_index) {
         ctx->md_blk_arr_nsq[coded_leaf_index].av1xd      = ctx->md_blk_arr_nsq[0].av1xd + coded_leaf_index;
         ctx->md_blk_arr_nsq[coded_leaf_index].segment_id = 0;
-        const BlockGeom *blk_geom                        = get_blk_geom_mds(scs->blk_geom_mds, coded_leaf_index);
+        const BlockGeom* blk_geom                        = get_blk_geom_mds(scs->blk_geom_mds, coded_leaf_index);
 
         if (svt_aom_get_bypass_encdec(enc_mode, encoder_bit_depth)) {
             EbPictureBufferDescInitData init_data;
@@ -600,7 +600,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, Sequenc
 /**************************************************
  * Reset Mode Decision Neighbor Arrays
  *************************************************/
-void svt_aom_reset_mode_decision_neighbor_arrays(PictureControlSet *pcs, uint16_t tile_idx) {
+void svt_aom_reset_mode_decision_neighbor_arrays(PictureControlSet* pcs, uint16_t tile_idx) {
     uint8_t depth;
     for (depth = 0; depth < NA_TOT_CNT; depth++) {
         svt_aom_neighbor_array_unit_reset(pcs->mdleaf_partition_na[depth][tile_idx]);
@@ -637,7 +637,7 @@ void svt_aom_reset_mode_decision_neighbor_arrays(PictureControlSet *pcs, uint16_
 // When lambda tuning is on (blk_lambda_tuning), lambda of each block is set separately (full_lambda_md/fast_lambda_md)
 // later in svt_aom_set_tuned_blk_lambda
 // Testing showed that updating SAD lambda based on frame info was not helpful; therefore, the SAD lambda generation is not changed.
-static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ctx) {
+static void av1_lambda_assign_md(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     ctx->full_lambda_md[0] = (uint32_t)svt_aom_compute_rd_mult(pcs, ctx->qp_index, ctx->me_q_index, 8);
     ctx->fast_lambda_md[0] = (uint32_t)svt_aom_compute_fast_lambda(pcs, ctx->qp_index, ctx->me_q_index, 8);
     ctx->full_lambda_md[1] = (uint32_t)svt_aom_compute_rd_mult(pcs, ctx->qp_index, ctx->me_q_index, 10);
@@ -663,7 +663,7 @@ static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ct
     ctx->full_lambda_md[1] *= 16;
     ctx->fast_lambda_md[1] *= 4;
 
-    SequenceControlSet *scs          = pcs->scs;
+    SequenceControlSet* scs          = pcs->scs;
     uint64_t            scale_factor = scs->static_config.lambda_scale_factors[pcs->ppcs->update_type];
     ctx->full_lambda_md[0]           = (uint32_t)((ctx->full_lambda_md[0] * scale_factor) >> 7);
     ctx->full_lambda_md[1]           = (uint32_t)((ctx->full_lambda_md[1] * scale_factor) >> 7);
@@ -674,7 +674,7 @@ static void av1_lambda_assign_md(PictureControlSet *pcs, ModeDecisionContext *ct
     ctx->full_sb_lambda_md[1] = ctx->full_lambda_md[1];
 }
 
-void svt_aom_reset_mode_decision(SequenceControlSet *scs, ModeDecisionContext *ctx, PictureControlSet *pcs,
+void svt_aom_reset_mode_decision(SequenceControlSet* scs, ModeDecisionContext* ctx, PictureControlSet* pcs,
                                  uint16_t tile_group_idx, uint32_t segment_index) {
     const bool rtc_tune = scs->static_config.rtc;
     ctx->hbd_md         = pcs->hbd_md;
@@ -710,7 +710,7 @@ void svt_aom_reset_mode_decision(SequenceControlSet *scs, ModeDecisionContext *c
 /******************************************************
  * Mode Decision Configure SB
  ******************************************************/
-void svt_aom_mode_decision_configure_sb(ModeDecisionContext *ctx, PictureControlSet *pcs, uint8_t sb_qp,
+void svt_aom_mode_decision_configure_sb(ModeDecisionContext* ctx, PictureControlSet* pcs, uint8_t sb_qp,
                                         uint8_t me_sb_qp) {
     /* Note(CHKN) : when Qp modulation varies QP on a sub-SB(CU) basis,  Lamda has to change based on Cu->QP , and then this code has to move inside the CU loop in MD */
 

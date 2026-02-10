@@ -19,7 +19,7 @@
 #include <assert.h>
 
 // Solves Ax = b, where x and b are column vectors of size nx1 and A is nxn
-static INLINE int32_t linsolve(int32_t n, double *A, int32_t stride, double *b, double *x) {
+static INLINE int32_t linsolve(int32_t n, double* A, int32_t stride, double* b, double* x) {
     const double tiny_near_zero = 1.0E-16;
     int32_t      i, j, k;
     double       c;
@@ -87,12 +87,12 @@ static INLINE int32_t linsolve(int32_t n, double *A, int32_t stride, double *b, 
 // * a, b are the coefficients of each individual equation,
 // * x is the result vector
 // * and n is the problem size
-static INLINE void least_squares_init(double *mat, double *y, int n) {
+static INLINE void least_squares_init(double* mat, double* y, int n) {
     memset(mat, 0, n * n * sizeof(double));
     memset(y, 0, n * sizeof(double));
 }
 
-static INLINE void least_squares_accumulate(double *mat, double *y, const double *a, double b, int n) {
+static INLINE void least_squares_accumulate(double* mat, double* y, const double* a, double b, int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             mat[i * n + j] += a[i] * a[j];
@@ -103,12 +103,12 @@ static INLINE void least_squares_accumulate(double *mat, double *y, const double
     }
 }
 
-static INLINE int least_squares_solve(double *mat, double *y, double *x, int n) {
+static INLINE int least_squares_solve(double* mat, double* y, double* x, int n) {
     return linsolve(n, mat, n, y, x);
 }
 
 // Matrix multiply
-static INLINE void multiply_mat(const double *m1, const double *m2, double *res, const int32_t m1_rows,
+static INLINE void multiply_mat(const double* m1, const double* m2, double* res, const int32_t m1_rows,
                                 const int32_t inner_dim, const int32_t m2_cols) {
     double sum;
 

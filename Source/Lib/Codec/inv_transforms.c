@@ -34,16 +34,16 @@ static const int8_t inv_shift_32x8[2]  = {-2, -4};
 static const int8_t inv_shift_16x64[2] = {-2, -4};
 static const int8_t inv_shift_64x16[2] = {-2, -4};
 
-const int8_t *svt_aom_inv_txfm_shift_ls[TX_SIZES_ALL] = {
+const int8_t* svt_aom_inv_txfm_shift_ls[TX_SIZES_ALL] = {
     inv_shift_4x4,  inv_shift_8x8,  inv_shift_16x16, inv_shift_32x32, inv_shift_64x64, inv_shift_4x8,   inv_shift_8x4,
     inv_shift_8x16, inv_shift_16x8, inv_shift_16x32, inv_shift_32x16, inv_shift_32x64, inv_shift_64x32, inv_shift_4x16,
     inv_shift_16x4, inv_shift_8x32, inv_shift_32x8,  inv_shift_16x64, inv_shift_64x16,
 };
 
-void svt_av1_gen_inv_stage_range(int8_t *stage_range_col, int8_t *stage_range_row, const Txfm2dFlipCfg *cfg,
+void svt_av1_gen_inv_stage_range(int8_t* stage_range_col, int8_t* stage_range_row, const Txfm2dFlipCfg* cfg,
                                  TxSize tx_size, int32_t bd) {
     const int32_t fwd_shift = inv_start_range[tx_size];
-    const int8_t *shift     = cfg->shift;
+    const int8_t* shift     = cfg->shift;
     int8_t        opt_range_row, opt_range_col;
     if (bd == 8) {
         opt_range_row = 16;
@@ -93,9 +93,9 @@ static INLINE int32_t clamp_value(int32_t value, int8_t bit) {
     return (int32_t)clamp64(value, min_value, max_value);
 }
 
-void svt_av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_idct4_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -132,9 +132,9 @@ void svt_av1_idct4_new(const int32_t *input, int32_t *output, int8_t cos_bit, co
     bf1[3] = clamp_value(bf0[0] - bf0[3], stage_range[stage]);
 }
 
-void svt_av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_idct8_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -211,9 +211,9 @@ void svt_av1_idct8_new(const int32_t *input, int32_t *output, int8_t cos_bit, co
     bf1[7] = clamp_value(bf0[0] - bf0[7], stage_range[stage]);
 }
 
-void svt_av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_idct16_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -374,9 +374,9 @@ void svt_av1_idct16_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     bf1[15] = clamp_value(bf0[0] - bf0[15], stage_range[stage]);
 }
 
-void svt_av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_idct32_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -725,10 +725,10 @@ void svt_av1_idct32_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     bf1[31] = clamp_value(bf0[0] - bf0[31], stage_range[stage]);
 }
 
-void svt_av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iadst4_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)stage_range;
     int32_t        bit   = cos_bit;
-    const int32_t *sinpi = sinpi_arr(bit);
+    const int32_t* sinpi = sinpi_arr(bit);
     int32_t        s0, s1, s2, s3, s4, s5, s6, s7;
 
     int32_t x0 = input[0];
@@ -812,15 +812,15 @@ void svt_av1_iadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     //range_check_buf(6, input, output, 4, stage_range[6]);
 }
 
-static INLINE void clamp_buf(int32_t *buf, int32_t size, int8_t bit) {
+static INLINE void clamp_buf(int32_t* buf, int32_t size, int8_t bit) {
     for (int32_t i = 0; i < size; ++i) {
         buf[i] = clamp_value(buf[i], bit);
     }
 }
 
-void svt_av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iadst8_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -923,9 +923,9 @@ void svt_av1_iadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     bf1[7] = -bf0[1];
 }
 
-void svt_av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iadst16_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -1128,16 +1128,16 @@ void svt_av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit, 
     bf1[15] = -bf0[1];
 }
 
-static void av1_iadst32_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+static void av1_iadst32_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     const int32_t  size = 32;
-    const int32_t *cospi;
+    const int32_t* cospi;
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
     int32_t  step[32];
 
     // stage 0;
-    clamp_buf((int32_t *)input, size, stage_range[stage]);
+    clamp_buf((int32_t*)input, size, stage_range[stage]);
 
     // stage 1;
     stage++;
@@ -1563,9 +1563,9 @@ static void av1_iadst32_new(const int32_t *input, int32_t *output, int8_t cos_bi
     clamp_buf(bf1, size, stage_range[stage]);
 }
 
-void svt_av1_idct64_new(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_idct64_new(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     assert(output != input);
-    const int32_t *cospi = cospi_arr(cos_bit);
+    const int32_t* cospi = cospi_arr(cos_bit);
 
     int32_t  stage = 0;
     int32_t *bf0, *bf1;
@@ -2342,7 +2342,7 @@ void svt_av1_idct64_new(const int32_t *input, int32_t *output, int8_t cos_bit, c
     bf1[63] = clamp_value(bf0[0] - bf0[63], stage_range[stage]);
 }
 
-void svt_av1_iidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iidentity4_c(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)cos_bit;
     (void)stage_range;
     for (int32_t i = 0; i < 4; ++i) {
@@ -2353,7 +2353,7 @@ void svt_av1_iidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
-void svt_av1_iidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iidentity8_c(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)cos_bit;
     (void)stage_range;
     for (int32_t i = 0; i < 8; ++i) {
@@ -2361,7 +2361,7 @@ void svt_av1_iidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit,
     }
 }
 
-void svt_av1_iidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iidentity16_c(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)cos_bit;
     (void)stage_range;
     for (int32_t i = 0; i < 16; ++i) {
@@ -2370,7 +2370,7 @@ void svt_av1_iidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
 
-void svt_av1_iidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void svt_av1_iidentity32_c(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)cos_bit;
     (void)stage_range;
     for (int32_t i = 0; i < 32; ++i) {
@@ -2378,7 +2378,7 @@ void svt_av1_iidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit
     }
 }
 
-void av1_iidentity64_c(const int32_t *input, int32_t *output, int8_t cos_bit, const int8_t *stage_range) {
+void av1_iidentity64_c(const int32_t* input, int32_t* output, int8_t cos_bit, const int8_t* stage_range) {
     (void)cos_bit;
     (void)stage_range;
     for (int32_t i = 0; i < 64; ++i) {
@@ -2445,7 +2445,7 @@ static INLINE uint16_t highbd_clip_pixel_add(uint16_t dest, TranHigh trans, int3
     return clip_pixel_highbd(dest + (int32_t)trans, bd);
 }
 
-void svt_av1_round_shift_array_c(int32_t *arr, int32_t size, int32_t bit) {
+void svt_av1_round_shift_array_c(int32_t* arr, int32_t size, int32_t bit) {
     int32_t i;
     if (bit == 0) {
         return;
@@ -2462,11 +2462,11 @@ void svt_av1_round_shift_array_c(int32_t *arr, int32_t size, int32_t bit) {
     }
 }
 
-static const int32_t *cast_to_int32(const TranLow *input) {
-    return (const int32_t *)input;
+static const int32_t* cast_to_int32(const TranLow* input) {
+    return (const int32_t*)input;
 }
 
-void svt_av1_get_inv_txfm_cfg(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg *cfg) {
+void svt_av1_get_inv_txfm_cfg(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg* cfg) {
     assert(cfg != NULL);
     cfg->tx_size = tx_size;
     set_flip_cfg(tx_type, cfg);
@@ -2492,8 +2492,8 @@ void svt_av1_get_inv_txfm_cfg(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg *cfg
     cfg->stage_num_row = av1_txfm_stage_num_list[cfg->txfm_type_row];
 }
 
-static INLINE void inv_txfm2d_add_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
-                                    int32_t stride_w, Txfm2dFlipCfg *cfg, int32_t *txfm_buf, TxSize tx_size,
+static INLINE void inv_txfm2d_add_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
+                                    int32_t stride_w, Txfm2dFlipCfg* cfg, int32_t* txfm_buf, TxSize tx_size,
                                     int32_t bd) {
     // Note when assigning txfm_size_col, we use the txfm_size from the
     // row configuration and vice versa. This is intentionally done to
@@ -2504,7 +2504,7 @@ static INLINE void inv_txfm2d_add_c(const int32_t *input, uint16_t *output_r, in
     const int32_t txfm_size_col = tx_size_wide[cfg->tx_size];
     const int32_t txfm_size_row = tx_size_high[cfg->tx_size];
     // Take the shift from the larger dimension in the rectangular case.
-    const int8_t *shift     = cfg->shift;
+    const int8_t* shift     = cfg->shift;
     const int32_t rect_type = get_rect_tx_log_ratio(txfm_size_col, txfm_size_row);
     int8_t        stage_range_row[MAX_TXFM_STAGE_NUM];
     int8_t        stage_range_col[MAX_TXFM_STAGE_NUM];
@@ -2522,10 +2522,10 @@ static INLINE void inv_txfm2d_add_c(const int32_t *input, uint16_t *output_r, in
     // AOMMAX(txfm_size_row, txfm_size_col)
     // it is used for intermediate data buffering
     const int32_t buf_offset = AOMMAX(txfm_size_row, txfm_size_col);
-    int32_t      *temp_in    = txfm_buf;
-    int32_t      *temp_out   = temp_in + buf_offset;
-    int32_t      *buf        = temp_out + buf_offset;
-    int32_t      *buf_ptr    = buf;
+    int32_t*      temp_in    = txfm_buf;
+    int32_t*      temp_out   = temp_in + buf_offset;
+    int32_t*      buf        = temp_out + buf_offset;
+    int32_t*      buf_ptr    = buf;
     int32_t       c, r;
 
     // Rows
@@ -2577,8 +2577,8 @@ static INLINE void inv_txfm2d_add_c(const int32_t *input, uint16_t *output_r, in
     }
 }
 
-static INLINE void inv_txfm2d_add_facade(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
-                                         int32_t stride_w, int32_t *txfm_buf, TxType tx_type, TxSize tx_size,
+static INLINE void inv_txfm2d_add_facade(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
+                                         int32_t stride_w, int32_t* txfm_buf, TxType tx_type, TxSize tx_size,
                                          int32_t bd) {
     Txfm2dFlipCfg cfg;
     svt_av1_get_inv_txfm_cfg(tx_type, tx_size, &cfg);
@@ -2587,31 +2587,31 @@ static INLINE void inv_txfm2d_add_facade(const int32_t *input, uint16_t *output_
     inv_txfm2d_add_c(input, output_r, stride_r, output_w, stride_w, &cfg, txfm_buf, tx_size, bd);
 }
 
-void svt_av1_inv_txfm2d_add_4x4_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_4x4_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                   int32_t stride_w, TxType tx_type, int32_t bd) {
     DECLARE_ALIGNED(32, int32_t, txfm_buf[4 * 4 + 4 + 4]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_4X4, bd);
 }
 
-void svt_av1_inv_txfm2d_add_8x8_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_8x8_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                   int32_t stride_w, TxType tx_type, int32_t bd) {
     DECLARE_ALIGNED(32, int32_t, txfm_buf[8 * 8 + 8 + 8]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_8X8, bd);
 }
 
-void svt_av1_inv_txfm2d_add_16x16_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x16_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, int32_t bd) {
     DECLARE_ALIGNED(32, int32_t, txfm_buf[16 * 16 + 16 + 16]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_16X16, bd);
 }
 
-void svt_av1_inv_txfm2d_add_32x32_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x32_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, int32_t bd) {
     DECLARE_ALIGNED(32, int32_t, txfm_buf[32 * 32 + 32 + 32]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_32X32, bd);
 }
 
-void svt_av1_inv_txfm2d_add_64x64_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x64_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, int32_t bd) {
     // Remap 32x32 input into a modified 64x64 by:
     // - Copying over these values in top-left 32x32 locations.
@@ -2626,21 +2626,21 @@ void svt_av1_inv_txfm2d_add_64x64_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(mod_input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_64X64, bd);
 }
 
-void svt_av1_inv_txfm2d_add_4x8_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_4x8_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                   int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t bd) {
     (void)tx_size;
     DECLARE_ALIGNED(32, int32_t, txfm_buf[4 * 8 + 8 + 8]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_4X8, bd);
 }
 
-void svt_av1_inv_txfm2d_add_8x4_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_8x4_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                   int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t bd) {
     (void)tx_size;
     DECLARE_ALIGNED(32, int32_t, txfm_buf[8 * 4 + 8 + 8]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_8X4, bd);
 }
 
-void svt_av1_inv_txfm2d_add_8x16_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_8x16_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2648,7 +2648,7 @@ void svt_av1_inv_txfm2d_add_8x16_c(const int32_t *input, uint16_t *output_r, int
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_8X16, bd);
 }
 
-void svt_av1_inv_txfm2d_add_16x8_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x8_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2656,7 +2656,7 @@ void svt_av1_inv_txfm2d_add_16x8_c(const int32_t *input, uint16_t *output_r, int
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_16X8, bd);
 }
 
-void svt_av1_inv_txfm2d_add_16x32_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x32_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2664,7 +2664,7 @@ void svt_av1_inv_txfm2d_add_16x32_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_16X32, bd);
 }
 
-void svt_av1_inv_txfm2d_add_32x16_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x16_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2672,7 +2672,7 @@ void svt_av1_inv_txfm2d_add_32x16_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_32X16, bd);
 }
 
-void svt_av1_inv_txfm2d_add_64x32_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x32_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2688,7 +2688,7 @@ void svt_av1_inv_txfm2d_add_64x32_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(mod_input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_64X32, bd);
 }
 
-void svt_av1_inv_txfm2d_add_32x64_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x64_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2702,7 +2702,7 @@ void svt_av1_inv_txfm2d_add_32x64_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(mod_input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_32X64, bd);
 }
 
-void svt_av1_inv_txfm2d_add_16x64_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x64_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2716,7 +2716,7 @@ void svt_av1_inv_txfm2d_add_16x64_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(mod_input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_16X64, bd);
 }
 
-void svt_av1_inv_txfm2d_add_64x16_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x16_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                     int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2732,21 +2732,21 @@ void svt_av1_inv_txfm2d_add_64x16_c(const int32_t *input, uint16_t *output_r, in
     inv_txfm2d_add_facade(mod_input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_64X16, bd);
 }
 
-void svt_av1_inv_txfm2d_add_4x16_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_4x16_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t bd) {
     UNUSED(tx_size);
     DECLARE_ALIGNED(32, int32_t, txfm_buf[4 * 16 + 16 + 16]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_4X16, bd);
 }
 
-void svt_av1_inv_txfm2d_add_16x4_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x4_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t bd) {
     UNUSED(tx_size);
     DECLARE_ALIGNED(32, int32_t, txfm_buf[4 * 16 + 16 + 16]);
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_16X4, bd);
 }
 
-void svt_av1_inv_txfm2d_add_8x32_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_8x32_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2754,7 +2754,7 @@ void svt_av1_inv_txfm2d_add_8x32_c(const int32_t *input, uint16_t *output_r, int
     inv_txfm2d_add_facade(input, output_r, stride_r, output_w, stride_w, txfm_buf, tx_type, TX_8X32, bd);
 }
 
-void svt_av1_inv_txfm2d_add_32x8_c(const int32_t *input, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x8_c(const int32_t* input, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                    int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     UNUSED(tx_size);
     UNUSED(eob);
@@ -2779,17 +2779,17 @@ static INLINE int32_t range_check_value(int32_t value, int8_t bit) {
     return value;
 }
 
-void svt_av1_highbd_iwht4x4_16_add_c(const TranLow *input, uint8_t *dest8_r, int32_t stride_r, uint8_t *dest8_w,
+void svt_av1_highbd_iwht4x4_16_add_c(const TranLow* input, uint8_t* dest8_r, int32_t stride_r, uint8_t* dest8_w,
                                      int32_t stride_w, int32_t bd) {
     /* 4-point reversible, orthonormal inverse Walsh-Hadamard in 3.5 adds,
        0.5 shifts per pixel. */
     int32_t        i;
     TranLow        output[16];
     TranLow        a1, b1, c1, d1, e1;
-    const TranLow *ip     = input;
-    TranLow       *op     = output;
-    uint16_t      *dest_r = CONVERT_TO_SHORTPTR(dest8_r);
-    uint16_t      *dest_w = CONVERT_TO_SHORTPTR(dest8_w);
+    const TranLow* ip     = input;
+    TranLow*       op     = output;
+    uint16_t*      dest_r = CONVERT_TO_SHORTPTR(dest8_r);
+    uint16_t*      dest_w = CONVERT_TO_SHORTPTR(dest8_w);
 
     for (i = 0; i < 4; i++) {
         a1 = ip[0] >> UNIT_QUANT_SHIFT;
@@ -2840,15 +2840,15 @@ void svt_av1_highbd_iwht4x4_16_add_c(const TranLow *input, uint8_t *dest8_r, int
     }
 }
 
-void svt_av1_highbd_iwht4x4_1_add_c(const TranLow *in, uint8_t *dest8_r, int32_t dest_stride_r, uint8_t *dest8_w,
+void svt_av1_highbd_iwht4x4_1_add_c(const TranLow* in, uint8_t* dest8_r, int32_t dest_stride_r, uint8_t* dest8_w,
                                     int32_t dest_stride_w, int32_t bd) {
     int32_t        i;
     TranLow        a1, e1;
     TranLow        tmp[4];
-    const TranLow *ip     = in;
-    TranLow       *op     = tmp;
-    uint16_t      *dest_r = CONVERT_TO_SHORTPTR(dest8_r);
-    uint16_t      *dest_w = CONVERT_TO_SHORTPTR(dest8_w);
+    const TranLow* ip     = in;
+    TranLow*       op     = tmp;
+    uint16_t*      dest_r = CONVERT_TO_SHORTPTR(dest8_r);
+    uint16_t*      dest_w = CONVERT_TO_SHORTPTR(dest8_w);
     (void)bd;
 
     a1 = ip[0] >> UNIT_QUANT_SHIFT;
@@ -2871,7 +2871,7 @@ void svt_av1_highbd_iwht4x4_1_add_c(const TranLow *in, uint8_t *dest8_r, int32_t
     }
 }
 
-static void highbd_iwht4x4_add(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
+static void highbd_iwht4x4_add(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
                                int32_t stride_w, int32_t eob, int32_t bd) {
     if (eob > 1) {
         svt_av1_highbd_iwht4x4_16_add_c(input, dest_r, stride_r, dest_w, stride_w, bd);
@@ -2880,13 +2880,13 @@ static void highbd_iwht4x4_add(const TranLow *input, uint8_t *dest_r, int32_t st
     }
 }
 
-void svt_av1_highbd_inv_txfm_add_4x4(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
+void svt_av1_highbd_inv_txfm_add_4x4(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
     // assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     int32_t        eob      = txfm_param->eob;
     int32_t        bd       = txfm_param->bd;
     int32_t        lossless = txfm_param->lossless;
-    const int32_t *src      = cast_to_int32(input);
+    const int32_t* src      = cast_to_int32(input);
     const TxType   tx_type  = txfm_param->tx_type;
     if (lossless) {
         assert(tx_type == DCT_DCT);
@@ -2897,29 +2897,29 @@ void svt_av1_highbd_inv_txfm_add_4x4(const TranLow *input, uint8_t *dest_r, int3
         src, CONVERT_TO_SHORTPTR(dest_r), stride_r, CONVERT_TO_SHORTPTR(dest_w), stride_w, tx_type, bd);
 }
 
-static void highbd_inv_txfm_add_8x8(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                    int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_8x8(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                    int32_t stride_w, const TxfmParam* txfm_param) {
     int32_t        bd      = txfm_param->bd;
     const TxType   tx_type = txfm_param->tx_type;
-    const int32_t *src     = cast_to_int32(input);
+    const int32_t* src     = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_8x8(
         src, CONVERT_TO_SHORTPTR(dest_r), stride_r, CONVERT_TO_SHORTPTR(dest_w), stride_w, tx_type, bd);
 }
 
-static void highbd_inv_txfm_add_16x16(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_16x16(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
     int32_t        bd      = txfm_param->bd;
     const TxType   tx_type = txfm_param->tx_type;
-    const int32_t *src     = cast_to_int32(input);
+    const int32_t* src     = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_16x16(
         src, CONVERT_TO_SHORTPTR(dest_r), stride_r, CONVERT_TO_SHORTPTR(dest_w), stride_w, tx_type, bd);
 }
 
-static void highbd_inv_txfm_add_32x32(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_32x32(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
     const int32_t  bd      = txfm_param->bd;
     const TxType   tx_type = txfm_param->tx_type;
-    const int32_t *src     = cast_to_int32(input);
+    const int32_t* src     = cast_to_int32(input);
     switch (tx_type) {
     case DCT_DCT:
     case IDTX:
@@ -2931,20 +2931,20 @@ static void highbd_inv_txfm_add_32x32(const TranLow *input, uint8_t *dest_r, int
     }
 }
 
-static void highbd_inv_txfm_add_64x64(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_64x64(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
     const int32_t  bd      = txfm_param->bd;
     const TxType   tx_type = txfm_param->tx_type;
-    const int32_t *src     = cast_to_int32(input);
+    const int32_t* src     = cast_to_int32(input);
     assert(tx_type == DCT_DCT);
     svt_av1_inv_txfm2d_add_64x64(
         src, CONVERT_TO_SHORTPTR(dest_r), stride_r, CONVERT_TO_SHORTPTR(dest_w), stride_w, tx_type, bd);
 }
 
-static void highbd_inv_txfm_add_4x8(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                    int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_4x8(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                    int32_t stride_w, const TxfmParam* txfm_param) {
     //TODO: add this assert once we fill tx_set_type    assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
-    const int32_t *src = cast_to_int32(input);
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_4x8(src,
                                CONVERT_TO_SHORTPTR(dest_r),
                                stride_r,
@@ -2955,10 +2955,10 @@ static void highbd_inv_txfm_add_4x8(const TranLow *input, uint8_t *dest_r, int32
                                txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_8x4(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                    int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add_8x4(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                    int32_t stride_w, const TxfmParam* txfm_param) {
     //TODO: add this assert once we fill tx_set_type    assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
-    const int32_t *src = cast_to_int32(input);
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_8x4(src,
                                CONVERT_TO_SHORTPTR(dest_r),
                                stride_r,
@@ -2969,9 +2969,9 @@ static void highbd_inv_txfm_add_8x4(const TranLow *input, uint8_t *dest_r, int32
                                txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_8x16(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_8x16(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_8x16(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -2983,9 +2983,9 @@ static void highbd_inv_txfm_add_8x16(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_16x8(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_16x8(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_16x8(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -2997,9 +2997,9 @@ static void highbd_inv_txfm_add_16x8(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_16x32(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_16x32(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_16x32(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3011,9 +3011,9 @@ static void highbd_inv_txfm_add_16x32(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_32x16(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_32x16(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_32x16(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3025,9 +3025,9 @@ static void highbd_inv_txfm_add_32x16(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_16x4(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_16x4(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_16x4(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -3038,9 +3038,9 @@ static void highbd_inv_txfm_add_16x4(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_4x16(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_4x16(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_4x16(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -3051,9 +3051,9 @@ static void highbd_inv_txfm_add_4x16(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_32x8(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_32x8(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_32x8(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -3065,9 +3065,9 @@ static void highbd_inv_txfm_add_32x8(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_8x32(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                     int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_8x32(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                     int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_8x32(src,
                                 CONVERT_TO_SHORTPTR(dest_r),
                                 stride_r,
@@ -3079,9 +3079,9 @@ static void highbd_inv_txfm_add_8x32(const TranLow *input, uint8_t *dest_r, int3
                                 txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_32x64(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_32x64(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_32x64(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3093,9 +3093,9 @@ static void highbd_inv_txfm_add_32x64(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_64x32(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_64x32(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_64x32(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3107,9 +3107,9 @@ static void highbd_inv_txfm_add_64x32(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_16x64(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_16x64(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_16x64(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3121,9 +3121,9 @@ static void highbd_inv_txfm_add_16x64(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-static void highbd_inv_txfm_add_64x16(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                      int32_t stride_w, const TxfmParam *txfm_param) {
-    const int32_t *src = cast_to_int32(input);
+static void highbd_inv_txfm_add_64x16(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                      int32_t stride_w, const TxfmParam* txfm_param) {
+    const int32_t* src = cast_to_int32(input);
     svt_av1_inv_txfm2d_add_64x16(src,
                                  CONVERT_TO_SHORTPTR(dest_r),
                                  stride_r,
@@ -3135,8 +3135,8 @@ static void highbd_inv_txfm_add_64x16(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-EbErrorType svt_aom_inv_transform_recon8bit(int32_t *coeff_buffer, //1D buffer
-                                            uint8_t *recon_buffer_r, uint32_t recon_stride_r, uint8_t *recon_buffer_w,
+EbErrorType svt_aom_inv_transform_recon8bit(int32_t* coeff_buffer, //1D buffer
+                                            uint8_t* recon_buffer_r, uint32_t recon_stride_r, uint8_t* recon_buffer_w,
                                             uint32_t recon_stride_w, TxSize txsize, TxType transform_type,
                                             PlaneType component_type, uint32_t eob, uint8_t lossless) {
     UNUSED(component_type);
@@ -3158,13 +3158,13 @@ EbErrorType svt_aom_inv_transform_recon8bit(int32_t *coeff_buffer, //1D buffer
     }
 
     svt_av1_inv_txfm_add(
-        (const TranLow *)coeff_buffer, recon_buffer_r, recon_stride_r, recon_buffer_w, recon_stride_w, &txfm_param);
+        (const TranLow*)coeff_buffer, recon_buffer_r, recon_stride_r, recon_buffer_w, recon_stride_w, &txfm_param);
 
     return return_error;
 }
 
-static void highbd_inv_txfm_add(const TranLow *input, uint8_t *dest_r, int32_t stride_r, uint8_t *dest_w,
-                                int32_t stride_w, const TxfmParam *txfm_param) {
+static void highbd_inv_txfm_add(const TranLow* input, uint8_t* dest_r, int32_t stride_r, uint8_t* dest_w,
+                                int32_t stride_w, const TxfmParam* txfm_param) {
     //assert(av1_ext_tx_used[txfm_param->tx_set_type][txfm_param->tx_type]);
     const TxSize tx_size = txfm_param->tx_size;
     switch (tx_size) {
@@ -3234,8 +3234,8 @@ static void highbd_inv_txfm_add(const TranLow *input, uint8_t *dest_r, int32_t s
     }
 }
 
-EbErrorType svt_aom_inv_transform_recon(int32_t *coeff_buffer, //1D buffer
-                                        uint8_t *recon_buffer_r, uint32_t recon_stride_r, uint8_t *recon_buffer_w,
+EbErrorType svt_aom_inv_transform_recon(int32_t* coeff_buffer, //1D buffer
+                                        uint8_t* recon_buffer_r, uint32_t recon_stride_r, uint8_t* recon_buffer_w,
                                         uint32_t recon_stride_w, TxSize txsize, uint32_t bit_depth,
                                         TxType transform_type, PlaneType component_type, uint32_t eob,
                                         uint8_t lossless) {
@@ -3258,13 +3258,13 @@ EbErrorType svt_aom_inv_transform_recon(int32_t *coeff_buffer, //1D buffer
     }
 
     highbd_inv_txfm_add(
-        (const TranLow *)coeff_buffer, recon_buffer_r, recon_stride_r, recon_buffer_w, recon_stride_w, &txfm_param);
+        (const TranLow*)coeff_buffer, recon_buffer_r, recon_stride_r, recon_buffer_w, recon_stride_w, &txfm_param);
 
     return return_error;
 }
 
-void svt_av1_inv_txfm_add_c(const TranLow *dqcoeff, uint8_t *dst_r, int32_t stride_r, uint8_t *dst_w, int32_t stride_w,
-                            const TxfmParam *txfm_param) {
+void svt_av1_inv_txfm_add_c(const TranLow* dqcoeff, uint8_t* dst_r, int32_t stride_r, uint8_t* dst_w, int32_t stride_w,
+                            const TxfmParam* txfm_param) {
     const TxSize tx_size = txfm_param->tx_size;
     DECLARE_ALIGNED(32, uint16_t, tmp[MAX_TX_SQUARE]);
     int32_t tmp_stride = MAX_TX_SIZE;
@@ -3504,7 +3504,7 @@ int32_t svt_aom_get_qzbin_factor(int32_t q, EbBitDepth bit_depth) {
     }
 }
 
-void svt_aom_invert_quant(int16_t *quant, int16_t *shift, int32_t d) {
+void svt_aom_invert_quant(int16_t* quant, int16_t* shift, int32_t d) {
     uint32_t t;
     int32_t  l, m;
     t = d;

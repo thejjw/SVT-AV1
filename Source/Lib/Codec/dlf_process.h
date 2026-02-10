@@ -21,15 +21,15 @@
  * Dlf Context
  **************************************/
 typedef struct DlfContext {
-    EbFifo *dlf_input_fifo_ptr;
-    EbFifo *dlf_output_fifo_ptr;
+    EbFifo* dlf_input_fifo_ptr;
+    EbFifo* dlf_output_fifo_ptr;
 } DlfContext;
 
 /**************************************
  * Extern Function Declarations
  **************************************/
-EbErrorType svt_aom_dlf_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr, int index);
+EbErrorType svt_aom_dlf_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr, int index);
 
-void *svt_aom_dlf_kernel(void *input_ptr);
+void* svt_aom_dlf_kernel(void* input_ptr);
 
 #endif // EbEntropyCodingProcess_h

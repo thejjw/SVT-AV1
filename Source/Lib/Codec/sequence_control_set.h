@@ -60,14 +60,14 @@ typedef struct SequenceControlSet {
     /*!< Pointer to the dtor of the struct*/
     EbDctor dctor;
     /*!< Encoding context pointer containing the handle pointer */
-    EncodeContext *enc_ctx;
+    EncodeContext* enc_ctx;
     /*!< 2ndpass enc mode, available at firstpass encoder */
     /*!< API structure */
     EbSvtAv1EncConfiguration static_config;
     /*!< Super block geomerty pointer */
-    SbGeom *sb_geom;
+    SbGeom* sb_geom;
     /*!< Array of superblock parameters computed at the resource coordination stage */
-    B64Geom *b64_geom;
+    B64Geom* b64_geom;
     /*!< Bitstream level */
     BitstreamLevel level[MAX_NUM_OPERATING_POINTS];
     /*!< Sequence header structure, common between the encoder and decoder */
@@ -147,7 +147,7 @@ typedef struct SequenceControlSet {
     uint16_t sb_total_count;
     uint16_t max_block_cnt;
     // Pointer to block geometry table (owned by EbEncHandle)
-    struct BlockGeom *blk_geom_mds;
+    struct BlockGeom* blk_geom_mds;
     /*!< Restoration Unit parameters set for the stream */
     int32_t rest_units_per_tile;
     /*!< Sub picture reagions for picture analysis */
@@ -317,19 +317,19 @@ typedef struct SequenceControlSet {
 
 typedef struct EbSequenceControlSetInstance {
     EbDctor             dctor;
-    EncodeContext      *enc_ctx;
-    SequenceControlSet *scs;
+    EncodeContext*      enc_ctx;
+    SequenceControlSet* scs;
     EbHandle            config_mutex;
 } EbSequenceControlSetInstance;
 
 /**************************************
      * Extern Function Declarations
      **************************************/
-EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_ptr);
+EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance* object_ptr);
 
-EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution, uint32_t input_size);
-EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSet *src);
-EbErrorType svt_aom_scs_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_derive_input_resolution(EbInputResolution* input_resolution, uint32_t input_size);
+EbErrorType copy_sequence_control_set(SequenceControlSet* dst, SequenceControlSet* src);
+EbErrorType svt_aom_scs_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 
 #ifdef __cplusplus
 }

@@ -20,7 +20,7 @@
 #endif
 #include "deblocking_filter.h"
 
-static uint16_t get_variance_for_cu(const BlockGeom *blk_geom, uint16_t *variance_ptr) {
+static uint16_t get_variance_for_cu(const BlockGeom* blk_geom, uint16_t* variance_ptr) {
     int index0, index1;
     //Assumes max CU size is 64
     switch (blk_geom->bsize) {
@@ -83,11 +83,11 @@ static uint16_t get_variance_for_cu(const BlockGeom *blk_geom, uint16_t *varianc
     return (variance_ptr[index0] + variance_ptr[index1]) >> 1;
 }
 
-static void roi_map_apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureControlSet *pcs,
-                                                          SuperBlock *sb_ptr, BlkStruct *blk_ptr) {
-    SequenceControlSet    *scs                 = pcs->ppcs->scs;
-    const SvtAv1RoiMapEvt *roi_map             = pcs->ppcs->roi_map_evt;
-    SegmentationParams    *segmentation_params = &pcs->ppcs->frm_hdr.segmentation_params;
+static void roi_map_apply_segmentation_based_quantization(const BlockGeom* blk_geom, PictureControlSet* pcs,
+                                                          SuperBlock* sb_ptr, BlkStruct* blk_ptr) {
+    SequenceControlSet*    scs                 = pcs->ppcs->scs;
+    const SvtAv1RoiMapEvt* roi_map             = pcs->ppcs->roi_map_evt;
+    SegmentationParams*    segmentation_params = &pcs->ppcs->frm_hdr.segmentation_params;
     const int              stride_b64          = (scs->max_input_luma_width + 63) / 64;
     uint8_t                segment_id;
     if (scs->seq_header.sb_size == BLOCK_64X64) {
@@ -125,14 +125,14 @@ static void roi_map_apply_segmentation_based_quantization(const BlockGeom *blk_g
            0);
 }
 
-void svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureControlSet *pcs,
-                                                   SuperBlock *sb_ptr, BlkStruct *blk_ptr) {
+void svt_aom_apply_segmentation_based_quantization(const BlockGeom* blk_geom, PictureControlSet* pcs,
+                                                   SuperBlock* sb_ptr, BlkStruct* blk_ptr) {
     if (pcs->ppcs->roi_map_evt != NULL) {
         roi_map_apply_segmentation_based_quantization(blk_geom, pcs, sb_ptr, blk_ptr);
         return;
     }
-    uint16_t           *variance_ptr        = pcs->ppcs->variance[sb_ptr->index];
-    SegmentationParams *segmentation_params = &pcs->ppcs->frm_hdr.segmentation_params;
+    uint16_t*           variance_ptr        = pcs->ppcs->variance[sb_ptr->index];
+    SegmentationParams* segmentation_params = &pcs->ppcs->frm_hdr.segmentation_params;
     uint16_t            variance            = get_variance_for_cu(blk_geom, variance_ptr);
     blk_ptr->segment_id                     = 0;
     for (int i = MAX_SEGMENTS - 1; i >= 0; i--) {
@@ -149,10 +149,10 @@ void svt_aom_apply_segmentation_based_quantization(const BlockGeom *blk_geom, Pi
     }
 }
 
-static void roi_map_setup_segmentation(PictureControlSet *pcs, SequenceControlSet *scs) {
+static void roi_map_setup_segmentation(PictureControlSet* pcs, SequenceControlSet* scs) {
     UNUSED(scs);
-    SvtAv1RoiMapEvt    *roi_map                       = pcs->ppcs->roi_map_evt;
-    SegmentationParams *segmentation_params           = &pcs->ppcs->frm_hdr.segmentation_params;
+    SvtAv1RoiMapEvt*    roi_map                       = pcs->ppcs->roi_map_evt;
+    SegmentationParams* segmentation_params           = &pcs->ppcs->frm_hdr.segmentation_params;
     segmentation_params->segmentation_enabled         = true;
     segmentation_params->segmentation_update_data     = true;
     segmentation_params->segmentation_update_map      = true;
@@ -217,12 +217,12 @@ static void roi_map_setup_segmentation(PictureControlSet *pcs, SequenceControlSe
     calculate_segmentation_data(segmentation_params);
 }
 
-void svt_aom_setup_segmentation(PictureControlSet *pcs, SequenceControlSet *scs) {
+void svt_aom_setup_segmentation(PictureControlSet* pcs, SequenceControlSet* scs) {
     if (pcs->ppcs->roi_map_evt != NULL) {
         roi_map_setup_segmentation(pcs, scs);
         return;
     }
-    SegmentationParams *segmentation_params   = &pcs->ppcs->frm_hdr.segmentation_params;
+    SegmentationParams* segmentation_params   = &pcs->ppcs->frm_hdr.segmentation_params;
     segmentation_params->segmentation_enabled = scs->static_config.aq_mode == 1;
     if (segmentation_params->segmentation_enabled) {
         segmentation_params->segmentation_update_data =
@@ -239,7 +239,7 @@ void svt_aom_setup_segmentation(PictureControlSet *pcs, SequenceControlSet *scs)
     }
 }
 
-void calculate_segmentation_data(SegmentationParams *segmentation_params) {
+void calculate_segmentation_data(SegmentationParams* segmentation_params) {
     for (int i = 0; i < MAX_SEGMENTS; i++) {
         for (int j = 0; j < SEG_LVL_MAX; j++) {
             if (segmentation_params->feature_enabled[i][j]) {
@@ -252,14 +252,14 @@ void calculate_segmentation_data(SegmentationParams *segmentation_params) {
     }
 }
 
-void find_segment_qps(SegmentationParams *segmentation_params,
-                      PictureControlSet  *pcs) { //QP needs to be specified as qpindex, not qp.
+void find_segment_qps(SegmentationParams* segmentation_params,
+                      PictureControlSet*  pcs) { //QP needs to be specified as qpindex, not qp.
     uint16_t    min_var = UINT16_MAX, max_var = MIN_UNSIGNED_VALUE, avg_var = 0;
     const float strength = 2; //to tune
 
     // get range of variance
     for (uint32_t sb_idx = 0; sb_idx < pcs->b64_total_count; ++sb_idx) {
-        uint16_t *variance_ptr = pcs->ppcs->variance[sb_idx];
+        uint16_t* variance_ptr = pcs->ppcs->variance[sb_idx];
         uint32_t  var_index, local_avg = 0;
         // Loop over all 8x8s in a 64x64
         for (var_index = ME_TIER_ZERO_PU_8x8_0; var_index <= ME_TIER_ZERO_PU_8x8_63; var_index++) {

@@ -16,7 +16,7 @@
 #include "neon_sve_bridge.h"
 #include "sum_neon.h"
 
-static inline void highbd_sse_8x1_neon(const uint16_t *src, const uint16_t *ref, uint64x2_t *sse) {
+static inline void highbd_sse_8x1_neon(const uint16_t* src, const uint16_t* ref, uint64x2_t* sse) {
     uint16x8_t s = vld1q_u16(src);
     uint16x8_t r = vld1q_u16(ref);
 
@@ -25,7 +25,7 @@ static inline void highbd_sse_8x1_neon(const uint16_t *src, const uint16_t *ref,
     *sse = svt_udotq_u16(*sse, abs_diff, abs_diff);
 }
 
-static inline int64_t highbd_sse_128xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_128xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                            int height) {
     uint64x2_t sse[4] = {vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0)};
 
@@ -57,7 +57,7 @@ static inline int64_t highbd_sse_128xh_sve(const uint16_t *src, int src_stride, 
     return vaddvq_u64(sse[0]);
 }
 
-static inline int64_t highbd_sse_64xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_64xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                           int height) {
     uint64x2_t sse[4] = {vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0)};
 
@@ -81,7 +81,7 @@ static inline int64_t highbd_sse_64xh_sve(const uint16_t *src, int src_stride, c
     return vaddvq_u64(sse[0]);
 }
 
-static inline int64_t highbd_sse_32xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_32xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                           int height) {
     uint64x2_t sse[4] = {vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0), vdupq_n_u64(0)};
 
@@ -101,7 +101,7 @@ static inline int64_t highbd_sse_32xh_sve(const uint16_t *src, int src_stride, c
     return vaddvq_u64(sse[0]);
 }
 
-static inline int64_t highbd_sse_16xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_16xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                           int height) {
     uint64x2_t sse[2] = {vdupq_n_u64(0), vdupq_n_u64(0)};
 
@@ -116,7 +116,7 @@ static inline int64_t highbd_sse_16xh_sve(const uint16_t *src, int src_stride, c
     return vaddvq_u64(vaddq_u64(sse[0], sse[1]));
 }
 
-static inline int64_t highbd_sse_8xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_8xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                          int height) {
     uint64x2_t sse[2] = {vdupq_n_u64(0), vdupq_n_u64(0)};
 
@@ -132,7 +132,7 @@ static inline int64_t highbd_sse_8xh_sve(const uint16_t *src, int src_stride, co
     return vaddvq_u64(vaddq_u64(sse[0], sse[1]));
 }
 
-static inline int64_t highbd_sse_4xh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_4xh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                          int height) {
     uint64x2_t sse = vdupq_n_u64(0);
 
@@ -151,15 +151,15 @@ static inline int64_t highbd_sse_4xh_sve(const uint16_t *src, int src_stride, co
     return vaddvq_u64(sse);
 }
 
-static inline int64_t highbd_sse_wxh_sve(const uint16_t *src, int src_stride, const uint16_t *ref, int ref_stride,
+static inline int64_t highbd_sse_wxh_sve(const uint16_t* src, int src_stride, const uint16_t* ref, int ref_stride,
                                          int width, int height) {
     svuint64_t sse  = svdup_n_u64(0);
     uint64_t   step = svcnth();
 
     do {
         int             w       = 0;
-        const uint16_t *src_ptr = src;
-        const uint16_t *ref_ptr = ref;
+        const uint16_t* src_ptr = src;
+        const uint16_t* ref_ptr = ref;
 
         do {
             svbool_t   pred = svwhilelt_b16_u32(w, width);
@@ -182,10 +182,10 @@ static inline int64_t highbd_sse_wxh_sve(const uint16_t *src, int src_stride, co
     return svaddv_u64(svptrue_b64(), sse);
 }
 
-int64_t svt_aom_highbd_sse_sve(const uint8_t *src8, int src_stride, const uint8_t *ref8, int ref_stride, int width,
+int64_t svt_aom_highbd_sse_sve(const uint8_t* src8, int src_stride, const uint8_t* ref8, int ref_stride, int width,
                                int height) {
-    uint16_t *src = (uint16_t *)src8;
-    uint16_t *ref = (uint16_t *)ref8;
+    uint16_t* src = (uint16_t*)src8;
+    uint16_t* ref = (uint16_t*)ref8;
 
     switch (width) {
     case 4:
@@ -205,11 +205,11 @@ int64_t svt_aom_highbd_sse_sve(const uint8_t *src8, int src_stride, const uint8_
     }
 }
 
-uint64_t svt_full_distortion_kernel16_bits_sve(uint8_t *input8, uint32_t input_offset, uint32_t input_stride,
-                                               uint8_t *recon8, int32_t recon_offset, uint32_t recon_stride,
+uint64_t svt_full_distortion_kernel16_bits_sve(uint8_t* input8, uint32_t input_offset, uint32_t input_stride,
+                                               uint8_t* recon8, int32_t recon_offset, uint32_t recon_stride,
                                                uint32_t area_width, uint32_t area_height) {
-    uint16_t *input = (uint16_t *)input8;
-    uint16_t *recon = (uint16_t *)recon8;
+    uint16_t* input = (uint16_t*)input8;
+    uint16_t* recon = (uint16_t*)recon8;
     input += input_offset;
     recon += recon_offset;
 

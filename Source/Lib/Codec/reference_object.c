@@ -21,7 +21,7 @@
 void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
                                                            uint16_t recon_width, uint16_t recon_height,
                                                            uint16_t left_padding, uint16_t top_padding) {
-    uint8_t *recon_samples_ptr;
+    uint8_t* recon_samples_ptr;
     uint16_t sample_count;
 
     // 1. zero out the top row
@@ -45,7 +45,7 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
 }
 
 static void initialize_samples_neighboring_reference_picture(
-    EbReferenceObject *ref_object, EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr,
+    EbReferenceObject* ref_object, EbPictureBufferDescInitData* picture_buffer_desc_init_data_ptr,
     EbBitDepth bit_depth) {
     UNUSED(bit_depth);
     {
@@ -73,7 +73,7 @@ static void initialize_samples_neighboring_reference_picture(
 }
 
 static void svt_reference_object_dctor(EbPtr p) {
-    EbReferenceObject *obj = (EbReferenceObject *)p;
+    EbReferenceObject* obj = (EbReferenceObject*)p;
 
     EB_DELETE(obj->reference_picture);
     EB_FREE_2D(obj->unit_info);
@@ -98,7 +98,7 @@ static void svt_reference_object_dctor(EbPtr p) {
 /*
 svt_reference_param_update: update the parameters in EbReferenceObject for changing the resolution on the fly
 */
-EbErrorType svt_reference_param_update(EbReferenceObject *ref_object, SequenceControlSet *scs) {
+EbErrorType svt_reference_param_update(EbReferenceObject* ref_object, SequenceControlSet* scs) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data_ptr;
 
     bool is_16bit = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
@@ -152,9 +152,9 @@ EbErrorType svt_reference_param_update(EbReferenceObject *ref_object, SequenceCo
  *  values that are fixed for the life of
  *  the descriptor.
  *****************************************/
-EbErrorType svt_reference_object_ctor(EbReferenceObject *ref_object, EbPtr object_init_data_ptr) {
-    EbReferenceObjectDescInitData *ref_init_ptr = (EbReferenceObjectDescInitData *)object_init_data_ptr;
-    EbPictureBufferDescInitData   *picture_buffer_desc_init_data_ptr = &ref_init_ptr->reference_picture_desc_init_data;
+EbErrorType svt_reference_object_ctor(EbReferenceObject* ref_object, EbPtr object_init_data_ptr) {
+    EbReferenceObjectDescInitData* ref_init_ptr = (EbReferenceObjectDescInitData*)object_init_data_ptr;
+    EbPictureBufferDescInitData*   picture_buffer_desc_init_data_ptr = &ref_init_ptr->reference_picture_desc_init_data;
     EbPictureBufferDescInitData    picture_buffer_desc_init_data_16bit_ptr = *picture_buffer_desc_init_data_ptr;
 
     ref_object->dctor = svt_reference_object_dctor;
@@ -207,8 +207,8 @@ EbErrorType svt_reference_object_ctor(EbReferenceObject *ref_object, EbPtr objec
     return EB_ErrorNone;
 }
 
-EbErrorType svt_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbReferenceObject *obj;
+EbErrorType svt_reference_object_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbReferenceObject* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, svt_reference_object_ctor, object_init_data_ptr);
@@ -217,7 +217,7 @@ EbErrorType svt_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_ini
     return EB_ErrorNone;
 }
 
-EbErrorType svt_reference_object_reset(EbReferenceObject *ref_object, SequenceControlSet *scs) {
+EbErrorType svt_reference_object_reset(EbReferenceObject* ref_object, SequenceControlSet* scs) {
     ref_object->mi_rows = scs->max_input_luma_height >> MI_SIZE_LOG2;
     ref_object->mi_cols = scs->max_input_luma_width >> MI_SIZE_LOG2;
 
@@ -225,7 +225,7 @@ EbErrorType svt_reference_object_reset(EbReferenceObject *ref_object, SequenceCo
 }
 
 static void svt_pa_reference_object_dctor(EbPtr p) {
-    EbPaReferenceObject *obj = (EbPaReferenceObject *)p;
+    EbPaReferenceObject* obj = (EbPaReferenceObject*)p;
     if (obj->dummy_obj) {
         return;
     }
@@ -245,14 +245,14 @@ static void svt_pa_reference_object_dctor(EbPtr p) {
 }
 
 static void svt_tpl_reference_object_dctor(EbPtr p) {
-    EbTplReferenceObject *obj = (EbTplReferenceObject *)p;
+    EbTplReferenceObject* obj = (EbTplReferenceObject*)p;
     EB_DELETE(obj->ref_picture_ptr);
 }
 
 /*
 svt_pa_reference_param_update: update the parameters in EbPaReferenceObject for changing the resolution on the fly
 */
-EbErrorType svt_pa_reference_param_update(EbPaReferenceObject *pa_ref_obj, SequenceControlSet *scs) {
+EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, SequenceControlSet* scs) {
     EbPictureBufferDescInitData ref_pic_buf_desc_init_data;
     EbPictureBufferDescInitData quart_pic_buf_desc_init_data;
     EbPictureBufferDescInitData sixteenth_pic_buf_desc_init_data;
@@ -318,9 +318,8 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject *pa_ref_obj, Seque
  *  values that are fixed for the life of
  *  the descriptor.
  *****************************************/
-EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_, EbPtr object_init_data_ptr) {
-    EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData *)
-        object_init_data_ptr;
+EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject* pa_ref_obj_, EbPtr object_init_data_ptr) {
+    EbPictureBufferDescInitData* picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     pa_ref_obj_->dctor = svt_pa_reference_object_dctor;
 
@@ -351,8 +350,8 @@ EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_, EbPtr
     return EB_ErrorNone;
 }
 
-EbErrorType svt_pa_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbPaReferenceObject *obj;
+EbErrorType svt_pa_reference_object_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbPaReferenceObject* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, svt_pa_reference_object_ctor, object_init_data_ptr);
@@ -364,7 +363,7 @@ EbErrorType svt_pa_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_
 /*
 svt_tpl_reference_param_update: update the parameters in tpl_ref_obj for changing the resolution on the fly
 */
-EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject *tpl_ref_obj, SequenceControlSet *scs) {
+EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject* tpl_ref_obj, SequenceControlSet* scs) {
     EbPictureBufferDescInitData ref_pic_buf_desc_init_data;
     // PA Reference Picture Buffers
     // Currently, only Luma samples are needed in the PA
@@ -393,9 +392,8 @@ EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject *tpl_ref_obj, Se
     return EB_ErrorNone;
 }
 
-EbErrorType svt_tpl_reference_object_ctor(EbTplReferenceObject *tpl_ref_obj_, EbPtr object_init_data_ptr) {
-    EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData *)
-        object_init_data_ptr;
+EbErrorType svt_tpl_reference_object_ctor(EbTplReferenceObject* tpl_ref_obj_, EbPtr object_init_data_ptr) {
+    EbPictureBufferDescInitData* picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     tpl_ref_obj_->dctor = svt_tpl_reference_object_dctor;
 
@@ -405,8 +403,8 @@ EbErrorType svt_tpl_reference_object_ctor(EbTplReferenceObject *tpl_ref_obj_, Eb
     return EB_ErrorNone;
 }
 
-EbErrorType svt_tpl_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbTplReferenceObject *obj;
+EbErrorType svt_tpl_reference_object_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbTplReferenceObject* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, svt_tpl_reference_object_ctor, object_init_data_ptr);
@@ -420,7 +418,7 @@ EbErrorType svt_tpl_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object
 ** Check if reference pictures are needed
 ** release them when appropriate
 ************************************************/
-void svt_aom_release_pa_reference_objects(SequenceControlSet *scs, PictureParentControlSet *pcs) {
+void svt_aom_release_pa_reference_objects(SequenceControlSet* scs, PictureParentControlSet* pcs) {
     (void)scs;
     // PA Reference Pictures
     if (pcs->slice_type != I_SLICE) {

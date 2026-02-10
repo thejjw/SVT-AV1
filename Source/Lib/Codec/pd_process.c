@@ -45,12 +45,12 @@
 #define LAY4_OFF 7
 
 void             svt_aom_get_max_allocated_me_refs(uint8_t ref_count_used_list0, uint8_t ref_count_used_list1,
-                                                   uint8_t *max_ref_to_alloc, uint8_t *max_cand_to_alloc);
-void             svt_aom_init_resize_picture(SequenceControlSet *scs, PictureParentControlSet *pcs);
+                                                   uint8_t* max_ref_to_alloc, uint8_t* max_cand_to_alloc);
+void             svt_aom_init_resize_picture(SequenceControlSet* scs, PictureParentControlSet* pcs);
 MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
 
-static uint32_t calc_ahd(SequenceControlSet *scs, PictureParentControlSet *input_pcs, PictureParentControlSet *ref_pcs,
-                         uint8_t *active_region_cnt) {
+static uint32_t calc_ahd(SequenceControlSet* scs, PictureParentControlSet* input_pcs, PictureParentControlSet* ref_pcs,
+                         uint8_t* active_region_cnt) {
     uint32_t ahd           = 0;
     uint32_t region_width  = ref_pcs->enhanced_pic->width / scs->picture_analysis_number_of_regions_per_width;
     uint32_t region_height = ref_pcs->enhanced_pic->height / scs->picture_analysis_number_of_regions_per_height;
@@ -79,7 +79,7 @@ static uint32_t calc_ahd(SequenceControlSet *scs, PictureParentControlSet *input
     return ahd;
 }
 
-static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
+static INLINE int get_relative_dist(const OrderHintInfo* oh, int a, int b) {
     if (!oh->enable_order_hint) {
         return 0;
     }
@@ -96,16 +96,16 @@ static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
     return diff;
 }
 
-void svt_av1_setup_skip_mode_allowed(PictureParentControlSet *pcs) {
-    FrameHeader               *frm_hdr         = &pcs->frm_hdr;
-    const OrderHintInfo *const order_hint_info = &pcs->scs->seq_header.order_hint_info;
-    SkipModeInfo *const        skip_mode_info  = &frm_hdr->skip_mode_params;
+void svt_av1_setup_skip_mode_allowed(PictureParentControlSet* pcs) {
+    FrameHeader*               frm_hdr         = &pcs->frm_hdr;
+    const OrderHintInfo* const order_hint_info = &pcs->scs->seq_header.order_hint_info;
+    SkipModeInfo* const        skip_mode_info  = &frm_hdr->skip_mode_params;
 
     skip_mode_info->skip_mode_allowed = 0;
     skip_mode_info->ref_frame_idx_0   = INVALID_IDX;
     skip_mode_info->ref_frame_idx_1   = INVALID_IDX;
 
-    uint32_t *ref_order_hint = pcs->ref_order_hint;
+    uint32_t* ref_order_hint = pcs->ref_order_hint;
 
     // If these conditions are true, skip mode is not allowed, so return early
     if (!order_hint_info->enable_order_hint || pcs->slice_type == I_SLICE /*frame_is_intra_only(cm)*/ ||
@@ -185,8 +185,8 @@ uint8_t circ_inc(uint8_t max, uint8_t off, uint8_t input) {
 #define QUEUE_GET_NEXT_SPOT(h, off, size) (((int)(h + off) >= (int)(size)) ? h + off - (int)(size) : h + off)
 
 static void picture_decision_context_dctor(EbPtr p) {
-    EbThreadContext        *thread_ctx = (EbThreadContext *)p;
-    PictureDecisionContext *obj        = (PictureDecisionContext *)thread_ctx->priv;
+    EbThreadContext*        thread_ctx = (EbThreadContext*)p;
+    PictureDecisionContext* obj        = (PictureDecisionContext*)thread_ctx->priv;
 
     if (obj->prev_picture_histogram) {
         for (int region_in_picture_width_index = 0; region_in_picture_width_index < MAX_NUMBER_OF_REGIONS_IN_WIDTH;
@@ -213,14 +213,14 @@ static void picture_decision_context_dctor(EbPtr p) {
 /************************************************
   * Picture Analysis Context Constructor
   ************************************************/
-EbErrorType svt_aom_picture_decision_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
+EbErrorType svt_aom_picture_decision_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr,
                                                   uint8_t calc_hist) {
-    PictureDecisionContext *pd_ctx;
+    PictureDecisionContext* pd_ctx;
     EB_CALLOC_ARRAY(pd_ctx, 1);
     thread_ctx->priv  = pd_ctx;
     thread_ctx->dctor = picture_decision_context_dctor;
 
-    memset(pd_ctx->tf_pic_array, 0, (1 << MAX_TEMPORAL_LAYERS) * sizeof(PictureParentControlSet *));
+    memset(pd_ctx->tf_pic_array, 0, (1 << MAX_TEMPORAL_LAYERS) * sizeof(PictureParentControlSet*));
     pd_ctx->tf_pic_arr_cnt                          = 0;
     pd_ctx->picture_analysis_results_input_fifo_ptr = svt_system_resource_get_consumer_fifo(
         enc_handle_ptr->picture_analysis_results_resource_ptr, 0);
@@ -262,10 +262,10 @@ EbErrorType svt_aom_picture_decision_context_ctor(EbThreadContext *thread_ctx, c
     return EB_ErrorNone;
 }
 
-static bool scene_transition_detector(PictureDecisionContext *pd_ctx, SequenceControlSet *scs,
-                                      PictureParentControlSet **parent_pcs_window) {
-    PictureParentControlSet *current_pcs_ptr = parent_pcs_window[1];
-    PictureParentControlSet *future_pcs_ptr  = parent_pcs_window[2];
+static bool scene_transition_detector(PictureDecisionContext* pd_ctx, SequenceControlSet* scs,
+                                      PictureParentControlSet** parent_pcs_window) {
+    PictureParentControlSet* current_pcs_ptr = parent_pcs_window[1];
+    PictureParentControlSet* future_pcs_ptr  = parent_pcs_window[2];
 
     // calculating the frame threshold based on the number of 64x64 blocks in the frame
     uint32_t region_threshold;
@@ -273,7 +273,7 @@ static bool scene_transition_detector(PictureDecisionContext *pd_ctx, SequenceCo
     bool is_abrupt_change; // this variable signals an abrupt change (scene change or flash)
     bool is_scene_change; // this variable signals a frame representing a scene change
 
-    uint32_t **ahd_running_avg = pd_ctx->ahd_running_avg;
+    uint32_t** ahd_running_avg = pd_ctx->ahd_running_avg;
 
     uint32_t region_in_picture_width_index;
     uint32_t region_in_picture_height_index;
@@ -385,10 +385,10 @@ static bool scene_transition_detector(PictureDecisionContext *pd_ctx, SequenceCo
 /***************************************************************************************************
 * release_prev_picture_from_reorder_queue
 ***************************************************************************************************/
-EbErrorType release_prev_picture_from_reorder_queue(EncodeContext *enc_ctx) {
+EbErrorType release_prev_picture_from_reorder_queue(EncodeContext* enc_ctx) {
     EbErrorType return_error = EB_ErrorNone;
 
-    PictureDecisionReorderEntry *queue_previous_entry_ptr;
+    PictureDecisionReorderEntry* queue_previous_entry_ptr;
     int32_t                      previous_entry_index;
 
     // Get the previous entry from the Picture Decision Reordering Queue (Entry N-1)
@@ -409,7 +409,7 @@ EbErrorType release_prev_picture_from_reorder_queue(EncodeContext *enc_ctx) {
     return return_error;
 }
 
-static void early_hme_b64(uint8_t *sixteenth_b64_buffer, uint32_t sixteenth_b64_buffer_stride,
+static void early_hme_b64(uint8_t* sixteenth_b64_buffer, uint32_t sixteenth_b64_buffer_stride,
                           uint8_t  hme_search_method, //
                           int16_t  org_x, // Block position in the horizontal direction- sixteenth resolution
                           int16_t  org_y, // Block position in the vertical direction- sixteenth resolution
@@ -417,9 +417,9 @@ static void early_hme_b64(uint8_t *sixteenth_b64_buffer, uint32_t sixteenth_b64_
                           uint32_t block_height, // Block height - sixteenth resolution
                           int16_t  sa_width, // search area width
                           int16_t  sa_height, // search area height
-                          EbPictureBufferDesc *sixteenth_ref_pic_ptr, // sixteenth-downsampled reference picture
-                          uint64_t            *best_sad, // output: Level0 SAD
-                          Mv                  *sr_center // output: Level0 xMV, Level0 yMV
+                          EbPictureBufferDesc* sixteenth_ref_pic_ptr, // sixteenth-downsampled reference picture
+                          uint64_t*            best_sad, // output: Level0 SAD
+                          Mv*                  sr_center // output: Level0 xMV, Level0 yMV
 ) {
     // round up the search region width to nearest multiple of 8 because the SAD calculation performance (for
     // intrinsic functions) is the same for search region width from 1 to 8
@@ -497,12 +497,12 @@ static void early_hme_b64(uint8_t *sixteenth_b64_buffer, uint32_t sixteenth_b64_
     return;
 }
 
-void dg_detector_hme_level0(PictureParentControlSet *ppcs, uint32_t seg_idx) {
-    EbPictureBufferDesc *src_sixt_ds_pic =
-        ((EbPaReferenceObject *)ppcs->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;
+void dg_detector_hme_level0(PictureParentControlSet* ppcs, uint32_t seg_idx) {
+    EbPictureBufferDesc* src_sixt_ds_pic =
+        ((EbPaReferenceObject*)ppcs->pa_ref_pic_wrapper->object_ptr)->sixteenth_downsampled_picture_ptr;
 
-    EbPictureBufferDesc *ref_sixt_ds_pic =
-        ((EbPaReferenceObject *)ppcs->dg_detector->ref_pic->pa_ref_pic_wrapper->object_ptr)
+    EbPictureBufferDesc* ref_sixt_ds_pic =
+        ((EbPaReferenceObject*)ppcs->dg_detector->ref_pic->pa_ref_pic_wrapper->object_ptr)
             ->sixteenth_downsampled_picture_ptr;
 
     int16_t sa_width  = ppcs->input_resolution <= INPUT_SIZE_360p_RANGE ? 16
@@ -596,7 +596,7 @@ void dg_detector_hme_level0(PictureParentControlSet *ppcs, uint32_t seg_idx) {
     svt_release_mutex(ppcs->dg_detector->metrics_mutex);
 }
 
-static void early_hme(PictureDecisionContext *ctx, PictureParentControlSet *src_pcs, PictureParentControlSet *ref_pcs) {
+static void early_hme(PictureDecisionContext* ctx, PictureParentControlSet* src_pcs, PictureParentControlSet* ref_pcs) {
     // store the ref pic so it can be used by dg detector when the src picture is sent to the motion estimation kernel
     src_pcs->dg_detector->ref_pic = ref_pcs;
 
@@ -611,10 +611,10 @@ static void early_hme(PictureDecisionContext *ctx, PictureParentControlSet *src_
 
     // create segments for the dg detector and send them to the motion estimation kernel
     for (uint16_t seg_idx = 0; seg_idx < dg_detector_seg_total_count; ++seg_idx) {
-        EbObjectWrapper        *out_results_wrp;
-        PictureDecisionResults *out_results;
+        EbObjectWrapper*        out_results_wrp;
+        PictureDecisionResults* out_results;
         svt_get_empty_object(ctx->picture_decision_results_output_fifo_ptr, &out_results_wrp);
-        out_results                = (PictureDecisionResults *)out_results_wrp->object_ptr;
+        out_results                = (PictureDecisionResults*)out_results_wrp->object_ptr;
         out_results->pcs_wrapper   = src_pcs->p_pcs_wrapper_ptr;
         out_results->segment_index = seg_idx;
         out_results->task_type     = TASK_DG_DETECTOR_HME;
@@ -638,7 +638,7 @@ static void early_hme(PictureDecisionContext *ctx, PictureParentControlSet *src_
 #define HIGH_DIST_TH 16 * 16 * 18
 #define LOW_DIST_TH 16 * 16 * 2
 
-static void calc_mini_gop_activity(PictureDecisionContext *ctx, EncodeContext *enc_ctx, uint64_t top_layer_idx,
+static void calc_mini_gop_activity(PictureDecisionContext* ctx, EncodeContext* enc_ctx, uint64_t top_layer_idx,
                                    uint64_t top_layer_dist, uint8_t top_layer_perc_active, uint8_t top_layer_perc_cplx,
                                    uint64_t sub_layer_idx0, uint64_t sub_layer_dist0, uint8_t sub_layer0_perc_active,
                                    uint8_t sub_layer0_perc_cplx, uint64_t sub_layer_idx1, uint64_t sub_layer_dist1,
@@ -666,9 +666,9 @@ static void calc_mini_gop_activity(PictureDecisionContext *ctx, EncodeContext *e
     }
 }
 
-static void eval_sub_mini_gop(PictureDecisionContext *ctx, EncodeContext *enc_ctx, uint64_t top_layer_idx,
-                              uint64_t sub_layer_idx0, uint64_t sub_layer_idx1, PictureParentControlSet *start_pcs,
-                              PictureParentControlSet *mid_pcs, PictureParentControlSet *end_pcs) {
+static void eval_sub_mini_gop(PictureDecisionContext* ctx, EncodeContext* enc_ctx, uint64_t top_layer_idx,
+                              uint64_t sub_layer_idx0, uint64_t sub_layer_idx1, PictureParentControlSet* start_pcs,
+                              PictureParentControlSet* mid_pcs, PictureParentControlSet* end_pcs) {
     early_hme(ctx, end_pcs, start_pcs);
 
     uint64_t dist_end_start            = ctx->norm_dist;
@@ -712,8 +712,8 @@ static void eval_sub_mini_gop(PictureDecisionContext *ctx, EncodeContext *enc_ct
 * Initializes mini GOP activity array
 *
 ***************************************************************************************************/
-static void initialize_mini_gop_activity_array(SequenceControlSet *scs, PictureParentControlSet *pcs,
-                                               EncodeContext *enc_ctx, PictureDecisionContext *ctx) {
+static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureParentControlSet* pcs,
+                                               EncodeContext* enc_ctx, PictureDecisionContext* ctx) {
     (void)scs;
 
     // Loop over all mini GOPs to initialize the activity
@@ -789,12 +789,12 @@ static void initialize_mini_gop_activity_array(SequenceControlSet *scs, PictureP
 
     // 6L vs. 5L
     if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == false) {
-        PictureParentControlSet *start_pcs = (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[0]->object_ptr;
-        PictureParentControlSet *mid_pcs =
-            (PictureParentControlSet *)enc_ctx
+        PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
+        PictureParentControlSet* mid_pcs =
+            (PictureParentControlSet*)enc_ctx
                 ->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]
                 ->object_ptr;
-        PictureParentControlSet *end_pcs = (PictureParentControlSet *)enc_ctx
+        PictureParentControlSet* end_pcs = (PictureParentControlSet*)enc_ctx
                                                ->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]
                                                ->object_ptr;
         eval_sub_mini_gop(ctx, enc_ctx, L6_INDEX, L5_0_INDEX, L5_1_INDEX, start_pcs, mid_pcs, end_pcs);
@@ -810,7 +810,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet *scs, PictureP
 *
 *
 ***************************************************************************************************/
-static EbErrorType generate_picture_window_split(PictureDecisionContext *pd_ctx, EncodeContext *enc_ctx) {
+static EbErrorType generate_picture_window_split(PictureDecisionContext* pd_ctx, EncodeContext* enc_ctx) {
     pd_ctx->total_number_of_mini_gops = 0;
     // Loop over all mini GOPs
     for (uint32_t gopindex = 0; gopindex < MINI_GOP_MAX_COUNT; gopindex += pd_ctx->mini_gop_activity_array[gopindex]
@@ -845,8 +845,8 @@ static EbErrorType generate_picture_window_split(PictureDecisionContext *pd_ctx,
 *
 *
 ***************************************************************************************************/
-static EbErrorType handle_incomplete_picture_window_map(uint32_t hierarchical_level, PictureDecisionContext *pd_ctx,
-                                                        EncodeContext *enc_ctx) {
+static EbErrorType handle_incomplete_picture_window_map(uint32_t hierarchical_level, PictureDecisionContext* pd_ctx,
+                                                        EncodeContext* enc_ctx) {
     EbErrorType return_error = EB_ErrorNone;
     if (pd_ctx->total_number_of_mini_gops == 0) {
         hierarchical_level = MIN(MIN_HIERARCHICAL_LEVEL, hierarchical_level);
@@ -881,7 +881,7 @@ static EbErrorType handle_incomplete_picture_window_map(uint32_t hierarchical_le
    This function tells if a picture is part of a short
    mg in RA configuration
 */
-uint8_t is_pic_cutting_short_ra_mg(PictureDecisionContext *pd_ctx, PictureParentControlSet *pcs, uint32_t mg_idx) {
+uint8_t is_pic_cutting_short_ra_mg(PictureDecisionContext* pd_ctx, PictureParentControlSet* pcs, uint32_t mg_idx) {
     //if the size < complete MG or if there is usage of closed GOP
     if ((pd_ctx->mini_gop_length[mg_idx] < pcs->pred_struct_ptr->pred_struct_entry_count ||
          pd_ctx->mini_gop_idr_count[mg_idx] > 0) &&
@@ -895,16 +895,16 @@ uint8_t is_pic_cutting_short_ra_mg(PictureDecisionContext *pd_ctx, PictureParent
 /***************************************************************************************************
 * Gets the pred struct for each frame in the mini-gop(s) that we have available
 ***************************************************************************************************/
-static void get_pred_struct_for_all_frames(PictureDecisionContext *ctx, EncodeContext *enc_ctx) {
+static void get_pred_struct_for_all_frames(PictureDecisionContext* ctx, EncodeContext* enc_ctx) {
     // Loop over all mini GOPs
     for (unsigned int mini_gop_index = 0; mini_gop_index < ctx->total_number_of_mini_gops; ++mini_gop_index) {
         // Loop over picture within the mini GOP
         for (unsigned int pic_idx = ctx->mini_gop_start_index[mini_gop_index];
              pic_idx <= ctx->mini_gop_end_index[mini_gop_index];
              pic_idx++) {
-            PictureParentControlSet *pcs =
-                (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
-            SequenceControlSet *scs = pcs->scs;
+            PictureParentControlSet* pcs =
+                (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
+            SequenceControlSet* scs = pcs->scs;
 #if DEBUG_STARTUP_MG_SIZE
             if (pcs->idr_flag || pcs->cra_flag) {
                 SVT_LOG("Frame %d, key-frame\n", (int)pcs->picture_number);
@@ -943,21 +943,21 @@ static void get_pred_struct_for_all_frames(PictureDecisionContext *ctx, EncodeCo
     }
 }
 
-void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool *gm_need_full, bool *gm_need_quart, bool *gm_need_sixteen) {
+void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool* gm_need_full, bool* gm_need_quart, bool* gm_need_sixteen) {
     *gm_need_full    = (ds_lvl == GM_FULL) || (ds_lvl == GM_ADAPT_0);
     *gm_need_quart   = (ds_lvl == GM_DOWN) || (ds_lvl == GM_ADAPT_0) || (ds_lvl == GM_ADAPT_1);
     *gm_need_sixteen = (ds_lvl == GM_DOWN16) || (ds_lvl == GM_ADAPT_1);
 }
 
-bool svt_aom_is_pic_skipped(PictureParentControlSet *pcs) {
+bool svt_aom_is_pic_skipped(PictureParentControlSet* pcs) {
     if (!pcs->is_ref && pcs->scs->rc_stat_gen_pass_mode && !pcs->first_frame_in_minigop) {
         return true;
     }
     return false;
 }
 
-static void prune_sframe_refs(PictureDecisionContext *ctx, PictureParentControlSet *ppcs,
-                              MvReferenceFrame ref_frame_arr[], uint8_t *tot_ref_frames) {
+static void prune_sframe_refs(PictureDecisionContext* ctx, PictureParentControlSet* ppcs,
+                              MvReferenceFrame ref_frame_arr[], uint8_t* tot_ref_frames) {
     if (ctx->sframe_poc > 0 && ppcs->picture_number < ctx->sframe_poc && ppcs->scs->mfmv_enabled) {
 #if DEBUG_SFRAME
         fprintf(stderr, "frame[%u] ref before prune:\t", ppcs->picture_number);
@@ -997,8 +997,8 @@ static void prune_sframe_refs(PictureDecisionContext *ctx, PictureParentControlS
 }
 
 //set the ref frame types used for this picture,
-static void set_all_ref_frame_type(PictureDecisionContext *ctx, PictureParentControlSet *ppcs,
-                                   MvReferenceFrame ref_frame_arr[], uint8_t *tot_ref_frames) {
+static void set_all_ref_frame_type(PictureDecisionContext* ctx, PictureParentControlSet* ppcs,
+                                   MvReferenceFrame ref_frame_arr[], uint8_t* tot_ref_frames) {
     MvReferenceFrame rf[2];
     *tot_ref_frames = 0;
 
@@ -1053,7 +1053,7 @@ static void set_all_ref_frame_type(PictureDecisionContext *ctx, PictureParentCon
     prune_sframe_refs(ctx, ppcs, ref_frame_arr, tot_ref_frames);
 }
 
-static void prune_refs(Av1RpsNode *av1_rps, unsigned ref_list0_count, unsigned ref_list1_count) {
+static void prune_refs(Av1RpsNode* av1_rps, unsigned ref_list0_count, unsigned ref_list1_count) {
     if (ref_list0_count < 4) {
         av1_rps->ref_dpb_index[GOLD] = av1_rps->ref_dpb_index[LAST];
         av1_rps->ref_poc_array[GOLD] = av1_rps->ref_poc_array[LAST];
@@ -1085,9 +1085,9 @@ static void prune_refs(Av1RpsNode *av1_rps, unsigned ref_list0_count, unsigned r
 // Set the show_frame and show_existing_frame for current picture if it's:
 // 1)Low delay P, 2)Low delay b and 3)I frames of RA
 // For b frames of RA, need to set it manually based on picture_index
-static bool set_frame_display_params(PictureParentControlSet *pcs, PictureDecisionContext *pd_ctx,
+static bool set_frame_display_params(PictureParentControlSet* pcs, PictureDecisionContext* pd_ctx,
                                      uint32_t mini_gop_index) {
-    FrameHeader *frm_hdr = &pcs->frm_hdr;
+    FrameHeader* frm_hdr = &pcs->frm_hdr;
 
     if (pcs->pred_struct_ptr->pred_type == LOW_DELAY || pcs->is_overlay) {
         frm_hdr->show_frame    = true;
@@ -1115,8 +1115,8 @@ static bool set_frame_display_params(PictureParentControlSet *pcs, PictureDecisi
     return true;
 }
 
-static void set_key_frame_rps(PictureParentControlSet *pcs, PictureDecisionContext *pd_ctx) {
-    FrameHeader *frm_hdr = &pcs->frm_hdr;
+static void set_key_frame_rps(PictureParentControlSet* pcs, PictureDecisionContext* pd_ctx) {
+    FrameHeader* frm_hdr = &pcs->frm_hdr;
     pd_ctx->lay0_toggle  = 0;
     pd_ctx->lay1_toggle  = 0;
 
@@ -1127,7 +1127,7 @@ static void set_key_frame_rps(PictureParentControlSet *pcs, PictureDecisionConte
 
 // returns the distance to the nearest S-Frame, and dist_to_next_s will be filled if current is an S-Frame
 // dist_to_next_s is for there being more than one S-Frame inserted within one miniGOP size
-static int32_t get_dist_to_s(SvtAv1SFramePositions const *sframe_posi, uint64_t picture_num, int32_t *dist_to_next_s) {
+static int32_t get_dist_to_s(SvtAv1SFramePositions const* sframe_posi, uint64_t picture_num, int32_t* dist_to_next_s) {
     *dist_to_next_s = -1;
     for (uint32_t i = 0; i < sframe_posi->sframe_num; i++) {
         if (sframe_posi->sframe_posis[i] >= picture_num) {
@@ -1142,7 +1142,7 @@ static int32_t get_dist_to_s(SvtAv1SFramePositions const *sframe_posi, uint64_t 
     return -1; // all s-frame spots are expired
 }
 
-static uint8_t get_sframe_qp(SvtAv1SFramePositions const *sframe_posi, uint64_t picture_num) {
+static uint8_t get_sframe_qp(SvtAv1SFramePositions const* sframe_posi, uint64_t picture_num) {
     if (sframe_posi->sframe_qps == NULL) {
         return 0;
     }
@@ -1158,7 +1158,7 @@ static uint8_t get_sframe_qp(SvtAv1SFramePositions const *sframe_posi, uint64_t 
     return 0; // not find the picture
 }
 
-static int8_t get_sframe_qp_offset(SvtAv1SFramePositions const *sframe_posi, uint64_t picture_num) {
+static int8_t get_sframe_qp_offset(SvtAv1SFramePositions const* sframe_posi, uint64_t picture_num) {
     if (sframe_posi->sframe_qp_offsets == NULL) {
         return 0;
     }
@@ -1174,8 +1174,8 @@ static int8_t get_sframe_qp_offset(SvtAv1SFramePositions const *sframe_posi, uin
     return 0; // not find the picture
 }
 
-static void setup_sframe_qp(PictureParentControlSet *ppcs) {
-    SequenceControlSet *scs       = ppcs->scs;
+static void setup_sframe_qp(PictureParentControlSet* ppcs) {
+    SequenceControlSet* scs       = ppcs->scs;
     uint64_t            pic_num   = scs->static_config.sframe_mode == SFRAME_DEC_POSI_BASE ? ppcs->decode_order
                                                                                            : ppcs->picture_number;
     uint8_t             sframe_qp = scs->static_config.sframe_qp > 0 ? scs->static_config.sframe_qp
@@ -1196,7 +1196,7 @@ static void setup_sframe_qp(PictureParentControlSet *ppcs) {
 // Adjust the S-frame position offset for S-frame decode order mode.
 // In low-delay mode, the decode order is the same as the display order,
 // so the offset adjustment is unnecessary.
-static int32_t sframe_position_offset(SequenceControlSet *scs) {
+static int32_t sframe_position_offset(SequenceControlSet* scs) {
     return (scs->static_config.sframe_mode == SFRAME_DEC_POSI_BASE &&
             scs->static_config.pred_structure == RANDOM_ACCESS)
         ? 1
@@ -1204,8 +1204,8 @@ static int32_t sframe_position_offset(SequenceControlSet *scs) {
 }
 
 // Decide whether to make an inter frame into an S-Frame
-static void set_sframe_type(PictureParentControlSet *ppcs, EncodeContext *enc_ctx, PictureDecisionContext *pd_ctx) {
-    FrameHeader       *frm_hdr     = &ppcs->frm_hdr;
+static void set_sframe_type(PictureParentControlSet* ppcs, EncodeContext* enc_ctx, PictureDecisionContext* pd_ctx) {
+    FrameHeader*       frm_hdr     = &ppcs->frm_hdr;
     const int          sframe_dist = enc_ctx->sf_cfg.sframe_dist;
     const EbSFrameMode sframe_mode = enc_ctx->sf_cfg.sframe_mode;
 
@@ -1322,8 +1322,8 @@ static void set_sframe_type(PictureParentControlSet *ppcs, EncodeContext *enc_ct
 }
 
 // Determine the size of the first mini-GOP after inserting a key frame
-static void decide_sframe_mg(PictureParentControlSet *ppcs, EncodeContext *enc_ctx, PictureDecisionContext *pd_ctx) {
-    SequenceControlSet *scs           = ppcs->scs;
+static void decide_sframe_mg(PictureParentControlSet* ppcs, EncodeContext* enc_ctx, PictureDecisionContext* pd_ctx) {
+    SequenceControlSet* scs           = ppcs->scs;
     int32_t             sframe_dist   = enc_ctx->sf_cfg.sframe_dist;
     int32_t             sframe_offset = sframe_position_offset(scs);
     // reset next_arf_sframe when key frame inserted
@@ -1359,7 +1359,7 @@ static void decide_sframe_mg(PictureParentControlSet *ppcs, EncodeContext *enc_c
 }
 
 // Update RPS info for S-Frame
-static void set_sframe_rps(PictureParentControlSet *ppcs, EncodeContext *enc_ctx, PictureDecisionContext *pd_ctx) {
+static void set_sframe_rps(PictureParentControlSet* ppcs, EncodeContext* enc_ctx, PictureDecisionContext* pd_ctx) {
     ppcs->frm_hdr.error_resilient_mode      = 1;
     ppcs->av1_ref_signal.refresh_frame_mask = 0xFF;
 
@@ -1436,15 +1436,15 @@ bool svt_aom_is_pic_used_as_ref(uint32_t hierarchical_levels, uint32_t temporal_
     return true;
 }
 
-static void set_ref_list_counts(PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
+static void set_ref_list_counts(PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     if (pcs->slice_type == I_SLICE) {
         pcs->ref_list0_count = 0;
         pcs->ref_list1_count = 0;
         return;
     }
 
-    Av1RpsNode           *av1_rps   = &pcs->av1_ref_signal;
-    const MrpCtrls *const mrp_ctrls = &pcs->scs->mrp_ctrls;
+    Av1RpsNode*           av1_rps   = &pcs->av1_ref_signal;
+    const MrpCtrls* const mrp_ctrls = &pcs->scs->mrp_ctrls;
     const bool            is_base   = pcs->temporal_layer_index == 0;
     const bool            is_sc     = pcs->sc_class1;
 
@@ -1540,7 +1540,7 @@ static void set_ref_list_counts(PictureParentControlSet *pcs, PictureDecisionCon
     assert(!(pcs->ref_list1_count == 0 && pcs->scs->static_config.pred_structure == RANDOM_ACCESS));
 }
 
-static INLINE void update_ref_poc_array(uint8_t *ref_dpb_idx, uint64_t *ref_poc_array, DpbEntry *dpb) {
+static INLINE void update_ref_poc_array(uint8_t* ref_dpb_idx, uint64_t* ref_poc_array, DpbEntry* dpb) {
     ref_poc_array[LAST]  = dpb[ref_dpb_idx[LAST]].picture_number;
     ref_poc_array[LAST2] = dpb[ref_dpb_idx[LAST2]].picture_number;
     ref_poc_array[LAST3] = dpb[ref_dpb_idx[LAST3]].picture_number;
@@ -1550,11 +1550,11 @@ static INLINE void update_ref_poc_array(uint8_t *ref_dpb_idx, uint64_t *ref_poc_
     ref_poc_array[ALT]   = dpb[ref_dpb_idx[ALT]].picture_number;
 }
 
-static void av1_generate_rps_info(PictureParentControlSet *pcs, EncodeContext *enc_ctx, PictureDecisionContext *ctx,
+static void av1_generate_rps_info(PictureParentControlSet* pcs, EncodeContext* enc_ctx, PictureDecisionContext* ctx,
                                   uint32_t pic_idx, uint32_t mg_idx) {
-    Av1RpsNode         *av1_rps             = &pcs->av1_ref_signal;
-    FrameHeader        *frm_hdr             = &pcs->frm_hdr;
-    SequenceControlSet *scs                 = pcs->scs;
+    Av1RpsNode*         av1_rps             = &pcs->av1_ref_signal;
+    FrameHeader*        frm_hdr             = &pcs->frm_hdr;
+    SequenceControlSet* scs                 = pcs->scs;
     const uint8_t       hierarchical_levels = pcs->hierarchical_levels;
     const uint8_t       temporal_layer      = pcs->temporal_layer_index;
     const uint8_t       more_5L_refs        = pcs->scs->mrp_ctrls.more_5L_refs;
@@ -1593,8 +1593,8 @@ static void av1_generate_rps_info(PictureParentControlSet *pcs, EncodeContext *e
         }
     }
 
-    uint8_t  *ref_dpb_index = av1_rps->ref_dpb_index;
-    uint64_t *ref_poc_array = av1_rps->ref_poc_array;
+    uint8_t*  ref_dpb_index = av1_rps->ref_dpb_index;
+    uint64_t* ref_poc_array = av1_rps->ref_poc_array;
 
     if (scs->use_flat_ipp) {
         const uint8_t max_refs = scs->mrp_ctrls.flat_max_refs;
@@ -1658,7 +1658,7 @@ static void av1_generate_rps_info(PictureParentControlSet *pcs, EncodeContext *e
 
         assert(!pcs->is_overlay && "overlays not supported in LD");
 
-        const MrpCtrls *const mrp_ctrls       = &pcs->scs->mrp_ctrls;
+        const MrpCtrls* const mrp_ctrls       = &pcs->scs->mrp_ctrls;
         const bool            is_base         = temporal_layer == 0;
         const bool            is_sc           = pcs->sc_class1;
         uint8_t               ref_list1_count = is_sc
@@ -3087,15 +3087,15 @@ static void av1_generate_rps_info(PictureParentControlSet *pcs, EncodeContext *e
 /***************************************************************************************************
 // Perform Required Picture Analysis Processing for the Overlay frame
 ***************************************************************************************************/
-void perform_simple_picture_analysis_for_overlay(PictureParentControlSet *pcs) {
-    EbPictureBufferDesc *input_padded_pic;
-    EbPictureBufferDesc *input_pic;
-    EbPaReferenceObject *pa_ref_obj_;
+void perform_simple_picture_analysis_for_overlay(PictureParentControlSet* pcs) {
+    EbPictureBufferDesc* input_padded_pic;
+    EbPictureBufferDesc* input_pic;
+    EbPaReferenceObject* pa_ref_obj_;
 
-    SequenceControlSet *scs = pcs->scs;
+    SequenceControlSet* scs = pcs->scs;
     input_pic               = pcs->enhanced_pic;
-    pa_ref_obj_             = (EbPaReferenceObject *)pcs->pa_ref_pic_wrapper->object_ptr;
-    input_padded_pic        = (EbPictureBufferDesc *)pa_ref_obj_->input_padded_pic;
+    pa_ref_obj_             = (EbPaReferenceObject*)pcs->pa_ref_pic_wrapper->object_ptr;
+    input_padded_pic        = (EbPictureBufferDesc*)pa_ref_obj_->input_padded_pic;
 
     // Pad pictures to multiple min cu size
     svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(scs, input_pic);
@@ -3115,9 +3115,9 @@ void perform_simple_picture_analysis_for_overlay(PictureParentControlSet *pcs) {
 
     // R2R FIX: copying input_pic to input_padded_pic for motion_estimate_sb needs it
     {
-        uint8_t *pa = input_padded_pic->buffer_y + input_padded_pic->org_x +
+        uint8_t* pa = input_padded_pic->buffer_y + input_padded_pic->org_x +
             input_padded_pic->org_y * input_padded_pic->stride_y;
-        uint8_t *in = input_pic->buffer_y + input_pic->org_x + input_pic->org_y * input_pic->stride_y;
+        uint8_t* in = input_pic->buffer_y + input_pic->org_x + input_pic->org_y * input_pic->stride_y;
         for (uint32_t row = 0; row < input_pic->height; row++) {
             svt_memcpy(pa + row * input_padded_pic->stride_y,
                        in + row * input_pic->stride_y,
@@ -3130,8 +3130,8 @@ void perform_simple_picture_analysis_for_overlay(PictureParentControlSet *pcs) {
     // 1/4 & 1/16 input picture downsampling through filtering
     svt_aom_downsample_filtering_input_picture(pcs,
                                                input_padded_pic,
-                                               (EbPictureBufferDesc *)pa_ref_obj_->quarter_downsampled_picture_ptr,
-                                               (EbPictureBufferDesc *)pa_ref_obj_->sixteenth_downsampled_picture_ptr);
+                                               (EbPictureBufferDesc*)pa_ref_obj_->quarter_downsampled_picture_ptr,
+                                               (EbPictureBufferDesc*)pa_ref_obj_->sixteenth_downsampled_picture_ptr);
 
     // Gathering statistics of input picture, including Variance Calculation, Histogram Bins
     svt_aom_gathering_picture_statistics(scs, pcs, input_padded_pic, pa_ref_obj_->sixteenth_downsampled_picture_ptr);
@@ -3146,7 +3146,7 @@ void perform_simple_picture_analysis_for_overlay(PictureParentControlSet *pcs) {
 /***************************************************************************************************
  * Initialize the overlay frame
 ***************************************************************************************************/
-void initialize_overlay_frame(PictureParentControlSet *pcs) {
+void initialize_overlay_frame(PictureParentControlSet* pcs) {
     pcs->scene_change_flag              = false;
     pcs->cra_flag                       = false;
     pcs->idr_flag                       = false;
@@ -3173,7 +3173,7 @@ void initialize_overlay_frame(PictureParentControlSet *pcs) {
   ret number of past picture(not including current) in mg buffer.
 
 */
-static int32_t avail_past_pictures(PictureParentControlSet **buf, uint32_t buf_size, uint64_t input_pic) {
+static int32_t avail_past_pictures(PictureParentControlSet** buf, uint32_t buf_size, uint64_t input_pic) {
     //buffer has at least curr picture
     int32_t tot_past = 0;
     for (uint32_t pic = 0; pic < buf_size; pic++) {
@@ -3187,7 +3187,7 @@ static int32_t avail_past_pictures(PictureParentControlSet **buf, uint32_t buf_s
 /*
   searches a picture in a given pcs buffer
 */
-int32_t search_this_pic(PictureParentControlSet **buf, uint32_t buf_size, uint64_t input_pic) {
+int32_t search_this_pic(PictureParentControlSet** buf, uint32_t buf_size, uint64_t input_pic) {
     int32_t index = -1;
     for (uint32_t pic = 0; pic < buf_size; pic++) {
         if (buf[pic]->picture_number == input_pic) {
@@ -3201,7 +3201,7 @@ int32_t search_this_pic(PictureParentControlSet **buf, uint32_t buf_size, uint64
 /*
   Tells if an Intra picture should be delayed to get next mini-gop
 */
-bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
+bool svt_aom_is_delayed_intra(PictureParentControlSet* pcs) {
     if ((pcs->idr_flag || pcs->cra_flag) && pcs->pred_structure == RANDOM_ACCESS) {
         if (pcs->scs->static_config.intra_period_length == 0 || pcs->end_of_sequence_flag) {
             return 0;
@@ -3217,13 +3217,13 @@ bool svt_aom_is_delayed_intra(PictureParentControlSet *pcs) {
     }
 }
 
-void first_pass_frame_end_one_pass(PictureParentControlSet *pcs);
+void first_pass_frame_end_one_pass(PictureParentControlSet* pcs);
 
 /* modulate_ref_pics()
  For INTRA, the modulation uses the noise level, and towards increasing the number of ref_pics
  For BASE and L1, the modulation uses the filt_INTRA-to-unfilterd_INTRA distortion range, and towards decreasing the number of ref_pics
 */
-static int ref_pics_modulation(PictureParentControlSet *pcs, int32_t noise_levels_log1p_fp16) {
+static int ref_pics_modulation(PictureParentControlSet* pcs, int32_t noise_levels_log1p_fp16) {
     int offset = 0;
 
     if (pcs->slice_type == I_SLICE) {
@@ -3327,15 +3327,15 @@ static int ref_pics_modulation(PictureParentControlSet *pcs, int32_t noise_level
     return offset;
 }
 
-static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContext *enc_ctx,
-                                           PictureParentControlSet *pcs, PictureDecisionContext *pd_ctx) {
-    PictureParentControlSet *centre_pcs          = pcs;
-    EbPictureBufferDesc     *central_picture_ptr = centre_pcs->enhanced_pic;
+static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContext* enc_ctx,
+                                           PictureParentControlSet* pcs, PictureDecisionContext* pd_ctx) {
+    PictureParentControlSet* centre_pcs          = pcs;
+    EbPictureBufferDesc*     central_picture_ptr = centre_pcs->enhanced_pic;
 
     // chroma subsampling
     uint32_t ss_x                    = centre_pcs->scs->subsampling_x;
     uint32_t ss_y                    = centre_pcs->scs->subsampling_y;
-    int32_t *noise_levels_log1p_fp16 = &(centre_pcs->noise_levels_log1p_fp16[0]);
+    int32_t* noise_levels_log1p_fp16 = &(centre_pcs->noise_levels_log1p_fp16[0]);
     int32_t  noise_level_fp16;
 
     uint8_t do_noise_est = pcs->tf_ctrls.use_intra_for_noise_est ? 0 : 1;
@@ -3356,7 +3356,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
         // pack byte buffers to 16 bit buffer
         svt_aom_pack_highbd_pic(central_picture_ptr, centre_pcs->altref_buffer_highbd, ss_x, ss_y, true);
         // Estimate source noise level
-        uint16_t *altref_buffer_highbd_start[COLOR_CHANNELS];
+        uint16_t* altref_buffer_highbd_start[COLOR_CHANNELS];
         altref_buffer_highbd_start[C_Y] = centre_pcs->altref_buffer_highbd[C_Y] +
             central_picture_ptr->org_y * central_picture_ptr->stride_y + central_picture_ptr->org_x;
         if (pcs->tf_ctrls.chroma_lvl) {
@@ -3467,7 +3467,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
             int32_t q_index = QUEUE_GET_NEXT_SPOT(
                 pcs->pic_decision_reorder_queue_idx, pic_i + 1, enc_ctx->picture_decision_reorder_queue_size);
             if (enc_ctx->picture_decision_reorder_queue[q_index]->ppcs_wrapper != NULL) {
-                PictureParentControlSet *pcs_itr = (PictureParentControlSet *)enc_ctx
+                PictureParentControlSet* pcs_itr = (PictureParentControlSet*)enc_ctx
                                                        ->picture_decision_reorder_queue[q_index]
                                                        ->ppcs_wrapper->object_ptr;
                 // if resolution has changed, and the pcs with new resolution should not be used in temporal filtering
@@ -3485,8 +3485,8 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
         if (pic_i < num_future_pics) {
             for (int pic_i_future = pic_i; pic_i_future < num_future_pics; pic_i_future++) {
                 for (uint32_t pic_i_pa = 0; pic_i_pa < enc_ctx->pre_assignment_buffer_count; pic_i_pa++) {
-                    PictureParentControlSet *pcs_itr =
-                        (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[pic_i_pa]->object_ptr;
+                    PictureParentControlSet* pcs_itr =
+                        (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[pic_i_pa]->object_ptr;
                     // if resolution has changed, and the pcs with new resolution should not be used in temporal filtering
                     if (pcs_itr->picture_number == pcs->picture_number + pic_i_future + 1 &&
                         pcs_itr->frame_width == pcs->frame_width && pcs_itr->frame_height == pcs->frame_height) {
@@ -3569,7 +3569,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
                     int32_t q_index = QUEUE_GET_NEXT_SPOT(
                         pcs->pic_decision_reorder_queue_idx, pic_i + 1, enc_ctx->picture_decision_reorder_queue_size);
                     if (enc_ctx->picture_decision_reorder_queue[q_index]->ppcs_wrapper != NULL) {
-                        PictureParentControlSet *pcs_itr = (PictureParentControlSet *)enc_ctx
+                        PictureParentControlSet* pcs_itr = (PictureParentControlSet*)enc_ctx
                                                                ->picture_decision_reorder_queue[q_index]
                                                                ->ppcs_wrapper->object_ptr;
                         // if resolution has changed, and the pcs with new resolution should not be used in temporal filtering
@@ -3635,7 +3635,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
                     int32_t q_index = QUEUE_GET_NEXT_SPOT(
                         pcs->pic_decision_reorder_queue_idx, pic_i + 1, enc_ctx->picture_decision_reorder_queue_size);
                     if (enc_ctx->picture_decision_reorder_queue[q_index]->ppcs_wrapper != NULL) {
-                        PictureParentControlSet *pcs_itr = (PictureParentControlSet *)enc_ctx
+                        PictureParentControlSet* pcs_itr = (PictureParentControlSet*)enc_ctx
                                                                ->picture_decision_reorder_queue[q_index]
                                                                ->ppcs_wrapper->object_ptr;
                         // if resolution has changed, and the pcs with new resolution should not be used in temporal filtering
@@ -3656,8 +3656,8 @@ static EbErrorType derive_tf_window_params(SequenceControlSet *scs, EncodeContex
                 if (pic_i < num_future_pics) {
                     for (int pic_i_future = pic_i; pic_i_future < num_future_pics; pic_i_future++) {
                         for (uint32_t pic_i_pa = 0; pic_i_pa < enc_ctx->pre_assignment_buffer_count; pic_i_pa++) {
-                            PictureParentControlSet *pcs_itr =
-                                (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[pic_i_pa]->object_ptr;
+                            PictureParentControlSet* pcs_itr =
+                                (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[pic_i_pa]->object_ptr;
                             // if resolution has changed, and the pcs with new resolution should not be used in temporal filtering
                             if (pcs_itr->picture_number == pcs->picture_number + pic_i_future + 1 &&
                                 pcs_itr->frame_width == pcs->frame_width &&
@@ -3712,8 +3712,8 @@ store this input  picture to be used for TF-ing of upcoming base
 increment live count of the required ressources to be used by TF of upcoming base.
 will be released once TF is done
 */
-static void low_delay_store_tf_pictures(SequenceControlSet *scs, PictureParentControlSet *pcs,
-                                        PictureDecisionContext *ctx) {
+static void low_delay_store_tf_pictures(SequenceControlSet* scs, PictureParentControlSet* pcs,
+                                        PictureDecisionContext* ctx) {
     const uint32_t mg_size  = 1 << (IS_SFRAME_FLEXIBLE_INSERT(scs->static_config.sframe_mode)
                                         ? (uint32_t)ctx->sframe_hier_lvls
                                         : scs->static_config.hierarchical_levels);
@@ -3736,9 +3736,9 @@ static void low_delay_store_tf_pictures(SequenceControlSet *scs, PictureParentCo
 /*
  TF is done, release ressources and reset the tf picture buffer.
 */
-static void low_delay_release_tf_pictures(PictureDecisionContext *ctx) {
+static void low_delay_release_tf_pictures(PictureDecisionContext* ctx) {
     for (uint32_t pic_it = 0; pic_it < ctx->tf_pic_arr_cnt; pic_it++) {
-        PictureParentControlSet *past_pcs = ctx->tf_pic_array[pic_it];
+        PictureParentControlSet* past_pcs = ctx->tf_pic_array[pic_it];
 
         svt_release_object(past_pcs->input_pic_wrapper);
 
@@ -3752,14 +3752,14 @@ static void low_delay_release_tf_pictures(PictureDecisionContext *ctx) {
         svt_release_object(past_pcs->p_pcs_wrapper_ptr);
     }
 
-    memset(ctx->tf_pic_array, 0, ctx->tf_pic_arr_cnt * sizeof(PictureParentControlSet *));
+    memset(ctx->tf_pic_array, 0, ctx->tf_pic_arr_cnt * sizeof(PictureParentControlSet*));
     ctx->tf_pic_arr_cnt = 0;
 }
 
 /*
   Performs Motion Compensated Temporal Filtering in ME process
 */
-static void mctf_frame(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *pd_ctx) {
+static void mctf_frame(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* pd_ctx) {
     if (scs->static_config.pred_structure != RANDOM_ACCESS && scs->tf_params_per_type[1].enabled) {
         low_delay_store_tf_pictures(scs, pcs, pd_ctx);
     }
@@ -3778,11 +3778,11 @@ static void mctf_frame(SequenceControlSet *scs, PictureParentControlSet *pcs, Pi
             pcs->tf_segments_total_count  = (uint16_t)(pcs->tf_segments_column_count * pcs->tf_segments_row_count);
             pcs->temp_filt_seg_acc        = 0;
             for (seg_idx = 0; seg_idx < pcs->tf_segments_total_count; ++seg_idx) {
-                EbObjectWrapper        *out_results_wrapper;
-                PictureDecisionResults *out_results;
+                EbObjectWrapper*        out_results_wrapper;
+                PictureDecisionResults* out_results;
 
                 svt_get_empty_object(pd_ctx->picture_decision_results_output_fifo_ptr, &out_results_wrapper);
-                out_results                = (PictureDecisionResults *)out_results_wrapper->object_ptr;
+                out_results                = (PictureDecisionResults*)out_results_wrapper->object_ptr;
                 out_results->pcs_wrapper   = pcs->p_pcs_wrapper_ptr;
                 out_results->segment_index = seg_idx;
                 out_results->task_type     = 1;
@@ -3811,11 +3811,11 @@ static void mctf_frame(SequenceControlSet *scs, PictureParentControlSet *pcs, Pi
     }
 }
 
-bool get_similar_ref_brightness(PictureParentControlSet *pcs) {
+bool get_similar_ref_brightness(PictureParentControlSet* pcs) {
     bool similar_brightness_refs = false;
     if (pcs->slice_type == B_SLICE && pcs->hierarchical_levels > 0 && pcs->ref_list1_count_try > 0) {
-        EbPaReferenceObject *ref_obj_0 = (EbPaReferenceObject *)pcs->ref_pa_pic_ptr_array[0][0]->object_ptr;
-        EbPaReferenceObject *ref_obj_1 = (EbPaReferenceObject *)pcs->ref_pa_pic_ptr_array[1][0]->object_ptr;
+        EbPaReferenceObject* ref_obj_0 = (EbPaReferenceObject*)pcs->ref_pa_pic_ptr_array[0][0]->object_ptr;
+        EbPaReferenceObject* ref_obj_1 = (EbPaReferenceObject*)pcs->ref_pa_pic_ptr_array[1][0]->object_ptr;
         if (ref_obj_0->avg_luma != INVALID_LUMA && ref_obj_1->avg_luma != INVALID_LUMA) {
             const int32_t luma_th = 5;
             if (ABS((int)ref_obj_0->avg_luma - (int)pcs->avg_luma) < luma_th &&
@@ -3828,13 +3828,13 @@ bool get_similar_ref_brightness(PictureParentControlSet *pcs) {
     return similar_brightness_refs;
 }
 
-static void send_picture_out(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
-    EbObjectWrapper *me_wrapper;
-    EbObjectWrapper *out_results_wrapper;
+static void send_picture_out(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
+    EbObjectWrapper* me_wrapper;
+    EbObjectWrapper* out_results_wrapper;
 
     //every picture enherits latest motion direction from TF
     pcs->tf_motion_direction = ctx->tf_motion_direction;
-    MrpCtrls *mrp_ctrl       = &(scs->mrp_ctrls);
+    MrpCtrls* mrp_ctrl       = &(scs->mrp_ctrls);
 
     pcs->similar_brightness_refs = get_similar_ref_brightness(pcs);
     if (scs->mrp_ctrls.safe_limit_nref == 2 && pcs->slice_type == B_SLICE && pcs->hierarchical_levels > 0 &&
@@ -3849,7 +3849,7 @@ static void send_picture_out(SequenceControlSet *scs, PictureParentControlSet *p
     if (pcs->me_data_wrapper == NULL) {
         svt_get_empty_object(ctx->me_fifo_ptr, &me_wrapper);
         pcs->me_data_wrapper = me_wrapper;
-        pcs->pa_me_data      = (MotionEstimationData *)me_wrapper->object_ptr;
+        pcs->pa_me_data      = (MotionEstimationData*)me_wrapper->object_ptr;
         me_update_param(pcs->pa_me_data, scs);
     }
 
@@ -3899,7 +3899,7 @@ static void send_picture_out(SequenceControlSet *scs, PictureParentControlSet *p
         // Get Empty Results Object
         svt_get_empty_object(ctx->picture_decision_results_output_fifo_ptr, &out_results_wrapper);
 
-        PictureDecisionResults *out_results = (PictureDecisionResults *)out_results_wrapper->object_ptr;
+        PictureDecisionResults* out_results = (PictureDecisionResults*)out_results_wrapper->object_ptr;
         out_results->pcs_wrapper            = pcs->p_pcs_wrapper_ptr;
         out_results->segment_index          = segment_index;
         out_results->task_type              = TASK_PAME;
@@ -3911,18 +3911,18 @@ static void send_picture_out(SequenceControlSet *scs, PictureParentControlSet *p
 /***************************************************************************************************
 * Store the pcs pointers in the gf group, set the gf_interval and gf_update_due
 ***************************************************************************************************/
-void store_gf_group(PictureParentControlSet *pcs, PictureDecisionContext *ctx, uint32_t mg_size) {
+void store_gf_group(PictureParentControlSet* pcs, PictureDecisionContext* ctx, uint32_t mg_size) {
     if (pcs->slice_type == I_SLICE || (!svt_aom_is_delayed_intra(pcs) && pcs->temporal_layer_index == 0) ||
         svt_aom_is_incomp_mg_frame(pcs)) {
         if (svt_aom_is_delayed_intra(pcs)) {
             pcs->gf_group[0] = pcs;
-            svt_memcpy(&pcs->gf_group[1], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet *));
+            svt_memcpy(&pcs->gf_group[1], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
             pcs->gf_interval = 1 + mg_size;
         } else {
             if (svt_aom_is_incomp_mg_frame(pcs) && mg_size > 0 && ctx->mg_pictures_array[mg_size - 1]->idr_flag) {
                 mg_size = MAX(0, (int)mg_size - 1);
             }
-            svt_memcpy(&pcs->gf_group[0], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet *));
+            svt_memcpy(&pcs->gf_group[0], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
             pcs->gf_interval = mg_size;
         }
 
@@ -3946,7 +3946,7 @@ void store_gf_group(PictureParentControlSet *pcs, PictureDecisionContext *ctx, u
                 pcs->gf_group[pic_i]->gf_interval = pcs->gf_interval - 1;
                 svt_memcpy(&pcs->gf_group[pic_i]->gf_group[0],
                            &ctx->mg_pictures_array[1],
-                           pcs->gf_group[pic_i]->gf_interval * sizeof(PictureParentControlSet *));
+                           pcs->gf_group[pic_i]->gf_interval * sizeof(PictureParentControlSet*));
                 pcs->gf_group[pic_i]->gf_update_due = 0;
             }
         }
@@ -3955,7 +3955,7 @@ void store_gf_group(PictureParentControlSet *pcs, PictureDecisionContext *ctx, u
 
 #if LAD_MG_PRINT
 /* prints content of pre-assignment buffer */
-void print_pre_ass_buffer(EncodeContext *ctx, PictureParentControlSet *pcs, uint8_t log) {
+void print_pre_ass_buffer(EncodeContext* ctx, PictureParentControlSet* pcs, uint8_t log) {
     if (log) {
         if (ctx->pre_assignment_buffer_intra_count > 0) {
             SVT_LOG(
@@ -3977,7 +3977,7 @@ void print_pre_ass_buffer(EncodeContext *ctx, PictureParentControlSet *pcs, uint
 
         SVT_LOG("\n Pre-Assign(%i):  ", ctx->pre_assignment_buffer_count);
         for (uint32_t pic = 0; pic < ctx->pre_assignment_buffer_count; pic++) {
-            PictureParentControlSet *pcs = (PictureParentControlSet *)ctx->pre_assignment_buffer[pic]->object_ptr;
+            PictureParentControlSet* pcs = (PictureParentControlSet*)ctx->pre_assignment_buffer[pic]->object_ptr;
             SVT_LOG("%ld ", pcs->picture_number);
         }
         SVT_LOG("\n");
@@ -3985,8 +3985,8 @@ void print_pre_ass_buffer(EncodeContext *ctx, PictureParentControlSet *pcs, uint
 }
 #endif
 
-static PaReferenceEntry *search_ref_in_ref_queue_pa(EncodeContext *enc_ctx, uint64_t ref_poc) {
-    PaReferenceEntry *ref_entry_ptr = NULL;
+static PaReferenceEntry* search_ref_in_ref_queue_pa(EncodeContext* enc_ctx, uint64_t ref_poc) {
+    PaReferenceEntry* ref_entry_ptr = NULL;
     for (uint8_t i = 0; i < REF_FRAMES; i++) {
         ref_entry_ptr = enc_ctx->pd_dpb[i];
 
@@ -4001,7 +4001,7 @@ static PaReferenceEntry *search_ref_in_ref_queue_pa(EncodeContext *enc_ctx, uint
 /*
  * Copy TF params: sps -> pcs
  */
-static void copy_tf_params(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
+static void copy_tf_params(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     // Map TF settings sps -> pcs
     if (scs->static_config.pred_structure != RANDOM_ACCESS) {
         if (pcs->slice_type != I_SLICE && pcs->temporal_layer_index == 0) {
@@ -4032,14 +4032,14 @@ static void copy_tf_params(SequenceControlSet *scs, PictureParentControlSet *pcs
     }
 }
 
-void svt_aom_is_screen_content(PictureParentControlSet *pcs);
-void svt_aom_is_screen_content_antialiasing_aware(PictureParentControlSet *pcs);
+void svt_aom_is_screen_content(PictureParentControlSet* pcs);
+void svt_aom_is_screen_content_antialiasing_aware(PictureParentControlSet* pcs);
 
 /*
 * Update the list0 count try and the list1 count try based on the Enc-Mode, whether BASE or not, whether SC or not
 */
-void update_count_try(SequenceControlSet *scs, PictureParentControlSet *pcs) {
-    MrpCtrls *mrp_ctrl = &scs->mrp_ctrls;
+void update_count_try(SequenceControlSet* scs, PictureParentControlSet* pcs) {
+    MrpCtrls* mrp_ctrl = &scs->mrp_ctrls;
     if (pcs->sc_class1) {
         if (pcs->temporal_layer_index == 0) {
             pcs->ref_list0_count_try = MIN(pcs->ref_list0_count, mrp_ctrl->sc_base_ref_list0_count);
@@ -4062,7 +4062,7 @@ void update_count_try(SequenceControlSet *scs, PictureParentControlSet *pcs) {
 /*
 * Switch frame's pcs->dpb_order_hint[8] will be packed to uncompressed_header as ref_order_hint[8], ref to spec 5.9.2.
 */
-static void update_sframe_ref_order_hint(PictureParentControlSet *ppcs, PictureDecisionContext *pd_ctx) {
+static void update_sframe_ref_order_hint(PictureParentControlSet* ppcs, PictureDecisionContext* pd_ctx) {
     assert(sizeof(ppcs->dpb_order_hint) == sizeof(pd_ctx->ref_order_hint));
     if (ppcs->pred_structure == LOW_DELAY) {
         for (int32_t i = 0; i < REF_FRAMES; i++) {
@@ -4088,7 +4088,7 @@ static void update_sframe_ref_order_hint(PictureParentControlSet *ppcs, PictureD
 * Set the size of the previous Gop/param, Check if all the frames in gop are processed, if yes reset
 * Increament the head index to assign a new spot in the queue for the new gop
 *****************************************************************/
-static void update_rc_param_queue(PictureParentControlSet *ppcs, EncodeContext *enc_cxt) {
+static void update_rc_param_queue(PictureParentControlSet* ppcs, EncodeContext* enc_cxt) {
     if (ppcs->idr_flag == true && ppcs->picture_number > 0) {
         svt_block_on_mutex(enc_cxt->rc_param_queue_mutex);
         // Set the size of the previous Gop/param
@@ -4117,7 +4117,7 @@ static void update_rc_param_queue(PictureParentControlSet *ppcs, EncodeContext *
 * set_layer_depth()
 * Set the layer depth per frame based on frame type, temporal layer
 ****************************************************************************************/
-static void set_layer_depth(PictureParentControlSet *ppcs) {
+static void set_layer_depth(PictureParentControlSet* ppcs) {
     // SequenceControlSet *scs = ppcs->scs;
     if (ppcs->frm_hdr.frame_type == KEY_FRAME) {
         ppcs->layer_depth = 0;
@@ -4132,8 +4132,8 @@ static void set_layer_depth(PictureParentControlSet *ppcs) {
 * For Low delay, there is a special case where all non key frames are treated as LF_UPDATE.
 * Every MAX_GF_INTERVAL frames, update type is set to GF_UPDATE
 ****************************************************************************************/
-static void set_frame_update_type(PictureParentControlSet *ppcs) {
-    SequenceControlSet *scs = ppcs->scs;
+static void set_frame_update_type(PictureParentControlSet* ppcs) {
+    SequenceControlSet* scs = ppcs->scs;
     if (ppcs->frm_hdr.frame_type == KEY_FRAME) {
         ppcs->update_type = SVT_AV1_KF_UPDATE;
     } else if (scs->max_temporal_layers > 0 && ppcs->pred_structure != LOW_DELAY) {
@@ -4151,22 +4151,22 @@ static void set_frame_update_type(PictureParentControlSet *ppcs) {
     }
 }
 
-static void set_gf_group_param(PictureParentControlSet *ppcs) {
+static void set_gf_group_param(PictureParentControlSet* ppcs) {
     set_frame_update_type(ppcs);
     set_layer_depth(ppcs);
 }
 
-static void process_first_pass(SequenceControlSet *scs, EncodeContext *enc_ctx) {
+static void process_first_pass(SequenceControlSet* scs, EncodeContext* enc_ctx) {
     for (unsigned int window_index = 0; window_index < scs->scd_delay + 1; window_index++) {
         unsigned int entry_index = QUEUE_GET_NEXT_SPOT(enc_ctx->picture_decision_reorder_queue_head_index,
                                                        window_index,
                                                        enc_ctx->picture_decision_reorder_queue_size);
-        PictureDecisionReorderEntry *first_pass_queue_entry = enc_ctx->picture_decision_reorder_queue[entry_index];
+        PictureDecisionReorderEntry* first_pass_queue_entry = enc_ctx->picture_decision_reorder_queue[entry_index];
         if (first_pass_queue_entry->ppcs_wrapper == NULL) {
             break;
         }
 
-        PictureParentControlSet *first_pass_pcs = (PictureParentControlSet *)
+        PictureParentControlSet* first_pass_pcs = (PictureParentControlSet*)
                                                       first_pass_queue_entry->ppcs_wrapper->object_ptr;
         if (!first_pass_pcs->first_pass_done) {
             first_pass_frame_end_one_pass(first_pass_pcs);
@@ -4176,14 +4176,14 @@ static void process_first_pass(SequenceControlSet *scs, EncodeContext *enc_ctx) 
 }
 
 // Check if have enough frames to do scene change detection or if the EOS has been reached
-static void check_window_availability(SequenceControlSet *scs, EncodeContext *enc_ctx, PictureParentControlSet *pcs,
-                                      PictureDecisionReorderEntry *queue_entry, bool *window_avail, bool *eos_reached) {
-    *eos_reached  = ((PictureParentControlSet *)(queue_entry->ppcs_wrapper->object_ptr))->end_of_sequence_flag == true;
+static void check_window_availability(SequenceControlSet* scs, EncodeContext* enc_ctx, PictureParentControlSet* pcs,
+                                      PictureDecisionReorderEntry* queue_entry, bool* window_avail, bool* eos_reached) {
+    *eos_reached  = ((PictureParentControlSet*)(queue_entry->ppcs_wrapper->object_ptr))->end_of_sequence_flag == true;
     *window_avail = true;
 
     unsigned int previous_entry_index = QUEUE_GET_PREVIOUS_SPOT(enc_ctx->picture_decision_reorder_queue_head_index,
                                                                 enc_ctx->picture_decision_reorder_queue_size);
-    memset(pcs->pd_window, 0, (2 + scs->scd_delay) * sizeof(PictureParentControlSet *));
+    memset(pcs->pd_window, 0, (2 + scs->scd_delay) * sizeof(PictureParentControlSet*));
     //for poc 0, ignore previous frame check
     if (queue_entry->picture_number > 0 &&
         enc_ctx->picture_decision_reorder_queue[previous_entry_index]->ppcs_wrapper == NULL) {
@@ -4192,10 +4192,10 @@ static void check_window_availability(SequenceControlSet *scs, EncodeContext *en
         //TODO: risk of a race condition accessing prev(pcs0 is released, and pcs1 still doing sc).
         //Actually we don't need to keep prev, just keep previous copy of histograms.
         pcs->pd_window[0] = queue_entry->picture_number > 0
-            ? (PictureParentControlSet *)enc_ctx->picture_decision_reorder_queue[previous_entry_index]
+            ? (PictureParentControlSet*)enc_ctx->picture_decision_reorder_queue[previous_entry_index]
                   ->ppcs_wrapper->object_ptr
             : NULL;
-        pcs->pd_window[1] = (PictureParentControlSet *)enc_ctx
+        pcs->pd_window[1] = (PictureParentControlSet*)enc_ctx
                                 ->picture_decision_reorder_queue[enc_ctx->picture_decision_reorder_queue_head_index]
                                 ->ppcs_wrapper->object_ptr;
         for (unsigned int window_index = 0; window_index < scs->scd_delay; window_index++) {
@@ -4205,14 +4205,14 @@ static void check_window_availability(SequenceControlSet *scs, EncodeContext *en
             if (enc_ctx->picture_decision_reorder_queue[entry_index]->ppcs_wrapper == NULL) {
                 *window_avail = false;
                 break;
-            } else if (((PictureParentControlSet *)(enc_ctx->picture_decision_reorder_queue[entry_index]
-                                                        ->ppcs_wrapper->object_ptr))
+            } else if (((PictureParentControlSet*)(enc_ctx->picture_decision_reorder_queue[entry_index]
+                                                       ->ppcs_wrapper->object_ptr))
                            ->end_of_sequence_flag == true) {
                 *window_avail = false;
                 *eos_reached  = true;
                 break;
             } else {
-                pcs->pd_window[2 + window_index] = (PictureParentControlSet *)enc_ctx
+                pcs->pd_window[2 + window_index] = (PictureParentControlSet*)enc_ctx
                                                        ->picture_decision_reorder_queue[entry_index]
                                                        ->ppcs_wrapper->object_ptr;
             }
@@ -4221,17 +4221,17 @@ static void check_window_availability(SequenceControlSet *scs, EncodeContext *en
 }
 
 // Perform scene change detection and update relevant signals
-static void perform_scene_change_detection(SequenceControlSet *scs, PictureParentControlSet *pcs,
-                                           PictureDecisionContext *ctx) {
+static void perform_scene_change_detection(SequenceControlSet* scs, PictureParentControlSet* pcs,
+                                           PictureDecisionContext* ctx) {
     if (scs->static_config.scene_change_detection) {
-        pcs->scene_change_flag = scene_transition_detector(ctx, scs, (PictureParentControlSet **)pcs->pd_window);
+        pcs->scene_change_flag = scene_transition_detector(ctx, scs, (PictureParentControlSet**)pcs->pd_window);
 
     } else {
         pcs->scene_change_flag = false;
 
         if (scs->vq_ctrls.sharpness_ctrls.scene_transition &&
             (ctx->transition_detected == -1 || ctx->transition_detected == 0)) {
-            ctx->transition_detected = scene_transition_detector(ctx, scs, (PictureParentControlSet **)pcs->pd_window);
+            ctx->transition_detected = scene_transition_detector(ctx, scs, (PictureParentControlSet**)pcs->pd_window);
         }
     }
 
@@ -4242,7 +4242,7 @@ static void perform_scene_change_detection(SequenceControlSet *scs, PictureParen
 }
 
 // Copy current pic's histogram to temporary buffer to be used by next input pic (N + 1) for scene change detection
-static void copy_histograms(PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
+static void copy_histograms(PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     for (unsigned int region_in_picture_width_index = 0; region_in_picture_width_index < MAX_NUMBER_OF_REGIONS_IN_WIDTH;
          region_in_picture_width_index++) {
         for (unsigned int region_in_picture_height_index = 0;
@@ -4259,8 +4259,8 @@ static void copy_histograms(PictureParentControlSet *pcs, PictureDecisionContext
 }
 
 // Decide what mini-gop sizes to use and init the relevant fields
-static void set_mini_gop_structure(SequenceControlSet *scs, EncodeContext *enc_ctx, PictureParentControlSet *pcs,
-                                   PictureDecisionContext *ctx) {
+static void set_mini_gop_structure(SequenceControlSet* scs, EncodeContext* enc_ctx, PictureParentControlSet* pcs,
+                                   PictureDecisionContext* ctx) {
     uint32_t next_mg_hierarchical_levels = scs->static_config.hierarchical_levels;
     // Overwrite next_mg_hierarchical_levels when an S-Frame needs to modify the mini-GOP size.
     if (ctx->sframe_hier_lvls != (int32_t)scs->static_config.hierarchical_levels) {
@@ -4310,7 +4310,7 @@ static void set_mini_gop_structure(SequenceControlSet *scs, EncodeContext *enc_c
 }
 
 // Set whether the picture is to be considered as SC; for single-threaded mode we perform SC detection here
-static void perform_sc_detection(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
+static void perform_sc_detection(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     if (pcs->slice_type == I_SLICE) {
         // If running multi-threaded mode, perform SC detection in svt_aom_picture_analysis_kernel, else in svt_aom_picture_decision_kernel
         if (scs->static_config.level_of_parallelism == 1) {
@@ -4348,10 +4348,10 @@ static void perform_sc_detection(SequenceControlSet *scs, PictureParentControlSe
 }
 
 // Update pred struct info and pic type for non-overlay pictures
-static void update_pred_struct_and_pic_type(SequenceControlSet *scs, EncodeContext *enc_ctx,
-                                            PictureParentControlSet *pcs, PictureDecisionContext *ctx,
+static void update_pred_struct_and_pic_type(SequenceControlSet* scs, EncodeContext* enc_ctx,
+                                            PictureParentControlSet* pcs, PictureDecisionContext* ctx,
                                             unsigned int mini_gop_index, bool pre_assignment_buffer_first_pass_flag,
-                                            SliceType *picture_type, PredictionStructureEntry **pred_position_ptr) {
+                                            SliceType* picture_type, PredictionStructureEntry** pred_position_ptr) {
     (void)scs;
     // Keep track of the mini GOP size to which the input picture belongs - needed @ PictureManagerProcess()
     pcs->pre_assignment_buffer_count = ctx->mini_gop_length[mini_gop_index];
@@ -4406,7 +4406,7 @@ static void update_pred_struct_and_pic_type(SequenceControlSet *scs, EncodeConte
     *pred_position_ptr = pcs->pred_struct_ptr->pred_struct_entry_ptr_array[enc_ctx->pred_struct_position];
 }
 
-static uint32_t get_pic_idx_in_mg(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx,
+static uint32_t get_pic_idx_in_mg(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx,
                                   uint32_t pic_idx, uint32_t mini_gop_index) {
     uint32_t pic_idx_in_mg = 0;
     if (scs->static_config.pred_structure == RANDOM_ACCESS) {
@@ -4438,7 +4438,7 @@ static uint32_t get_pic_idx_in_mg(SequenceControlSet *scs, PictureParentControlS
     return pic_idx_in_mg;
 }
 
-static void set_ref_frame_sign_bias(SequenceControlSet *scs, PictureParentControlSet *pcs) {
+static void set_ref_frame_sign_bias(SequenceControlSet* scs, PictureParentControlSet* pcs) {
     memset(pcs->av1_cm->ref_frame_sign_bias, 0, 8 * sizeof(int32_t));
 
     if (scs->seq_header.order_hint_info.enable_order_hint) {
@@ -4454,8 +4454,8 @@ static void set_ref_frame_sign_bias(SequenceControlSet *scs, PictureParentContro
 
 // Derive settings used to encode the picture
 // Both normative (e.g. frame header info) and non-normative (e.g. feature levels) are set here
-static void init_pic_settings(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
-    FrameHeader *frm_hdr        = &pcs->frm_hdr;
+static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
+    FrameHeader* frm_hdr        = &pcs->frm_hdr;
     pcs->allow_comp_inter_inter = pcs->slice_type != I_SLICE;
     frm_hdr->reference_mode     = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF
             : svt_aom_is_incomp_mg_frame(pcs)                ? SINGLE_REFERENCE
@@ -4465,8 +4465,8 @@ static void init_pic_settings(SequenceControlSet *scs, PictureParentControlSet *
     pcs->av1_cm->mi_rows = pcs->aligned_height >> MI_SIZE_LOG2;
 
     // Initialize the order hints
-    const OrderHintInfo *const order_hint_info = &pcs->scs->seq_header.order_hint_info;
-    uint32_t                  *ref_order_hint  = pcs->ref_order_hint;
+    const OrderHintInfo* const order_hint_info = &pcs->scs->seq_header.order_hint_info;
+    uint32_t*                  ref_order_hint  = pcs->ref_order_hint;
     for (uint8_t i = 0; i < INTER_REFS_PER_FRAME; ++i) {
         ref_order_hint[i] = pcs->av1_ref_signal.ref_poc_array[i] % (uint64_t)(1 << (order_hint_info->order_hint_bits));
     }
@@ -4505,18 +4505,18 @@ static void init_pic_settings(SequenceControlSet *scs, PictureParentControlSet *
 
 // Create MG arrays with pics in decode order (ctx->mg_pictures_array) and dispaly order (ctx->mg_pictures_array_disp_order)
 // Input is ctx->mg_pictures_array with all pics in the MG sorted by display order
-static void store_mg_picture_arrays(PictureDecisionContext *ctx) {
+static void store_mg_picture_arrays(PictureDecisionContext* ctx) {
     const unsigned int mg_size = ctx->mg_size;
 
     // mg_pictures_array arrives in display order, so copy into display order array
-    svt_memcpy(ctx->mg_pictures_array_disp_order, ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet *));
+    svt_memcpy(ctx->mg_pictures_array_disp_order, ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
 
     // Sort MG pics into decode order
-    PictureParentControlSet **mg_pics = &ctx->mg_pictures_array[0];
+    PictureParentControlSet** mg_pics = &ctx->mg_pictures_array[0];
     for (unsigned int i = 0; i < mg_size - 1; ++i) {
         for (unsigned int j = i + 1; j < mg_size; ++j) {
             if (mg_pics[j]->decode_order < mg_pics[i]->decode_order) {
-                PictureParentControlSet *temp = mg_pics[i];
+                PictureParentControlSet* temp = mg_pics[i];
                 mg_pics[i]                    = ctx->mg_pictures_array[j];
                 mg_pics[j]                    = temp;
             }
@@ -4525,12 +4525,12 @@ static void store_mg_picture_arrays(PictureDecisionContext *ctx) {
 }
 
 // return true if the frame is part of an incomplete MG (at the end of a GOP)
-bool svt_aom_is_incomp_mg_frame(PictureParentControlSet *pcs) {
+bool svt_aom_is_incomp_mg_frame(PictureParentControlSet* pcs) {
     return (pcs->pred_struct_ptr->pred_type == LOW_DELAY && pcs->scs->static_config.pred_structure == RANDOM_ACCESS);
 }
 
-static void assign_and_release_pa_refs(EncodeContext *enc_ctx, PictureParentControlSet *pcs,
-                                       PictureDecisionContext *ctx) {
+static void assign_and_release_pa_refs(EncodeContext* enc_ctx, PictureParentControlSet* pcs,
+                                       PictureDecisionContext* ctx) {
     const unsigned int mg_size = ctx->mg_size;
     for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i) {
         pcs = ctx->mg_pictures_array[pic_i];
@@ -4542,7 +4542,7 @@ static void assign_and_release_pa_refs(EncodeContext *enc_ctx, PictureParentCont
                 uint8_t list_idx = get_list_idx(ref + 1);
                 uint8_t ref_idx  = get_ref_frame_idx(ref + 1);
                 svt_block_on_mutex(enc_ctx->pd_dpb_mutex);
-                PaReferenceEntry *pa_ref_entry = search_ref_in_ref_queue_pa(enc_ctx, ref_poc);
+                PaReferenceEntry* pa_ref_entry = search_ref_in_ref_queue_pa(enc_ctx, ref_poc);
                 assert(pa_ref_entry != NULL);
                 // Set the Reference Object
                 pcs->ref_pa_pic_ptr_array[list_idx][ref_idx] = pa_ref_entry->input_object_ptr;
@@ -4570,7 +4570,7 @@ static void assign_and_release_pa_refs(EncodeContext *enc_ctx, PictureParentCont
                 if ((pcs->av1_ref_signal.refresh_frame_mask >> i) & 1) {
                     svt_block_on_mutex(enc_ctx->pd_dpb_mutex);
                     // Get the current entry at that spot in the DPB
-                    PaReferenceEntry *input_entry = enc_ctx->pd_dpb[i];
+                    PaReferenceEntry* input_entry = enc_ctx->pd_dpb[i];
 
                     // If DPB entry is occupied, release the current entry
                     if (input_entry->is_valid) {
@@ -4597,7 +4597,7 @@ static void assign_and_release_pa_refs(EncodeContext *enc_ctx, PictureParentCont
                             svt_release_object(input_entry->y8b_wrapper);
                         }
 
-                        input_entry->input_object_ptr = (EbObjectWrapper *)NULL;
+                        input_entry->input_object_ptr = (EbObjectWrapper*)NULL;
                     }
 
                     // Update the list entry with the info of the new pic that is replacing the old pic in the DPB
@@ -4626,8 +4626,8 @@ static void assign_and_release_pa_refs(EncodeContext *enc_ctx, PictureParentCont
 }
 
 // Send pictures to TF and ME
-static void process_pics(SequenceControlSet *scs, PictureDecisionContext *ctx) {
-    PictureParentControlSet *pcs     = NULL; // init'd to quiet build warnings
+static void process_pics(SequenceControlSet* scs, PictureDecisionContext* ctx) {
+    PictureParentControlSet* pcs     = NULL; // init'd to quiet build warnings
     const unsigned int       mg_size = ctx->mg_size;
     // Process previous delayed Intra if we have one
     if (ctx->prev_delayed_intra) {
@@ -4718,8 +4718,8 @@ static void process_pics(SequenceControlSet *scs, PictureDecisionContext *ctx) {
 }
 
 // update the DPB stored in the PD context
-static void update_dpb(PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
-    Av1RpsNode *av1_rps = &pcs->av1_ref_signal;
+static void update_dpb(PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
+    Av1RpsNode* av1_rps = &pcs->av1_ref_signal;
     if (av1_rps->refresh_frame_mask) {
         for (int i = 0; i < REF_FRAMES; i++) {
             if ((av1_rps->refresh_frame_mask >> i) & 1) {
@@ -4731,7 +4731,7 @@ static void update_dpb(PictureParentControlSet *pcs, PictureDecisionContext *ctx
     }
 }
 
-static uint32_t calc_ahd_pd(SequenceControlSet *scs, PictureParentControlSet *pcs, PictureDecisionContext *ctx) {
+static uint32_t calc_ahd_pd(SequenceControlSet* scs, PictureParentControlSet* pcs, PictureDecisionContext* ctx) {
     // accumulative histogram (absolute) differences between the past and current frame
     uint32_t ahd = 0;
     uint32_t region_in_picture_width_index;
@@ -4856,20 +4856,20 @@ static uint32_t calc_ahd_pd(SequenceControlSet *scs, PictureParentControlSet *pc
 *     Pictures is used. The intention here is that any combination of Intra Flag and Scene
 *     Change flag can be coded.
 ***************************************************************************************************/
-void *svt_aom_picture_decision_kernel(void *input_ptr) {
-    EbThreadContext        *thread_ctx = (EbThreadContext *)input_ptr;
-    PictureDecisionContext *ctx        = (PictureDecisionContext *)thread_ctx->priv;
+void* svt_aom_picture_decision_kernel(void* input_ptr) {
+    EbThreadContext*        thread_ctx = (EbThreadContext*)input_ptr;
+    PictureDecisionContext* ctx        = (PictureDecisionContext*)thread_ctx->priv;
 
-    PictureParentControlSet *pcs;
+    PictureParentControlSet* pcs;
 
-    EncodeContext          *enc_ctx;
-    SequenceControlSet     *scs;
-    EbObjectWrapper        *in_results_wrapper_ptr;
-    PictureAnalysisResults *in_results_ptr;
+    EncodeContext*          enc_ctx;
+    SequenceControlSet*     scs;
+    EbObjectWrapper*        in_results_wrapper_ptr;
+    PictureAnalysisResults* in_results_ptr;
 
-    PredictionStructureEntry *pred_position_ptr;
+    PredictionStructureEntry* pred_position_ptr;
 
-    PictureDecisionReorderEntry *queue_entry_ptr;
+    PictureDecisionReorderEntry* queue_entry_ptr;
 
     unsigned int pic_idx;
     int64_t      current_input_poc = -1;
@@ -4878,8 +4878,8 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
         // Get Input Full Object
         EB_GET_FULL_OBJECT(ctx->picture_analysis_results_input_fifo_ptr, &in_results_wrapper_ptr);
 
-        in_results_ptr      = (PictureAnalysisResults *)in_results_wrapper_ptr->object_ptr;
-        pcs                 = (PictureParentControlSet *)in_results_ptr->pcs_wrapper->object_ptr;
+        in_results_ptr      = (PictureAnalysisResults*)in_results_wrapper_ptr->object_ptr;
+        pcs                 = (PictureParentControlSet*)in_results_ptr->pcs_wrapper->object_ptr;
         scs                 = pcs->scs;
         enc_ctx             = scs->enc_ctx;
         const bool allintra = scs->allintra;
@@ -4916,7 +4916,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                 process_first_pass(scs, enc_ctx);
             }
 
-            pcs = (PictureParentControlSet *)queue_entry_ptr->ppcs_wrapper->object_ptr;
+            pcs = (PictureParentControlSet*)queue_entry_ptr->ppcs_wrapper->object_ptr;
             bool window_avail, eos_reached;
             check_window_availability(scs, enc_ctx, pcs, queue_entry_ptr, &window_avail, &eos_reached);
 
@@ -5039,7 +5039,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                     bool pre_assignment_buffer_first_pass_flag = true;
 
                     // Get the 1st PCS in the mini-GOP
-                    pcs = (PictureParentControlSet *)enc_ctx
+                    pcs = (PictureParentControlSet*)enc_ctx
                               ->pre_assignment_buffer[ctx->mini_gop_start_index[mini_gop_index]]
                               ->object_ptr;
 
@@ -5059,7 +5059,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                     for (pic_idx = ctx->mini_gop_start_index[mini_gop_index];
                          pic_idx <= ctx->mini_gop_end_index[mini_gop_index];
                          ++pic_idx) {
-                        pcs = (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
+                        pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
                         scs = pcs->scs;
 
                         update_pred_struct_and_pic_type(scs,
@@ -5156,7 +5156,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                     // 2nd Loop over Pictures in the Pre-Assignment Buffer
                     // Init picture settings
                     // Add 1 to the loop for the overlay picture. If the last picture is alt ref, increase the loop by 1 to add the overlay picture
-                    const uint32_t has_overlay = ((PictureParentControlSet *)enc_ctx
+                    const uint32_t has_overlay = ((PictureParentControlSet*)enc_ctx
                                                       ->pre_assignment_buffer[ctx->mini_gop_end_index[mini_gop_index]]
                                                       ->object_ptr)
                                                      ->is_alt_ref
@@ -5167,12 +5167,12 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                          ++pic_idx) {
                         // Assign the overlay pcs. Since Overlay picture is not added to the picture_decision_pa_reference_queue, in the next stage, the loop finds the alt_ref picture. The reference for overlay frame is hardcoded later
                         if (has_overlay && pic_idx == ctx->mini_gop_end_index[mini_gop_index] + has_overlay) {
-                            pcs = ((PictureParentControlSet *)enc_ctx
+                            pcs = ((PictureParentControlSet*)enc_ctx
                                        ->pre_assignment_buffer[ctx->mini_gop_end_index[mini_gop_index]]
                                        ->object_ptr)
                                       ->overlay_ppcs_ptr;
                         } else {
-                            pcs = (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
+                            pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[pic_idx]->object_ptr;
                         }
 
                         pcs->picture_number_alt = enc_ctx->picture_number_alt++;
@@ -5192,11 +5192,11 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                         update_rc_param_queue(pcs, enc_ctx);
                         // Reset the PA Reference Lists
                         EB_MEMSET(
-                            pcs->ref_pa_pic_ptr_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper *));
+                            pcs->ref_pa_pic_ptr_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper*));
                         EB_MEMSET(
-                            pcs->ref_pa_pic_ptr_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper *));
-                        EB_MEMSET(pcs->ref_y8b_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper *));
-                        EB_MEMSET(pcs->ref_y8b_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper *));
+                            pcs->ref_pa_pic_ptr_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper*));
+                        EB_MEMSET(pcs->ref_y8b_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper*));
+                        EB_MEMSET(pcs->ref_y8b_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper*));
                         EB_MEMSET(pcs->ref_pic_poc_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(uint64_t));
                         EB_MEMSET(pcs->ref_pic_poc_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(uint64_t));
 
@@ -5233,7 +5233,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
                     }
 
                     for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i) {
-                        PictureParentControlSet *pcs_1 = ctx->mg_pictures_array_disp_order[pic_i];
+                        PictureParentControlSet* pcs_1 = ctx->mg_pictures_array_disp_order[pic_i];
                         pcs_1->first_frame_in_minigop  = !pic_i;
                         set_gf_group_param(pcs_1);
                         if (pcs_1->is_alt_ref) {
@@ -5265,7 +5265,7 @@ void *svt_aom_picture_decision_kernel(void *input_ptr) {
         }
 
         if (scs->static_config.enable_overlays == true) {
-            svt_release_object(((PictureParentControlSet *)in_results_ptr->pcs_wrapper->object_ptr)->scs_wrapper);
+            svt_release_object(((PictureParentControlSet*)in_results_ptr->pcs_wrapper->object_ptr)->scs_wrapper);
             // release ppcs, since live_count + 1 before post in ResourceCoordination
             svt_release_object(in_results_ptr->pcs_wrapper);
         }

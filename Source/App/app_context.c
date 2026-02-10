@@ -31,8 +31,8 @@
 **************************************
 **************************************/
 
-static EbErrorType allocate_frame_buffer(EbConfig *app_cfg, EbSvtIOFormat *input_ptr) {
-    EbSvtAv1EncConfiguration *cfg                 = &app_cfg->config;
+static EbErrorType allocate_frame_buffer(EbConfig* app_cfg, EbSvtIOFormat* input_ptr) {
+    EbSvtAv1EncConfiguration* cfg                 = &app_cfg->config;
     const int32_t             ten_bit_packed_mode = cfg->encoder_bit_depth > 8;
 
     // Chroma subsampling
@@ -79,7 +79,7 @@ static EbErrorType allocate_frame_buffer(EbConfig *app_cfg, EbSvtIOFormat *input
     return EB_ErrorNone;
 }
 
-static EbErrorType allocate_input_buffers(EbConfig *app_cfg) {
+static EbErrorType allocate_input_buffers(EbConfig* app_cfg) {
     app_cfg->input_buffer_pool = malloc(sizeof(EbBufferHeaderType));
     if (app_cfg->input_buffer_pool == NULL) {
         return EB_ErrorInsufficientResources;
@@ -88,7 +88,7 @@ static EbErrorType allocate_input_buffers(EbConfig *app_cfg) {
     // Initialize Header
     app_cfg->input_buffer_pool->size = sizeof(EbBufferHeaderType);
 
-    EbSvtIOFormat *p_buffer = malloc(sizeof(EbSvtIOFormat));
+    EbSvtIOFormat* p_buffer = malloc(sizeof(EbSvtIOFormat));
 
     if (p_buffer == NULL) {
         return EB_ErrorInsufficientResources;
@@ -102,7 +102,7 @@ static EbErrorType allocate_input_buffers(EbConfig *app_cfg) {
         app_cfg->input_buffer_pool = NULL;
         return EB_ErrorInsufficientResources;
     }
-    app_cfg->input_buffer_pool->p_buffer = (uint8_t *)p_buffer;
+    app_cfg->input_buffer_pool->p_buffer = (uint8_t*)p_buffer;
 
     // Assign the variables
     app_cfg->input_buffer_pool->p_app_private = NULL;
@@ -111,7 +111,7 @@ static EbErrorType allocate_input_buffers(EbConfig *app_cfg) {
     return EB_ErrorNone;
 }
 
-static EbErrorType allocate_output_recon_buffers(EbConfig *app_cfg) {
+static EbErrorType allocate_output_recon_buffers(EbConfig* app_cfg) {
     const uint8_t subsampling_x = app_cfg->config.encoder_color_format == EB_YUV444 ? 0 : 1;
     const uint8_t subsampling_y = (app_cfg->config.encoder_color_format == EB_YUV444 ||
                                    app_cfg->config.encoder_color_format == EB_YUV422)
@@ -138,7 +138,7 @@ static EbErrorType allocate_output_recon_buffers(EbConfig *app_cfg) {
     app_cfg->recon_buffer->p_buffer = NULL;
 
     if (app_cfg->config.recon_enabled) {
-        app_cfg->recon_buffer->p_buffer = (uint8_t *)malloc(frame_size * sizeof(*app_cfg->recon_buffer->p_buffer));
+        app_cfg->recon_buffer->p_buffer = (uint8_t*)malloc(frame_size * sizeof(*app_cfg->recon_buffer->p_buffer));
         if (app_cfg->recon_buffer->p_buffer == NULL) {
             free(app_cfg->recon_buffer);
             app_cfg->recon_buffer = NULL;
@@ -153,7 +153,7 @@ static EbErrorType allocate_output_recon_buffers(EbConfig *app_cfg) {
     return EB_ErrorNone;
 }
 
-static EbErrorType preload_frames_info_ram(EbConfig *app_cfg) {
+static EbErrorType preload_frames_info_ram(EbConfig* app_cfg) {
     EbErrorType   return_error        = EB_ErrorNone;
     int32_t       input_padded_width  = app_cfg->input_padded_width;
     int32_t       input_padded_height = app_cfg->input_padded_height;
@@ -171,7 +171,7 @@ static EbErrorType preload_frames_info_ram(EbConfig *app_cfg) {
     if (app_cfg->config.encoder_bit_depth > 8) {
         read_size *= 2; //10 bit
     }
-    app_cfg->sequence_buffer = calloc(app_cfg->buffered_input, sizeof(uint8_t *));
+    app_cfg->sequence_buffer = calloc(app_cfg->buffered_input, sizeof(uint8_t*));
     if (app_cfg->sequence_buffer == NULL) {
         return EB_ErrorInsufficientResources;
     }
@@ -199,19 +199,19 @@ static EbErrorType preload_frames_info_ram(EbConfig *app_cfg) {
     return return_error;
 }
 
-static int compare_seg_qp(const void *qp_first, const void *qp_second) {
-    if (*(const int16_t *)qp_first < *(const int16_t *)qp_second) {
+static int compare_seg_qp(const void* qp_first, const void* qp_second) {
+    if (*(const int16_t*)qp_first < *(const int16_t*)qp_second) {
         return 1;
-    } else if (*(const int16_t *)qp_first == *(const int16_t *)qp_second) {
+    } else if (*(const int16_t*)qp_first == *(const int16_t*)qp_second) {
         return 0;
     } else {
         return -1;
     }
 }
 
-static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
+static EbErrorType parse_rio_map_file(EbConfig* app_cfg) {
     const int32_t MAX_SEGMENTS = 8;
-    FILE         *file         = app_cfg->roi_map_file;
+    FILE*         file         = app_cfg->roi_map_file;
     if (file == NULL) {
         return EB_ErrorBadParameter;
     }
@@ -221,14 +221,14 @@ static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
     // <pic_num> <b64_qp_offset> <b64_qp_offset> ... <b64_qp_offset>\n
     // b64_qp_offset range -255 ~ 255
     EbErrorType      ret      = EB_ErrorNone;
-    SvtAv1RoiMap    *roi_map  = calloc(1, sizeof(*app_cfg->roi_map));
-    SvtAv1RoiMapEvt *last_evt = NULL;
+    SvtAv1RoiMap*    roi_map  = calloc(1, sizeof(*app_cfg->roi_map));
+    SvtAv1RoiMapEvt* last_evt = NULL;
     const size_t     b64_num = ((app_cfg->config.source_width + 63) / 64) * ((app_cfg->config.source_height + 63) / 64);
     // Multiplied by 5 because each qp_offset value requires at most 4 chars plus a space.
     // Multiplied by 2 to make some extra space.
     const size_t buf_size = b64_num * 5 * 2;
-    char        *buf      = malloc(buf_size);
-    int16_t     *qp_map   = malloc(sizeof(*qp_map) * b64_num);
+    char*        buf      = malloc(buf_size);
+    int16_t*     qp_map   = malloc(sizeof(*qp_map) * b64_num);
     if (!roi_map || !buf || !qp_map) {
         ret = EB_ErrorInsufficientResources;
         goto fail;
@@ -245,8 +245,8 @@ static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
             fprintf(stderr, "Warning - May exceed the line length limitation of ROI map file\n");
         }
         if (buf[0] != '\n') {
-            char    *p              = buf;
-            char    *end            = p;
+            char*    p              = buf;
+            char*    end            = p;
             uint64_t picture_number = strtoull(p, &end, 10);
             if (end == p) {
                 // no new value parsed
@@ -258,7 +258,7 @@ static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
             }
 
             // allocate a new ROI event
-            SvtAv1RoiMapEvt *evt = calloc(1, sizeof(*evt));
+            SvtAv1RoiMapEvt* evt = calloc(1, sizeof(*evt));
             if (!evt) {
                 ret = EB_ErrorInsufficientResources;
                 goto fail;
@@ -373,8 +373,8 @@ static EbErrorType parse_rio_map_file(EbConfig *app_cfg) {
     return ret;
 fail:
     if (last_evt) {
-        for (SvtAv1RoiMapEvt *evt = roi_map->evt_list; evt != last_evt;) {
-            SvtAv1RoiMapEvt *next = evt->next;
+        for (SvtAv1RoiMapEvt* evt = roi_map->evt_list; evt != last_evt;) {
+            SvtAv1RoiMapEvt* next = evt->next;
             free(evt->b64_seg_map);
             free(evt);
             evt = next;
@@ -386,11 +386,11 @@ fail:
     return ret;
 }
 
-static void deallocate_buffers(EbConfig *app_cfg) {
+static void deallocate_buffers(EbConfig* app_cfg) {
     // Deallocate input buffers
     if (app_cfg->input_buffer_pool) {
         if (app_cfg->buffered_input == -1 && !app_cfg->mmap.enable) {
-            EbSvtIOFormat *input_ptr = (EbSvtIOFormat *)app_cfg->input_buffer_pool->p_buffer;
+            EbSvtIOFormat* input_ptr = (EbSvtIOFormat*)app_cfg->input_buffer_pool->p_buffer;
             if (input_ptr) {
                 free(input_ptr->luma);
                 free(input_ptr->cb);
@@ -423,7 +423,7 @@ static void deallocate_buffers(EbConfig *app_cfg) {
 /***********************************
  * Initialize Core & Component
  ***********************************/
-EbErrorType init_encoder(EbConfig *app_cfg) {
+EbErrorType init_encoder(EbConfig* app_cfg) {
     // Initialize Port Activity Flags
     app_cfg->output_stream_port_active = APP_PortActive;
 
@@ -481,7 +481,7 @@ EbErrorType init_encoder(EbConfig *app_cfg) {
 /***********************************
  * Deinit Components
  ***********************************/
-EbErrorType de_init_encoder(EbConfig *app_cfg) {
+EbErrorType de_init_encoder(EbConfig* app_cfg) {
     EbErrorType return_error = EB_ErrorNone;
 
     deallocate_buffers(app_cfg);

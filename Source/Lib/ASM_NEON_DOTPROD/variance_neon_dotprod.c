@@ -14,8 +14,8 @@
 #include "aom_dsp_rtcd.h"
 #include "mem_neon.h"
 
-static inline void variance_4xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                             int h, uint32_t *sse, int *sum) {
+static inline void variance_4xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                             int h, uint32_t* sse, int* sum) {
     uint32x4_t src_sum = vdupq_n_u32(0);
     uint32x4_t ref_sum = vdupq_n_u32(0);
     uint32x4_t sse_u32 = vdupq_n_u32(0);
@@ -40,8 +40,8 @@ static inline void variance_4xh_neon_dotprod(const uint8_t *src, int src_stride,
     *sse               = vaddvq_u32(sse_u32);
 }
 
-static inline void variance_8xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                             int h, uint32_t *sse, int *sum) {
+static inline void variance_8xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                             int h, uint32_t* sse, int* sum) {
     uint32x4_t src_sum = vdupq_n_u32(0);
     uint32x4_t ref_sum = vdupq_n_u32(0);
     uint32x4_t sse_u32 = vdupq_n_u32(0);
@@ -66,8 +66,8 @@ static inline void variance_8xh_neon_dotprod(const uint8_t *src, int src_stride,
     *sse               = vaddvq_u32(sse_u32);
 }
 
-static inline void variance_16xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                              int h, uint32_t *sse, int *sum) {
+static inline void variance_16xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                              int h, uint32_t* sse, int* sum) {
     uint32x4_t src_sum = vdupq_n_u32(0);
     uint32x4_t ref_sum = vdupq_n_u32(0);
     uint32x4_t sse_u32 = vdupq_n_u32(0);
@@ -91,8 +91,8 @@ static inline void variance_16xh_neon_dotprod(const uint8_t *src, int src_stride
     *sse               = vaddvq_u32(sse_u32);
 }
 
-static inline void variance_large_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                               int w, int h, uint32_t *sse, int *sum) {
+static inline void variance_large_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                               int w, int h, uint32_t* sse, int* sum) {
     uint32x4_t src_sum = vdupq_n_u32(0);
     uint32x4_t ref_sum = vdupq_n_u32(0);
     uint32x4_t sse_u32 = vdupq_n_u32(0);
@@ -121,24 +121,24 @@ static inline void variance_large_neon_dotprod(const uint8_t *src, int src_strid
     *sse               = vaddvq_u32(sse_u32);
 }
 
-static inline void variance_32xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                              int h, uint32_t *sse, int *sum) {
+static inline void variance_32xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                              int h, uint32_t* sse, int* sum) {
     variance_large_neon_dotprod(src, src_stride, ref, ref_stride, 32, h, sse, sum);
 }
 
-static inline void variance_64xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                              int h, uint32_t *sse, int *sum) {
+static inline void variance_64xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                              int h, uint32_t* sse, int* sum) {
     variance_large_neon_dotprod(src, src_stride, ref, ref_stride, 64, h, sse, sum);
 }
 
-static inline void variance_128xh_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,
-                                               int h, uint32_t *sse, int *sum) {
+static inline void variance_128xh_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride,
+                                               int h, uint32_t* sse, int* sum) {
     variance_large_neon_dotprod(src, src_stride, ref, ref_stride, 128, h, sse, sum);
 }
 
 #define VARIANCE_WXH_NEON_DOTPROD(w, h, shift)                                                       \
     unsigned int svt_aom_variance##w##x##h##_neon_dotprod(                                           \
-        const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, unsigned int *sse) { \
+        const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride, unsigned int* sse) { \
         int sum;                                                                                     \
         variance_##w##xh_neon_dotprod(src, src_stride, ref, ref_stride, h, sse, &sum);               \
         return *sse - (uint32_t)(((int64_t)sum * sum) >> shift);                                     \
@@ -174,7 +174,7 @@ VARIANCE_WXH_NEON_DOTPROD(128, 128, 14)
 
 #undef VARIANCE_WXH_NEON_DOTPROD
 
-unsigned int svt_aom_mse16x16_neon_dotprod(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride) {
+unsigned int svt_aom_mse16x16_neon_dotprod(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride) {
     uint32x4_t sse_u32[2] = {vdupq_n_u32(0), vdupq_n_u32(0)};
 
     int h = 16;

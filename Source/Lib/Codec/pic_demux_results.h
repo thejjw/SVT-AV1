@@ -34,11 +34,11 @@ typedef struct PictureDemuxResults {
     EbPicType picture_type;
 
     // Only valid for input pictures
-    EbObjectWrapper *pcs_wrapper;
+    EbObjectWrapper* pcs_wrapper;
 
     // Only valid for reference pictures
-    EbObjectWrapper           *ref_pic_wrapper;
-    struct SequenceControlSet *scs;
+    EbObjectWrapper*           ref_pic_wrapper;
+    struct SequenceControlSet* scs;
     uint64_t                   picture_number;
     uint64_t                   decode_order;
 } PictureDemuxResults;
@@ -50,5 +50,5 @@ typedef struct PictureResultInitData {
 /**************************************
  * Extern Function Declarations
  **************************************/
-EbErrorType svt_aom_picture_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_picture_results_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 #endif //EbPictureResults_h

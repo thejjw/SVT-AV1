@@ -28,7 +28,7 @@ extern const TxType g_intra_mode_to_tx_type[INTRA_MODES];
 extern const PredictionMode g_uv2y[16];
 extern const PredictionMode fimode_to_intradir[FILTER_INTRA_MODES];
 
-static INLINE uint8_t *set_levels(uint8_t *const levels_buf, const int32_t width) {
+static INLINE uint8_t* set_levels(uint8_t* const levels_buf, const int32_t width) {
     return levels_buf + TX_PAD_TOP * (width + TX_PAD_HOR);
 }
 
@@ -68,11 +68,11 @@ static INLINE int32_t is_chroma_reference(int32_t mi_row, int32_t mi_col, BlockS
     return ref_pos;
 }
 
-static INLINE int get_segdata(SegmentationParams *seg, int segment_id, SEG_LVL_FEATURES feature_id) {
+static INLINE int get_segdata(SegmentationParams* seg, int segment_id, SEG_LVL_FEATURES feature_id) {
     return seg->feature_data[segment_id][feature_id];
 }
 
-static AOM_FORCE_INLINE int get_br_ctx(const uint8_t *const levels,
+static AOM_FORCE_INLINE int get_br_ctx(const uint8_t* const levels,
                                        const int            c, // raster order
                                        const int bwl, const TxClass tx_class) {
     const int row    = c >> bwl;

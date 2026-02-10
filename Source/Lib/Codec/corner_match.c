@@ -20,7 +20,7 @@
 /* Compute var(im) * MATCH_SZ_SQ over a MATCH_SZ by MATCH_SZ window of im,
    centered at (x, y).
 */
-static int32_t compute_variance(unsigned char *im, int stride, int x, int y, uint8_t match_sz) {
+static int32_t compute_variance(unsigned char* im, int stride, int x, int y, uint8_t match_sz) {
     const uint8_t match_sz_by2 = ((match_sz - 1) / 2);
     const uint8_t match_sz_sq  = (match_sz * match_sz);
     int           sum          = 0;
@@ -43,7 +43,7 @@ static int32_t compute_variance(unsigned char *im, int stride, int x, int y, uin
    correlation/standard deviation are taken over MATCH_SZ by MATCH_SZ windows
    of each image, centered at (x1, y1) and (x2, y2) respectively.
 */
-double svt_av1_compute_cross_correlation_c(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2,
+double svt_av1_compute_cross_correlation_c(unsigned char* im1, int stride1, int x1, int y1, unsigned char* im2,
                                            int stride2, int x2, int y2, uint8_t match_sz) {
     const uint8_t match_sz_by2 = ((match_sz - 1) / 2);
     const uint8_t match_sz_sq  = (match_sz * match_sz);
@@ -86,8 +86,8 @@ static INLINE int is_eligible_distance(int point1x, int point1y, int point2x, in
     return (xdist * xdist + ydist * ydist) <= threshSqr;
 }
 
-static void improve_correspondence(unsigned char *frm, unsigned char *ref, int width, int height, int frm_stride,
-                                   int ref_stride, Correspondence *correspondences, int num_correspondences,
+static void improve_correspondence(unsigned char* frm, unsigned char* ref, int width, int height, int frm_stride,
+                                   int ref_stride, Correspondence* correspondences, int num_correspondences,
                                    uint8_t match_sz) {
     int       i;
     const int thresh    = (width < height ? height : width) >> 4;
@@ -164,9 +164,9 @@ static void improve_correspondence(unsigned char *frm, unsigned char *ref, int w
     }
 }
 
-int svt_av1_determine_correspondence(uint8_t *frm, int *frm_corners, int num_frm_corners, uint8_t *ref,
-                                     int *ref_corners, int num_ref_corners, int width, int height, int frm_stride,
-                                     int ref_stride, Correspondence *correspondences, uint8_t match_sz) {
+int svt_av1_determine_correspondence(uint8_t* frm, int* frm_corners, int num_frm_corners, uint8_t* ref,
+                                     int* ref_corners, int num_ref_corners, int width, int height, int frm_stride,
+                                     int ref_stride, Correspondence* correspondences, uint8_t match_sz) {
     int       i, j;
     int       num_correspondences = 0;
     const int thresh              = (width < height ? height : width) >> 4;

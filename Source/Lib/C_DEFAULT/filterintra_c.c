@@ -67,8 +67,8 @@ DECLARE_ALIGNED(16, const int8_t, eb_av1_filter_intra_taps[FILTER_INTRA_MODES][8
     },
 };
 
-void svt_av1_filter_intra_predictor_c(uint8_t *dst, ptrdiff_t stride, TxSize tx_size, const uint8_t *above,
-                                      const uint8_t *left, int32_t mode) {
+void svt_av1_filter_intra_predictor_c(uint8_t* dst, ptrdiff_t stride, TxSize tx_size, const uint8_t* above,
+                                      const uint8_t* left, int32_t mode) {
     int       r, c;
     uint8_t   buffer[33][33];
     const int bw = tx_size_wide[tx_size];

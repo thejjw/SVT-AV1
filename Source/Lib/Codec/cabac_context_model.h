@@ -31,7 +31,7 @@ extern "C" {
 typedef uint16_t AomCdfProb;
 
 typedef struct {
-    AomCdfProb *color_map_cdf;
+    AomCdfProb* color_map_cdf;
     uint8_t     token;
 } TOKENEXTRA;
 
@@ -466,7 +466,7 @@ static INLINE uint8_t get_prob(unsigned int num, unsigned int den) {
     return (uint8_t)clipped_prob;
 }
 
-static INLINE void update_cdf(AomCdfProb *cdf, int8_t val, int nsymbs) {
+static INLINE void update_cdf(AomCdfProb* cdf, int8_t val, int nsymbs) {
     assert(nsymbs < 17);
     const int count = cdf[nsymbs];
 
@@ -526,9 +526,9 @@ static INLINE void update_cdf(AomCdfProb *cdf, int8_t val, int nsymbs) {
 
 struct AV1Common;
 struct FrameContexts;
-void svt_av1_reset_cdf_symbol_counters(struct FrameContexts *fc);
-void svt_av1_default_coef_probs(struct FrameContexts *fc, int32_t base_qindex);
-void svt_aom_init_mode_probs(struct FrameContexts *fc);
+void svt_av1_reset_cdf_symbol_counters(struct FrameContexts* fc);
+void svt_av1_default_coef_probs(struct FrameContexts* fc, int32_t base_qindex);
+void svt_aom_init_mode_probs(struct FrameContexts* fc);
 
 struct FrameContexts;
 
@@ -606,7 +606,7 @@ typedef struct NmvContext {
     NmvComponent comps[2];
 } NmvContext;
 
-MvClassType svt_av1_get_mv_class(int32_t z, int32_t *offset);
+MvClassType svt_av1_get_mv_class(int32_t z, int32_t* offset);
 
 typedef enum MvSubpelPrecision {
     MV_SUBPEL_NONE          = -1,
@@ -657,8 +657,8 @@ typedef enum MvSubpelPrecision {
 #define SPATIAL_PREDICTION_PROBS 3
 
 typedef struct {
-    const int16_t *scan;
-    const int16_t *iscan;
+    const int16_t* scan;
+    const int16_t* iscan;
 } ScanOrder;
 
 struct segmentation_probs {
@@ -750,10 +750,10 @@ typedef struct FrameContexts {
 extern const int32_t av1_ext_tx_ind[EXT_TX_SET_TYPES][TX_TYPES];
 extern const int32_t av1_ext_tx_inv[EXT_TX_SET_TYPES][TX_TYPES];
 
-void av1_set_default_ref_deltas(int8_t *ref_deltas);
-void av1_set_default_mode_deltas(int8_t *mode_deltas);
-void av1_setup_frame_contexts(struct AV1Common *cm);
-void av1_setup_past_independence(struct AV1Common *cm);
+void av1_set_default_ref_deltas(int8_t* ref_deltas);
+void av1_set_default_mode_deltas(int8_t* mode_deltas);
+void av1_setup_frame_contexts(struct AV1Common* cm);
+void av1_setup_past_independence(struct AV1Common* cm);
 
 static INLINE int32_t av1_ceil_log2(int32_t n) {
     if (n < 2) {
@@ -762,12 +762,12 @@ static INLINE int32_t av1_ceil_log2(int32_t n) {
     return svt_log2f(n - 1) + 1;
 }
 
-static AomCdfProb cdf_element_prob(const AomCdfProb *const cdf, size_t element) {
+static AomCdfProb cdf_element_prob(const AomCdfProb* const cdf, size_t element) {
     assert(cdf != NULL);
     return (element > 0 ? cdf[element - 1] : CDF_PROB_TOP) - cdf[element];
 }
 
-static INLINE void partition_gather_horz_alike(AomCdfProb *out, const AomCdfProb *const in, BlockSize bsize) {
+static INLINE void partition_gather_horz_alike(AomCdfProb* out, const AomCdfProb* const in, BlockSize bsize) {
     out[0] = CDF_PROB_TOP;
     out[0] -= cdf_element_prob(in, PARTITION_HORZ);
     out[0] -= cdf_element_prob(in, PARTITION_SPLIT);
@@ -782,7 +782,7 @@ static INLINE void partition_gather_horz_alike(AomCdfProb *out, const AomCdfProb
     out[2] = 0;
 }
 
-static INLINE void partition_gather_vert_alike(AomCdfProb *out, const AomCdfProb *const in, BlockSize bsize) {
+static INLINE void partition_gather_vert_alike(AomCdfProb* out, const AomCdfProb* const in, BlockSize bsize) {
     out[0] = CDF_PROB_TOP;
     out[0] -= cdf_element_prob(in, PARTITION_VERT);
     out[0] -= cdf_element_prob(in, PARTITION_SPLIT);
@@ -801,8 +801,8 @@ static INLINE void partition_gather_vert_alike(AomCdfProb *out, const AomCdfProb
 // onyxc_int.h
 
 /**********************************************************************************************************************/
-int svt_aom_get_palette_color_index_context_optimized(const uint8_t *color_map, int stride, int r, int c,
-                                                      int *color_idx);
+int svt_aom_get_palette_color_index_context_optimized(const uint8_t* color_map, int stride, int r, int c,
+                                                      int* color_idx);
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 

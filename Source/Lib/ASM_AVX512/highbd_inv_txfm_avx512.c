@@ -20,22 +20,22 @@
 #include "synonyms_avx512.h"
 #include "transpose_avx512.h"
 
-extern const int8_t *svt_aom_inv_txfm_shift_ls[];
-const int32_t       *cospi_arr(int32_t n);
-const int32_t       *sinpi_arr(int32_t n);
+extern const int8_t* svt_aom_inv_txfm_shift_ls[];
+const int32_t*       cospi_arr(int32_t n);
+const int32_t*       sinpi_arr(int32_t n);
 
 #define ONE (uint8_t)1U
 
-typedef void (*inv_transform_1d_avx512)(__m512i *in, __m512i *out, const int8_t bit, int32_t num_cols);
+typedef void (*inv_transform_1d_avx512)(__m512i* in, __m512i* out, const int8_t bit, int32_t num_cols);
 
-static void load_buffer_64x64_lower_32x32_avx512(const int32_t *coeff, __m512i *in) {
+static void load_buffer_64x64_lower_32x32_avx512(const int32_t* coeff, __m512i* in) {
     int32_t i, j;
 
     __m512i zeroes = _mm512_setzero_si512();
 
     for (i = 0; i < 32; ++i) {
         for (j = 0; j < 2; ++j) {
-            in[4 * i + j]     = _mm512_loadu_si512((const __m512i *)(coeff + 32 * i + 16 * j));
+            in[4 * i + j]     = _mm512_loadu_si512((const __m512i*)(coeff + 32 * i + 16 * j));
             in[4 * i + j + 2] = zeroes;
         }
     }
@@ -45,7 +45,7 @@ static void load_buffer_64x64_lower_32x32_avx512(const int32_t *coeff, __m512i *
     }
 }
 
-static void round_shift_64x64_avx512(__m512i *in, const int8_t shift) {
+static void round_shift_64x64_avx512(__m512i* in, const int8_t shift) {
     uint8_t ushift = (uint8_t)shift;
     __m512i rnding = _mm512_set1_epi32(1 << (ushift - 1));
 
@@ -64,8 +64,8 @@ static void round_shift_64x64_avx512(__m512i *in, const int8_t shift) {
 
 // Note:
 //  rounding = 1 << (bit - 1)
-static INLINE __m512i half_btf_avx512(const __m512i *w0, const __m512i *n0, const __m512i *w1, const __m512i *n1,
-                                      const __m512i *rounding, const int8_t bit) {
+static INLINE __m512i half_btf_avx512(const __m512i* w0, const __m512i* n0, const __m512i* w1, const __m512i* n1,
+                                      const __m512i* rounding, const int8_t bit) {
     __m512i x, y;
 
     x = _mm512_mullo_epi32(*w0, *n0);
@@ -76,7 +76,7 @@ static INLINE __m512i half_btf_avx512(const __m512i *w0, const __m512i *n0, cons
     return x;
 }
 
-static INLINE __m512i half_btf_0_avx512(const __m512i *w0, const __m512i *n0, const __m512i *rounding,
+static INLINE __m512i half_btf_0_avx512(const __m512i* w0, const __m512i* n0, const __m512i* rounding,
                                         const int8_t bit) {
     __m512i x;
 
@@ -86,8 +86,8 @@ static INLINE __m512i half_btf_0_avx512(const __m512i *w0, const __m512i *n0, co
     return x;
 }
 
-static void addsub_avx512(const __m512i in0, const __m512i in1, __m512i *out0, __m512i *out1, const __m512i *clamp_lo,
-                          const __m512i *clamp_hi) {
+static void addsub_avx512(const __m512i in0, const __m512i in1, __m512i* out0, __m512i* out1, const __m512i* clamp_lo,
+                          const __m512i* clamp_hi) {
     __m512i a0 = _mm512_add_epi32(in0, in1);
     __m512i a1 = _mm512_sub_epi32(in0, in1);
 
@@ -100,8 +100,8 @@ static void addsub_avx512(const __m512i in0, const __m512i in1, __m512i *out0, _
     *out1 = a1;
 }
 
-static void addsub_shift_avx512(const __m512i in0, const __m512i in1, __m512i *out0, __m512i *out1,
-                                const __m512i *clamp_lo, const __m512i *clamp_hi, int32_t shift) {
+static void addsub_shift_avx512(const __m512i in0, const __m512i in1, __m512i* out0, __m512i* out1,
+                                const __m512i* clamp_lo, const __m512i* clamp_hi, int32_t shift) {
     __m512i offset       = _mm512_set1_epi32((1 << shift) >> 1);
     __m512i in0_w_offset = _mm512_add_epi32(in0, offset);
 
@@ -120,9 +120,9 @@ static void addsub_shift_avx512(const __m512i in0, const __m512i in1, __m512i *o
     *out1 = a1;
 }
 
-static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t do_cols, int32_t bd) {
+static void idct64x64_avx512(__m512i* in, __m512i* out, const int8_t bit, int32_t do_cols, int32_t bd) {
     int32_t        i, j;
-    const int32_t *cospi     = cospi_arr(bit);
+    const int32_t* cospi     = cospi_arr(bit);
     const __m512i  rnding    = _mm512_set1_epi32(1 << (bit - 1));
     const int32_t  log_range = AOMMAX(16, bd + (do_cols ? 6 : 8));
     const __m512i  clamp_lo  = _mm512_set1_epi32(-(1 << (log_range - 1)));
@@ -573,7 +573,7 @@ static void idct64x64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_
     }
 }
 
-static INLINE void highbd_clamp_epi32_avx512(__m512i *x, int32_t bd) {
+static INLINE void highbd_clamp_epi32_avx512(__m512i* x, int32_t bd) {
     const __m512i zeroes = _mm512_setzero_si512();
     const __m512i max    = _mm512_set1_epi32((1 << bd) - 1);
 
@@ -581,7 +581,7 @@ static INLINE void highbd_clamp_epi32_avx512(__m512i *x, int32_t bd) {
     *x = _mm512_max_epi32(*x, zeroes);
 }
 
-static void load_buffer_16x16_avx512(const int32_t *coeff, __m512i *in) {
+static void load_buffer_16x16_avx512(const int32_t* coeff, __m512i* in) {
     int32_t i;
     for (i = 0; i < 16; ++i) {
         in[i] = zz_load_512(coeff);
@@ -605,14 +605,14 @@ static INLINE __m256i highbd_clamp_epi16_avx512(__m256i u, int32_t bd) {
     return clamped;
 }
 
-static INLINE void write_buffer_16x16_avx512_new(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static INLINE void write_buffer_16x16_avx512_new(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                                  int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd) {
     __m512i  u1, v0, index;
     __m256i  u0, a, b;
     __m128i  p, q, r, s;
     int32_t  i     = 0;
     uint32_t idx[] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-    index          = _mm512_loadu_si512((const __m256i *)idx);
+    index          = _mm512_loadu_si512((const __m256i*)idx);
 
     if (flipud) {
         output_r += stride_r * 15;
@@ -622,7 +622,7 @@ static INLINE void write_buffer_16x16_avx512_new(__m512i *in, uint16_t *output_r
     }
 
     while (i < 16) {
-        u0 = _mm256_loadu_si256((const __m256i *)output_r);
+        u0 = _mm256_loadu_si256((const __m256i*)output_r);
 
         u1 = _mm512_cvtepu16_epi32(u0);
         v0 = in[i];
@@ -644,7 +644,7 @@ static INLINE void write_buffer_16x16_avx512_new(__m512i *in, uint16_t *output_r
         u0 = _mm256_insertf128_si256(u0, r, ONE);
         u0 = highbd_clamp_epi16_avx512(u0, bd);
 
-        _mm256_storeu_si256((__m256i *)output_w, u0);
+        _mm256_storeu_si256((__m256i*)output_w, u0);
 
         output_r += stride_r;
         output_w += stride_w;
@@ -652,13 +652,13 @@ static INLINE void write_buffer_16x16_avx512_new(__m512i *in, uint16_t *output_r
     }
 }
 
-static INLINE void write_buffer_16x16_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static INLINE void write_buffer_16x16_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                              int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd) {
     __m512i  u1, v0, index;
     __m256i  u0;
     int32_t  i     = 0;
     uint32_t idx[] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-    index          = _mm512_loadu_si512((const __m256i *)idx);
+    index          = _mm512_loadu_si512((const __m256i*)idx);
 
     if (flipud) {
         output_r += stride_r * 15;
@@ -668,7 +668,7 @@ static INLINE void write_buffer_16x16_avx512(__m512i *in, uint16_t *output_r, in
     }
 
     while (i < 16) {
-        u0 = _mm256_loadu_si256((const __m256i *)output_r);
+        u0 = _mm256_loadu_si256((const __m256i*)output_r);
 
         u1 = _mm512_cvtepu16_epi32(u0);
         v0 = in[i];
@@ -681,7 +681,7 @@ static INLINE void write_buffer_16x16_avx512(__m512i *in, uint16_t *output_r, in
 
         u0 = _mm512_cvtepi32_epi16(v0);
 
-        _mm256_storeu_si256((__m256i *)output_w, u0);
+        _mm256_storeu_si256((__m256i*)output_w, u0);
 
         output_r += stride_r;
         output_w += stride_w;
@@ -689,7 +689,7 @@ static INLINE void write_buffer_16x16_avx512(__m512i *in, uint16_t *output_r, in
     }
 }
 
-static INLINE void round_shift_16x16_avx512(__m512i *in, const int8_t shift) {
+static INLINE void round_shift_16x16_avx512(__m512i* in, const int8_t shift) {
     uint8_t ushift = (uint8_t)shift;
     __m512i rnding = _mm512_set1_epi32(1 << (ushift - 1));
     int32_t i      = 0;
@@ -701,7 +701,7 @@ static INLINE void round_shift_16x16_avx512(__m512i *in, const int8_t shift) {
     }
 }
 
-static INLINE void iidentity16_and_round_shift_avx512(__m512i *input, int32_t shift) {
+static INLINE void iidentity16_and_round_shift_avx512(__m512i* input, int32_t shift) {
     const __m512i scalar = _mm512_set1_epi32(new_sqrt2);
     const __m512i rnding = _mm512_set1_epi32((1 << (new_sqrt2_bits - 2)) + (!!(shift) << (shift + new_sqrt2_bits - 2)));
 
@@ -712,8 +712,8 @@ static INLINE void iidentity16_and_round_shift_avx512(__m512i *input, int32_t sh
     }
 }
 
-static INLINE void idct16_col_avx512(__m512i *in, __m512i *out, const int8_t bit) {
-    const int32_t *cospi    = cospi_arr(bit);
+static INLINE void idct16_col_avx512(__m512i* in, __m512i* out, const int8_t bit) {
+    const int32_t* cospi    = cospi_arr(bit);
     const __m512i  cospi60  = _mm512_set1_epi32(cospi[60]);
     const __m512i  cospi28  = _mm512_set1_epi32(cospi[28]);
     const __m512i  cospi44  = _mm512_set1_epi32(cospi[44]);
@@ -829,8 +829,8 @@ static INLINE void idct16_col_avx512(__m512i *in, __m512i *out, const int8_t bit
     out[15] = _mm512_sub_epi32(tmp[0], tmp2[15]);
 }
 
-static INLINE void iadst16_col_avx512(__m512i *in, __m512i *out, const int8_t cos_bit) {
-    const int32_t *cospi   = cospi_arr(cos_bit);
+static INLINE void iadst16_col_avx512(__m512i* in, __m512i* out, const int8_t cos_bit) {
+    const int32_t* cospi   = cospi_arr(cos_bit);
     const __m512i  cospi2  = _mm512_set1_epi32(cospi[2]);
     const __m512i  cospi62 = _mm512_set1_epi32(cospi[62]);
     const __m512i  cospi10 = _mm512_set1_epi32(cospi[10]);
@@ -1040,10 +1040,10 @@ static INLINE void iadst16_col_avx512(__m512i *in, __m512i *out, const int8_t co
     out[15] = _mm512_inserti64x4(out[15], temp2, ONE);
 }
 
-void svt_av1_inv_txfm2d_add_16x16_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x16_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, int32_t bd) {
     __m512i       in[16], out[16];
-    const int8_t *shift   = svt_aom_inv_txfm_shift_ls[TX_16X16];
+    const int8_t* shift   = svt_aom_inv_txfm_shift_ls[TX_16X16];
     const int32_t txw_idx = get_txw_idx(TX_16X16);
     const int32_t txh_idx = get_txh_idx(TX_16X16);
 
@@ -1213,16 +1213,16 @@ void svt_av1_inv_txfm2d_add_16x16_avx512(const int32_t *coeff, uint16_t *output_
     }
 }
 
-static void load_buffer_32x32(const int32_t *coeff, __m512i *in) {
+static void load_buffer_32x32(const int32_t* coeff, __m512i* in) {
     int32_t i;
     for (i = 0; i < 64; ++i) {
-        in[i] = _mm512_loadu_si512((const __m512i *)coeff);
+        in[i] = _mm512_loadu_si512((const __m512i*)coeff);
         coeff += 16;
     }
 }
 
-static void idct32_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t col_num) {
-    const int32_t *cospi    = cospi_arr(bit);
+static void idct32_avx512(__m512i* in, __m512i* out, const int8_t bit, int32_t col_num) {
+    const int32_t* cospi    = cospi_arr(bit);
     const __m512i  cospi62  = _mm512_set1_epi32(cospi[62]);
     const __m512i  cospi30  = _mm512_set1_epi32(cospi[30]);
     const __m512i  cospi46  = _mm512_set1_epi32(cospi[46]);
@@ -1587,7 +1587,7 @@ static void idct32_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t c
     }
 }
 
-static INLINE void round_shift_32x32_avx512(__m512i *in, int32_t shift) {
+static INLINE void round_shift_32x32_avx512(__m512i* in, int32_t shift) {
     uint8_t ushift = (uint8_t)shift;
     __m512i rnding = _mm512_set1_epi32(1 << (ushift - 1));
     int32_t i      = 0;
@@ -1599,14 +1599,14 @@ static INLINE void round_shift_32x32_avx512(__m512i *in, int32_t shift) {
     }
 }
 
-static void swap_addr(uint16_t **output1, uint16_t **output2) {
-    uint16_t *tmp;
+static void swap_addr(uint16_t** output1, uint16_t** output2) {
+    uint16_t* tmp;
     tmp      = *output1;
     *output1 = *output2;
     *output2 = tmp;
 }
 
-static void assign_16x16_input_from_32x32_avx512(const __m512i *in, __m512i *in16x16, int32_t col) {
+static void assign_16x16_input_from_32x32_avx512(const __m512i* in, __m512i* in16x16, int32_t col) {
     int32_t i;
     for (i = 0; i < 16; i += 1) {
         in16x16[i] = in[col];
@@ -1614,17 +1614,17 @@ static void assign_16x16_input_from_32x32_avx512(const __m512i *in, __m512i *in1
     }
 }
 
-static void write_buffer_32x32_avx512_new(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_32x32_avx512_new(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                           int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd) {
     __m512i   in16x16[16]; /*load 16x16 blocks*/
-    uint16_t *left_up_r    = &output_r[0];
-    uint16_t *right_up_r   = &output_r[16];
-    uint16_t *left_down_r  = &output_r[16 * stride_r];
-    uint16_t *right_down_r = &output_r[16 * stride_r + 16];
-    uint16_t *left_up_w    = &output_w[0];
-    uint16_t *right_up_w   = &output_w[16];
-    uint16_t *left_down_w  = &output_w[16 * stride_w];
-    uint16_t *right_down_w = &output_w[16 * stride_w + 16];
+    uint16_t* left_up_r    = &output_r[0];
+    uint16_t* right_up_r   = &output_r[16];
+    uint16_t* left_down_r  = &output_r[16 * stride_r];
+    uint16_t* right_down_r = &output_r[16 * stride_r + 16];
+    uint16_t* left_up_w    = &output_w[0];
+    uint16_t* right_up_w   = &output_w[16];
+    uint16_t* left_down_w  = &output_w[16 * stride_w];
+    uint16_t* right_down_w = &output_w[16 * stride_w + 16];
 
     if (fliplr) {
         swap_addr(&left_up_r, &right_up_r);
@@ -1657,17 +1657,17 @@ static void write_buffer_32x32_avx512_new(__m512i *in, uint16_t *output_r, int32
     write_buffer_16x16_avx512_new(in16x16, right_down_r, stride_r, right_down_w, stride_w, fliplr, flipud, bd);
 }
 
-static void write_buffer_32x32_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_32x32_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                       int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd) {
     __m512i   in16x16[16]; /*load 16x16 blocks*/
-    uint16_t *left_up_r    = &output_r[0];
-    uint16_t *right_up_r   = &output_r[16];
-    uint16_t *left_down_r  = &output_r[16 * stride_r];
-    uint16_t *right_down_r = &output_r[16 * stride_r + 16];
-    uint16_t *left_up_w    = &output_w[0];
-    uint16_t *right_up_w   = &output_w[16];
-    uint16_t *left_down_w  = &output_w[16 * stride_w];
-    uint16_t *right_down_w = &output_w[16 * stride_w + 16];
+    uint16_t* left_up_r    = &output_r[0];
+    uint16_t* right_up_r   = &output_r[16];
+    uint16_t* left_down_r  = &output_r[16 * stride_r];
+    uint16_t* right_down_r = &output_r[16 * stride_r + 16];
+    uint16_t* left_up_w    = &output_w[0];
+    uint16_t* right_up_w   = &output_w[16];
+    uint16_t* left_down_w  = &output_w[16 * stride_w];
+    uint16_t* right_down_w = &output_w[16 * stride_w + 16];
 
     if (fliplr) {
         swap_addr(&left_up_r, &right_up_r);
@@ -1700,7 +1700,7 @@ static void write_buffer_32x32_avx512(__m512i *in, uint16_t *output_r, int32_t s
     write_buffer_16x16_avx512(in16x16, right_down_r, stride_r, right_down_w, stride_w, fliplr, flipud, bd);
 }
 
-static void assign_32x32_input_from_64x64_avx512(const __m512i *in, __m512i *in32x32, int32_t col) {
+static void assign_32x32_input_from_64x64_avx512(const __m512i* in, __m512i* in32x32, int32_t col) {
     int32_t i;
     for (i = 0; i < 32 * 32 / 16; i += 2) {
         in32x32[i]     = in[col];
@@ -1709,10 +1709,10 @@ static void assign_32x32_input_from_64x64_avx512(const __m512i *in, __m512i *in3
     }
 }
 
-void svt_av1_inv_txfm2d_add_32x32_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x32_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, int32_t bd) {
     __m512i       in_avx512[64], out_avx512[128];
-    const int8_t *shift     = svt_aom_inv_txfm_shift_ls[TX_32X32];
+    const int8_t* shift     = svt_aom_inv_txfm_shift_ls[TX_32X32];
     const int32_t txw_idx   = get_txw_idx(TX_32X32);
     const int32_t txh_idx   = get_txh_idx(TX_32X32);
     const int32_t txfm_size = 32;
@@ -1737,17 +1737,17 @@ void svt_av1_inv_txfm2d_add_32x32_avx512(const int32_t *coeff, uint16_t *output_
     }
 }
 
-static void write_buffer_64x64_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_64x64_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                       int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t shift, int32_t bd) {
     __m512i   in32x32[32 * 32 / 16];
-    uint16_t *left_up_r    = &output_r[0];
-    uint16_t *right_up_r   = &output_r[32];
-    uint16_t *left_down_r  = &output_r[32 * stride_r];
-    uint16_t *right_down_r = &output_r[32 * stride_r + 32];
-    uint16_t *left_up_w    = &output_w[0];
-    uint16_t *right_up_w   = &output_w[32];
-    uint16_t *left_down_w  = &output_w[32 * stride_w];
-    uint16_t *right_down_w = &output_w[32 * stride_w + 32];
+    uint16_t* left_up_r    = &output_r[0];
+    uint16_t* right_up_r   = &output_r[32];
+    uint16_t* left_down_r  = &output_r[32 * stride_r];
+    uint16_t* right_down_r = &output_r[32 * stride_r + 32];
+    uint16_t* left_up_w    = &output_w[0];
+    uint16_t* right_up_w   = &output_w[32];
+    uint16_t* left_down_w  = &output_w[32 * stride_w];
+    uint16_t* right_down_w = &output_w[32 * stride_w + 32];
 
     if (fliplr) {
         swap_addr(&left_up_r, &right_up_r);
@@ -1784,10 +1784,10 @@ static void write_buffer_64x64_avx512(__m512i *in, uint16_t *output_r, int32_t s
     write_buffer_32x32_avx512_new(in32x32, right_down_r, stride_r, right_down_w, stride_w, fliplr, flipud, bd);
 }
 
-void svt_av1_inv_txfm2d_add_64x64_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x64_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, int32_t bd) {
     __m512i       in[64 * 64 / 16], out[64 * 64 / 16];
-    const int8_t *shift   = svt_aom_inv_txfm_shift_ls[TX_64X64];
+    const int8_t* shift   = svt_aom_inv_txfm_shift_ls[TX_64X64];
     const int32_t txw_idx = tx_size_wide_log2[TX_64X64] - tx_size_wide_log2[0];
     const int32_t txh_idx = tx_size_high_log2[TX_64X64] - tx_size_high_log2[0];
 
@@ -1809,20 +1809,20 @@ void svt_av1_inv_txfm2d_add_64x64_avx512(const int32_t *coeff, uint16_t *output_
     }
 }
 
-static void load_buffer_16_avx512(const int32_t *coeff, __m512i *in) {
-    in[0] = _mm512_loadu_si512((const __m512i *)coeff);
+static void load_buffer_16_avx512(const int32_t* coeff, __m512i* in) {
+    in[0] = _mm512_loadu_si512((const __m512i*)coeff);
 }
 
-static void load_buffer_64_avx512(const int32_t *coeff, __m512i *in) {
+static void load_buffer_64_avx512(const int32_t* coeff, __m512i* in) {
     int32_t i;
     for (i = 0; i < 4; i++) {
-        in[i] = _mm512_loadu_si512((const __m512i *)coeff);
+        in[i] = _mm512_loadu_si512((const __m512i*)coeff);
         coeff += 16;
     }
 }
 
-static INLINE void idct16_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t col_num) {
-    const int32_t *cospi    = cospi_arr(bit);
+static INLINE void idct16_avx512(__m512i* in, __m512i* out, const int8_t bit, int32_t col_num) {
+    const int32_t* cospi    = cospi_arr(bit);
     const __m512i  cospi60  = _mm512_set1_epi32(cospi[60]);
     const __m512i  cospi28  = _mm512_set1_epi32(cospi[28]);
     const __m512i  cospi44  = _mm512_set1_epi32(cospi[44]);
@@ -1942,9 +1942,9 @@ static INLINE void idct16_avx512(__m512i *in, __m512i *out, const int8_t bit, in
     }
 }
 
-static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
+static void idct64_avx512(__m512i* in, __m512i* out, const int8_t bit, int32_t do_cols, int32_t bd, int32_t out_shift) {
     int32_t        i, j;
-    const int32_t *cospi     = cospi_arr(bit);
+    const int32_t* cospi     = cospi_arr(bit);
     const __m512i  rnding    = _mm512_set1_epi32(1 << (bit - 1));
     const int32_t  log_range = AOMMAX(16, bd + ((do_cols - 1) ? 6 : 8));
     const __m512i  clamp_lo  = _mm512_set1_epi32(-(1 << (log_range - 1)));
@@ -2401,7 +2401,7 @@ static void idct64_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t d
     }
 }
 
-static void iidtx16_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t col_num) {
+static void iidtx16_avx512(__m512i* in, __m512i* out, const int8_t bit, int32_t col_num) {
     (void)bit;
     const uint8_t bits     = 12; // new_sqrt2_bits = 12
     const int32_t sqrt     = 2 * 5793; // 2 * new_sqrt2
@@ -2416,14 +2416,14 @@ static void iidtx16_avx512(__m512i *in, __m512i *out, const int8_t bit, int32_t 
     }
 }
 
-void iidtx32_avx512(__m512i *input, __m512i *output, const int8_t cos_bit, int32_t col_num) {
+void iidtx32_avx512(__m512i* input, __m512i* output, const int8_t cos_bit, int32_t col_num) {
     (void)cos_bit;
     for (int32_t i = 0; i < 32; i++) {
         output[i * col_num] = _mm512_slli_epi32(input[i * col_num], (uint8_t)2);
     }
 }
 
-static void write_buffer_16x16n_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_16x16n_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                        int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd, int32_t size) {
     __m512i u1, v0;
     __m256i u0;
@@ -2431,20 +2431,20 @@ static void write_buffer_16x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
     (void)fliplr;
     (void)flipud;
     while (i < size) {
-        u0 = _mm256_loadu_si256((const __m256i *)output_r);
+        u0 = _mm256_loadu_si256((const __m256i*)output_r);
         u1 = _mm512_cvtepu16_epi32(u0);
         v0 = in[i];
         v0 = _mm512_add_epi32(v0, u1);
         highbd_clamp_epi32_avx512(&v0, bd);
         u0 = _mm512_cvtepi32_epi16(v0);
-        _mm256_storeu_si256((__m256i *)output_w, u0);
+        _mm256_storeu_si256((__m256i*)output_w, u0);
         output_r += stride_r;
         output_w += stride_w;
         i += 1;
     }
 }
 
-static void write_buffer_64x16n_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_64x16n_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                        int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd, int32_t size) {
     __m512i v0, v1, v2, v3, x0, x1, x2, x3;
     __m256i u0, u1, u2, u3;
@@ -2452,10 +2452,10 @@ static void write_buffer_64x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
     (void)fliplr;
     (void)flipud;
     while (i < size) {
-        u0 = _mm256_loadu_si256((const __m256i *)output_r);
-        u1 = _mm256_loadu_si256((const __m256i *)(output_r + 16));
-        u2 = _mm256_loadu_si256((const __m256i *)(output_r + 32));
-        u3 = _mm256_loadu_si256((const __m256i *)(output_r + 48));
+        u0 = _mm256_loadu_si256((const __m256i*)output_r);
+        u1 = _mm256_loadu_si256((const __m256i*)(output_r + 16));
+        u2 = _mm256_loadu_si256((const __m256i*)(output_r + 32));
+        u3 = _mm256_loadu_si256((const __m256i*)(output_r + 48));
         x0 = _mm512_cvtepu16_epi32(u0);
         x1 = _mm512_cvtepu16_epi32(u1);
         x2 = _mm512_cvtepu16_epi32(u2);
@@ -2481,17 +2481,17 @@ static void write_buffer_64x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
         u2 = _mm512_cvtepi32_epi16(v2);
         u3 = _mm512_cvtepi32_epi16(v3);
 
-        _mm256_storeu_si256((__m256i *)output_w, u0);
-        _mm256_storeu_si256((__m256i *)(output_w + 16), u1);
-        _mm256_storeu_si256((__m256i *)(output_w + 32), u2);
-        _mm256_storeu_si256((__m256i *)(output_w + 48), u3);
+        _mm256_storeu_si256((__m256i*)output_w, u0);
+        _mm256_storeu_si256((__m256i*)(output_w + 16), u1);
+        _mm256_storeu_si256((__m256i*)(output_w + 32), u2);
+        _mm256_storeu_si256((__m256i*)(output_w + 48), u3);
         output_r += stride_r;
         output_w += stride_w;
         i += 4;
     }
 }
 
-static void write_buffer_32x16n_avx512(__m512i *in, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+static void write_buffer_32x16n_avx512(__m512i* in, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                        int32_t stride_w, int32_t fliplr, int32_t flipud, int32_t bd, int32_t size) {
     __m512i v0, v1, x0, x1;
     __m256i u0, u1;
@@ -2499,8 +2499,8 @@ static void write_buffer_32x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
     (void)fliplr;
     (void)flipud;
     while (i < size) {
-        u0 = _mm256_loadu_si256((const __m256i *)output_r);
-        u1 = _mm256_loadu_si256((const __m256i *)(output_r + 16));
+        u0 = _mm256_loadu_si256((const __m256i*)output_r);
+        u1 = _mm256_loadu_si256((const __m256i*)(output_r + 16));
 
         x0 = _mm512_cvtepu16_epi32(u0);
         x1 = _mm512_cvtepu16_epi32(u1);
@@ -2517,8 +2517,8 @@ static void write_buffer_32x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
         u0 = _mm512_cvtepi32_epi16(v0);
         u1 = _mm512_cvtepi32_epi16(v1);
 
-        _mm256_storeu_si256((__m256i *)output_w, u0);
-        _mm256_storeu_si256((__m256i *)(output_w + 16), u1);
+        _mm256_storeu_si256((__m256i*)output_w, u0);
+        _mm256_storeu_si256((__m256i*)(output_w + 16), u1);
 
         output_r += stride_r;
         output_w += stride_w;
@@ -2526,7 +2526,7 @@ static void write_buffer_32x16n_avx512(__m512i *in, uint16_t *output_r, int32_t 
     }
 }
 
-static INLINE void av1_round_shift_array_avx512(__m512i *input, __m512i *output, const int32_t size, const int8_t bit) {
+static INLINE void av1_round_shift_array_avx512(__m512i* input, __m512i* output, const int32_t size, const int8_t bit) {
     if (bit > 0) {
         __m512i round = _mm512_set1_epi32(1 << (bit - 1));
         int32_t i;
@@ -2541,7 +2541,7 @@ static INLINE void av1_round_shift_array_avx512(__m512i *input, __m512i *output,
     }
 }
 
-static INLINE void av1_round_shift_rect_array_32_avx512(__m512i *input, __m512i *output, const int32_t size,
+static INLINE void av1_round_shift_rect_array_32_avx512(__m512i* input, __m512i* output, const int32_t size,
                                                         const int8_t bit, const int32_t val) {
     const __m512i sqrt2  = _mm512_set1_epi32(val);
     const __m512i round2 = _mm512_set1_epi32(1 << (12 - 1));
@@ -2567,12 +2567,12 @@ static INLINE void av1_round_shift_rect_array_32_avx512(__m512i *input, __m512i 
     }
 }
 
-void svt_av1_inv_txfm2d_add_16x64_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x64_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)tx_type;
     (void)eob;
     __m512i       in[64], out[64];
-    const int8_t *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t* shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t txfm_size_col = tx_size_wide[tx_size];
@@ -2597,12 +2597,12 @@ void svt_av1_inv_txfm2d_add_16x64_avx512(const int32_t *coeff, uint16_t *output_
     write_buffer_16x16n_avx512(in, output_r, stride_r, output_w, stride_w, 0, 0, bd, 64);
 }
 
-void svt_av1_inv_txfm2d_add_64x16_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x16_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)tx_type;
     (void)eob;
     __m512i       in[64], out[64];
-    const int8_t *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t* shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t txfm_size_col = tx_size_wide[tx_size];
@@ -2624,12 +2624,12 @@ void svt_av1_inv_txfm2d_add_64x16_avx512(const int32_t *coeff, uint16_t *output_
     write_buffer_64x16n_avx512(out, output_r, stride_r, output_w, stride_w, 0, 0, bd, 64);
 }
 
-void svt_av1_inv_txfm2d_add_32x64_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x64_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)tx_type;
     (void)eob;
     __m512i       in[128], out[128];
-    const int8_t *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t* shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t txfm_size_col = tx_size_wide[tx_size];
@@ -2655,12 +2655,12 @@ void svt_av1_inv_txfm2d_add_32x64_avx512(const int32_t *coeff, uint16_t *output_
     write_buffer_32x16n_avx512(in, output_r, stride_r, output_w, stride_w, 0, 0, bd, 128);
 }
 
-void svt_av1_inv_txfm2d_add_64x32_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_64x32_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)tx_type;
     (void)eob;
     __m512i       in[128], out[128];
-    const int8_t *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t* shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t txfm_size_col = tx_size_wide[tx_size];
@@ -2724,11 +2724,11 @@ static const inv_transform_1d_avx512 row_invtxfm_16x32_arr[TX_TYPES] = {
     NULL // H_FLIPADST
 };
 
-void svt_av1_inv_txfm2d_add_16x32_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_16x32_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)eob;
     __m512i                       in[32], out[32];
-    const int8_t                 *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t*                 shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t                 txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t                 txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t                 txfm_size_col = tx_size_wide[tx_size];
@@ -2756,11 +2756,11 @@ void svt_av1_inv_txfm2d_add_16x32_avx512(const int32_t *coeff, uint16_t *output_
     write_buffer_16x16n_avx512(out, output_r, stride_r, output_w, stride_w, 0, 0, bd, 32);
 }
 
-void svt_av1_inv_txfm2d_add_32x16_avx512(const int32_t *coeff, uint16_t *output_r, int32_t stride_r, uint16_t *output_w,
+void svt_av1_inv_txfm2d_add_32x16_avx512(const int32_t* coeff, uint16_t* output_r, int32_t stride_r, uint16_t* output_w,
                                          int32_t stride_w, TxType tx_type, TxSize tx_size, int32_t eob, int32_t bd) {
     (void)eob;
     __m512i                       in[32], out[32];
-    const int8_t                 *shift         = svt_aom_inv_txfm_shift_ls[tx_size];
+    const int8_t*                 shift         = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t                 txw_idx       = tx_size_wide_log2[tx_size] - tx_size_wide_log2[0];
     const int32_t                 txh_idx       = tx_size_high_log2[tx_size] - tx_size_high_log2[0];
     const int32_t                 txfm_size_col = tx_size_wide[tx_size];

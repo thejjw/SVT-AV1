@@ -21,12 +21,12 @@
 #include "md_config_process.h"
 #include "enc_mode_config.h"
 
-void svt_aom_set_tile_info(PictureParentControlSet *pcs);
+void svt_aom_set_tile_info(PictureParentControlSet* pcs);
 
-EbErrorType svt_av1_alloc_restoration_buffers(PictureControlSet *pcs, Av1Common *cm);
-EbErrorType svt_av1_hash_table_create(HashTable *p_hash_table);
+EbErrorType svt_av1_alloc_restoration_buffers(PictureControlSet* pcs, Av1Common* cm);
+EbErrorType svt_av1_hash_table_create(HashTable* p_hash_table);
 
-static void set_restoration_unit_size(int32_t width, int32_t height, int32_t sx, int32_t sy, RestorationInfo *rst) {
+static void set_restoration_unit_size(int32_t width, int32_t height, int32_t sx, int32_t sy, RestorationInfo* rst) {
     (void)width;
     (void)height;
     (void)sx;
@@ -41,13 +41,13 @@ static void set_restoration_unit_size(int32_t width, int32_t height, int32_t sx,
 }
 
 static void dg_detector_seg_dctor(EbPtr p) {
-    DGDetectorSeg *obj = (DGDetectorSeg *)p;
+    DGDetectorSeg* obj = (DGDetectorSeg*)p;
 
     EB_DESTROY_SEMAPHORE(obj->frame_done_sem);
     EB_DESTROY_MUTEX(obj->metrics_mutex);
 }
 
-EbErrorType svt_aom_dg_detector_seg_ctor(DGDetectorSeg *obj_ptr) {
+EbErrorType svt_aom_dg_detector_seg_ctor(DGDetectorSeg* obj_ptr) {
     obj_ptr->dctor = dg_detector_seg_dctor;
 
     EB_CREATE_SEMAPHORE(obj_ptr->frame_done_sem, 0, 1);
@@ -56,17 +56,17 @@ EbErrorType svt_aom_dg_detector_seg_ctor(DGDetectorSeg *obj_ptr) {
 }
 
 static void segmentation_map_dctor(EbPtr p) {
-    SegmentationNeighborMap *obj = (SegmentationNeighborMap *)p;
+    SegmentationNeighborMap* obj = (SegmentationNeighborMap*)p;
     EB_FREE_ARRAY(obj->data);
 }
 
 static void svt_pcs_sb_structs_dctor(EbPtr p) {
-    PictureParentControlSet *obj = (PictureParentControlSet *)p;
+    PictureParentControlSet* obj = (PictureParentControlSet*)p;
     EB_FREE_ARRAY(obj->b64_geom);
     free_sb_geoms(obj->sb_geom);
 }
 
-EbErrorType segmentation_map_ctor(SegmentationNeighborMap *seg_neighbor_map, uint16_t pic_width, uint16_t pic_height) {
+EbErrorType segmentation_map_ctor(SegmentationNeighborMap* seg_neighbor_map, uint16_t pic_width, uint16_t pic_height) {
     uint32_t num_elements = (pic_width >> MI_SIZE_LOG2) * (pic_height >> MI_SIZE_LOG2);
 
     seg_neighbor_map->dctor = segmentation_map_dctor;
@@ -77,7 +77,7 @@ EbErrorType segmentation_map_ctor(SegmentationNeighborMap *seg_neighbor_map, uin
 }
 
 static void me_sb_results_dctor(EbPtr p) {
-    MeSbResults *obj = (MeSbResults *)p;
+    MeSbResults* obj = (MeSbResults*)p;
     EB_FREE_ARRAY(obj->me_candidate_array);
     EB_FREE_ARRAY(obj->me_mv_array);
     EB_FREE_ARRAY(obj->total_me_candidate_index);
@@ -87,13 +87,13 @@ static void me_sb_results_dctor(EbPtr p) {
   controls how many references are needed for ME results allocation
 */
 void svt_aom_get_max_allocated_me_refs(uint8_t ref_count_used_list0, uint8_t ref_count_used_list1,
-                                       uint8_t *max_ref_to_alloc, uint8_t *max_cand_to_alloc) {
+                                       uint8_t* max_ref_to_alloc, uint8_t* max_cand_to_alloc) {
     *max_ref_to_alloc  = ref_count_used_list0 + ref_count_used_list1;
     *max_cand_to_alloc = ref_count_used_list0 + ref_count_used_list1 + (ref_count_used_list0 * ref_count_used_list1) +
         (ref_count_used_list0 - 1) + (ref_count_used_list1 == 3 ? 1 : 0);
 }
 
-EbErrorType svt_aom_me_sb_results_ctor(MeSbResults *obj_ptr, PictureControlSetInitData *init_data_ptr) {
+EbErrorType svt_aom_me_sb_results_ctor(MeSbResults* obj_ptr, PictureControlSetInitData* init_data_ptr) {
     obj_ptr->dctor = me_sb_results_dctor;
 
     uint8_t max_ref_to_alloc, max_cand_to_alloc;
@@ -118,7 +118,7 @@ EbErrorType svt_aom_me_sb_results_ctor(MeSbResults *obj_ptr, PictureControlSetIn
 }
 
 void recon_coef_dctor(EbPtr p) {
-    EncDecSet *obj = (EncDecSet *)p;
+    EncDecSet* obj = (EncDecSet*)p;
 
     EB_DELETE(obj->recon_pic_16bit);
     EB_DELETE(obj->recon_pic);
@@ -129,7 +129,7 @@ void recon_coef_dctor(EbPtr p) {
 }
 
 static void picture_control_set_dctor(EbPtr p) {
-    PictureControlSet *obj      = (PictureControlSet *)p;
+    PictureControlSet* obj      = (PictureControlSet*)p;
     uint16_t           tile_cnt = obj->tile_row_count * obj->tile_column_count;
     uint8_t            depth;
     svt_av1_hash_table_destroy(&obj->hash_table);
@@ -191,8 +191,8 @@ static void picture_control_set_dctor(EbPtr p) {
 
     const int32_t num_planes = 3; // av1_num_planes(cm);
     for (int32_t pl = 0; pl < num_planes; ++pl) {
-        RestorationInfo             *ri         = obj->rst_info + pl;
-        RestorationStripeBoundaries *boundaries = &ri->boundaries;
+        RestorationInfo*             ri         = obj->rst_info + pl;
+        RestorationStripeBoundaries* boundaries = &ri->boundaries;
         EB_FREE_ARRAY(ri->unit_info);
         EB_FREE(boundaries->stripe_boundary_above);
         EB_FREE(boundaries->stripe_boundary_below);
@@ -216,7 +216,7 @@ static void picture_control_set_dctor(EbPtr p) {
 }
 
 typedef struct InitData {
-    NeighborArrayUnit **na_unit_dbl_ptr;
+    NeighborArrayUnit** na_unit_dbl_ptr;
     uint32_t            max_picture_width;
     uint32_t            max_picture_height;
     uint32_t            unit_size;
@@ -227,7 +227,7 @@ typedef struct InitData {
 
 #define DIM(array) (sizeof(array) / sizeof(array[0]))
 
-static EbErrorType create_neighbor_array_units(InitData *data, size_t count) {
+static EbErrorType create_neighbor_array_units(InitData* data, size_t count) {
     for (size_t i = 0; i < count; i++) {
         EB_NEW(*data[i].na_unit_dbl_ptr,
                svt_aom_neighbor_array_unit_ctor,
@@ -244,7 +244,7 @@ static EbErrorType create_neighbor_array_units(InitData *data, size_t count) {
 /*
 recon_coef_update_param: update the parameters in EncDecSet for changing the resolution on the fly
 */
-EbErrorType recon_coef_update_param(EncDecSet *object_ptr, SequenceControlSet *scs) {
+EbErrorType recon_coef_update_param(EncDecSet* object_ptr, SequenceControlSet* scs) {
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
     bool                        is_16bit = scs->encoder_bit_depth > 8 ? true : false;
     // Init Picture Init data
@@ -281,8 +281,8 @@ EbErrorType recon_coef_update_param(EncDecSet *object_ptr, SequenceControlSet *s
     return EB_ErrorNone;
 }
 
-static EbErrorType recon_coef_ctor(EncDecSet *object_ptr, EbPtr object_init_data_ptr) {
-    PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
+static EbErrorType recon_coef_ctor(EncDecSet* object_ptr, EbPtr object_init_data_ptr) {
+    PictureControlSetInitData* init_data_ptr = (PictureControlSetInitData*)object_init_data_ptr;
 
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
 
@@ -374,8 +374,8 @@ uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_he
 /*
 pcs_update_param: update the parameters in PictureParentControlSet for changing the resolution on the fly
 */
-EbErrorType pcs_update_param(PictureControlSet *pcs) {
-    SequenceControlSet *scs      = pcs->scs;
+EbErrorType pcs_update_param(PictureControlSet* pcs) {
+    SequenceControlSet* scs      = pcs->scs;
     const bool          rtc_tune = scs->static_config.rtc;
     // Max/Min CU Sizes
     const uint32_t max_blk_size = scs->super_block_size;
@@ -448,8 +448,8 @@ EbErrorType pcs_update_param(PictureControlSet *pcs) {
     return EB_ErrorNone;
 }
 
-static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object_init_data_ptr) {
-    PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
+static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr object_init_data_ptr) {
+    PictureControlSetInitData* init_data_ptr = (PictureControlSetInitData*)object_init_data_ptr;
 
     const bool allintra = init_data_ptr->allintra;
 
@@ -1129,8 +1129,8 @@ static EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_recon_coef_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EncDecSet *obj;
+EbErrorType svt_aom_recon_coef_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EncDecSet* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, recon_coef_ctor, object_init_data_ptr);
@@ -1139,8 +1139,8 @@ EbErrorType svt_aom_recon_coef_creator(EbPtr *object_dbl_ptr, EbPtr object_init_
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_picture_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    PictureControlSet *obj;
+EbErrorType svt_aom_picture_control_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    PictureControlSet* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, picture_control_set_ctor, object_init_data_ptr);
@@ -1150,7 +1150,7 @@ EbErrorType svt_aom_picture_control_set_creator(EbPtr *object_dbl_ptr, EbPtr obj
 }
 
 static void picture_parent_control_set_dctor(EbPtr ptr) {
-    PictureParentControlSet *obj = (PictureParentControlSet *)ptr;
+    PictureParentControlSet* obj = (PictureParentControlSet*)ptr;
 
     if (obj->is_chroma_downsampled_picture_ptr_owner) {
         EB_DELETE(obj->chroma_downsampled_pic);
@@ -1216,9 +1216,9 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
 /*
 ppcs_update_param: update the parameters in PictureParentControlSet for changing the resolution on the fly
 */
-EbErrorType ppcs_update_param(PictureParentControlSet *ppcs) {
+EbErrorType ppcs_update_param(PictureParentControlSet* ppcs) {
     EbErrorType         return_error = EB_ErrorNone;
-    SequenceControlSet *scs          = ppcs->scs;
+    SequenceControlSet* scs          = ppcs->scs;
 
     if (ppcs->av1_cm->color_format >= EB_YUV422) {
         EbPictureBufferDescInitData input_pic_buf_desc_init_data;
@@ -1256,8 +1256,8 @@ EbErrorType ppcs_update_param(PictureParentControlSet *ppcs) {
     return return_error;
 }
 
-static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr, EbPtr object_init_data_ptr) {
-    PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
+static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* object_ptr, EbPtr object_init_data_ptr) {
+    PictureControlSetInitData* init_data_ptr = (PictureControlSetInitData*)object_init_data_ptr;
 
     EbErrorType    return_error  = EB_ErrorNone;
     const uint16_t subsampling_x = (init_data_ptr->color_format == EB_YUV444 ? 0 : 1);
@@ -1429,7 +1429,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
 }
 
 static void me_dctor(EbPtr p) {
-    MotionEstimationData *obj = (MotionEstimationData *)p;
+    MotionEstimationData* obj = (MotionEstimationData*)p;
     EB_DELETE_PTR_ARRAY(obj->me_results, obj->init_b64_total_count);
     if (obj->tpl_stats) {
         EB_FREE_2D(obj->tpl_stats);
@@ -1454,15 +1454,15 @@ static void me_dctor(EbPtr p) {
 /*
 me_update_param: update the parameters in MotionEstimationData for changing the resolution on the fly
 */
-EbErrorType me_update_param(MotionEstimationData *me_data, SequenceControlSet *scs) {
+EbErrorType me_update_param(MotionEstimationData* me_data, SequenceControlSet* scs) {
     EbErrorType return_error = EB_ErrorNone;
     me_data->b64_total_count = scs->b64_total_count;
 
     return return_error;
 }
 
-static EbErrorType me_ctor(MotionEstimationData *object_ptr, EbPtr object_init_data_ptr) {
-    PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
+static EbErrorType me_ctor(MotionEstimationData* object_ptr, EbPtr object_init_data_ptr) {
+    PictureControlSetInitData* init_data_ptr = (PictureControlSetInitData*)object_init_data_ptr;
 
     EbErrorType return_error = EB_ErrorNone;
     object_ptr->dctor        = me_dctor;
@@ -1523,7 +1523,7 @@ static EbErrorType me_ctor(MotionEstimationData *object_ptr, EbPtr object_init_d
     return return_error;
 }
 
-EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t height, B64Geom **b64_geoms) {
+EbErrorType b64_geom_init(SequenceControlSet* scs, uint16_t width, uint16_t height, B64Geom** b64_geoms) {
     EbErrorType return_error = EB_ErrorNone;
 
     uint8_t  b64_size           = scs->b64_size;
@@ -1534,7 +1534,7 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
     EB_MALLOC_ARRAY(*b64_geoms, picture_b64_width * picture_b64_height);
 
     for (int b64_idx = 0; b64_idx < picture_b64_width * picture_b64_height; ++b64_idx) {
-        B64Geom *b64_geom         = &(*b64_geoms)[b64_idx];
+        B64Geom* b64_geom         = &(*b64_geoms)[b64_idx];
         uint16_t horizontal_index = (uint16_t)(b64_idx % picture_b64_width);
         uint16_t vertical_index   = (uint16_t)(b64_idx / picture_b64_width);
         b64_geom->org_x           = horizontal_index * b64_size;
@@ -1547,27 +1547,27 @@ EbErrorType b64_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heig
     return return_error;
 }
 
-EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height) {
-    SbGeom *tmp;
+EbErrorType alloc_sb_geoms(SbGeom** geom, int width, int height) {
+    SbGeom* tmp;
     EB_MALLOC_ARRAY(tmp, width * height);
     *geom = tmp;
 
     return EB_ErrorNone;
 }
 
-void free_sb_geoms(SbGeom *geom) {
+void free_sb_geoms(SbGeom* geom) {
     if (geom) {
         EB_FREE_ARRAY(geom);
     }
 }
 
-void copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height) {
+void copy_sb_geoms(SbGeom* dst_geom, SbGeom* src_geom, uint16_t width, uint16_t height) {
     for (int i = 0; i < width * height; i++) {
         dst_geom[i] = src_geom[i];
     }
 }
 
-EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms) {
+EbErrorType sb_geom_init(SequenceControlSet* scs, uint16_t width, uint16_t height, SbGeom** sb_geoms) {
     uint16_t picture_sb_width  = DIVIDE_AND_CEIL(width, scs->sb_size);
     uint16_t picture_sb_height = DIVIDE_AND_CEIL(height, scs->sb_size);
     free_sb_geoms(*sb_geoms);
@@ -1577,7 +1577,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
     }
 
     for (int sb_index = 0; sb_index < picture_sb_width * picture_sb_height; ++sb_index) {
-        SbGeom  *sb_geom   = &(*sb_geoms)[sb_index];
+        SbGeom*  sb_geom   = &(*sb_geoms)[sb_index];
         uint16_t hor_index = sb_index % picture_sb_width;
         uint16_t ver_index = sb_index / picture_sb_width;
         sb_geom->org_x     = hor_index * scs->sb_size;
@@ -1589,8 +1589,8 @@ EbErrorType sb_geom_init(SequenceControlSet *scs, uint16_t width, uint16_t heigh
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    PictureParentControlSet *obj;
+EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    PictureParentControlSet* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, picture_parent_control_set_ctor, object_init_data_ptr);
@@ -1599,8 +1599,8 @@ EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr *object_dbl_ptr, Eb
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_me_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    MotionEstimationData *obj;
+EbErrorType svt_aom_me_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    MotionEstimationData* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, me_ctor, object_init_data_ptr);

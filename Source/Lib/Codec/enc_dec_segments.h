@@ -39,7 +39,7 @@ extern "C" {
        * Member definitions
        **************************************/
 typedef struct EncDecSegDependencyMap {
-    uint8_t *dependency_map;
+    uint8_t* dependency_map;
     EbHandle update_mutex;
 } EncDecSegDependencyMap;
 
@@ -56,11 +56,11 @@ typedef struct EncDecSegSegmentRow {
 typedef struct EncDecSegments {
     EbDctor                dctor;
     EncDecSegDependencyMap dep_map;
-    EncDecSegSegmentRow   *row_array;
+    EncDecSegSegmentRow*   row_array;
 
-    uint16_t *x_start_array;
-    uint16_t *y_start_array;
-    uint16_t *valid_sb_count_array;
+    uint16_t* x_start_array;
+    uint16_t* y_start_array;
+    uint16_t* valid_sb_count_array;
 
     uint32_t segment_band_count;
     uint32_t segment_row_count;
@@ -76,10 +76,10 @@ typedef struct EncDecSegments {
 /**************************************
      * Extern Function Declarations
      **************************************/
-EbErrorType svt_aom_enc_dec_segments_ctor(EncDecSegments *segments_ptr, uint32_t segment_col_count,
+EbErrorType svt_aom_enc_dec_segments_ctor(EncDecSegments* segments_ptr, uint32_t segment_col_count,
                                           uint32_t segment_row_count);
 
-void svt_aom_enc_dec_segments_init(EncDecSegments *segments_ptr, uint32_t col_count, uint32_t row_count,
+void svt_aom_enc_dec_segments_init(EncDecSegments* segments_ptr, uint32_t col_count, uint32_t row_count,
                                    uint32_t pic_width_sb, uint32_t pic_height_sb);
 #ifdef __cplusplus
 }

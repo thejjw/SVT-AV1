@@ -17,7 +17,7 @@
 #include "mem_neon.h"
 #include "transpose_neon.h"
 
-static inline void hadamard_4x4_one_pass(int16x4_t *a0, int16x4_t *a1, int16x4_t *a2, int16x4_t *a3) {
+static inline void hadamard_4x4_one_pass(int16x4_t* a0, int16x4_t* a1, int16x4_t* a2, int16x4_t* a3) {
     const int16x4_t b0 = vhadd_s16(*a0, *a1);
     const int16x4_t b1 = vhsub_s16(*a0, *a1);
     const int16x4_t b2 = vhadd_s16(*a2, *a3);
@@ -29,7 +29,7 @@ static inline void hadamard_4x4_one_pass(int16x4_t *a0, int16x4_t *a1, int16x4_t
     *a3 = vsub_s16(b1, b3);
 }
 
-void svt_aom_hadamard_4x4_neon(const int16_t *src_diff, ptrdiff_t src_stride, tran_low_t *coeff) {
+void svt_aom_hadamard_4x4_neon(const int16_t* src_diff, ptrdiff_t src_stride, tran_low_t* coeff) {
     int16x4_t a0 = vld1_s16(src_diff);
     int16x4_t a1 = vld1_s16(src_diff + src_stride);
     int16x4_t a2 = vld1_s16(src_diff + 2 * src_stride);
@@ -47,7 +47,7 @@ void svt_aom_hadamard_4x4_neon(const int16_t *src_diff, ptrdiff_t src_stride, tr
     store_s16_to_tran_low(coeff + 12, a3);
 }
 
-static inline void hadamard8x8_one_pass(int16x8_t *a) {
+static inline void hadamard8x8_one_pass(int16x8_t* a) {
     const int16x8_t b0 = vaddq_s16(a[0], a[1]);
     const int16x8_t b1 = vsubq_s16(a[0], a[1]);
     const int16x8_t b2 = vaddq_s16(a[2], a[3]);
@@ -76,7 +76,7 @@ static inline void hadamard8x8_one_pass(int16x8_t *a) {
     a[7] = vaddq_s16(c1, c5);
 }
 
-void svt_aom_hadamard_8x8_neon(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff) {
+void svt_aom_hadamard_8x8_neon(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff) {
     int16x8_t a[8];
 
     a[0] = vld1q_s16(src_diff);
@@ -102,7 +102,7 @@ void svt_aom_hadamard_8x8_neon(const int16_t *src_diff, ptrdiff_t src_stride, in
     store_s16q_to_tran_low(coeff + 56, a[7]);
 }
 
-void svt_aom_hadamard_16x16_neon(const int16_t *src_diff, ptrdiff_t src_stride, tran_low_t *coeff) {
+void svt_aom_hadamard_16x16_neon(const int16_t* src_diff, ptrdiff_t src_stride, tran_low_t* coeff) {
     /* Rearrange 16x16 to 8x32 and remove stride.
      * Top left first. */
     svt_aom_hadamard_8x8_neon(src_diff + 0 + 0 * src_stride, src_stride, coeff + 0);
@@ -202,7 +202,7 @@ void svt_aom_hadamard_16x16_neon(const int16_t *src_diff, ptrdiff_t src_stride, 
     }
 }
 
-void svt_aom_hadamard_32x32_neon(const int16_t *src_diff, ptrdiff_t src_stride, tran_low_t *coeff) {
+void svt_aom_hadamard_32x32_neon(const int16_t* src_diff, ptrdiff_t src_stride, tran_low_t* coeff) {
     /* Top left first. */
     svt_aom_hadamard_16x16_neon(src_diff + 0 + 0 * src_stride, src_stride, coeff + 0);
     /* Top right. */

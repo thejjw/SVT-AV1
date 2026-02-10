@@ -18,16 +18,16 @@
 #define PRINT_HEADER 0
 
 /* only reads the y4m header, needed when we reach end of the file and loop to the beginning */
-void read_and_skip_y4m_header(FILE *input_file) {
+void read_and_skip_y4m_header(FILE* input_file) {
     int c = 0;
     while ((c = fgetc(input_file)) != '\n' && c != EOF) {}
 }
 
 /* reads the y4m header and parses the input parameters */
-EbErrorType read_y4m_header(EbConfig *cfg) {
+EbErrorType read_y4m_header(EbConfig* cfg) {
 #define CHROMA_MAX 4
     char          buffer[YFM_HEADER_MAX];
-    char         *tokstart = buffer;
+    char*         tokstart = buffer;
     uint32_t      bitdepth = 8;
     unsigned long width = 0, height = 0;
     long          fr_n = 0, fr_d = 0, aspect_n = 0, aspect_d = 0;
@@ -242,7 +242,7 @@ EbErrorType read_y4m_header(EbConfig *cfg) {
 }
 
 /* read next line which contains the "FRAME" delimiter */
-size_t read_y4m_frame_delimiter(FILE *input_file, FILE *error_log_file) {
+size_t read_y4m_frame_delimiter(FILE* input_file, FILE* error_log_file) {
     char buffer_y4m_header[YFM_HEADER_MAX] = {0};
 
     if (!fgets(buffer_y4m_header, sizeof(buffer_y4m_header), input_file)) {
@@ -257,7 +257,7 @@ size_t read_y4m_frame_delimiter(FILE *input_file, FILE *error_log_file) {
 }
 
 /* check if the input file is in YUV4MPEG2 (y4m) format */
-bool check_if_y4m(EbConfig *cfg) {
+bool check_if_y4m(EbConfig* cfg) {
     const size_t y4m_magic_size = 9;
     if (fread(cfg->y4m_buf, y4m_magic_size, 1, cfg->input_file) != 1) {
         return false;

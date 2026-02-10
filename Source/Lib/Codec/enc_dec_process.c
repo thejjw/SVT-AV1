@@ -33,8 +33,8 @@
 #include "pack_unpack_c.h"
 #include "deblocking_filter.h"
 
-static void copy_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *dst_rate) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+static void copy_mv_rate(PictureControlSet* pcs, MdRateEstimationContext* dst_rate) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
 
     memcpy(dst_rate->nmv_vec_cost, pcs->md_rate_est_ctx->nmv_vec_cost, MV_JOINTS * sizeof(int32_t));
 
@@ -56,8 +56,8 @@ static void copy_mv_rate(PictureControlSet *pcs, MdRateEstimationContext *dst_ra
 }
 
 static void enc_dec_context_dctor(EbPtr p) {
-    EbThreadContext *thread_ctx = (EbThreadContext *)p;
-    EncDecContext   *obj        = (EncDecContext *)thread_ctx->priv;
+    EbThreadContext* thread_ctx = (EbThreadContext*)p;
+    EncDecContext*   obj        = (EncDecContext*)thread_ctx->priv;
     EB_DELETE(obj->md_ctx);
     EB_DELETE(obj->input_sample16bit_buffer);
     EB_FREE_ARRAY(obj);
@@ -66,14 +66,14 @@ static void enc_dec_context_dctor(EbPtr p) {
 /******************************************************
  * Enc Dec Context Constructor
  ******************************************************/
-EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr, int index,
+EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr, int index,
                                          int tasks_index) {
-    SequenceControlSet             *scs                      = enc_handle_ptr->scs_instance->scs;
-    const EbSvtAv1EncConfiguration *static_config            = &scs->static_config;
+    SequenceControlSet*             scs                      = enc_handle_ptr->scs_instance->scs;
+    const EbSvtAv1EncConfiguration* static_config            = &scs->static_config;
     EbColorFormat                   color_format             = static_config->encoder_color_format;
     int8_t                          enable_hbd_mode_decision = scs->enable_hbd_mode_decision;
 
-    EncDecContext *ed_ctx;
+    EncDecContext* ed_ctx;
     EB_CALLOC_ARRAY(ed_ctx, 1);
     thread_ctx->priv  = ed_ctx;
     thread_ctx->dctor = enc_dec_context_dctor;
@@ -132,7 +132,7 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext *thread_ctx, const EbEn
 /**************************************************
  * Reset Segmentation Map
  *************************************************/
-static void reset_segmentation_map(SegmentationNeighborMap *segmentation_map) {
+static void reset_segmentation_map(SegmentationNeighborMap* segmentation_map) {
     if (segmentation_map->data != NULL) {
         EB_MEMSET(segmentation_map->data, ~0, segmentation_map->map_size);
     }
@@ -141,7 +141,7 @@ static void reset_segmentation_map(SegmentationNeighborMap *segmentation_map) {
 /**************************************************
  * Reset Mode Decision Neighbor Arrays
  *************************************************/
-static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs, uint16_t tile_idx) {
+static void reset_encode_pass_neighbor_arrays(PictureControlSet* pcs, uint16_t tile_idx) {
     svt_aom_neighbor_array_unit_reset(pcs->ep_luma_recon_na[tile_idx]);
     svt_aom_neighbor_array_unit_reset(pcs->ep_cb_recon_na[tile_idx]);
     svt_aom_neighbor_array_unit_reset(pcs->ep_cr_recon_na[tile_idx]);
@@ -165,7 +165,7 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs, uint16_t t
 /**************************************************
  * Reset Coding Loop
  **************************************************/
-static void reset_enc_dec(EncDecContext *ed_ctx, PictureControlSet *pcs, SequenceControlSet *scs,
+static void reset_enc_dec(EncDecContext* ed_ctx, PictureControlSet* pcs, SequenceControlSet* scs,
                           uint32_t segment_index) {
     ed_ctx->is_16bit        = scs->is_16bit_pipeline;
     ed_ctx->bit_depth       = scs->static_config.encoder_bit_depth;
@@ -242,8 +242,8 @@ static void reset_enc_dec(EncDecContext *ed_ctx, PictureControlSet *pcs, Sequenc
  *   of the segment-row (b) as this would block other
  *   threads from performing an update (A).
  ******************************************************/
-static bool assign_enc_dec_segments(EncDecSegments *segmentPtr, uint16_t *segmentInOutIndex, EncDecTasks *taskPtr,
-                                    EbFifo *srmFifoPtr) {
+static bool assign_enc_dec_segments(EncDecSegments* segmentPtr, uint16_t* segmentInOutIndex, EncDecTasks* taskPtr,
+                                    EbFifo* srmFifoPtr) {
     bool     continue_processing_flag = false;
     uint32_t row_segment_index        = 0;
     uint32_t segment_index;
@@ -323,9 +323,9 @@ static bool assign_enc_dec_segments(EncDecSegments *segmentPtr, uint16_t *segmen
         }
 
         if (feedback_row_index > 0) {
-            EbObjectWrapper *wrapper_ptr;
+            EbObjectWrapper* wrapper_ptr;
             svt_get_empty_object(srmFifoPtr, &wrapper_ptr);
-            EncDecTasks *feedback_task         = (EncDecTasks *)wrapper_ptr->object_ptr;
+            EncDecTasks* feedback_task         = (EncDecTasks*)wrapper_ptr->object_ptr;
             feedback_task->input_type          = ENCDEC_TASKS_ENCDEC_INPUT;
             feedback_task->enc_dec_segment_row = feedback_row_index;
             feedback_task->pcs_wrapper         = taskPtr->pcs_wrapper;
@@ -343,7 +343,7 @@ static bool assign_enc_dec_segments(EncDecSegments *segmentPtr, uint16_t *segmen
 }
 
 #if CONFIG_ENABLE_FILM_GRAIN
-static void svt_av1_add_film_grain(EbPictureBufferDesc *src, EbPictureBufferDesc *dst, AomFilmGrain *film_grain_ptr) {
+static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc* dst, AomFilmGrain* film_grain_ptr) {
     uint8_t *luma, *cb, *cr;
     int32_t  height, width, luma_stride, chroma_stride;
     int32_t  use_high_bit_depth = 0;
@@ -437,8 +437,8 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc *src, EbPictureBufferDesc
 }
 #endif
 
-void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
-    EncodeContext *enc_ctx = scs->enc_ctx;
+void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
+    EncodeContext* enc_ctx = scs->enc_ctx;
     // The totalNumberOfReconFrames counter has to be write/read protected as
     //   it is used to determine the end of the stream.  If it is not protected
     //   the encoder might not properly terminate.
@@ -446,10 +446,10 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
 
     if (!pcs->ppcs->is_alt_ref) {
         bool             is_16bit = (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
-        EbObjectWrapper *output_recon_wrapper_ptr;
+        EbObjectWrapper* output_recon_wrapper_ptr;
         // Get Recon Buffer
         svt_get_empty_object(scs->enc_ctx->recon_output_fifo_ptr, &output_recon_wrapper_ptr);
-        EbBufferHeaderType *output_recon_ptr = (EbBufferHeaderType *)output_recon_wrapper_ptr->object_ptr;
+        EbBufferHeaderType* output_recon_ptr = (EbBufferHeaderType*)output_recon_wrapper_ptr->object_ptr;
         output_recon_ptr->flags              = 0;
 
         // START READ/WRITE PROTECTED SECTION
@@ -465,11 +465,11 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
         // Copy the Reconstructed Picture to the Output Recon Buffer
         {
             uint32_t sample_total_count;
-            uint8_t *recon_read_ptr;
-            uint8_t *recon_write_ptr;
+            uint8_t* recon_read_ptr;
+            uint8_t* recon_write_ptr;
 
-            EbPictureBufferDesc *recon_ptr;
-            EbPictureBufferDesc *intermediate_buffer_ptr = NULL;
+            EbPictureBufferDesc* recon_ptr;
+            EbPictureBufferDesc* intermediate_buffer_ptr = NULL;
             svt_aom_get_recon_pic(pcs, &recon_ptr, is_16bit);
 
             const uint32_t color_format = recon_ptr->color_format;
@@ -478,7 +478,7 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
 #if CONFIG_ENABLE_FILM_GRAIN
             // FGN: Create a buffer if needed, copy the reconstructed picture and run the film grain synthesis algorithm
             if (scs->seq_header.film_grain_params_present && pcs->ppcs->frm_hdr.film_grain_params.apply_grain) {
-                AomFilmGrain *film_grain_ptr;
+                AomFilmGrain* film_grain_ptr;
 
                 uint16_t                    padding = scs->super_block_size + 32;
                 EbPictureBufferDescInitData temp_recon_desc_init_data;
@@ -503,7 +503,7 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
                     intermediate_buffer_ptr, svt_recon_picture_buffer_desc_ctor, (EbPtr)&temp_recon_desc_init_data);
 
                 if (pcs->ppcs->is_ref == true) {
-                    film_grain_ptr = &((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->film_grain_params;
+                    film_grain_ptr = &((EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr)->film_grain_params;
                 } else {
                     film_grain_ptr = &pcs->ppcs->frm_hdr.film_grain_params;
                 }
@@ -613,7 +613,7 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
                 frame_size.subsampling_x         = ss_x;
                 frame_size.subsampling_y         = ss_y;
                 svt_add_metadata(
-                    output_recon_ptr, EB_AV1_METADATA_TYPE_FRAME_SIZE, (uint8_t *)&frame_size, sizeof(frame_size));
+                    output_recon_ptr, EB_AV1_METADATA_TYPE_FRAME_SIZE, (uint8_t*)&frame_size, sizeof(frame_size));
             }
 
             if (intermediate_buffer_ptr) {
@@ -636,8 +636,8 @@ void svt_aom_recon_output(PictureControlSet *pcs, SequenceControlSet *scs) {
 // Calculate Frame SSIM
 /************************************/
 
-static void svt_aom_ssim_parms_8x8_c(const uint8_t *s, int sp, const uint8_t *r, int rp, uint32_t *sum_s,
-                                     uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr) {
+static void svt_aom_ssim_parms_8x8_c(const uint8_t* s, int sp, const uint8_t* r, int rp, uint32_t* sum_s,
+                                     uint32_t* sum_r, uint32_t* sum_sq_s, uint32_t* sum_sq_r, uint32_t* sum_sxr) {
     int i, j;
     for (i = 0; i < 8; i++, s += sp, r += rp) {
         for (j = 0; j < 8; j++) {
@@ -650,9 +650,9 @@ static void svt_aom_ssim_parms_8x8_c(const uint8_t *s, int sp, const uint8_t *r,
     }
 }
 
-static void svt_aom_highbd_ssim_parms_8x8_c(const uint8_t *s, int sp, const uint8_t *sinc, int spinc, const uint16_t *r,
-                                            int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s,
-                                            uint32_t *sum_sq_r, uint32_t *sum_sxr) {
+static void svt_aom_highbd_ssim_parms_8x8_c(const uint8_t* s, int sp, const uint8_t* sinc, int spinc, const uint16_t* r,
+                                            int rp, uint32_t* sum_s, uint32_t* sum_r, uint32_t* sum_sq_s,
+                                            uint32_t* sum_sq_r, uint32_t* sum_sxr) {
     int      i, j;
     uint32_t ss;
     for (i = 0; i < 8; i++, s += sp, sinc += spinc, r += rp) {
@@ -702,13 +702,13 @@ double similarity(uint32_t sum_s, uint32_t sum_r, uint32_t sum_sq_s, uint32_t su
     return ssim_n / ssim_d;
 }
 
-static double ssim_8x8(const uint8_t *s, int sp, const uint8_t *r, int rp) {
+static double ssim_8x8(const uint8_t* s, int sp, const uint8_t* r, int rp) {
     uint32_t sum_s = 0, sum_r = 0, sum_sq_s = 0, sum_sq_r = 0, sum_sxr = 0;
     svt_aom_ssim_parms_8x8_c(s, sp, r, rp, &sum_s, &sum_r, &sum_sq_s, &sum_sq_r, &sum_sxr);
     return similarity(sum_s, sum_r, sum_sq_s, sum_sq_r, sum_sxr, 64, 8);
 }
 
-static double highbd_ssim_8x8(const uint8_t *s, int sp, const uint8_t *sinc, int spinc, const uint16_t *r, int rp,
+static double highbd_ssim_8x8(const uint8_t* s, int sp, const uint8_t* sinc, int spinc, const uint16_t* r, int rp,
                               uint32_t bd, uint32_t shift) {
     uint32_t sum_s = 0, sum_r = 0, sum_sq_s = 0, sum_sq_r = 0, sum_sxr = 0;
     svt_aom_highbd_ssim_parms_8x8_c(s, sp, sinc, spinc, r, rp, &sum_s, &sum_r, &sum_sq_s, &sum_sq_r, &sum_sxr);
@@ -724,7 +724,7 @@ static double highbd_ssim_8x8(const uint8_t *s, int sp, const uint8_t *sinc, int
 // We are using a 8x8 moving window with starting location of each 8x8 window
 // on the 4x4 pixel grid. Such arrangement allows the windows to overlap
 // block boundaries to penalize blocking artifacts.
-static double aom_ssim2(const uint8_t *img1, int stride_img1, const uint8_t *img2, int stride_img2, int width,
+static double aom_ssim2(const uint8_t* img1, int stride_img1, const uint8_t* img2, int stride_img2, int width,
                         int height) {
     int    i, j;
     int    samples    = 0;
@@ -748,8 +748,8 @@ static double aom_ssim2(const uint8_t *img1, int stride_img1, const uint8_t *img
     return ssim_total;
 }
 
-static double aom_highbd_ssim2(const uint8_t *img1, int stride_img1, const uint8_t *img1inc, int stride_img1inc,
-                               const uint16_t *img2, int stride_img2, int width, int height, uint32_t bd,
+static double aom_highbd_ssim2(const uint8_t* img1, int stride_img1, const uint8_t* img1inc, int stride_img1inc,
+                               const uint16_t* img2, int stride_img2, int width, int height, uint32_t bd,
                                uint32_t shift) {
     int    i, j;
     int    samples    = 0;
@@ -775,7 +775,7 @@ static double aom_highbd_ssim2(const uint8_t *img1, int stride_img1, const uint8
     return ssim_total;
 }
 
-void free_temporal_filtering_buffer(PictureControlSet *pcs, SequenceControlSet *scs) {
+void free_temporal_filtering_buffer(PictureControlSet* pcs, SequenceControlSet* scs) {
     // save_source_picture_ptr will be allocated only if do_tf is true in svt_av1_init_temporal_filtering().
     if (!pcs->ppcs->do_tf) {
         return;
@@ -793,18 +793,18 @@ void free_temporal_filtering_buffer(PictureControlSet *pcs, SequenceControlSet *
     }
 }
 
-EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet *scs, bool free_memory) {
+EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet* scs, bool free_memory) {
     bool is_16bit = (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
 
     const uint32_t ss_x = scs->subsampling_x;
     const uint32_t ss_y = scs->subsampling_y;
 
-    EbPictureBufferDesc *recon_ptr;
-    EbPictureBufferDesc *input_pic = (EbPictureBufferDesc *)pcs->ppcs->enhanced_unscaled_pic;
+    EbPictureBufferDesc* recon_ptr;
+    EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->ppcs->enhanced_unscaled_pic;
     svt_aom_get_recon_pic(pcs, &recon_ptr, is_16bit);
 
     // upscale recon if resized
-    EbPictureBufferDesc *upscaled_recon = NULL;
+    EbPictureBufferDesc* upscaled_recon = NULL;
     bool                 is_resized = recon_ptr->width != input_pic->width || recon_ptr->height != input_pic->height;
     if (is_resized) {
         superres_params_type spr_params = {input_pic->width, input_pic->height, 0};
@@ -882,7 +882,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet
     } else {
         EbByte    input_buffer;
         EbByte    input_buffer_bit_inc;
-        uint16_t *recon_buffer;
+        uint16_t* recon_buffer;
 
         // if current source picture was temporally filtered, use an alternative buffer which stores
         // the original source picture
@@ -932,7 +932,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet
         int bd    = 10;
         int shift = 0; // both input and output are 10 bit (bitdepth - input_bd)
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
+        recon_buffer = &((uint16_t*)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
         input_buffer = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
         input_buffer_bit_inc = &buffer_bit_inc_y[input_pic->org_x + input_pic->org_y * input_pic->stride_bit_inc_y];
         pcs->ppcs->luma_ssim = aom_highbd_ssim2(input_buffer,
@@ -946,8 +946,8 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet
                                                 bd,
                                                 shift);
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
+        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
+        input_buffer         = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
         input_buffer_bit_inc = &buffer_bit_inc_cb[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cb];
         pcs->ppcs->cb_ssim   = aom_highbd_ssim2(input_buffer,
                                               input_pic->stride_cb,
@@ -960,8 +960,8 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet
                                               bd,
                                               shift);
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
+        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
+        input_buffer         = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
         input_buffer_bit_inc = &buffer_bit_inc_cr[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cr];
         pcs->ppcs->cr_ssim   = aom_highbd_ssim2(input_buffer,
                                               input_pic->stride_cr,
@@ -992,8 +992,8 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet *pcs, SequenceControlSet
     return EB_ErrorNone;
 }
 
-static int64_t get_sse_10bit(const uint8_t *a_hi, int32_t a_hi_stride, const uint8_t *a_lo, int32_t a_lo_stride,
-                             const uint16_t *b, int32_t b_stride, int32_t width, int32_t height) {
+static int64_t get_sse_10bit(const uint8_t* a_hi, int32_t a_hi_stride, const uint8_t* a_lo, int32_t a_lo_stride,
+                             const uint16_t* b, int32_t b_stride, int32_t width, int32_t height) {
     int64_t sse = 0;
 
     for (int j = 0; j < height; ++j) {
@@ -1009,18 +1009,18 @@ static int64_t get_sse_10bit(const uint8_t *a_hi, int32_t a_hi_stride, const uin
     return sse;
 }
 
-EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, bool free_memory) {
+EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, bool free_memory) {
     bool is_16bit = (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
 
     const uint32_t ss_x = scs->subsampling_x;
     const uint32_t ss_y = scs->subsampling_y;
 
-    EbPictureBufferDesc *recon_ptr;
-    EbPictureBufferDesc *input_pic = (EbPictureBufferDesc *)pcs->ppcs->enhanced_unscaled_pic;
+    EbPictureBufferDesc* recon_ptr;
+    EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->ppcs->enhanced_unscaled_pic;
     svt_aom_get_recon_pic(pcs, &recon_ptr, is_16bit);
 
     // upscale recon if resized
-    EbPictureBufferDesc *upscaled_recon = NULL;
+    EbPictureBufferDesc* upscaled_recon = NULL;
     bool                 is_resized = recon_ptr->width != input_pic->width || recon_ptr->height != input_pic->height;
     if (is_resized) {
         superres_params_type spr_params = {input_pic->width, input_pic->height, 0};
@@ -1089,7 +1089,7 @@ EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, b
     } else {
         EbByte    input_buffer;
         EbByte    input_buffer_bit_inc;
-        uint16_t *recon_buffer;
+        uint16_t* recon_buffer;
 
         // if current source picture was temporally filtered, use an alternative buffer which stores
         // the original source picture
@@ -1136,7 +1136,7 @@ EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, b
                                           height_y >> ss_y);
         }
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
+        recon_buffer = &((uint16_t*)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
         input_buffer = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
         input_buffer_bit_inc = &buffer_bit_inc_y[input_pic->org_x + input_pic->org_y * input_pic->stride_bit_inc_y];
 
@@ -1149,8 +1149,8 @@ EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, b
                                             pic_w,
                                             pic_h);
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
+        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
+        input_buffer         = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
         input_buffer_bit_inc = &buffer_bit_inc_cb[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cb];
 
         pcs->ppcs->cb_sse = get_sse_10bit(input_buffer,
@@ -1162,8 +1162,8 @@ EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, b
                                           pic_w >> ss_x,
                                           pic_h >> ss_y);
 
-        recon_buffer = &((uint16_t *)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
+        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
+        input_buffer         = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
         input_buffer_bit_inc = &buffer_bit_inc_cr[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cr];
 
         pcs->ppcs->cr_sse = get_sse_10bit(input_buffer,
@@ -1193,13 +1193,13 @@ EbErrorType psnr_calculations(PictureControlSet *pcs, SequenceControlSet *scs, b
     return EB_ErrorNone;
 }
 
-void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
-    EbReferenceObject *ref_object = (EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr;
+void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
+    EbReferenceObject* ref_object = (EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr;
 
     //= (EbPictureBufferDesc *)ref_object->reference_picture;
-    EbPictureBufferDesc *ref_pic_ptr;
+    EbPictureBufferDesc* ref_pic_ptr;
     // =   (EbPictureBufferDesc *)ref_object->reference_picture16bit;
-    EbPictureBufferDesc *ref_pic_16bit_ptr;
+    EbPictureBufferDesc* ref_pic_16bit_ptr;
 
     {
         svt_aom_get_recon_pic(pcs, &ref_pic_ptr, 0);
@@ -1243,7 +1243,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
         svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions_16bit(scs, ref_pic_16bit_ptr);
 
         // Y samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_y,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_y,
                                        ref_pic_16bit_ptr->stride_y,
                                        ref_pic_16bit_ptr->width,
                                        ref_pic_16bit_ptr->height,
@@ -1251,7 +1251,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                        ref_pic_16bit_ptr->org_y);
 
         // Cb samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_cb,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
                                        ref_pic_16bit_ptr->stride_cb,
                                        (ref_pic_16bit_ptr->width + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y) >> ss_y,
@@ -1259,7 +1259,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                        (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
 
         // Cr samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_cr,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
                                        ref_pic_16bit_ptr->stride_cr,
                                        (ref_pic_16bit_ptr->width + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y) >> ss_y,
@@ -1267,7 +1267,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                        (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
 
         // Hsan: unpack ref samples (to be used @ MD)
-        svt_aom_un_pack2d((uint16_t *)ref_pic_16bit_ptr->buffer_y,
+        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_y,
                           ref_pic_16bit_ptr->stride_y,
                           ref_pic_ptr->buffer_y,
                           ref_pic_ptr->stride_y,
@@ -1275,7 +1275,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                           ref_pic_ptr->stride_bit_inc_y,
                           ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1),
                           ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1));
-        svt_aom_un_pack2d((uint16_t *)ref_pic_16bit_ptr->buffer_cb,
+        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
                           ref_pic_16bit_ptr->stride_cb,
                           ref_pic_ptr->buffer_cb,
                           ref_pic_ptr->stride_cb,
@@ -1283,7 +1283,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                           ref_pic_ptr->stride_bit_inc_cb,
                           (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->org_x << 1)) >> ss_x,
                           (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
-        svt_aom_un_pack2d((uint16_t *)ref_pic_16bit_ptr->buffer_cr,
+        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
                           ref_pic_16bit_ptr->stride_cr,
                           ref_pic_ptr->buffer_cr,
                           ref_pic_ptr->stride_cr,
@@ -1294,7 +1294,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
     }
     if ((scs->is_16bit_pipeline) && (!is_16bit)) {
         // Y samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_y,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_y,
                                        ref_pic_16bit_ptr->stride_y,
                                        ref_pic_16bit_ptr->width - scs->max_input_pad_right,
                                        ref_pic_16bit_ptr->height - scs->max_input_pad_bottom,
@@ -1302,7 +1302,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                        ref_pic_16bit_ptr->org_y);
 
         // Cb samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_cb,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
                                        ref_pic_16bit_ptr->stride_cb,
                                        (ref_pic_16bit_ptr->width + ss_x - scs->max_input_pad_right) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y - scs->max_input_pad_bottom) >> ss_y,
@@ -1310,7 +1310,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                        (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
 
         // Cr samples
-        svt_aom_generate_padding16_bit((uint16_t *)ref_pic_16bit_ptr->buffer_cr,
+        svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
                                        ref_pic_16bit_ptr->stride_cr,
                                        (ref_pic_16bit_ptr->width + ss_x - scs->max_input_pad_right) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y - scs->max_input_pad_bottom) >> ss_y,
@@ -1320,8 +1320,8 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
         // Hsan: unpack ref samples (to be used @ MD)
 
         //Y
-        uint16_t *buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_y);
-        uint8_t  *buf_8bit  = ref_pic_ptr->buffer_y;
+        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_y);
+        uint8_t*  buf_8bit  = ref_pic_ptr->buffer_y;
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_y,
                                   buf_8bit,
@@ -1330,7 +1330,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                   ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1));
 
         //CB
-        buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_cb);
+        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cb);
         buf_8bit  = ref_pic_ptr->buffer_cb;
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_cb,
@@ -1340,7 +1340,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
                                   (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
 
         //CR
-        buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_cr);
+        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cr);
         buf_8bit  = ref_pic_ptr->buffer_cr;
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_cr,
@@ -1364,8 +1364,8 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
  * Prepare the input picture for EncDec processing, including any necessary
  * padding, compressing, packing, or bit depth conversion.
  */
-static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pcs, EncDecContext *ctx,
-                                  EbPictureBufferDesc *input_pic, uint32_t sb_org_x, uint32_t sb_org_y) {
+static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx,
+                                  EbPictureBufferDesc* input_pic, uint32_t sb_org_x, uint32_t sb_org_y) {
     bool     is_16bit  = ctx->is_16bit;
     uint32_t sb_width  = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_org_x);
     uint32_t sb_height = MIN(scs->sb_size, pcs->ppcs->aligned_height - sb_org_y);
@@ -1389,7 +1389,7 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
                                    input_pic->stride_y,
                                    input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
                                    comp_stride_y,
-                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_y,
+                                   (uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
                                    ctx->input_sample16bit_buffer->stride_y,
                                    sb_width,
                                    sb_height);
@@ -1402,7 +1402,7 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
                                    input_pic->stride_cb,
                                    input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
                                    comp_stride_uv,
-                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_cb,
+                                   (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
                                    ctx->input_sample16bit_buffer->stride_cb,
                                    sb_width / 2,
                                    sb_height / 2);
@@ -1410,13 +1410,13 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
                                    input_pic->stride_cr,
                                    input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
                                    comp_stride_uv,
-                                   (uint16_t *)ctx->input_sample16bit_buffer->buffer_cr,
+                                   (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
                                    ctx->input_sample16bit_buffer->stride_cr,
                                    sb_width / 2,
                                    sb_height / 2);
 
         // PAD the packed source in incomplete sb up to max SB size
-        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_y,
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_y,
                                         ctx->input_sample16bit_buffer->stride_y,
                                         sb_width,
                                         sb_height,
@@ -1425,14 +1425,14 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
 
         // Safe to divide by 2 (scs->sb_size - sb_width) >> 1), with no risk of off-of-one issues
         // from chroma subsampling as picture is already 8px aligned
-        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_cb,
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cb,
                                         ctx->input_sample16bit_buffer->stride_cb,
                                         sb_width >> 1,
                                         sb_height >> 1,
                                         (scs->sb_size - sb_width) >> 1,
                                         (scs->sb_size - sb_height) >> 1);
 
-        svt_aom_pad_input_picture_16bit((uint16_t *)ctx->input_sample16bit_buffer->buffer_cr,
+        svt_aom_pad_input_picture_16bit((uint16_t*)ctx->input_sample16bit_buffer->buffer_cr,
                                         ctx->input_sample16bit_buffer->stride_cr,
                                         sb_width >> 1,
                                         sb_height >> 1,
@@ -1461,13 +1461,13 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
             : sb_height;
 
         // PACK Y
-        uint16_t *buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_y;
-        uint8_t  *buf_8bit  = input_pic->buffer_y + input_luma_offset;
+        uint16_t* buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_y;
+        uint8_t*  buf_8bit  = input_pic->buffer_y + input_luma_offset;
         svt_convert_8bit_to_16bit(
             buf_8bit, input_pic->stride_y, buf_16bit, ctx->input_sample16bit_buffer->stride_y, sb_width, sb_height);
 
         // PACK CB
-        buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_cb;
+        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cb;
         buf_8bit  = input_pic->buffer_cb + input_cb_offset;
         svt_convert_8bit_to_16bit(buf_8bit,
                                   input_pic->stride_cb,
@@ -1477,7 +1477,7 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
                                   sb_height >> 1);
 
         // PACK CR
-        buf_16bit = (uint16_t *)ctx->input_sample16bit_buffer->buffer_cr;
+        buf_16bit = (uint16_t*)ctx->input_sample16bit_buffer->buffer_cr;
         buf_8bit  = input_pic->buffer_cr + input_cr_offset;
         svt_convert_8bit_to_16bit(buf_8bit,
                                   input_pic->stride_cr,
@@ -1488,7 +1488,7 @@ static void prepare_input_picture(SequenceControlSet *scs, PictureControlSet *pc
     }
 }
 
-static void copy_neighbour_arrays_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t src_idx,
+static void copy_neighbour_arrays_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t src_idx,
                                             uint32_t dst_idx, uint32_t sb_org_x, uint32_t sb_org_y) {
     const uint16_t tile_idx = ctx->tile_index;
 
@@ -1501,14 +1501,14 @@ static void copy_neighbour_arrays_light_pd0(PictureControlSet *pcs, ModeDecision
                            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
 }
 
-void svt_aom_copy_neighbour_arrays(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t src_idx, uint32_t dst_idx,
+void svt_aom_copy_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t src_idx, uint32_t dst_idx,
                                    uint32_t blk_mds);
 
 /* Update shapes and tot_shapes with the shapes to be tested at the current d1 depth, based on block
 characteristics and settings.
 */
-static void set_blocks_to_test(PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds, const int mi_row,
-                               const int mi_col, Part shapes[9], uint8_t *tot_shapes) {
+static void set_blocks_to_test(PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds, const int mi_row,
+                               const int mi_col, Part shapes[9], uint8_t* tot_shapes) {
     const int      sq_size  = block_size_wide[mds->bsize];
     const int      hbs      = mi_size_wide[mds->bsize] >> 1;
     const int      has_rows = mi_row + hbs < pcs->ppcs->av1_cm->mi_rows;
@@ -1554,7 +1554,7 @@ static void set_blocks_to_test(PictureControlSet *pcs, ModeDecisionContext *ctx,
 }
 
 // Initialize the MD blocks to be tested
-static void init_md_scan(PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds, const int mi_row,
+static void init_md_scan(PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds, const int mi_row,
                          const int mi_col, const int min_sq_size, const int max_sq_size,
                          const bool use_predetermined_depths) {
     const int sq_size = block_size_wide[mds->bsize];
@@ -1595,8 +1595,8 @@ static void init_md_scan(PictureControlSet *pcs, ModeDecisionContext *ctx, MdSca
     }
 }
 
-static void set_blocks_to_be_tested(SequenceControlSet *scs, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                    MdScan *mds, const bool use_predetermined_depths) {
+static void set_blocks_to_be_tested(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                    MdScan* mds, const bool use_predetermined_depths) {
     memset(ctx->avail_blk_flag, false, sizeof(uint8_t) * scs->max_block_cnt);
     memset(ctx->cost_avail, false, sizeof(uint8_t) * scs->max_block_cnt);
     int min_sq_size = (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_64x64) ? 64
@@ -1627,7 +1627,7 @@ static void set_blocks_to_be_tested(SequenceControlSet *scs, PictureControlSet *
                  use_predetermined_depths);
 }
 
-static void set_child_to_be_tested(PictureControlSet *pcs, ModeDecisionContext *ctx, MdScan *mds, int e_depth,
+static void set_child_to_be_tested(PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds, int e_depth,
                                    const int mi_row, const int mi_col) {
     //const BlockGeom* blk_geom = get_blk_geom_mds(*mds_idx);
     const int sq_size = block_size_wide[mds->bsize];
@@ -1656,8 +1656,8 @@ static void set_child_to_be_tested(PictureControlSet *pcs, ModeDecisionContext *
     }
 }
 
-void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, const BlockGeom *blk_geom, int *s_depth,
-                           int *e_depth, int64_t *s_th_offset, int64_t *e_th_offset) {
+void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, const BlockGeom* blk_geom, int* s_depth,
+                           int* e_depth, int64_t* s_th_offset, int64_t* e_th_offset) {
     if (ctx->depth_refinement_ctrls.cost_band_based_modulation) {
         uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
@@ -1687,7 +1687,7 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
         if (lower_depth_split_cost_th && ctx->avail_blk_flag[parent_depth_idx_mds]) {
             const uint32_t   full_lambda     = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                            : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-            const BlockGeom *parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
+            const BlockGeom* parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
             const uint64_t   split_rate      = svt_aom_partition_rate_cost(
                 pcs->ppcs,
                 parent_blk_geom->bsize,
@@ -1739,13 +1739,13 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
         const bool is_ref_l1_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_1, 0);
 
         if (pcs->slice_type != I_SLICE && is_ref_l0_avail) {
-            EbReferenceObject *ref_obj_l0 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+            EbReferenceObject* ref_obj_l0 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
 
             uint8_t sb_min_sq_size = ref_obj_l0->sb_min_sq_size[ctx->sb_index];
             uint8_t sb_max_sq_size = ref_obj_l0->sb_max_sq_size[ctx->sb_index];
 
             if (pcs->slice_type == B_SLICE && is_ref_l1_avail && pcs->ppcs->ref_list1_count_try) {
-                EbReferenceObject *ref_obj_l1 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                EbReferenceObject* ref_obj_l1 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                 sb_min_sq_size                = MIN(sb_min_sq_size, ref_obj_l1->sb_min_sq_size[ctx->sb_index]);
                 sb_max_sq_size                = MAX(sb_max_sq_size, ref_obj_l1->sb_max_sq_size[ctx->sb_index]);
             }
@@ -1761,8 +1761,8 @@ void update_pred_th_offset(PictureControlSet *pcs, ModeDecisionContext *ctx, con
     }
 }
 
-static void is_parent_to_current_deviation_small(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                                 const BlockGeom *blk_geom, int64_t th_offset, int *s_depth) {
+static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                                 const BlockGeom* blk_geom, int64_t th_offset, int* s_depth) {
     uint32_t parent_depth_idx_mds = blk_geom->parent_depth_idx_mds;
 
     if (ctx->avail_blk_flag[parent_depth_idx_mds]) {
@@ -1822,9 +1822,9 @@ static void is_parent_to_current_deviation_small(PictureControlSet *pcs, ModeDec
     }
 }
 
-static void is_child_to_current_deviation_small(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                                const BlockGeom *blk_geom, uint32_t blk_index, int64_t th_offset,
-                                                int *e_depth) {
+static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                                const BlockGeom* blk_geom, uint32_t blk_index, int64_t th_offset,
+                                                int* e_depth) {
     const uint32_t ns_d1_offset = blk_geom->d1_depth_offset;
 
     assert(blk_geom->depth < 6);
@@ -1912,8 +1912,8 @@ static void is_child_to_current_deviation_small(PictureControlSet *pcs, ModeDeci
     }
 }
 
-static void set_start_end_depth(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TREE *pc_tree, MdScan *mds,
-                                const int max_pd0_size, const int min_pd0_size, int *s_depth_ret, int *e_depth_ret) {
+static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, MdScan* mds,
+                                const int max_pd0_size, const int min_pd0_size, int* s_depth_ret, int* e_depth_ret) {
     const uint32_t sqi_mds = mds->mds_idx;
     const int      sq_size = block_size_wide[mds->bsize];
     ctx->blk_ptr           = pc_tree->block_data[PART_N][0]; // &ctx->md_blk_arr_nsq[mds->mds_idx];
@@ -2020,7 +2020,7 @@ static void set_start_end_depth(PictureControlSet *pcs, ModeDecisionContext *ctx
         int64_t s_th_offset = 0;
         int64_t e_th_offset = 0;
 
-        const BlockGeom *blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, mds->mds_idx);
+        const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, mds->mds_idx);
         update_pred_th_offset(pcs, ctx, blk_geom, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
         if (s_depth &&
             // Check avail_blk_flag b/c use default_cost inside, and default_cost may not be
@@ -2050,7 +2050,7 @@ static void set_start_end_depth(PictureControlSet *pcs, ModeDecisionContext *ctx
 
 // pc_tree contains the chosen prediction structure from the first/previous PD pass.
 // The blocks/depths to be tested in the next PD pass will be written to/updated in mds.
-static int refine_depth(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TREE *pc_tree, MdScan *mds,
+static int refine_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, MdScan* mds,
                         const int mi_row, const int mi_col, const int max_pd0_size, const int min_pd0_size) {
     // add check that blocks are in bounds
     if (mi_col >= pcs->ppcs->av1_cm->mi_cols || mi_row >= pcs->ppcs->av1_cm->mi_rows) {
@@ -2110,8 +2110,8 @@ static int refine_depth(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TRE
     return s_depth;
 }
 
-static void get_max_min_pd0_depths(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TREE *pc_tree, const int mi_row,
-                                   const int mi_col, int *max_pd0_size_out, int *min_pd0_size_out) {
+static void get_max_min_pd0_depths(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, const int mi_row,
+                                   const int mi_col, int* max_pd0_size_out, int* min_pd0_size_out) {
     // check that blocks are in bounds
     if (mi_col >= pcs->ppcs->av1_cm->mi_cols || mi_row >= pcs->ppcs->av1_cm->mi_rows) {
         return;
@@ -2136,8 +2136,8 @@ static void get_max_min_pd0_depths(PictureControlSet *pcs, ModeDecisionContext *
     }
 }
 
-static void perform_pred_depth_refinement(PictureControlSet *pcs, ModeDecisionContext *ctx, PC_TREE *pc_tree,
-                                          MdScan *mds, const int mi_row, const int mi_col) {
+static void perform_pred_depth_refinement(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree,
+                                          MdScan* mds, const int mi_row, const int mi_col) {
     // Get max/min PD0 selected block sizes
     int max_pd0_size = 0;
     int min_pd0_size = 255;
@@ -2150,17 +2150,17 @@ static void perform_pred_depth_refinement(PictureControlSet *pcs, ModeDecisionCo
     refine_depth(pcs, ctx, pc_tree, mds, mi_row, mi_col, max_pd0_size, min_pd0_size);
 }
 
-void svt_variance_adjust_qp(PictureControlSet *pcs);
-void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet *pcs);
-void mdc_init_qp_update(PictureControlSet *pcs);
-void svt_aom_init_enc_dec_segement(PictureParentControlSet *ppcs);
+void svt_variance_adjust_qp(PictureControlSet* pcs);
+void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs);
+void mdc_init_qp_update(PictureControlSet* pcs);
+void svt_aom_init_enc_dec_segement(PictureParentControlSet* ppcs);
 
-static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSet *scs, bool *do_recode) {
-    PictureParentControlSet *ppcs    = pcs->ppcs;
-    EncodeContext *const     enc_ctx = ppcs->scs->enc_ctx;
-    RATE_CONTROL *const      rc      = &(enc_ctx->rc);
+static void recode_loop_decision_maker(PictureControlSet* pcs, SequenceControlSet* scs, bool* do_recode) {
+    PictureParentControlSet* ppcs    = pcs->ppcs;
+    EncodeContext* const     enc_ctx = ppcs->scs->enc_ctx;
+    RATE_CONTROL* const      rc      = &(enc_ctx->rc);
     bool                     loop    = false;
-    FrameHeader             *frm_hdr = &ppcs->frm_hdr;
+    FrameHeader*             frm_hdr = &ppcs->frm_hdr;
     int32_t                  q       = frm_hdr->quantization_params.base_q_idx;
     if (ppcs->loop_count == 0) {
         ppcs->q_low  = ppcs->bottom_index;
@@ -2202,7 +2202,7 @@ static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSe
         // set initial SB base_q_idx values
         pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;
         for (int sb_addr = 0; sb_addr < pcs->sb_total_count; ++sb_addr) {
-            SuperBlock *sb_ptr = pcs->sb_ptr_array[sb_addr];
+            SuperBlock* sb_ptr = pcs->sb_ptr_array[sb_addr];
             sb_ptr->qindex     = frm_hdr->quantization_params.base_q_idx;
         }
 
@@ -2226,7 +2226,7 @@ static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSe
 }
 
 /* for debug/documentation purposes: list all features assumed off for light pd1*/
-static void exaustive_light_pd1_features(ModeDecisionContext *md_ctx, PictureParentControlSet *ppcs,
+static void exaustive_light_pd1_features(ModeDecisionContext* md_ctx, PictureParentControlSet* ppcs,
                                          uint8_t use_light_pd1, uint8_t debug_lpd1_features) {
     if (debug_lpd1_features) {
         uint8_t light_pd1;
@@ -2257,7 +2257,7 @@ static void exaustive_light_pd1_features(ModeDecisionContext *md_ctx, PicturePar
 
 /* Light-PD1 classifier used when cost/coeff info is available.  If PD0 is skipped, or the trasnsform is
 not performed, a separate detector (lpd1_detector_skip_pd0) is used. */
-static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *md_ctx) {
+static void lpd1_detector_post_pd0(PictureControlSet* pcs, ModeDecisionContext* md_ctx) {
     for (int pd1_lvl = LPD1_LEVELS - 1; pd1_lvl > REGULAR_PD1; pd1_lvl--) {
         if (pd1_lvl <= (md_ctx->pd1_lvl_refinement - 1)) {
             break;
@@ -2274,8 +2274,8 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     // the reference pic unavailable to avoid using wrong info
                     const bool is_ref_l0_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_0, 0);
                     if (pcs->ppcs->ref_list0_count_try && is_ref_l0_avail) {
-                        EbReferenceObject *ref_obj_l0 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l0 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l0->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             l0_was_intra += ref_obj_l0->sb_intra[md_ctx->sb_index];
@@ -2288,8 +2288,8 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     uint8_t    l1_refs         = 0;
                     const bool is_ref_l1_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_1, 0);
                     if (pcs->ppcs->ref_list1_count_try && is_ref_l1_avail) {
-                        EbReferenceObject *ref_obj_l1 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l1 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l1->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             l1_was_intra += ref_obj_l1->sb_intra[md_ctx->sb_index];
@@ -2331,7 +2331,7 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
                 // If the best PD0 mode was INTER, check the MV length
                 if (md_ctx->avail_blk_flag[0] == true && is_inter_mode(md_ctx->md_blk_arr_nsq[0].block_mi.mode) &&
                     md_ctx->lpd1_ctrls.max_mv_length[pd1_lvl] != (uint16_t)~0) {
-                    BlkStruct     *blk_ptr       = &md_ctx->md_blk_arr_nsq[0];
+                    BlkStruct*     blk_ptr       = &md_ctx->md_blk_arr_nsq[0];
                     const uint16_t max_mv_length = md_ctx->lpd1_ctrls.max_mv_length[pd1_lvl];
 
                     // unipred MVs always stored in idx0
@@ -2361,7 +2361,7 @@ static void lpd1_detector_post_pd0(PictureControlSet *pcs, ModeDecisionContext *
 
 /* Light-PD1 classifier used when cost/coeff info is unavailable.  If PD0 is skipped, or the trasnsform is
 not performed, this detector is used (else lpd1_detector_post_pd0() is used). */
-static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *md_ctx, uint32_t pic_width_in_sb) {
+static void lpd1_detector_skip_pd0(PictureControlSet* pcs, ModeDecisionContext* md_ctx, uint32_t pic_width_in_sb) {
     const uint16_t left_sb_index = md_ctx->sb_index - 1;
     const uint16_t top_sb_index  = md_ctx->sb_index - (uint16_t)pic_width_in_sb;
 
@@ -2384,8 +2384,8 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     // the reference pic unavailable to avoid using wrong info
                     const bool is_ref_l0_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_0, 0);
                     if (pcs->ppcs->ref_list0_count_try && is_ref_l0_avail) {
-                        EbReferenceObject *ref_obj_l0 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l0 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l0->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             if (ref_obj_l0->slice_type != I_SLICE) {
@@ -2414,8 +2414,8 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
                     // Get list 1 refs' info
                     const bool is_ref_l1_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_1, 0);
                     if (pcs->ppcs->ref_list1_count_try && is_ref_l1_avail) {
-                        EbReferenceObject *ref_obj_l1 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l1 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                         // flat ipp should not use hierarchical concept
                         if (ref_obj_l1->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             if (ref_obj_l1->slice_type != I_SLICE) {
@@ -2493,8 +2493,8 @@ static void lpd1_detector_skip_pd0(PictureControlSet *pcs, ModeDecisionContext *
 }
 
 /* Light-PD0 classifier. */
-static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, uint32_t pic_width_in_sb) {
-    Lpd0Ctrls *lpd0_ctrls = &md_ctx->lpd0_ctrls;
+static void lpd0_detector(PictureControlSet* pcs, ModeDecisionContext* md_ctx, uint32_t pic_width_in_sb) {
+    Lpd0Ctrls* lpd0_ctrls = &md_ctx->lpd0_ctrls;
 
     for (int pd0_lvl = LPD0_LEVELS - 1; pd0_lvl > REGULAR_PD0; pd0_lvl--) {
         if (lpd0_ctrls->pd0_level == pd0_lvl) {
@@ -2515,8 +2515,8 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
                     // the reference pic unavailable to avoid using wrong info
                     const bool is_ref_l0_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_0, 0);
                     if (pcs->ppcs->ref_list0_count_try && is_ref_l0_avail) {
-                        EbReferenceObject *ref_obj_l0 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l0 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
                         if (ref_obj_l0->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             l0_was_intra += ref_obj_l0->sb_intra[md_ctx->sb_index];
                             l0_refs++;
@@ -2528,8 +2528,8 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
                     uint8_t    l1_refs         = 0;
                     const bool is_ref_l1_avail = svt_aom_is_ref_same_size(pcs, REF_LIST_1, 0);
                     if (pcs->ppcs->ref_list1_count_try && is_ref_l1_avail) {
-                        EbReferenceObject *ref_obj_l1 =
-                            (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                        EbReferenceObject* ref_obj_l1 =
+                            (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                         if (ref_obj_l1->tmp_layer_idx <= pcs->temporal_layer_index || pcs->scs->use_flat_ipp) {
                             l1_was_intra += ref_obj_l1->sb_intra[md_ctx->sb_index];
                             l1_refs++;
@@ -2562,7 +2562,7 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
 
                 // I_SLICE doesn't have ME info
                 if (pcs->slice_type != I_SLICE) {
-                    PictureParentControlSet *ppcs                 = pcs->ppcs;
+                    PictureParentControlSet* ppcs                 = pcs->ppcs;
                     const uint16_t           sb_index             = md_ctx->sb_index;
                     const uint32_t           me_8x8_cost_variance = ppcs->me_8x8_cost_variance[sb_index];
                     const uint32_t           me_64x64_distortion  = ppcs->me_64x64_distortion[sb_index];
@@ -2608,7 +2608,7 @@ static void lpd0_detector(PictureControlSet *pcs, ModeDecisionContext *md_ctx, u
     assert(IMPLIES(pcs->slice_type == I_SLICE, lpd0_ctrls->pd0_level != VERY_LIGHT_PD0));
 }
 
-static EbErrorType rtime_alloc_palette_search_buffers(ModeDecisionContext *ctx) {
+static EbErrorType rtime_alloc_palette_search_buffers(ModeDecisionContext* ctx) {
     if (!ctx->palette_buffer) {
         EB_MALLOC_OBJECT(ctx->palette_buffer);
     }
@@ -2630,7 +2630,7 @@ static EbErrorType rtime_alloc_palette_search_buffers(ModeDecisionContext *ctx) 
 #define AVG_CDF_WEIGHT_LEFT 3
 #define AVG_CDF_WEIGHT_TOP 1
 
-static NOINLINE void avg_cdf_symbol(AomCdfProb *cdf_ptr_left, AomCdfProb *cdf_ptr_tr, int num_cdfs, int cdf_stride,
+static NOINLINE void avg_cdf_symbol(AomCdfProb* cdf_ptr_left, AomCdfProb* cdf_ptr_tr, int num_cdfs, int cdf_stride,
                                     int nsymbs, int wt_left, int wt_tr) {
     for (int i = 0; i < num_cdfs; i++) {
         for (int j = 0; j <= nsymbs; j++) {
@@ -2647,14 +2647,14 @@ static NOINLINE void avg_cdf_symbol(AomCdfProb *cdf_ptr_left, AomCdfProb *cdf_pt
 
 #define AVG_CDF_STRIDE(cname_left, cname_tr, nsymbs, cdf_stride)                                \
     do {                                                                                        \
-        AomCdfProb *cdf_ptr_left = (AomCdfProb *)cname_left;                                    \
-        AomCdfProb *cdf_ptr_tr   = (AomCdfProb *)cname_tr;                                      \
+        AomCdfProb* cdf_ptr_left = (AomCdfProb*)cname_left;                                     \
+        AomCdfProb* cdf_ptr_tr   = (AomCdfProb*)cname_tr;                                       \
         int         array_size   = (int)sizeof(cname_left) / sizeof(AomCdfProb);                \
         int         num_cdfs     = array_size / cdf_stride;                                     \
         avg_cdf_symbol(cdf_ptr_left, cdf_ptr_tr, num_cdfs, cdf_stride, nsymbs, wt_left, wt_tr); \
     } while (0)
 
-static NOINLINE void avg_nmv(NmvContext *nmv_left, NmvContext *nmv_tr, int wt_left, int wt_tr) {
+static NOINLINE void avg_nmv(NmvContext* nmv_left, NmvContext* nmv_tr, int wt_left, int wt_tr) {
     AVERAGE_CDF(nmv_left->joints_cdf, nmv_tr->joints_cdf, 4);
     for (int i = 0; i < 2; i++) {
         AVERAGE_CDF(nmv_left->comps[i].classes_cdf, nmv_tr->comps[i].classes_cdf, MV_CLASSES);
@@ -2672,7 +2672,7 @@ static NOINLINE void avg_nmv(NmvContext *nmv_left, NmvContext *nmv_tr, int wt_le
 // the left SB's CDFs and use it for current SB's encoding to
 // improve the performance. This function facilitates the averaging
 // of CDF.
-static NOINLINE void avg_cdf_symbols(FRAME_CONTEXT *ctx_left, FRAME_CONTEXT *ctx_tr, int wt_left, int wt_tr) {
+static NOINLINE void avg_cdf_symbols(FRAME_CONTEXT* ctx_left, FRAME_CONTEXT* ctx_tr, int wt_left, int wt_tr) {
     AVERAGE_CDF(ctx_left->txb_skip_cdf, ctx_tr->txb_skip_cdf, 2);
     AVERAGE_CDF(ctx_left->eob_extra_cdf, ctx_tr->eob_extra_cdf, 2);
     AVERAGE_CDF(ctx_left->dc_sign_cdf, ctx_tr->dc_sign_cdf, 2);
@@ -2807,19 +2807,19 @@ static NOINLINE void avg_cdf_symbols(FRAME_CONTEXT *ctx_left, FRAME_CONTEXT *ctx
  *appropriate syntax elements to be sent to the entropy coding engine
  *
  ********************************************************************************/
-void *svt_aom_mode_decision_kernel(void *input_ptr) {
+void* svt_aom_mode_decision_kernel(void* input_ptr) {
     // Context & SCS & PCS
-    EbThreadContext *thread_ctx = (EbThreadContext *)input_ptr;
-    EncDecContext   *ed_ctx     = (EncDecContext *)thread_ctx->priv;
+    EbThreadContext* thread_ctx = (EbThreadContext*)input_ptr;
+    EncDecContext*   ed_ctx     = (EncDecContext*)thread_ctx->priv;
 
     // Input
-    EbObjectWrapper *enc_dec_tasks_wrapper;
+    EbObjectWrapper* enc_dec_tasks_wrapper;
 
     // Output
-    EbObjectWrapper *enc_dec_results_wrapper;
-    EncDecResults   *enc_dec_results;
+    EbObjectWrapper* enc_dec_results_wrapper;
+    EncDecResults*   enc_dec_results;
     // SB Loop variables
-    SuperBlock *sb_ptr;
+    SuperBlock* sb_ptr;
     uint16_t    sb_index;
     uint32_t    x_sb_index;
     uint32_t    y_sb_index;
@@ -2836,7 +2836,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
     uint32_t        segment_row_index;
     uint32_t        segment_band_index;
     uint32_t        segment_band_size;
-    EncDecSegments *segments_ptr;
+    EncDecSegments* segments_ptr;
 
     segment_index = 0;
 
@@ -2844,11 +2844,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
         // Get Mode Decision Results
         EB_GET_FULL_OBJECT(ed_ctx->mode_decision_input_fifo_ptr, &enc_dec_tasks_wrapper);
 
-        EncDecTasks             *enc_dec_tasks = (EncDecTasks *)enc_dec_tasks_wrapper->object_ptr;
-        PictureControlSet       *pcs           = (PictureControlSet *)enc_dec_tasks->pcs_wrapper->object_ptr;
-        SequenceControlSet      *scs           = pcs->scs;
-        ModeDecisionContext     *md_ctx        = ed_ctx->md_ctx;
-        PictureParentControlSet *ppcs          = pcs->ppcs;
+        EncDecTasks*             enc_dec_tasks = (EncDecTasks*)enc_dec_tasks_wrapper->object_ptr;
+        PictureControlSet*       pcs           = (PictureControlSet*)enc_dec_tasks->pcs_wrapper->object_ptr;
+        SequenceControlSet*      scs           = pcs->scs;
+        ModeDecisionContext*     md_ctx        = ed_ctx->md_ctx;
+        PictureParentControlSet* ppcs          = pcs->ppcs;
         md_ctx->encoder_bit_depth              = (uint8_t)scs->static_config.encoder_bit_depth;
         md_ctx->corrupted_mv_check             = (pcs->ppcs->aligned_width >= (1 << (MV_IN_USE_BITS - 3))) ||
             (pcs->ppcs->aligned_height >= (1 << (MV_IN_USE_BITS - 3)));
@@ -2867,11 +2867,11 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
         // Bypass encdec for the first pass
         if (svt_aom_is_pic_skipped(pcs->ppcs)) {
             svt_release_object(pcs->ppcs->me_data_wrapper);
-            pcs->ppcs->me_data_wrapper = (EbObjectWrapper *)NULL;
+            pcs->ppcs->me_data_wrapper = (EbObjectWrapper*)NULL;
             pcs->ppcs->pa_me_data      = NULL;
             // Get Empty EncDec Results
             svt_get_empty_object(ed_ctx->enc_dec_output_fifo_ptr, &enc_dec_results_wrapper);
-            enc_dec_results              = (EncDecResults *)enc_dec_results_wrapper->object_ptr;
+            enc_dec_results              = (EncDecResults*)enc_dec_results_wrapper->object_ptr;
             enc_dec_results->pcs_wrapper = enc_dec_tasks->pcs_wrapper;
 
             // Post EncDec Results
@@ -2886,12 +2886,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                 svt_aom_init_enc_dec_segement(pcs->ppcs);
 
                 // post tile based encdec task
-                EbObjectWrapper *enc_dec_re_encode_tasks_wrapper;
+                EbObjectWrapper* enc_dec_re_encode_tasks_wrapper;
                 uint16_t         tg_count = pcs->ppcs->tile_group_cols * pcs->ppcs->tile_group_rows;
                 for (uint16_t tile_group_idx = 0; tile_group_idx < tg_count; tile_group_idx++) {
                     svt_get_empty_object(ed_ctx->enc_dec_feedback_fifo_ptr, &enc_dec_re_encode_tasks_wrapper);
 
-                    EncDecTasks *enc_dec_re_encode_tasks_ptr = (EncDecTasks *)
+                    EncDecTasks* enc_dec_re_encode_tasks_ptr = (EncDecTasks*)
                                                                    enc_dec_re_encode_tasks_wrapper->object_ptr;
                     enc_dec_re_encode_tasks_ptr->pcs_wrapper      = enc_dec_tasks->pcs_wrapper;
                     enc_dec_re_encode_tasks_ptr->input_type       = ENCDEC_TASKS_MDC_INPUT;
@@ -3258,7 +3258,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             if (sb_index == 0) {
                                 svt_av1_loop_filter_init(pcs);
                                 svt_av1_pick_filter_level(
-                                    (EbPictureBufferDesc *)pcs->ppcs->enhanced_pic, pcs, LPF_PICK_FROM_Q);
+                                    (EbPictureBufferDesc*)pcs->ppcs->enhanced_pic, pcs, LPF_PICK_FROM_Q);
                                 svt_av1_loop_filter_frame_init(&pcs->ppcs->frm_hdr, &pcs->ppcs->lf_info, 0, 3);
                             }
 
@@ -3266,7 +3266,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                             //Jing: Don't work for tile_parallel since the SB of bottom tile comes early than the bottom SB of top tile
                             if (pcs->ppcs->frm_hdr.loop_filter_params.filter_level[0] ||
                                 pcs->ppcs->frm_hdr.loop_filter_params.filter_level[1]) {
-                                EbPictureBufferDesc *recon_buffer;
+                                EbPictureBufferDesc* recon_buffer;
                                 svt_aom_get_recon_pic(pcs, &recon_buffer, ed_ctx->is_16bit);
                                 uint32_t sb_width = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_origin_x);
                                 uint8_t  last_col = ((sb_origin_x + sb_width) == pcs->ppcs->aligned_width) ? 1 : 0;
@@ -3304,7 +3304,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                     for (sb_index = 0; sb_index < pcs->enc_dec_coded_sb_count; ++sb_index) {
                         sb_ptr = pcs->sb_ptr_array[sb_index];
                         for (uint16_t blk_cnt = 0; blk_cnt < sb_ptr->final_blk_cnt; blk_cnt++) {
-                            EcBlkStruct *final_blk_arr = &(sb_ptr->final_blk_arr[blk_cnt]);
+                            EcBlkStruct* final_blk_arr = &(sb_ptr->final_blk_arr[blk_cnt]);
                             if (final_blk_arr->palette_info != NULL) {
                                 assert(final_blk_arr->palette_info->color_idx_map != NULL && "free palette:Null");
                                 EB_FREE(final_blk_arr->palette_info->color_idx_map);
@@ -3318,12 +3318,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                     mdc_init_qp_update(pcs);
                     // init segment for re-encode frame
                     svt_aom_init_enc_dec_segement(pcs->ppcs);
-                    EbObjectWrapper *enc_dec_re_encode_tasks_wrapper;
+                    EbObjectWrapper* enc_dec_re_encode_tasks_wrapper;
                     uint16_t         tg_count = pcs->ppcs->tile_group_cols * pcs->ppcs->tile_group_rows;
                     for (uint16_t tile_group_idx = 0; tile_group_idx < tg_count; tile_group_idx++) {
                         svt_get_empty_object(ed_ctx->enc_dec_feedback_fifo_ptr, &enc_dec_re_encode_tasks_wrapper);
 
-                        EncDecTasks *enc_dec_re_encode_tasks_ptr = (EncDecTasks *)
+                        EncDecTasks* enc_dec_re_encode_tasks_ptr = (EncDecTasks*)
                                                                        enc_dec_re_encode_tasks_wrapper->object_ptr;
                         enc_dec_re_encode_tasks_ptr->pcs_wrapper      = enc_dec_tasks->pcs_wrapper;
                         enc_dec_re_encode_tasks_ptr->input_type       = ENCDEC_TASKS_MDC_INPUT;
@@ -3339,7 +3339,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                     // further reference
                     if (scs->seq_header.film_grain_params_present) {
                         if (pcs->ppcs->is_ref == true && pcs->ppcs->ref_pic_wrapper) {
-                            ((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->film_grain_params =
+                            ((EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr)->film_grain_params =
                                 pcs->ppcs->frm_hdr.film_grain_params;
                         }
                     }
@@ -3349,7 +3349,7 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                     // multi-threading.
                     if (pcs->ppcs->is_ref == true && pcs->ppcs->ref_pic_wrapper) {
                         for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame) {
-                            ((EbReferenceObject *)pcs->ppcs->ref_pic_wrapper->object_ptr)->global_motion[frame] =
+                            ((EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr)->global_motion[frame] =
                                 pcs->ppcs->global_motion[frame];
                         }
                     }
@@ -3366,12 +3366,12 @@ void *svt_aom_mode_decision_kernel(void *input_ptr) {
                         ed_ctx->pic_full_lambda[(ed_ctx->bit_depth == EB_TEN_BIT) ? EB_10_BIT_MD : EB_8_BIT_MD];
                     if (pcs->ppcs->superres_total_recode_loop == 0) {
                         svt_release_object(pcs->ppcs->me_data_wrapper);
-                        pcs->ppcs->me_data_wrapper = (EbObjectWrapper *)NULL;
+                        pcs->ppcs->me_data_wrapper = (EbObjectWrapper*)NULL;
                         pcs->ppcs->pa_me_data      = NULL;
                     }
                     // Get Empty EncDec Results
                     svt_get_empty_object(ed_ctx->enc_dec_output_fifo_ptr, &enc_dec_results_wrapper);
-                    enc_dec_results              = (EncDecResults *)enc_dec_results_wrapper->object_ptr;
+                    enc_dec_results              = (EncDecResults*)enc_dec_results_wrapper->object_ptr;
                     enc_dec_results->pcs_wrapper = enc_dec_tasks->pcs_wrapper;
 
                     // Post EncDec Results

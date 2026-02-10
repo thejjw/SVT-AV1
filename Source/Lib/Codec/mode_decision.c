@@ -37,9 +37,9 @@
 #include "utility.h"
 #include "adaptive_mv_pred.h"
 
-void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx, const Av1Common *cm,
-                               const MacroBlockD *xd, int mi_row, int mi_col, const uint8_t *above, int above_stride,
-                               const uint8_t *left, int left_stride);
+void calc_target_weighted_pred(PictureControlSet* pcs, ModeDecisionContext* ctx, const Av1Common* cm,
+                               const MacroBlockD* xd, int mi_row, int mi_col, const uint8_t* above, int above_stride,
+                               const uint8_t* left, int left_stride);
 #define INC_MD_CAND_CNT(cnt, max_can_count)                  \
     MULTI_LINE_MACRO_BEGIN                                   \
     if (cnt + 1 < max_can_count)                             \
@@ -50,8 +50,8 @@ void calc_target_weighted_pred(PictureControlSet *pcs, ModeDecisionContext *ctx,
 
 #define SUPERRES_INVALID_STATE 0x7fffffff
 
-bool svt_av1_is_lossless_segment(PictureControlSet *pcs, int8_t segment_id) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+bool svt_av1_is_lossless_segment(PictureControlSet* pcs, int8_t segment_id) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     if (frm_hdr->segmentation_params.segmentation_enabled) {
         return pcs->lossless[segment_id];
     } else {
@@ -97,7 +97,7 @@ static MD_COMP_TYPE get_tot_comp_types_bsize(MD_COMP_TYPE tot_comp_types, BlockS
 /*
 Get the ME offset for a given block(the offset used to locate the PA MVs from the parent PCS).
 */
-uint32_t svt_aom_get_me_block_offset(const BlockGeom *const blk_geom, uint8_t enable_me_8x8, uint8_t enable_me_16x16) {
+uint32_t svt_aom_get_me_block_offset(const BlockGeom* const blk_geom, uint8_t enable_me_8x8, uint8_t enable_me_16x16) {
     uint32_t first_quad_org_x = blk_geom->org_x % 32;
     uint32_t first_quad_org_y = blk_geom->org_y % 32;
 
@@ -181,12 +181,12 @@ uint32_t svt_aom_get_me_block_offset(const BlockGeom *const blk_geom, uint8_t en
 
 //Given one reference frame identified by the pair (list_index,ref_index)
 //indicate if ME data is valid
-uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_offset, const MeSbResults *me_results,
+uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_offset, const MeSbResults* me_results,
                                    uint8_t list_idx, uint8_t ref_idx) {
     uint8_t            total_me_cnt     = me_results->total_me_candidate_index[me_block_offset];
-    const MeCandidate *me_block_results = &me_results->me_candidate_array[me_cand_offset];
+    const MeCandidate* me_block_results = &me_results->me_candidate_array[me_cand_offset];
     for (uint32_t me_cand_i = 0; me_cand_i < total_me_cnt; ++me_cand_i) {
-        const MeCandidate *me_cand = &me_block_results[me_cand_i];
+        const MeCandidate* me_cand = &me_block_results[me_cand_i];
         assert(me_cand->direction <= 2);
         if (me_cand->direction == 0 || me_cand->direction == 2) {
             if (list_idx == me_cand->ref0_list && ref_idx == me_cand->ref_idx_l0) {
@@ -210,14 +210,14 @@ uint8_t svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_of
 // 3 - Regular uni-pred + Wedge compound Inter Intra + Smooth compound Inter Intra
 
 #if CONFIG_ENABLE_OBMC
-static bool warped_motion_mode_allowed(PictureControlSet *pcs, ModeDecisionContext *ctx) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+static bool warped_motion_mode_allowed(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     return frm_hdr->allow_warped_motion && has_overlappable_candidates(ctx->blk_ptr) && ctx->blk_geom->bwidth >= 8 &&
         ctx->blk_geom->bheight >= 8 && ctx->wm_ctrls.enabled;
 }
 #endif
 MotionMode svt_aom_obmc_motion_mode_allowed(
-    const PictureControlSet *pcs, ModeDecisionContext *ctx, const BlockSize bsize,
+    const PictureControlSet* pcs, ModeDecisionContext* ctx, const BlockSize bsize,
     uint8_t          situation, // 0: candidate(s) preparation, 1: data preparation, 2: simple translation face-off
     MvReferenceFrame rf0, MvReferenceFrame rf1, PredictionMode mode) {
     if (ctx->obmc_ctrls.trans_face_off && !situation) {
@@ -232,7 +232,7 @@ MotionMode svt_aom_obmc_motion_mode_allowed(
     if (!ctx->obmc_ctrls.enabled) {
         return SIMPLE_TRANSLATION;
     }
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
 
     if (!frm_hdr->is_motion_mode_switchable) {
         return SIMPLE_TRANSLATION;
@@ -299,9 +299,9 @@ uint8_t svt_aom_get_max_drl_index(uint8_t refmvCnt, PredictionMode mode) {
 
 #define MV_COST_WEIGHT 108
 
-static int64_t pick_interintra_wedge(PictureControlSet *pcs, ModeDecisionContext *ctx, const BlockSize bsize,
-                                     const uint8_t *const p0, const uint8_t *const p1, uint8_t *src_buf,
-                                     uint32_t src_stride, int8_t *wedge_index_out) {
+static int64_t pick_interintra_wedge(PictureControlSet* pcs, ModeDecisionContext* ctx, const BlockSize bsize,
+                                     const uint8_t* const p0, const uint8_t* const p1, uint8_t* src_buf,
+                                     uint32_t src_stride, int8_t* wedge_index_out) {
     assert(svt_aom_is_interintra_wedge_used(bsize));
     // assert(cpi->common.seq_params.enable_interintra_compound);
 
@@ -328,15 +328,15 @@ static int64_t pick_interintra_wedge(PictureControlSet *pcs, ModeDecisionContext
     return rd;
 }
 
-static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand) {
-    SequenceControlSet *scs = pcs->scs;
+static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand) {
+    SequenceControlSet* scs = pcs->scs;
     DECLARE_ALIGNED(16, uint8_t, tmp_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     DECLARE_ALIGNED(16, uint8_t, ii_pred_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     // get inter pred for ref0
-    EbPictureBufferDesc *src_pic     = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    uint16_t            *src_buf_hbd = (uint16_t *)src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
+    EbPictureBufferDesc* src_pic     = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+    uint16_t*            src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
         (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y;
-    uint8_t *src_buf = src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
+    uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
         (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y;
 
     uint8_t  bit_depth   = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
@@ -348,8 +348,8 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
     pred_desc.org_x = pred_desc.org_y = 0;
     pred_desc.stride_y                = bwidth;
 
-    EbPictureBufferDesc *ref_pic_list0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
-    EbPictureBufferDesc *ref_pic_list1 = NULL;
+    EbPictureBufferDesc* ref_pic_list0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
+    EbPictureBufferDesc* ref_pic_list1 = NULL;
 
     // Use scaled references if resolution of the reference is different from that of the input
     // Only have one ref
@@ -359,7 +359,7 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
         svt_aom_use_scaled_rec_refs_if_needed(
             pcs,
             pcs->ppcs->enhanced_pic,
-            (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr,
+            (EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr,
             &ref_pic_list0,
             ctx->hbd_md);
     }
@@ -442,7 +442,7 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                          ctx->blk_geom->bsize,
                                          bwidth,
                                          bheight,
-                                         ctx->hbd_md ? (uint8_t *)src_buf_hbd : src_buf,
+                                         ctx->hbd_md ? (uint8_t*)src_buf_hbd : src_buf,
                                          src_pic->stride_y,
                                          ii_pred_buf,
                                          bwidth,
@@ -460,8 +460,7 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
         } else {
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
             if (ctx->hbd_md) {
-                rd = svt_aom_highbd_sse(
-                    (uint8_t *)src_buf_hbd, src_pic->stride_y, ii_pred_buf, bwidth, bwidth, bheight);
+                rd = svt_aom_highbd_sse((uint8_t*)src_buf_hbd, src_pic->stride_y, ii_pred_buf, bwidth, bwidth, bheight);
             } else
 #endif
             {
@@ -484,7 +483,7 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
                                                          ctx->blk_geom->bsize,
                                                          ctx->intrapred_buf[best_interintra_mode],
                                                          tmp_buf,
-                                                         ctx->hbd_md ? (uint8_t *)src_buf_hbd : src_buf,
+                                                         ctx->hbd_md ? (uint8_t*)src_buf_hbd : src_buf,
                                                          src_pic->stride_y,
                                                          &cand->block_mi.interintra_wedge_index);
     }
@@ -500,9 +499,9 @@ static void inter_intra_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
 
 static COMPOUND_TYPE to_av1_compound_lut[] = {COMPOUND_AVERAGE, COMPOUND_DISTWTD, COMPOUND_DIFFWTD, COMPOUND_WEDGE};
 
-static void determine_compound_mode(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand,
+static void determine_compound_mode(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand,
                                     MD_COMP_TYPE cur_type) {
-    BlockModeInfo *block_mi        = &cand->block_mi;
+    BlockModeInfo* block_mi        = &cand->block_mi;
     block_mi->interinter_comp.type = to_av1_compound_lut[cur_type];
     switch (cur_type) {
     case MD_COMP_AVG:
@@ -531,10 +530,10 @@ static void determine_compound_mode(PictureControlSet *pcs, ModeDecisionContext 
     }
 }
 
-void svt_aom_choose_best_av1_mv_pred(ModeDecisionContext *ctx, MvReferenceFrame ref_frame,
+void svt_aom_choose_best_av1_mv_pred(ModeDecisionContext* ctx, MvReferenceFrame ref_frame,
                                      PredictionMode mode, // NEW or NEW_NEW
                                      Mv mv0, Mv mv1,
-                                     uint8_t *bestDrlIndex, // output
+                                     uint8_t* bestDrlIndex, // output
                                      Mv       best_pred_mv[2] // output
 ) {
     if (ctx->shut_fast_rate) {
@@ -553,8 +552,8 @@ void svt_aom_choose_best_av1_mv_pred(ModeDecisionContext *ctx, MvReferenceFrame 
 
     uint8_t is_compound = is_inter_compound_mode(mode);
 
-    struct MdRateEstimationContext *md_rate_est_ctx = ctx->md_rate_est_ctx;
-    BlkStruct                      *blk_ptr         = ctx->blk_ptr;
+    struct MdRateEstimationContext* md_rate_est_ctx = ctx->md_rate_est_ctx;
+    BlkStruct*                      blk_ptr         = ctx->blk_ptr;
     uint8_t                         max_drl_index;
     Mv                              nearestmv[2] = {{{0}}, {{0}}};
     Mv                              nearmv[2];
@@ -625,14 +624,14 @@ void svt_aom_choose_best_av1_mv_pred(ModeDecisionContext *ctx, MvReferenceFrame 
 }
 
 static void mode_decision_cand_bf_dctor(EbPtr p) {
-    ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
+    ModeDecisionCandidateBuffer* obj = (ModeDecisionCandidateBuffer*)p;
     EB_DELETE(obj->pred);
     EB_DELETE(obj->rec_coeff);
     EB_DELETE(obj->quant);
 }
 
 static void mode_decision_scratch_cand_bf_dctor(EbPtr p) {
-    ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
+    ModeDecisionCandidateBuffer* obj = (ModeDecisionCandidateBuffer*)p;
     EB_DELETE(obj->pred);
     EB_DELETE(obj->residual);
     EB_DELETE(obj->rec_coeff);
@@ -643,10 +642,10 @@ static void mode_decision_scratch_cand_bf_dctor(EbPtr p) {
 /***************************************
 * Mode Decision Candidate Ctor
 ***************************************/
-EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepth max_bitdepth,
+EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer* buffer_ptr, EbBitDepth max_bitdepth,
                                                uint8_t sb_size, uint32_t buffer_desc_mask,
-                                               EbPictureBufferDesc *temp_residual, EbPictureBufferDesc *temp_recon_ptr,
-                                               uint64_t *fast_cost, uint64_t *full_cost, uint64_t *full_cost_ssim) {
+                                               EbPictureBufferDesc* temp_residual, EbPictureBufferDesc* temp_recon_ptr,
+                                               uint64_t* fast_cost, uint64_t* full_cost, uint64_t* full_cost_ssim) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data;
 
     EbPictureBufferDescInitData thirty_two_width_picture_buffer_desc_init_data;
@@ -697,7 +696,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer *buff
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuffer *buffer_ptr, uint8_t sb_size,
+EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuffer* buffer_ptr, uint8_t sb_size,
                                                        EbBitDepth max_bitdepth) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data;
     EbPictureBufferDescInitData double_width_picture_buffer_desc_init_data;
@@ -756,7 +755,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
 /***************************************
 * return true if the MV candidate is already injected
 ***************************************/
-static bool mv_is_already_injected(ModeDecisionContext *ctx, Mv mv0, Mv mv1, uint8_t ref_type) {
+static bool mv_is_already_injected(ModeDecisionContext* ctx, Mv mv0, Mv mv1, uint8_t ref_type) {
     MvReferenceFrame rf[2];
     av1_set_ref_frame(rf, ref_type);
 
@@ -778,7 +777,7 @@ static bool mv_is_already_injected(ModeDecisionContext *ctx, Mv mv0, Mv mv1, uin
             return true;
         }
 
-        RedundantCandCtrls *redund_ctrls = &ctx->cand_reduction_ctrls.redundant_cand_ctrls;
+        RedundantCandCtrls* redund_ctrls = &ctx->cand_reduction_ctrls.redundant_cand_ctrls;
         if (redund_ctrls->score_th) {
             uint8_t is_high_mag = (ABS(mv0.x) > redund_ctrls->mag_th) && (ABS(mv0.y) > redund_ctrls->mag_th) &&
                 (ABS(mv1.x) > redund_ctrls->mag_th) && (ABS(mv1.y) > redund_ctrls->mag_th);
@@ -806,7 +805,7 @@ static bool mv_is_already_injected(ModeDecisionContext *ctx, Mv mv0, Mv mv1, uin
     return false;
 }
 
-bool svt_aom_is_valid_unipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx,
+bool svt_aom_is_valid_unipred_ref(ModeDecisionContext* ctx, uint8_t inter_cand_group, uint8_t list_idx,
                                   uint8_t ref_idx) {
     if (!ctx->ref_pruning_ctrls.enabled) {
         return true;
@@ -837,7 +836,7 @@ static bool is_valid_mv_diff(Mv best_pred_mv[2], Mv mv0, Mv mv1, uint8_t is_comp
     return true;
 }
 
-static bool is_valid_bipred_ref(ModeDecisionContext *ctx, uint8_t inter_cand_group, uint8_t list_idx_0,
+static bool is_valid_bipred_ref(ModeDecisionContext* ctx, uint8_t inter_cand_group, uint8_t list_idx_0,
                                 uint8_t ref_idx_0, uint8_t list_idx_1, uint8_t ref_idx_1) {
     if (!ctx->ref_pruning_ctrls.enabled) {
         return true;
@@ -873,12 +872,12 @@ static int8_t bipred_3x3_y_pos[BIPRED_3x3_REFINMENT_POSITIONS]      = {0, 1, 1, 
 // enable_ii, enable_wm, and enable_obmc allow the caller to disable some modes explicitly; if enabled, the
 // mode will be injected if the block size/candidate type supports the mode. The enable signals are left as
 // arguments because some candidates do not inject all modes (e.g. unipred does not inject WM/OBMC).
-static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *total_cand_count,
+static void inj_non_simple_modes(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* total_cand_count,
                                  const bool enable_ii, const bool enable_wm, const bool enable_obmc) {
     // index of simple translation candidate (to be used to copy cand info for other modes)
     // assumes the simple trans cand is the previously injected candidate
     const uint32_t                     simple_trans_cand_idx = *total_cand_count - 1;
-    const ModeDecisionCandidate *const simple_trans_cand     = &ctx->fast_cand_array[simple_trans_cand_idx];
+    const ModeDecisionCandidate* const simple_trans_cand     = &ctx->fast_cand_array[simple_trans_cand_idx];
 
     // The candidate count to be used to track number of inj cands, and the index of fast_cand_array for new candidates
     uint32_t cand_count = *total_cand_count;
@@ -894,7 +893,7 @@ static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ct
                                   simple_trans_cand->block_mi.mode,
                                   simple_trans_cand->block_mi.ref_frame);
     if (enable_ii && is_ii_allowed) {
-        ModeDecisionCandidate *cand = &ctx->fast_cand_array[cand_count];
+        ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_count];
         svt_memcpy(cand, simple_trans_cand, sizeof(ModeDecisionCandidate));
 
         inter_intra_search(pcs, ctx, cand);
@@ -923,7 +922,7 @@ static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ct
     const uint8_t is_warp_allowed = warped_motion_mode_allowed(pcs, ctx) &&
         svt_aom_is_valid_unipred_ref(ctx, WARP_GROUP, list_idx, ref_idx);
     if (enable_wm && is_warp_allowed) {
-        ModeDecisionCandidate *cand = &ctx->fast_cand_array[cand_count];
+        ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_count];
         svt_memcpy(cand, simple_trans_cand, sizeof(ModeDecisionCandidate));
 
         cand->block_mi.is_interintra_used = 0;
@@ -963,7 +962,7 @@ static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ct
                                           simple_trans_cand->block_mi.ref_frame[1],
                                           simple_trans_cand->block_mi.mode) == OBMC_CAUSAL);
     if (enable_obmc && is_obmc_allowed) {
-        ModeDecisionCandidate *cand = &ctx->fast_cand_array[cand_count];
+        ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_count];
         svt_memcpy(cand, simple_trans_cand, sizeof(ModeDecisionCandidate));
 
         cand->block_mi.is_interintra_used = 0;
@@ -988,12 +987,12 @@ static void inj_non_simple_modes(PictureControlSet *pcs, ModeDecisionContext *ct
 }
 
 // Determines if inter MVP compound modes should be skipped based on info from neighbouring blocks/ref frame types.
-static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFrame rf[2]) {
+static bool skip_compound_on_ref_types(ModeDecisionContext* ctx, MvReferenceFrame rf[2]) {
     if (!ctx->inter_comp_ctrls.skip_on_ref_info) {
         return false;
     }
 
-    MacroBlockD *xd = ctx->blk_ptr->av1xd;
+    MacroBlockD* xd = ctx->blk_ptr->av1xd;
 
     // If both references are from the same list, skip compound
     const uint8_t list_idx_0 = get_list_idx(rf[0]);
@@ -1009,7 +1008,7 @@ static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFram
     }
 
     if (xd->left_available) {
-        const BlockModeInfo *const left_mi = &xd->left_mbmi->block_mi;
+        const BlockModeInfo* const left_mi = &xd->left_mbmi->block_mi;
         if ((is_inter_singleref_mode(left_mi->mode) &&
              (left_mi->ref_frame[0] == rf[0] || left_mi->ref_frame[0] == rf[1])) ||
             (is_inter_compound_mode(left_mi->mode) &&
@@ -1018,7 +1017,7 @@ static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFram
         }
     }
     if (xd->up_available) {
-        const BlockModeInfo *const above_mi = &xd->above_mbmi->block_mi;
+        const BlockModeInfo* const above_mi = &xd->above_mbmi->block_mi;
         if ((is_inter_singleref_mode(above_mi->mode) &&
              (above_mi->ref_frame[0] == rf[0] || above_mi->ref_frame[0] == rf[1])) ||
             (is_inter_compound_mode(above_mi->mode) &&
@@ -1035,11 +1034,11 @@ static bool skip_compound_on_ref_types(ModeDecisionContext *ctx, MvReferenceFram
 // total_cand_count is the index to ctx->fast_cand_array for the next candidate injected (which is the
 // same as the number of candidates injected so far).  It is assumed the AVG candidate to base
 // the other candidtes on is the previously injected candidate (at index total_cand_count - 1).
-static void inj_comp_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *total_cand_count) {
+static void inj_comp_modes(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* total_cand_count) {
     // index of MD_COMP_AVG candidate (to be used to copy cand info for other modes)
     // assumes the avg cand is the previously injected candidate
     const uint32_t         avg_cand_idx = *total_cand_count - 1;
-    ModeDecisionCandidate *avg_cand     = &ctx->fast_cand_array[avg_cand_idx];
+    ModeDecisionCandidate* avg_cand     = &ctx->fast_cand_array[avg_cand_idx];
 
     // Get allowable compound types based on settings and block size
     MD_COMP_TYPE tot_comp_types = get_tot_comp_types_bsize(ctx->inter_comp_ctrls.tot_comp_types, ctx->blk_geom->bsize);
@@ -1083,7 +1082,7 @@ static void inj_comp_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uin
         if (ctx->inter_comp_ctrls.no_sym_dist && cur_type == MD_COMP_DIST && ref_idx_0 == 0 && ref_idx_1 == 0) {
             continue;
         }
-        ModeDecisionCandidate *cand = &ctx->fast_cand_array[cand_count];
+        ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_count];
         svt_memcpy(cand, &ctx->fast_cand_array[avg_cand_idx], sizeof(ModeDecisionCandidate));
         cand->skip_mode_allowed = false;
         determine_compound_mode(pcs, ctx, cand, cur_type);
@@ -1092,18 +1091,18 @@ static void inj_comp_modes(PictureControlSet *pcs, ModeDecisionContext *ctx, uin
     *total_cand_count = cand_count;
 }
 
-static void unipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                             uint32_t *candidate_total_cnt) {
+static void unipred_3x3_candidates_injection(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                             uint32_t* candidate_total_cnt) {
     uint32_t               cand_total_cnt          = (*candidate_total_cnt);
     const uint8_t          allow_high_precision_mv = pcs->ppcs->frm_hdr.allow_high_precision_mv;
-    MeSbResults           *me_results              = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+    MeSbResults*           me_results              = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
     const uint8_t          total_me_cnt            = me_results->total_me_candidate_index[ctx->me_block_offset];
-    const MeCandidate     *me_block_results        = &me_results->me_candidate_array[ctx->me_cand_offset];
-    ModeDecisionCandidate *cand_array              = ctx->fast_cand_array;
+    const MeCandidate*     me_block_results        = &me_results->me_candidate_array[ctx->me_cand_offset];
+    ModeDecisionCandidate* cand_array              = ctx->fast_cand_array;
 
     // (8 Best_L0 neighbors)
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
-        const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+        const MeCandidate* me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
@@ -1137,7 +1136,7 @@ static void unipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisio
                 svt_aom_choose_best_av1_mv_pred(
                     ctx, to_inject_ref_type, NEWMV, to_inj_mv, (Mv){{0}}, &drl_index, best_pred_mv);
                 if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
-                    ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                     cand->block_mi.use_intrabc        = 0;
                     cand->skip_mode_allowed           = false;
                     cand->block_mi.mode               = NEWMV;
@@ -1173,21 +1172,21 @@ static void unipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisio
     return;
 }
 
-static void bipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                            uint32_t *candidate_total_cnt) {
+static void bipred_3x3_candidates_injection(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                            uint32_t* candidate_total_cnt) {
     uint32_t               cand_total_cnt          = (*candidate_total_cnt);
     const uint8_t          allow_high_precision_mv = pcs->ppcs->frm_hdr.allow_high_precision_mv;
-    const MeSbResults     *me_results              = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+    const MeSbResults*     me_results              = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
     const uint8_t          total_me_cnt            = me_results->total_me_candidate_index[ctx->me_block_offset];
-    const MeCandidate     *me_block_results        = &me_results->me_candidate_array[ctx->me_cand_offset];
-    ModeDecisionCandidate *cand_array              = ctx->fast_cand_array;
+    const MeCandidate*     me_block_results        = &me_results->me_candidate_array[ctx->me_cand_offset];
+    ModeDecisionCandidate* cand_array              = ctx->fast_cand_array;
     Mv                     best_pred_mv[2]         = {{{0}}, {{0}}};
 
     /**************
     NEW_NEWMV
     ************* */
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
-        const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+        const MeCandidate* me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
@@ -1243,7 +1242,7 @@ static void bipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecision
                     svt_aom_choose_best_av1_mv_pred(
                         ctx, to_inject_ref_type, NEW_NEWMV, to_inj_mv0, to_inj_mv1, &drl_index, best_pred_mv);
                     if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                         cand->block_mi.use_intrabc        = 0;
                         cand->skip_mode_allowed           = false;
                         cand->drl_index                   = drl_index;
@@ -1290,7 +1289,7 @@ static void bipred_3x3_candidates_injection(PictureControlSet *pcs, ModeDecision
                     svt_aom_choose_best_av1_mv_pred(
                         ctx, to_inject_ref_type, NEW_NEWMV, to_inj_mv0, to_inj_mv1, &drl_index, best_pred_mv);
                     if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                         cand->block_mi.use_intrabc        = 0;
                         cand->skip_mode_allowed           = false;
                         cand->drl_index                   = drl_index;
@@ -1336,12 +1335,12 @@ UniPred L1 : NEARST         + upto 3x NEAR
 BIPred     : NEARST_NEARST  + upto 3x NEAR_NEAR
 **********************************************************************
 **********************************************************************/
-static void inject_mvp_candidates_ii_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *candTotCnt,
+static void inject_mvp_candidates_ii_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* candTotCnt,
                                                const bool allow_bipred) {
-    FrameHeader           *frm_hdr    = &pcs->ppcs->frm_hdr;
+    FrameHeader*           frm_hdr    = &pcs->ppcs->frm_hdr;
     uint32_t               cand_idx   = *candTotCnt;
-    ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
-    MacroBlockD           *xd         = ctx->blk_ptr->av1xd;
+    ModeDecisionCandidate* cand_array = ctx->fast_cand_array;
+    MacroBlockD*           xd         = ctx->blk_ptr->av1xd;
 
     //all of ref pairs: (1)single-ref List0  (2)single-ref List1  (3)compound Bi-Dir List0-List1
     for (uint32_t ref_it = 0; ref_it < ctx->tot_ref_frame_types; ++ref_it) {
@@ -1354,10 +1353,10 @@ static void inject_mvp_candidates_ii_light_pd1(PictureControlSet *pcs, ModeDecis
             MvReferenceFrame frame_type = rf[0];
             uint8_t          list_idx   = get_list_idx(rf[0]);
             if (ctx->cand_reduction_ctrls.lpd1_mvp_best_me_list) {
-                const MeSbResults *me_results           = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+                const MeSbResults* me_results           = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                 const uint8_t      total_me_cnt         = me_results->total_me_candidate_index[ctx->me_block_offset];
-                const MeCandidate *me_block_results     = &me_results->me_candidate_array[ctx->me_cand_offset];
-                const MeCandidate *me_block_results_ptr = &me_block_results[0];
+                const MeCandidate* me_block_results     = &me_results->me_candidate_array[ctx->me_cand_offset];
+                const MeCandidate* me_block_results_ptr = &me_block_results[0];
                 const uint8_t      inter_direction      = me_block_results_ptr->direction;
                 if (total_me_cnt && list_idx != inter_direction) {
                     continue;
@@ -1367,7 +1366,7 @@ static void inject_mvp_candidates_ii_light_pd1(PictureControlSet *pcs, ModeDecis
             // Don't check if MV is already injected b/c NEAREST is the first INTER MV injected
             Mv to_inj_mv = {.as_int = ctx->ref_mv_stack[frame_type][0].this_mv.as_int};
 
-            ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+            ModeDecisionCandidate* cand       = &cand_array[cand_idx];
             cand->block_mi.mode               = NEARESTMV;
             cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
             cand->skip_mode_allowed           = false;
@@ -1420,7 +1419,7 @@ static void inject_mvp_candidates_ii_light_pd1(PictureControlSet *pcs, ModeDecis
             const bool is_skip_mode = !svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id) &&
                 frm_hdr->skip_mode_params.skip_mode_flag && (rf[0] == frm_hdr->skip_mode_params.ref_frame_idx_0) &&
                 (rf[1] == frm_hdr->skip_mode_params.ref_frame_idx_1);
-            ModeDecisionCandidate *cand         = &cand_array[cand_idx];
+            ModeDecisionCandidate* cand         = &cand_array[cand_idx];
             cand->block_mi.mode                 = NEAREST_NEARESTMV;
             cand->block_mi.motion_mode          = SIMPLE_TRANSLATION;
             cand->skip_mode_allowed             = is_skip_mode;
@@ -1490,13 +1489,13 @@ UniPred L1 : NEARST         + upto 3x NEAR
 BIPred     : NEARST_NEARST  + upto 3x NEAR_NEAR
 **********************************************************************
 **********************************************************************/
-static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *cand_total_cnt,
+static void inject_mvp_candidates_ii(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* cand_total_cnt,
                                      const bool allow_bipred) {
-    BlkStruct             *blk_ptr    = ctx->blk_ptr;
-    FrameHeader           *frm_hdr    = &pcs->ppcs->frm_hdr;
+    BlkStruct*             blk_ptr    = ctx->blk_ptr;
+    FrameHeader*           frm_hdr    = &pcs->ppcs->frm_hdr;
     uint32_t               cand_idx   = *cand_total_cnt;
-    ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
-    MacroBlockD           *xd         = blk_ptr->av1xd;
+    ModeDecisionCandidate* cand_array = ctx->fast_cand_array;
+    MacroBlockD*           xd         = blk_ptr->av1xd;
     Mv                     nearestmv[2], nearmv[2], ref_mv[2];
 
     //all of ref pairs: (1)single-ref List0  (2)single-ref List1  (3)compound Bi-Dir List0-List1  (4)compound Uni-Dir List0-List0  (5)compound Uni-Dir List1-List1
@@ -1518,7 +1517,7 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
             if ((ctx->injected_mv_count == 0 ||
                  mv_is_already_injected(ctx, to_inj_mv, to_inj_mv, frame_type) == false)) {
                 assert(list_idx == 0 || list_idx == 1);
-                ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                 cand->block_mi.mode               = NEARESTMV;
                 cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                 cand->block_mi.use_intrabc        = 0;
@@ -1553,7 +1552,7 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
                 if ((ctx->injected_mv_count == 0 ||
                      mv_is_already_injected(ctx, to_inj_mv, to_inj_mv, frame_type) == false)) {
                     assert(list_idx == 0 || list_idx == 1);
-                    ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                     cand->block_mi.mode               = NEARMV;
                     cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                     cand->block_mi.use_intrabc        = 0;
@@ -1598,7 +1597,7 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
                 const bool is_skip_mode = !svt_av1_is_lossless_segment(pcs, ctx->blk_ptr->segment_id) &&
                     frm_hdr->skip_mode_params.skip_mode_flag && (rf[0] == frm_hdr->skip_mode_params.ref_frame_idx_0) &&
                     (rf[1] == frm_hdr->skip_mode_params.ref_frame_idx_1);
-                ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                 cand->block_mi.mode               = NEAREST_NEARESTMV;
                 cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                 cand->block_mi.is_interintra_used = 0;
@@ -1635,7 +1634,7 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
                 to_inj_mv1.as_int = nearmv[1].as_int;
                 if ((ctx->injected_mv_count == 0 ||
                      mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair) == false)) {
-                    ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                     cand->block_mi.mode               = NEAR_NEARMV;
                     cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                     cand->block_mi.is_interintra_used = 0;
@@ -1665,11 +1664,11 @@ static void inject_mvp_candidates_ii(PictureControlSet *pcs, ModeDecisionContext
     *cand_total_cnt = cand_idx;
 }
 
-static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                                   uint32_t *cand_tot_cnt) {
+static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                                   uint32_t* cand_tot_cnt) {
     uint32_t               cand_idx   = *cand_tot_cnt;
-    ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
-    MacroBlockD           *xd         = ctx->blk_ptr->av1xd;
+    ModeDecisionCandidate* cand_array = ctx->fast_cand_array;
+    MacroBlockD*           xd         = ctx->blk_ptr->av1xd;
     Mv                     nearestmv[2], nearmv[2], ref_mv[2];
 
     //all of ref pairs: (1)single-ref List0  (2)single-ref List1  (3)compound Bi-Dir List0-List1  (4)compound Uni-Dir List0-List0  (5)compound Uni-Dir List1-List1
@@ -1697,7 +1696,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
 
             {
                 //NEAREST_NEWMV
-                const MeSbResults *me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+                const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                 Mv                 to_inj_mv0 = {.as_int = ctx->ref_mv_stack[ref_pair][0].this_mv.as_int};
                 Mv                 to_inj_mv1 = ctx->sb_me_mv[list_idx_1][ref_idx_1];
                 uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
@@ -1716,7 +1715,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                                                 nearmv,
                                                 ref_mv);
 
-                    ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                     cand->block_mi.mode               = NEAREST_NEWMV;
                     cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                     cand->block_mi.is_interintra_used = 0;
@@ -1745,7 +1744,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
 
             {
                 //NEW_NEARESTMV
-                const MeSbResults *me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+                const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                 Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                 Mv                 to_inj_mv1 = {.as_int = ctx->ref_mv_stack[ref_pair][0].comp_mv.as_int};
                 uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
@@ -1763,7 +1762,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                                                 nearmv,
                                                 ref_mv);
 
-                    ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                     cand->block_mi.mode               = NEW_NEARESTMV;
                     cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                     cand->block_mi.is_interintra_used = 0;
@@ -1803,7 +1802,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                         ctx, ctx->blk_ptr, ref_pair, 1, NEW_NEARMV, drli, nearestmv, nearmv, ref_mv);
 
                     //NEW_NEARMV
-                    const MeSbResults *me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+                    const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                     Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                     Mv                 to_inj_mv1 = {.as_int = nearmv[1].as_int};
                     uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
@@ -1811,7 +1810,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                     inj_mv                        = inj_mv &&
                         svt_aom_is_me_data_present(ctx->me_block_offset, ctx->me_cand_offset, me_results, 0, ref_idx_0);
                     if (inj_mv) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                         cand->block_mi.mode               = NEW_NEARMV;
                         cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                         cand->block_mi.is_interintra_used = 0;
@@ -1847,7 +1846,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                         ctx, ctx->blk_ptr, ref_pair, 1, NEAR_NEWMV, drli, nearestmv, nearmv, ref_mv);
 
                     //NEAR_NEWMV
-                    const MeSbResults *me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+                    const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                     Mv                 to_inj_mv0 = {.as_int = nearmv[0].as_int};
                     Mv                 to_inj_mv1 = ctx->sb_me_mv[list_idx_1][ref_idx_1];
                     uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
@@ -1857,7 +1856,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
                                  ctx->me_block_offset, ctx->me_cand_offset, me_results, list_idx_1, ref_idx_1);
 
                     if (inj_mv) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_idx];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_idx];
                         cand->block_mi.mode               = NEAR_NEWMV;
                         cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
                         cand->block_mi.is_interintra_used = 0;
@@ -1891,25 +1890,25 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet *pcs, ModeD
 }
 
 // Refine the WM MV (8 bit search).  Return true if search found a valid MV; false otherwise
-uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand,
+uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand,
                                      const bool shut_approx) {
-    PictureParentControlSet *ppcs         = pcs->ppcs;
+    PictureParentControlSet* ppcs         = pcs->ppcs;
     const Mv                 neighbors[9] = {
         {{0, 0}}, {{-1, 0}}, {{0, 1}}, {{1, 0}}, {{0, -1}}, {{1, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}};
 
     // Set info used to get MV cost
-    int        *mvjcost       = ctx->md_rate_est_ctx->nmv_vec_cost;
-    const int **mvcost        = ctx->md_rate_est_ctx->nmvcoststack;
+    int*        mvjcost       = ctx->md_rate_est_ctx->nmv_vec_cost;
+    const int** mvcost        = ctx->md_rate_est_ctx->nmvcoststack;
     uint32_t    full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
     int         error_per_bit = full_lambda >> RD_EPB_SHIFT;
     error_per_bit += (error_per_bit == 0);
     uint32_t             blk_origin_index   = ctx->blk_geom->org_x + ctx->blk_geom->org_y * ctx->sb_size;
-    EbPictureBufferDesc *input_pic          = ppcs->enhanced_pic; // 10BIT not supported
+    EbPictureBufferDesc* input_pic          = ppcs->enhanced_pic; // 10BIT not supported
     uint32_t             input_origin_index = (ctx->blk_org_y + input_pic->org_y) * input_pic->stride_y +
         (ctx->blk_org_x + input_pic->org_x);
-    const AomVarianceFnPtr *fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
+    const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
     unsigned int            sse;
-    uint8_t                *src_y = input_pic->buffer_y + input_origin_index;
+    uint8_t*                src_y = input_pic->buffer_y + input_origin_index;
 
     int mv_prec_shift = ppcs->frm_hdr.allow_high_precision_mv ? 0 : 1;
     int best_cost     = INT_MAX;
@@ -1958,8 +1957,8 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
                 continue;
             }
             assert(cand->block_mi.ref_frame[1] == NONE_FRAME);
-            EbPictureBufferDesc *ref_pic_0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
-            EbPictureBufferDesc *ref_pic_1 = NULL; // will stay NULL b/c this is unipred candidate
+            EbPictureBufferDesc* ref_pic_0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
+            EbPictureBufferDesc* ref_pic_1 = NULL; // will stay NULL b/c this is unipred candidate
 
             // update MV to be testing MV before calling prediction function
             cand->block_mi.mv[0].as_int = test_mv.as_int;
@@ -2032,7 +2031,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet *pcs, ModeDecisionContext
     return 0;
 }
 
-static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, int width, int height, int stride,
+static INLINE void setup_pred_plane(Buf2D* dst, BlockSize bsize, uint8_t* src, int width, int height, int stride,
                                     int mi_row, int mi_col, int subsampling_x, int subsampling_y) {
     // Offset the buffer pointer
     if (subsampling_y && (mi_row & 0x01) && (mi_size_high[bsize] == 1)) {
@@ -2051,7 +2050,7 @@ static INLINE void setup_pred_plane(Buf2D *dst, BlockSize bsize, uint8_t *src, i
     dst->stride = stride;
 }
 
-void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig *src, int mi_row,
+void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig* src, int mi_row,
                               int mi_col) {
     dst[0].buf    = src->y_buffer;
     dst[0].stride = src->y_stride;
@@ -2071,7 +2070,7 @@ int svt_aom_get_sad_per_bit(int qidx, EbBitDepth is_hbd) {
     return is_hbd ? sad_per_bit_lut_10[qidx] : sad_per_bit_lut_8[qidx];
 }
 
-static void init_me_luts_bd(int *bit16lut, int range, EbBitDepth bit_depth) {
+static void init_me_luts_bd(int* bit16lut, int range, EbBitDepth bit_depth) {
     int i;
     // Initialize the sad lut tables using a formulaic calculation for now.
     // This is to make it easier to resolve the impact of experimental changes
@@ -2088,8 +2087,8 @@ void svt_av1_init_me_luts(void) {
 }
 
 #if CONFIG_ENABLE_OBMC
-static void single_motion_search(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand,
-                                 Mv best_pred_mv, IntraBcContext *x, BlockSize bsize, Mv *ref_mv, int *rate_mv,
+static void single_motion_search(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand,
+                                 Mv best_pred_mv, IntraBcContext* x, BlockSize bsize, Mv* ref_mv, int* rate_mv,
                                  int refine_level) {
     bool do_full_refine = 0;
     bool do_frac_refine = 0;
@@ -2108,8 +2107,8 @@ static void single_motion_search(PictureControlSet *pcs, ModeDecisionContext *ct
     default:
         break;
     }
-    const Av1Common *const cm      = pcs->ppcs->av1_cm;
-    FrameHeader           *frm_hdr = &pcs->ppcs->frm_hdr;
+    const Av1Common* const cm      = pcs->ppcs->av1_cm;
+    FrameHeader*           frm_hdr = &pcs->ppcs->frm_hdr;
     // single_motion_search supports 8bit path only
     uint32_t full_lambda = ctx->full_lambda_md[EB_8_BIT_MD];
 
@@ -2202,7 +2201,7 @@ static void single_motion_search(PictureControlSet *pcs, ModeDecisionContext *ct
 }
 
 // Refine the OBMC MV (8 bit search). Return true if search found a valid MV; false otherwise
-uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidate *cand,
+uint8_t svt_aom_obmc_motion_refinement(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand,
                                        int refine_level) {
     if (block_size_wide[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine ||
         block_size_high[ctx->blk_geom->bsize] > ctx->obmc_ctrls.max_blk_size_to_refine) {
@@ -2215,9 +2214,9 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionConte
 
         DECLARE_ALIGNED(16, uint8_t, dst_buf1_8b[4 * MAX_MB_PLANE * MAX_SB_SQUARE]);
 
-        uint8_t *dst_buf2_8b = dst_buf1_8b + 2 * MAX_MB_PLANE * MAX_SB_SQUARE;
+        uint8_t* dst_buf2_8b = dst_buf1_8b + 2 * MAX_MB_PLANE * MAX_SB_SQUARE;
         if (ctx->obmc_is_luma_neigh_10bit) {
-            svt_aom_un_pack2d((uint16_t *)ctx->obmc_buff_0,
+            svt_aom_un_pack2d((uint16_t*)ctx->obmc_buff_0,
                               ctx->blk_geom->bwidth,
                               dst_buf1_8b,
                               ctx->blk_geom->bwidth,
@@ -2226,7 +2225,7 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionConte
                               ctx->blk_geom->bwidth,
                               ctx->blk_geom->bheight);
 
-            svt_aom_un_pack2d((uint16_t *)ctx->obmc_buff_1,
+            svt_aom_un_pack2d((uint16_t*)ctx->obmc_buff_1,
                               ctx->blk_geom->bwidth,
                               dst_buf2_8b,
                               ctx->blk_geom->bwidth,
@@ -2251,9 +2250,9 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionConte
     }
     Mv              best_pred_mv[2] = {{{0}}, {{0}}};
     IntraBcContext  x_st;
-    IntraBcContext *x = &x_st;
+    IntraBcContext* x = &x_st;
 
-    MacroBlockD *xd;
+    MacroBlockD* xd;
     xd = x->xd       = ctx->blk_ptr->av1xd;
     const int mi_row = -xd->mb_to_top_edge / (8 * MI_SIZE);
     const int mi_col = -xd->mb_to_left_edge / (8 * MI_SIZE);
@@ -2264,15 +2263,14 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionConte
         uint8_t list_idx = get_list_idx(cand->block_mi.ref_frame[0]);
 
         assert(list_idx < MAX_NUM_OF_REF_PIC_LIST);
-        EbPictureBufferDesc *reference_picture =
-            ((EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr)->reference_picture;
+        EbPictureBufferDesc* reference_picture =
+            ((EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr)->reference_picture;
 
-        svt_aom_use_scaled_rec_refs_if_needed(
-            pcs,
-            pcs->ppcs->enhanced_pic,
-            (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr,
-            &reference_picture,
-            EB_8_BIT_MD);
+        svt_aom_use_scaled_rec_refs_if_needed(pcs,
+                                              pcs->ppcs->enhanced_pic,
+                                              (EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr,
+                                              &reference_picture,
+                                              EB_8_BIT_MD);
         Yv12BufferConfig ref_buf;
         svt_aom_link_eb_to_aom_buffer_desc_8bit(reference_picture, &ref_buf);
 
@@ -2313,21 +2311,21 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet *pcs, ModeDecisionConte
 /*
    inject ME candidates for Light PD0
 */
-static void inject_new_candidates_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                            uint32_t *candidate_total_cnt, const bool allow_bipred) {
+static void inject_new_candidates_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                            uint32_t* candidate_total_cnt, const bool allow_bipred) {
     const uint32_t         me_sb_addr       = ctx->me_sb_addr;
     const uint32_t         me_block_offset  = ctx->me_block_offset;
-    ModeDecisionCandidate *cand_array       = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array       = ctx->fast_cand_array;
     uint32_t               cand_total_cnt   = (*candidate_total_cnt);
-    const MeSbResults     *me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
+    const MeSbResults*     me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
     const uint8_t          total_me_cnt     = me_results->total_me_candidate_index[me_block_offset];
-    const MeCandidate     *me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
+    const MeCandidate*     me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
 
     const uint8_t max_refs = pcs->ppcs->pa_me_data->max_refs;
     const uint8_t max_l0   = pcs->ppcs->pa_me_data->max_l0;
 
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
-        const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+        const MeCandidate* me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
@@ -2348,7 +2346,7 @@ static void inject_new_candidates_light_pd0(PictureControlSet *pcs, ModeDecision
                 (me_results->me_mv_array[me_block_offset * max_refs + (inter_direction ? max_l0 : 0) + ref_idx].y) << 3;
             const uint8_t to_inject_ref_type = svt_get_ref_frame_type(list_idx, ref_idx);
 
-            ModeDecisionCandidate *cand = &cand_array[cand_total_cnt];
+            ModeDecisionCandidate* cand = &cand_array[cand_total_cnt];
             cand->block_mi.mode         = NEWMV;
             cand->block_mi.mv[0]        = (Mv){{to_inject_mv_x, to_inject_mv_y}};
             cand->block_mi.ref_frame[0] = to_inject_ref_type;
@@ -2375,7 +2373,7 @@ static void inject_new_candidates_light_pd0(PictureControlSet *pcs, ModeDecision
                                       svt_get_ref_frame_type(me_block_results_ptr->ref1_list, list1_ref_index)};
 
             // Inject AVG candidate only
-            ModeDecisionCandidate *cand   = &cand_array[cand_total_cnt];
+            ModeDecisionCandidate* cand   = &cand_array[cand_total_cnt];
             cand->block_mi.mv[REF_LIST_0] = (Mv){{to_inject_mv_x_l0, to_inject_mv_y_l0}};
             cand->block_mi.mv[REF_LIST_1] = (Mv){{to_inject_mv_x_l1, to_inject_mv_y_l1}};
             cand->block_mi.mode           = NEW_NEWMV;
@@ -2392,19 +2390,19 @@ static void inject_new_candidates_light_pd0(PictureControlSet *pcs, ModeDecision
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_new_candidates_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                            uint32_t *candidate_total_cnt, const bool allow_bipred) {
+static void inject_new_candidates_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                            uint32_t* candidate_total_cnt, const bool allow_bipred) {
     const uint32_t         me_sb_addr       = ctx->me_sb_addr;
     const uint32_t         me_block_offset  = ctx->me_block_offset;
-    ModeDecisionCandidate *cand_array       = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array       = ctx->fast_cand_array;
     Mv                     best_pred_mv[2]  = {{{0}}, {{0}}};
     uint32_t               cand_total_cnt   = (*candidate_total_cnt);
-    const MeSbResults     *me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
+    const MeSbResults*     me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
     const uint8_t          total_me_cnt     = me_results->total_me_candidate_index[me_block_offset];
-    const MeCandidate     *me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
+    const MeCandidate*     me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
 
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
-        const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+        const MeCandidate* me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
@@ -2433,7 +2431,7 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, ModeDecision
                 svt_aom_choose_best_av1_mv_pred(
                     ctx, to_inject_ref_type, NEWMV, to_inj_mv, (Mv){{0}}, &drl_index, best_pred_mv);
                 if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
-                    ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                     cand->block_mi.use_intrabc        = 0;
                     cand->block_mi.is_interintra_used = 0;
                     cand->skip_mode_allowed           = false;
@@ -2468,7 +2466,7 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, ModeDecision
                 svt_aom_choose_best_av1_mv_pred(
                     ctx, to_inject_ref_type, NEW_NEWMV, to_inj_mv0, to_inj_mv1, &drl_index, best_pred_mv);
                 if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
-                    ModeDecisionCandidate *cand         = &cand_array[cand_total_cnt];
+                    ModeDecisionCandidate* cand         = &cand_array[cand_total_cnt];
                     cand->block_mi.use_intrabc          = 0;
                     cand->block_mi.is_interintra_used   = 0;
                     cand->skip_mode_allowed             = false;
@@ -2499,19 +2497,19 @@ static void inject_new_candidates_light_pd1(PictureControlSet *pcs, ModeDecision
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_new_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *candidate_total_cnt,
+static void inject_new_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* candidate_total_cnt,
                                   const bool allow_bipred) {
     const uint32_t         me_sb_addr       = ctx->me_sb_addr;
     const uint32_t         me_block_offset  = ctx->me_block_offset;
-    ModeDecisionCandidate *cand_array       = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array       = ctx->fast_cand_array;
     Mv                     best_pred_mv[2]  = {{{0}}, {{0}}};
     uint32_t               cand_total_cnt   = (*candidate_total_cnt);
-    const MeSbResults     *me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
+    const MeSbResults*     me_results       = pcs->ppcs->pa_me_data->me_results[me_sb_addr];
     const uint8_t          total_me_cnt     = me_results->total_me_candidate_index[me_block_offset];
-    const MeCandidate     *me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
+    const MeCandidate*     me_block_results = &me_results->me_candidate_array[ctx->me_cand_offset];
 
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
-        const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+        const MeCandidate* me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
@@ -2539,7 +2537,7 @@ static void inject_new_candidates(PictureControlSet *pcs, ModeDecisionContext *c
                 svt_aom_choose_best_av1_mv_pred(
                     ctx, to_inject_ref_type, NEWMV, to_inj_mv, (Mv){{0}}, &drl_index, best_pred_mv);
                 if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
-                    ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                     cand->block_mi.use_intrabc        = 0;
                     cand->skip_mode_allowed           = false;
                     cand->block_mi.mode               = NEWMV;
@@ -2590,7 +2588,7 @@ static void inject_new_candidates(PictureControlSet *pcs, ModeDecisionContext *c
                 if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
                     MvReferenceFrame rf[2] = {svt_get_ref_frame_type(me_block_results_ptr->ref0_list, list0_ref_index),
                                               svt_get_ref_frame_type(me_block_results_ptr->ref1_list, list1_ref_index)};
-                    ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                    ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                     cand->block_mi.use_intrabc        = 0;
                     cand->skip_mode_allowed           = false;
                     cand->drl_index                   = drl_index;
@@ -2623,9 +2621,9 @@ static void inject_new_candidates(PictureControlSet *pcs, ModeDecisionContext *c
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *candidate_total_cnt,
+static void inject_global_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* candidate_total_cnt,
                                      const bool allow_bipred) {
-    ModeDecisionCandidate *cand_array     = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array     = ctx->fast_cand_array;
     uint32_t               cand_total_cnt = (*candidate_total_cnt);
     uint32_t               mi_row         = ctx->blk_org_y >> MI_SIZE_LOG2;
     uint32_t               mi_col         = ctx->blk_org_x >> MI_SIZE_LOG2;
@@ -2645,7 +2643,7 @@ static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext
                 continue;
             }
             // Get gm params
-            WarpedMotionParams *gm_params = &pcs->ppcs->global_motion[frame_type];
+            WarpedMotionParams* gm_params = &pcs->ppcs->global_motion[frame_type];
             if (pcs->ppcs->gm_ctrls.skip_identity && gm_params->wmtype == IDENTITY) {
                 continue;
             }
@@ -2657,7 +2655,7 @@ static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext
                                                             0 /* force_integer_mv */);
 
             assert(list_idx == 0 || list_idx == 1);
-            ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+            ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
             cand->block_mi.mode               = GLOBALMV;
             cand->block_mi.motion_mode        = SIMPLE_TRANSLATION;
             cand->block_mi.is_interintra_used = 0;
@@ -2689,9 +2687,9 @@ static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext
                 return;
             }
             // Get gm params
-            WarpedMotionParams *gm_params_0 = &pcs->ppcs->global_motion[svt_get_ref_frame_type(list_idx_0, ref_idx_0)];
+            WarpedMotionParams* gm_params_0 = &pcs->ppcs->global_motion[svt_get_ref_frame_type(list_idx_0, ref_idx_0)];
 
-            WarpedMotionParams *gm_params_1 = &pcs->ppcs->global_motion[svt_get_ref_frame_type(list_idx_1, ref_idx_1)];
+            WarpedMotionParams* gm_params_1 = &pcs->ppcs->global_motion[svt_get_ref_frame_type(list_idx_1, ref_idx_1)];
 
             if (pcs->ppcs->gm_ctrls.skip_identity &&
                 (gm_params_0->wmtype == IDENTITY || gm_params_1->wmtype == IDENTITY)) {
@@ -2712,7 +2710,7 @@ static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext
                                                              0 /* force_integer_mv */);
             uint8_t to_inject_ref_type = av1_ref_frame_type(rf);
 
-            ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+            ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
             cand->block_mi.use_intrabc        = 0;
             cand->skip_mode_allowed           = false;
             cand->block_mi.mode               = GLOBAL_GLOBALMV;
@@ -2743,9 +2741,9 @@ static void inject_global_candidates(PictureControlSet *pcs, ModeDecisionContext
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_pme_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx, uint32_t *candidate_total_cnt,
+static void inject_pme_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t* candidate_total_cnt,
                                   const bool allow_bipred) {
-    ModeDecisionCandidate *cand_array      = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array      = ctx->fast_cand_array;
     Mv                     best_pred_mv[2] = {{{0}}, {{0}}};
     uint32_t               cand_total_cnt  = (*candidate_total_cnt);
     for (uint32_t ref_it = 0; ref_it < ctx->tot_ref_frame_types; ++ref_it) {
@@ -2767,7 +2765,7 @@ static void inject_pme_candidates(PictureControlSet *pcs, ModeDecisionContext *c
                     svt_aom_choose_best_av1_mv_pred(
                         ctx, frame_type, NEWMV, to_inj_mv, (Mv){{0}}, &drl_index, best_pred_mv);
                     if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv, to_inj_mv, 0)) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                         cand->block_mi.use_intrabc        = 0;
                         cand->skip_mode_allowed           = false;
                         cand->block_mi.mode               = NEWMV;
@@ -2810,7 +2808,7 @@ static void inject_pme_candidates(PictureControlSet *pcs, ModeDecisionContext *c
                     svt_aom_choose_best_av1_mv_pred(
                         ctx, to_inject_ref_type, NEW_NEWMV, to_inj_mv0, to_inj_mv1, &drl_index, best_pred_mv);
                     if (!ctx->corrupted_mv_check || is_valid_mv_diff(best_pred_mv, to_inj_mv0, to_inj_mv1, 1)) {
-                        ModeDecisionCandidate *cand       = &cand_array[cand_total_cnt];
+                        ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
                         cand->block_mi.use_intrabc        = 0;
                         cand->skip_mode_allowed           = false;
                         cand->drl_index                   = drl_index;
@@ -2843,9 +2841,9 @@ static void inject_pme_candidates(PictureControlSet *pcs, ModeDecisionContext *c
     (*candidate_total_cnt) = cand_total_cnt;
 }
 
-static void inject_inter_candidates_light_pd0(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                              uint32_t *candidate_total_cnt) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+static void inject_inter_candidates_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                              uint32_t* candidate_total_cnt) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     // Bipred prediction is only allowed when both dimensions are > 4 and the frame-header reference mode allows it.
     // See AV1 spec 5.11.25
     const bool allow_bipred = (frm_hdr->reference_mode == SINGLE_REFERENCE || ctx->blk_geom->bwidth == 4 ||
@@ -2856,9 +2854,9 @@ static void inject_inter_candidates_light_pd0(PictureControlSet *pcs, ModeDecisi
     inject_new_candidates_light_pd0(pcs, ctx, candidate_total_cnt, allow_bipred);
 }
 
-static void inject_inter_candidates_light_pd1(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                              uint32_t *cand_total_cnt) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+static void inject_inter_candidates_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                              uint32_t* cand_total_cnt) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     // Bipred prediction is only allowed when both dimensions are > 4 and the frame-header reference mode allows it.
     // See AV1 spec 5.11.25
     const bool allow_bipred = (frm_hdr->reference_mode == SINGLE_REFERENCE || ctx->blk_geom->bwidth == 4 ||
@@ -2887,9 +2885,9 @@ static void inject_inter_candidates_light_pd1(PictureControlSet *pcs, ModeDecisi
     }
 }
 
-static void svt_aom_inject_inter_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                            uint32_t *cand_total_cnt) {
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+static void svt_aom_inject_inter_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                            uint32_t* cand_total_cnt) {
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     // Bipred prediction is only allowed when both dimensions are > 4 and the frame-header reference mode allows it.
     // See AV1 spec 5.11.25
     const bool allow_bipred = (frm_hdr->reference_mode == SINGLE_REFERENCE || ctx->blk_geom->bwidth == 4 ||
@@ -2964,7 +2962,7 @@ TxType svt_aom_get_intra_uv_tx_type(UvPredictionMode pred_mode_uv, TxSize tx_siz
 double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
 
 // Values are now correlated to quantizer.
-static INLINE int mv_check_bounds(const MvLimits *mv_limits, const Mv *mv) {
+static INLINE int mv_check_bounds(const MvLimits* mv_limits, const Mv* mv) {
     return (mv->y >> 3) < mv_limits->row_min || (mv->y >> 3) > mv_limits->row_max ||
         (mv->x >> 3) < mv_limits->col_min || (mv->x >> 3) > mv_limits->col_max;
 }
@@ -2975,10 +2973,10 @@ static void assert_release(int statement) {
     }
 }
 
-static void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *ctx, const SequenceControlSet *scs,
-                            BlkStruct *blk_ptr, Mv *dv_cand, uint8_t *num_dv_cand) {
+static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, const SequenceControlSet* scs,
+                            BlkStruct* blk_ptr, Mv* dv_cand, uint8_t* num_dv_cand) {
     IntraBcContext  x_st;
-    IntraBcContext *x           = &x_st;
+    IntraBcContext* x           = &x_st;
     uint32_t        full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
     //fill x with what needed.
     x->is_exhaustive_allowed = ctx->blk_geom->bwidth == 4 || ctx->blk_geom->bheight == 4 ? 1 : 0;
@@ -2989,12 +2987,12 @@ static void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *ctx, co
     x->mv_cost_stack     = ctx->md_rate_est_ctx->nmvcoststack;
     BlockSize bsize      = ctx->blk_geom->bsize;
     assert(bsize < BlockSizeS_ALL);
-    FrameHeader           *frm_hdr    = &pcs->ppcs->frm_hdr;
-    const Av1Common *const cm         = pcs->ppcs->av1_cm;
+    FrameHeader*           frm_hdr    = &pcs->ppcs->frm_hdr;
+    const Av1Common* const cm         = pcs->ppcs->av1_cm;
     MvReferenceFrame       ref_frame  = INTRA_FRAME;
     const int              num_planes = 3;
-    MacroBlockD           *xd         = blk_ptr->av1xd;
-    const TileInfo        *tile       = &xd->tile;
+    MacroBlockD*           xd         = blk_ptr->av1xd;
+    const TileInfo*        tile       = &xd->tile;
     const int              mi_row     = -xd->mb_to_top_edge / (8 * MI_SIZE);
     const int              mi_col     = -xd->mb_to_left_edge / (8 * MI_SIZE);
     const int              w          = block_size_wide[bsize];
@@ -3126,18 +3124,18 @@ static void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *ctx, co
     }
 }
 
-static void inject_intra_bc_candidates(PictureControlSet *pcs, ModeDecisionContext *ctx, const SequenceControlSet *scs,
-                                       BlkStruct *blk_ptr, uint32_t *cand_cnt) {
+static void inject_intra_bc_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx, const SequenceControlSet* scs,
+                                       BlkStruct* blk_ptr, uint32_t* cand_cnt) {
     Mv      dv_cand[2];
     uint8_t num_dv_cand = 0;
 
     //perform dv-pred + search up to 2 dv(s)
     intra_bc_search(pcs, ctx, scs, blk_ptr, dv_cand, &num_dv_cand);
 
-    ModeDecisionCandidate *cand_array = ctx->fast_cand_array;
+    ModeDecisionCandidate* cand_array = ctx->fast_cand_array;
 
     for (uint32_t dv_i = 0; dv_i < num_dv_cand; dv_i++) {
-        ModeDecisionCandidate *cand               = &cand_array[*cand_cnt];
+        ModeDecisionCandidate* cand               = &cand_array[*cand_cnt];
         cand->palette_info                        = NULL;
         cand->block_mi.use_intrabc                = 1;
         cand->block_mi.angle_delta[PLANE_TYPE_Y]  = 0;

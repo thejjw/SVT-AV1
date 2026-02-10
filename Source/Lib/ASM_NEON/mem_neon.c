@@ -13,20 +13,20 @@
 
 #include "common_dsp_rtcd.h"
 
-static inline void copy_4xh(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height) {
+static inline void copy_4xh(uint8_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t height) {
     assert(height % 2 == 0);
     height >>= 1;
 
     do {
-        *(uint32_t *)dst                = *(uint32_t *)src;
-        *(uint32_t *)(dst + dst_stride) = *(uint32_t *)(src + src_stride);
+        *(uint32_t*)dst                = *(uint32_t*)src;
+        *(uint32_t*)(dst + dst_stride) = *(uint32_t*)(src + src_stride);
 
         src += 2 * src_stride;
         dst += 2 * dst_stride;
     } while (--height != 0);
 }
 
-static inline void copy_8xh(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height) {
+static inline void copy_8xh(uint8_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t height) {
     assert(height % 2 == 0);
     height >>= 1;
 
@@ -39,7 +39,7 @@ static inline void copy_8xh(uint8_t *src, uint32_t src_stride, uint8_t *dst, uin
     } while (--height != 0);
 }
 
-static inline void copy_16xh(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height) {
+static inline void copy_16xh(uint8_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t height) {
     assert(height % 2 == 0);
     height >>= 1;
 
@@ -52,7 +52,7 @@ static inline void copy_16xh(uint8_t *src, uint32_t src_stride, uint8_t *dst, ui
     } while (--height != 0);
 }
 
-static inline void copy_16Xxh(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height,
+static inline void copy_16Xxh(uint8_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t height,
                               uint32_t width) {
     assert(width % 16 == 0);
 
@@ -66,7 +66,7 @@ static inline void copy_16Xxh(uint8_t *src, uint32_t src_stride, uint8_t *dst, u
     } while (--height != 0);
 }
 
-void svt_av1_copy_wxh_8bit_neon(uint8_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride, uint32_t height,
+void svt_av1_copy_wxh_8bit_neon(uint8_t* src, uint32_t src_stride, uint8_t* dst, uint32_t dst_stride, uint32_t height,
                                 uint32_t width) {
     switch (width) {
     case 4:
@@ -91,11 +91,11 @@ void svt_av1_copy_wxh_8bit_neon(uint8_t *src, uint32_t src_stride, uint8_t *dst,
     }
 }
 
-void svt_av1_copy_wxh_16bit_neon(uint16_t *src, uint32_t src_stride, uint16_t *dst, uint32_t dst_stride,
+void svt_av1_copy_wxh_16bit_neon(uint16_t* src, uint32_t src_stride, uint16_t* dst, uint32_t dst_stride,
                                  uint32_t height, uint32_t width) {
     // 2x pixel size, so all byte functions are 2x too
-    uint8_t *src8        = (uint8_t *)src;
-    uint8_t *dst8        = (uint8_t *)dst;
+    uint8_t* src8        = (uint8_t*)src;
+    uint8_t* dst8        = (uint8_t*)dst;
     uint32_t src_stride8 = src_stride * 2;
     uint32_t dst_stride8 = dst_stride * 2;
     uint32_t width8      = width * 2;
@@ -121,9 +121,9 @@ void svt_av1_copy_wxh_16bit_neon(uint16_t *src, uint32_t src_stride, uint16_t *d
     }
 }
 
-void svt_memcpy_neon(void *dst_ptr, void const *src_ptr, size_t size) {
-    const uint8_t *src = src_ptr;
-    uint8_t       *dst = dst_ptr;
+void svt_memcpy_neon(void* dst_ptr, void const* src_ptr, size_t size) {
+    const uint8_t* src = src_ptr;
+    uint8_t*       dst = dst_ptr;
     size_t         i   = 0;
 
     while (i + 32 <= size) {
@@ -147,8 +147,8 @@ void svt_memcpy_neon(void *dst_ptr, void const *src_ptr, size_t size) {
     }
 }
 
-void svt_memset_neon(void *dst_ptr, int c, size_t size) {
-    uint8_t *dst = dst_ptr;
+void svt_memset_neon(void* dst_ptr, int c, size_t size) {
+    uint8_t* dst = dst_ptr;
     size_t   i   = 0;
 
     uint8x16_t vec = vdupq_n_u8(c);

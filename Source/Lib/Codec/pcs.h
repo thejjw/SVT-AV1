@@ -50,9 +50,9 @@ enum {
 #define AOM_QM_BITS 5
 
 typedef struct EbDownScaledBufDescPtrArray {
-    EbPictureBufferDesc *picture_ptr;
-    EbPictureBufferDesc *quarter_picture_ptr;
-    EbPictureBufferDesc *sixteenth_picture_ptr;
+    EbPictureBufferDesc* picture_ptr;
+    EbPictureBufferDesc* quarter_picture_ptr;
+    EbPictureBufferDesc* sixteenth_picture_ptr;
     uint64_t             picture_number;
 } EbDownScaledBufDescPtrArray;
 
@@ -61,13 +61,13 @@ typedef struct MacroblockPlane {
     // These are used/accessed only in the quantization process
     // RDO does not / must not depend on any of these values
     // All values below share the coefficient scale/shift used in TX
-    const int16_t *quant_fp_qtx;
-    const int16_t *round_fp_qtx;
-    const int16_t *quant_qtx;
-    const int16_t *quant_shift_qtx;
-    const int16_t *zbin_qtx;
-    const int16_t *round_qtx;
-    const int16_t *dequant_qtx;
+    const int16_t* quant_fp_qtx;
+    const int16_t* round_fp_qtx;
+    const int16_t* quant_qtx;
+    const int16_t* quant_shift_qtx;
+    const int16_t* zbin_qtx;
+    const int16_t* round_qtx;
+    const int16_t* dequant_qtx;
 } MacroblockPlane;
 
 // The Quants structure is used only for internal quantizer setup in
@@ -144,12 +144,12 @@ typedef struct SpeedFeatures {
 
 typedef struct EncDecSet {
     EbDctor                         dctor;
-    EbPictureBufferDesc            *recon_pic;
-    EbPictureBufferDesc            *recon_pic_16bit;
-    EbPictureBufferDesc           **quantized_coeff;
-    EbObjectWrapper                *enc_dec_wrapper;
-    struct PictureParentControlSet *ppcs; // The parent of this PCS.
-    EbObjectWrapper                *ppcs_wrapper;
+    EbPictureBufferDesc*            recon_pic;
+    EbPictureBufferDesc*            recon_pic_16bit;
+    EbPictureBufferDesc**           quantized_coeff;
+    EbObjectWrapper*                enc_dec_wrapper;
+    struct PictureParentControlSet* ppcs; // The parent of this PCS.
+    EbObjectWrapper*                ppcs_wrapper;
     uint16_t                        b64_total_count;
     uint16_t                        init_b64_total_count;
 } EncDecSet;
@@ -162,18 +162,18 @@ typedef struct CdefDirData {
 typedef struct PictureControlSet {
     /*!< Pointer to the dtor of the struct*/
     EbDctor                    dctor;
-    struct SequenceControlSet *scs;
-    EbPictureBufferDesc       *input_frame16bit;
+    struct SequenceControlSet* scs;
+    EbPictureBufferDesc*       input_frame16bit;
 
-    struct PictureParentControlSet *ppcs; // The parent of this PCS.
-    EbObjectWrapper                *ppcs_wrapper;
+    struct PictureParentControlSet* ppcs; // The parent of this PCS.
+    EbObjectWrapper*                ppcs_wrapper;
     // Packetization (used to encode SPS, PPS, etc)
-    Bitstream *bitstream_ptr;
+    Bitstream* bitstream_ptr;
 
-    EbObjectWrapper *c_pcs_wrapper_ptr;
+    EbObjectWrapper* c_pcs_wrapper_ptr;
 
     // Reference Lists
-    EbObjectWrapper *ref_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    EbObjectWrapper* ref_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // EB_S64 refPicPocArray[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 
     uint8_t   ref_pic_qp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
@@ -183,11 +183,11 @@ typedef struct PictureControlSet {
     uint64_t         picture_number;
     uint8_t          temporal_layer_index;
     EbColorFormat    color_format;
-    EncDecSegments **enc_dec_segment_ctrl;
+    EncDecSegments** enc_dec_segment_ctrl;
     uint16_t         enc_dec_coded_sb_count;
 
     // Entropy Process Rows
-    EntropyTileInfo **ec_info;
+    EntropyTileInfo** ec_info;
     EbHandle          entropy_coding_pic_mutex;
     bool              entropy_coding_pic_reset_flag;
     uint8_t           tile_size_bytes_minus_1;
@@ -204,8 +204,8 @@ typedef struct PictureControlSet {
     uint8_t  cdef_segments_row_count;
 
     uint64_t (*mse_seg[2])[TOTAL_STRENGTHS];
-    uint8_t     *skip_cdef_seg;
-    CdefDirData *cdef_dir_data;
+    uint8_t*     skip_cdef_seg;
+    CdefDirData* cdef_dir_data;
     EbByte       cdef_input_recon[3]; // DLF'd recon
     EbByte       cdef_input_source[3]; // Input video
     uint32_t     tot_seg_searched_rest;
@@ -227,68 +227,68 @@ typedef struct PictureControlSet {
     uint16_t frame_width;
     uint16_t frame_height;
 
-    SuperBlock **sb_ptr_array;
-    uint8_t     *sb_intra;
-    uint8_t     *sb_skip;
-    uint8_t     *sb_64x64_mvp;
-    uint8_t     *sb_min_sq_size;
-    uint8_t     *sb_max_sq_size;
+    SuperBlock** sb_ptr_array;
+    uint8_t*     sb_intra;
+    uint8_t*     sb_skip;
+    uint8_t*     sb_64x64_mvp;
+    uint8_t*     sb_min_sq_size;
+    uint8_t*     sb_max_sq_size;
     // qindex per 64x64 using ME distortions (to be used for lambda modulation only; not at Q/Q-1)
     // Mode Decision Neighbor Arrays
-    uint8_t            *b64_me_qindex;
-    NeighborArrayUnit **md_luma_recon_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_tx_depth_1_luma_recon_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_tx_depth_2_luma_recon_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_cb_recon_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_cr_recon_na[NA_TOT_CNT];
+    uint8_t*            b64_me_qindex;
+    NeighborArrayUnit** md_luma_recon_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_tx_depth_1_luma_recon_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_tx_depth_2_luma_recon_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_cb_recon_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_cr_recon_na[NA_TOT_CNT];
 
     uint8_t             hbd_md;
-    NeighborArrayUnit **md_luma_recon_na_16bit[NA_TOT_CNT];
-    NeighborArrayUnit **md_tx_depth_1_luma_recon_na_16bit[NA_TOT_CNT];
-    NeighborArrayUnit **md_tx_depth_2_luma_recon_na_16bit[NA_TOT_CNT];
-    NeighborArrayUnit **md_cb_recon_na_16bit[NA_TOT_CNT];
-    NeighborArrayUnit **md_cr_recon_na_16bit[NA_TOT_CNT];
-    NeighborArrayUnit **md_y_dcs_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_tx_depth_1_luma_dc_sign_level_coeff_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_cb_dc_sign_level_coeff_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_cr_dc_sign_level_coeff_na[NA_TOT_CNT];
-    NeighborArrayUnit **md_txfm_context_array[NA_TOT_CNT];
-    NeighborArrayUnit **mdleaf_partition_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_luma_recon_na_16bit[NA_TOT_CNT];
+    NeighborArrayUnit** md_tx_depth_1_luma_recon_na_16bit[NA_TOT_CNT];
+    NeighborArrayUnit** md_tx_depth_2_luma_recon_na_16bit[NA_TOT_CNT];
+    NeighborArrayUnit** md_cb_recon_na_16bit[NA_TOT_CNT];
+    NeighborArrayUnit** md_cr_recon_na_16bit[NA_TOT_CNT];
+    NeighborArrayUnit** md_y_dcs_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_tx_depth_1_luma_dc_sign_level_coeff_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_cb_dc_sign_level_coeff_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_cr_dc_sign_level_coeff_na[NA_TOT_CNT];
+    NeighborArrayUnit** md_txfm_context_array[NA_TOT_CNT];
+    NeighborArrayUnit** mdleaf_partition_na[NA_TOT_CNT];
 
     // Encode Pass Neighbor Arrays
-    NeighborArrayUnit **ep_luma_recon_na;
-    NeighborArrayUnit **ep_cb_recon_na;
-    NeighborArrayUnit **ep_cr_recon_na;
-    NeighborArrayUnit **ep_luma_recon_na_16bit;
-    NeighborArrayUnit **ep_cb_recon_na_16bit;
-    NeighborArrayUnit **ep_cr_recon_na_16bit;
-    NeighborArrayUnit **ep_luma_dc_sign_level_coeff_na;
-    NeighborArrayUnit **ep_cr_dc_sign_level_coeff_na;
-    NeighborArrayUnit **ep_cb_dc_sign_level_coeff_na;
-    NeighborArrayUnit **ep_luma_dc_sign_level_coeff_na_update;
-    NeighborArrayUnit **ep_cr_dc_sign_level_coeff_na_update;
-    NeighborArrayUnit **ep_cb_dc_sign_level_coeff_na_update;
-    NeighborArrayUnit **ep_partition_context_na;
-    NeighborArrayUnit **ep_txfm_context_na;
+    NeighborArrayUnit** ep_luma_recon_na;
+    NeighborArrayUnit** ep_cb_recon_na;
+    NeighborArrayUnit** ep_cr_recon_na;
+    NeighborArrayUnit** ep_luma_recon_na_16bit;
+    NeighborArrayUnit** ep_cb_recon_na_16bit;
+    NeighborArrayUnit** ep_cr_recon_na_16bit;
+    NeighborArrayUnit** ep_luma_dc_sign_level_coeff_na;
+    NeighborArrayUnit** ep_cr_dc_sign_level_coeff_na;
+    NeighborArrayUnit** ep_cb_dc_sign_level_coeff_na;
+    NeighborArrayUnit** ep_luma_dc_sign_level_coeff_na_update;
+    NeighborArrayUnit** ep_cr_dc_sign_level_coeff_na_update;
+    NeighborArrayUnit** ep_cb_dc_sign_level_coeff_na_update;
+    NeighborArrayUnit** ep_partition_context_na;
+    NeighborArrayUnit** ep_txfm_context_na;
 
     // Entropy Coding Neighbor Arrays
-    NeighborArrayUnit **partition_context_na;
+    NeighborArrayUnit** partition_context_na;
     // Stored per 4x4. 8 bit: lower 6 bits (COEFF_CONTEXT_BITS), shows if there is at least one
     // Coef. Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit **luma_dc_sign_level_coeff_na;
+    NeighborArrayUnit** luma_dc_sign_level_coeff_na;
     // Stored per 4x4. 8 bit: lower 6 bits(COEFF_CONTEXT_BITS), shows if there is at least one Coef.
     // Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit **cr_dc_sign_level_coeff_na;
+    NeighborArrayUnit** cr_dc_sign_level_coeff_na;
     // Stored per 4x4. 8 bit: lower 6 bits(COEFF_CONTEXT_BITS), shows if there is at least one Coef.
     // Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit **cb_dc_sign_level_coeff_na;
-    NeighborArrayUnit **txfm_context_array;
+    NeighborArrayUnit** cb_dc_sign_level_coeff_na;
+    NeighborArrayUnit** txfm_context_array;
 
-    NeighborArrayUnit      **segmentation_id_pred_array;
-    SegmentationNeighborMap *segmentation_neighbor_map;
+    NeighborArrayUnit**      segmentation_id_pred_array;
+    SegmentationNeighborMap* segmentation_neighbor_map;
 
-    MbModeInfo **mi_grid_base;
-    MbModeInfo  *mip;
+    MbModeInfo** mi_grid_base;
+    MbModeInfo*  mip;
 
     int32_t mi_stride;
     // true if 4x4 blocks are disallowed for all frames, and NSQ is disabled (since granularity is
@@ -335,15 +335,15 @@ typedef struct PictureControlSet {
     HashTable        hash_table;
     CRC32C           crc_calculator;
 
-    FRAME_CONTEXT                  *ec_ctx_array;
+    FRAME_CONTEXT*                  ec_ctx_array;
     FRAME_CONTEXT                   md_frame_context;
     CdfControls                     cdf_ctrl;
     WarpedMotionParams              ref_global_motion[TOTAL_REFS_PER_FRAME];
-    struct MdRateEstimationContext *md_rate_est_ctx;
+    struct MdRateEstimationContext* md_rate_est_ctx;
     int8_t                          ref_frame_side[REF_FRAMES];
-    TPL_MV_REF                     *tpl_mvs;
+    TPL_MV_REF*                     tpl_mvs;
     uint8_t                         pic_filter_intra_level;
-    TOKENEXTRA                     *tile_tok[64][64];
+    TOKENEXTRA*                     tile_tok[64][64];
     // Put it here for deinit, don't need to go pcs->ppcs->av1_cm which may already be released
     uint16_t tile_row_count;
     uint16_t tile_column_count;
@@ -351,10 +351,10 @@ typedef struct PictureControlSet {
     // Total SB count of unscaled picture (used for memory alloc/dealloc when superres is used)
     uint16_t sb_total_count_unscaled;
 
-    EbPictureBufferDesc *temp_lf_recon_pic;
-    EbPictureBufferDesc *temp_lf_recon_pic_16bit;
+    EbPictureBufferDesc* temp_lf_recon_pic;
+    EbPictureBufferDesc* temp_lf_recon_pic_16bit;
 
-    RestUnitSearchInfo *rusi_picture[3]; // for 3 planes
+    RestUnitSearchInfo* rusi_picture[3]; // for 3 planes
 
     RestorationInfo rst_info[MAX_MB_PLANE];
     // rst_end_stripe[i] is one more than the index of the bottom stripe
@@ -374,7 +374,7 @@ typedef struct PictureControlSet {
     uint16_t lambda_weight;
     // scaled input picture is only used in loop restoration for recon size is
     // different with input frame when reference scaling is enabled
-    EbPictureBufferDesc *scaled_input_pic;
+    EbPictureBufferDesc* scaled_input_pic;
     // lossless[s] is true if segment 's' is coded losslessly.
     bool    lossless[MAX_SEGMENTS];
     bool    mimic_only_tx_4x4;
@@ -417,21 +417,21 @@ typedef struct TileGroupInfo {
 
 typedef struct MotionEstimationData {
     EbDctor       dctor;
-    MeSbResults **me_results;
+    MeSbResults** me_results;
     uint16_t      b64_total_count;
     uint16_t      init_b64_total_count;
     uint8_t       max_cand; // total max me candidates given the active references
     uint8_t       max_refs; // total max active references
     uint8_t       max_l0; // max active refs in L0
-    TplStats    **tpl_stats;
+    TplStats**    tpl_stats;
 
-    TplSrcStats *tpl_src_stats_buffer; // tpl src based stats
+    TplSrcStats* tpl_src_stats_buffer; // tpl src based stats
 
     int32_t base_rdmult;
-    double *tpl_beta;
-    double *tpl_rdmult_scaling_factors;
-    double *tpl_sb_rdmult_scaling_factors;
-    double *ssim_rdmult_scaling_factors;
+    double* tpl_beta;
+    double* tpl_rdmult_scaling_factors;
+    double* tpl_sb_rdmult_scaling_factors;
+    double* ssim_rdmult_scaling_factors;
 } MotionEstimationData;
 
 typedef struct TplControls {
@@ -474,7 +474,7 @@ typedef struct {
     // window)
     int32_t ref_tpl_group_idx[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // TPL base picture
-    struct PictureParentControlSet *base_pcs;
+    struct PictureParentControlSet* base_pcs;
     bool                            is_ref;
     EbDownScaledBufDescPtrArray     tpl_ref_ds_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 } TPLData;
@@ -680,7 +680,7 @@ typedef struct DGDetectorMetrics {
 typedef struct DGDetectorSeg {
     EbDctor dctor;
     // 2nd picture used by the dynamic gop detector in order to determine whether to split the GoP
-    struct PictureParentControlSet *ref_pic;
+    struct PictureParentControlSet* ref_pic;
     struct DGDetectorMetrics        metrics;
     // semaphore that indicates whether all of the segments of the dynamic gop detector are finished
     EbHandle frame_done_sem;
@@ -697,32 +697,32 @@ typedef struct DGDetectorSeg {
 //  to EC/ALF.
 typedef struct PictureParentControlSet {
     EbDctor          dctor;
-    EbObjectWrapper *input_pic_wrapper;
+    EbObjectWrapper* input_pic_wrapper;
     // when overlay: y8b buffer is not used, should set to NULL.
-    EbObjectWrapper     *y8b_wrapper;
-    EbObjectWrapper     *ref_pic_wrapper;
-    EbObjectWrapper     *pa_ref_pic_wrapper;
-    EbPictureBufferDesc *enhanced_pic;
-    EbPictureBufferDesc *enhanced_downscaled_pic;
-    EbPictureBufferDesc *enhanced_unscaled_pic;
+    EbObjectWrapper*     y8b_wrapper;
+    EbObjectWrapper*     ref_pic_wrapper;
+    EbObjectWrapper*     pa_ref_pic_wrapper;
+    EbPictureBufferDesc* enhanced_pic;
+    EbPictureBufferDesc* enhanced_downscaled_pic;
+    EbPictureBufferDesc* enhanced_unscaled_pic;
     // if 422/444 input, down sample to 420 for MD
-    EbPictureBufferDesc       *chroma_downsampled_pic;
+    EbPictureBufferDesc*       chroma_downsampled_pic;
     bool                       is_chroma_downsampled_picture_ptr_owner;
-    PredictionStructure       *pred_struct_ptr; // need to check
-    struct SequenceControlSet *scs;
-    EbObjectWrapper           *scs_wrapper;
-    EbObjectWrapper           *p_pcs_wrapper_ptr;
-    EbObjectWrapper           *previous_picture_control_set_wrapper_ptr;
-    EbObjectWrapper           *output_stream_wrapper_ptr;
-    Av1Common                 *av1_cm;
+    PredictionStructure*       pred_struct_ptr; // need to check
+    struct SequenceControlSet* scs;
+    EbObjectWrapper*           scs_wrapper;
+    EbObjectWrapper*           p_pcs_wrapper_ptr;
+    EbObjectWrapper*           previous_picture_control_set_wrapper_ptr;
+    EbObjectWrapper*           output_stream_wrapper_ptr;
+    Av1Common*                 av1_cm;
 
     uint8_t hbd_md;
 
-    EbBufferHeaderType *input_ptr; // input picture buffer
+    EbBufferHeaderType* input_ptr; // input picture buffer
     uint8_t             log2_tile_rows;
     uint8_t             log2_tile_cols;
     uint8_t             log2_sb_size;
-    TileGroupInfo      *tile_group_info;
+    TileGroupInfo*      tile_group_info;
     uint8_t             tile_group_cols;
     uint8_t             tile_group_rows;
 
@@ -770,7 +770,7 @@ typedef struct PictureParentControlSet {
     uint16_t                                b64_total_count;
     bool                                    end_of_sequence_region;
     int                                     frames_in_sw; // used for Look ahead
-    struct RateControlIntervalParamContext *rate_control_param_ptr;
+    struct RateControlIntervalParamContext* rate_control_param_ptr;
     bool                                    qp_on_the_fly;
     uint64_t                                last_idr_picture;
     uint64_t                                start_time_seconds;
@@ -784,19 +784,19 @@ typedef struct PictureParentControlSet {
     double                                  cr_ssim;
     double                                  cb_ssim;
     // Pointer array for down scaled pictures
-    EbObjectWrapper            *downscaled_pic_wrapper;
+    EbObjectWrapper*            downscaled_pic_wrapper;
     EbDownScaledBufDescPtrArray ds_pics;
 
     TPLData          tpl_data;
-    EbObjectWrapper *ref_y8b_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    EbObjectWrapper* ref_y8b_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // Pre Analysis
-    EbObjectWrapper *ref_pa_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    EbObjectWrapper* ref_pa_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     uint64_t         ref_pic_poc_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    uint16_t       **variance;
+    uint16_t**       variance;
     uint32_t         pre_assignment_buffer_count;
     uint16_t         pic_avg_variance;
 
-    uint32_t ***picture_histogram;
+    uint32_t*** picture_histogram;
     uint64_t    average_intensity_per_region[MAX_NUMBER_OF_REGIONS_IN_WIDTH][MAX_NUMBER_OF_REGIONS_IN_HEIGHT];
     // Segments
     uint16_t me_segments_total_count;
@@ -804,17 +804,17 @@ typedef struct PictureParentControlSet {
     uint8_t  me_segments_row_count;
     uint16_t me_segments_completion_count;
 
-    EbPictureBufferDesc *non_tf_input;
+    EbPictureBufferDesc* non_tf_input;
     // Motion Estimation Results
     uint8_t   max_number_of_pus_per_sb;
-    uint32_t *rc_me_distortion;
-    uint8_t  *rc_me_allow_gm;
+    uint32_t* rc_me_distortion;
+    uint8_t*  rc_me_allow_gm;
 
-    uint32_t *me_8x8_cost_variance;
-    uint32_t *me_64x64_distortion;
-    uint32_t *me_32x32_distortion;
-    uint32_t *me_16x16_distortion;
-    uint32_t *me_8x8_distortion;
+    uint32_t* me_8x8_cost_variance;
+    uint32_t* me_64x64_distortion;
+    uint32_t* me_32x32_distortion;
+    uint32_t* me_16x16_distortion;
+    uint32_t* me_8x8_distortion;
     // Global motion estimation results
     bool               is_global_motion[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     WarpedMotionParams global_motion_estimation[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
@@ -868,8 +868,8 @@ typedef struct PictureParentControlSet {
 #endif
 
     // Global quant matrix tables
-    const QmVal *giqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
-    const QmVal *gqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
+    const QmVal* giqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
+    const QmVal* gqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
     int32_t      min_qmlevel;
     int32_t      max_qmlevel;
     int32_t      min_chroma_qmlevel;
@@ -917,9 +917,9 @@ typedef struct PictureParentControlSet {
     // int32_t delta_q_res;
     int32_t            allow_comp_inter_inter;
     WarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
-    PictureControlSet *child_pcs;
-    EncDecSet         *enc_dec_ptr;
-    Macroblock        *av1x;
+    PictureControlSet* child_pcs;
+    EncDecSet*         enc_dec_ptr;
+    Macroblock*        av1x;
     int8_t             cdef_level;
     bool               enable_restoration; // true if restoration filtering is enabled for the current frame
 
@@ -941,12 +941,12 @@ typedef struct PictureParentControlSet {
 
     uint8_t is_overlay;
 
-    struct PictureParentControlSet *overlay_ppcs_ptr;
+    struct PictureParentControlSet* overlay_ppcs_ptr;
 
-    struct PictureParentControlSet *alt_ref_ppcs_ptr;
+    struct PictureParentControlSet* alt_ref_ppcs_ptr;
     int32_t                         noise_levels_log1p_fp16[MAX_MB_PLANE];
     int32_t                         pic_decision_reorder_queue_idx;
-    struct PictureParentControlSet *temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
+    struct PictureParentControlSet* temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
     EbByte                          save_source_picture_ptr[3];
     EbByte                          save_source_picture_bit_inc_ptr[3];
     uint16_t                        save_source_picture_width;
@@ -968,14 +968,14 @@ typedef struct PictureParentControlSet {
     uint8_t     future_altref_nframes;
     bool        do_tf;
     FrameHeader frm_hdr;
-    uint16_t   *altref_buffer_highbd[3];
+    uint16_t*   altref_buffer_highbd[3];
     uint8_t     pic_obmc_level;
 
     bool is_pcs_sb_params;
     // Contains info for 64x64 blocks, NOT SB info.  Should not be used in MD; use sb_geom instead.
-    B64Geom *b64_geom;
+    B64Geom* b64_geom;
     // Contains SB info (adapts automatically when SB 128x128 is used). This should be used in MD.
-    SbGeom           *sb_geom;
+    SbGeom*           sb_geom;
     EbInputResolution input_resolution;
     uint16_t          picture_sb_width;
     uint16_t          picture_sb_height;
@@ -1010,17 +1010,17 @@ typedef struct PictureParentControlSet {
     uint8_t superres_denom_array[NUM_SR_SCALES + 1]; // denom candidate array used in auto supreres
     double  superres_rdcost[NUM_SR_SCALES + 1]; // 9 slots, for denom 8 ~ 16
 
-    EbObjectWrapper      *me_data_wrapper;
-    MotionEstimationData *pa_me_data;
+    EbObjectWrapper*      me_data_wrapper;
+    MotionEstimationData* pa_me_data;
     // stores pcs pictures needed for tpl algorithm
-    struct PictureParentControlSet *tpl_group[MAX_TPL_GROUP_SIZE];
+    struct PictureParentControlSet* tpl_group[MAX_TPL_GROUP_SIZE];
     // size of above buffer
     uint32_t tpl_group_size;
     // stores previous, current, future pictures from pd-reord-queue. empty for first I.
     // 1 past + 1 curent  + TF_MAX_BASE_REF_PICS from future
-    void *pd_window[2 + TF_MAX_BASE_REF_PICS];
+    void* pd_window[2 + TF_MAX_BASE_REF_PICS];
     // stores pcs pictures needed for lad mg based algorithms
-    struct PictureParentControlSet *ext_group[MAX_TPL_EXT_GROUP_SIZE];
+    struct PictureParentControlSet* ext_group[MAX_TPL_EXT_GROUP_SIZE];
     // actual size of extended group
     uint32_t ext_group_size;
 
@@ -1055,7 +1055,7 @@ typedef struct PictureParentControlSet {
     uint16_t tile_group_index;
     uint16_t tpl_disp_coded_sb_count;
 
-    EncDecSegments **tpl_disp_segment_ctrl;
+    EncDecSegments** tpl_disp_segment_ctrl;
     // the offsets for STATS_BUFFER_CTX
     uint64_t stats_in_end_offset;
     // the offsets for stats_in
@@ -1075,7 +1075,7 @@ typedef struct PictureParentControlSet {
     // thr gf update in RC is due for I, or base frames (except the one after I)or P frames
     int                             gf_update_due;
     uint8_t                         is_new_gf_group;
-    struct PictureParentControlSet *gf_group[MAX_TPL_GROUP_SIZE];
+    struct PictureParentControlSet* gf_group[MAX_TPL_GROUP_SIZE];
     StatStruct                      stat_struct;
     CyclicRefresh                   cyclic_refresh;
     bool                            use_accurate_part_ctx;
@@ -1095,8 +1095,8 @@ typedef struct PictureParentControlSet {
     bool             r0_delta_qp_md;
     bool             r0_delta_qp_quant;
     uint32_t         dpb_order_hint[REF_FRAMES]; // spec 6.8.2. ref_order_hint[]
-    DGDetectorSeg   *dg_detector; // dg detector segments control struct
-    SvtAv1RoiMapEvt *roi_map_evt;
+    DGDetectorSeg*   dg_detector; // dg detector segments control struct
+    SvtAv1RoiMapEvt* roi_map_evt;
     uint32_t         filt_to_unfilt_diff;
     // Absolute histogram deviation of the frame to the central TF frame (i.e. sum of absolute deviation of all bins)
     uint32_t tf_ahd_error_to_central;
@@ -1116,12 +1116,12 @@ typedef struct PictureParentControlSet {
 
 typedef struct TplDispResults {
     EbDctor                  dctor;
-    EbObjectWrapper         *pcs_wrapper;
+    EbObjectWrapper*         pcs_wrapper;
     uint32_t                 frame_index;
     uint32_t                 input_type;
     int16_t                  enc_dec_segment_row;
     uint16_t                 tile_group_index;
-    PictureParentControlSet *pcs;
+    PictureParentControlSet* pcs;
     int32_t                  qIndex;
 
 } TplDispResults;
@@ -1162,7 +1162,7 @@ typedef struct PictureControlSetInitData {
     uint16_t   non_m8_pad_h;
     uint8_t    enable_tpl_la;
     uint8_t    tpl_synth_size;
-    Av1Common *av1_cm;
+    Av1Common* av1_cm;
     uint8_t    ref_count_used_list0;
     uint8_t    ref_count_used_list1;
 
@@ -1185,23 +1185,23 @@ typedef struct PictureControlSetInitData {
 
 uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_height);
 
-EbErrorType svt_aom_picture_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
-EbErrorType svt_aom_recon_coef_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
-EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
-EbErrorType svt_aom_me_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
-EbErrorType svt_aom_me_sb_results_ctor(MeSbResults *obj_ptr, PictureControlSetInitData *init_data_ptr);
-EbErrorType ppcs_update_param(PictureParentControlSet *ppcs);
-EbErrorType pcs_update_param(PictureControlSet *pcs);
-EbErrorType me_update_param(MotionEstimationData *me_data, struct SequenceControlSet *scs);
-EbErrorType recon_coef_update_param(EncDecSet *recon_coef, struct SequenceControlSet *scs);
-bool        svt_aom_is_pic_skipped(PictureParentControlSet *pcs);
-void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool *gm_need_full, bool *gm_need_quart, bool *gm_need_sixteen);
+EbErrorType svt_aom_picture_control_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_recon_coef_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_me_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_aom_me_sb_results_ctor(MeSbResults* obj_ptr, PictureControlSetInitData* init_data_ptr);
+EbErrorType ppcs_update_param(PictureParentControlSet* ppcs);
+EbErrorType pcs_update_param(PictureControlSet* pcs);
+EbErrorType me_update_param(MotionEstimationData* me_data, struct SequenceControlSet* scs);
+EbErrorType recon_coef_update_param(EncDecSet* recon_coef, struct SequenceControlSet* scs);
+bool        svt_aom_is_pic_skipped(PictureParentControlSet* pcs);
+void svt_aom_get_gm_needed_resolutions(uint8_t ds_lvl, bool* gm_need_full, bool* gm_need_quart, bool* gm_need_sixteen);
 
-EbErrorType b64_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, B64Geom **b64_geoms);
-EbErrorType sb_geom_init(struct SequenceControlSet *scs, uint16_t width, uint16_t height, SbGeom **sb_geoms);
-EbErrorType alloc_sb_geoms(SbGeom **geom, int width, int height);
-void        free_sb_geoms(SbGeom *geom);
-void        copy_sb_geoms(SbGeom *dst_geom, SbGeom *src_geom, uint16_t width, uint16_t height);
+EbErrorType b64_geom_init(struct SequenceControlSet* scs, uint16_t width, uint16_t height, B64Geom** b64_geoms);
+EbErrorType sb_geom_init(struct SequenceControlSet* scs, uint16_t width, uint16_t height, SbGeom** sb_geoms);
+EbErrorType alloc_sb_geoms(SbGeom** geom, int width, int height);
+void        free_sb_geoms(SbGeom* geom);
+void        copy_sb_geoms(SbGeom* dst_geom, SbGeom* src_geom, uint16_t width, uint16_t height);
 
 #ifdef __cplusplus
 }

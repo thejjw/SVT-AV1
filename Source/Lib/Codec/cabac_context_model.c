@@ -759,7 +759,7 @@ static const AomCdfProb default_switchable_interp_cdf[SWITCHABLE_FILTER_CONTEXTS
     {AOM_CDF3(601, 943)},
     {AOM_CDF3(14969, 21398)}};
 
-void svt_aom_init_mode_probs(FRAME_CONTEXT *fc) {
+void svt_aom_init_mode_probs(FRAME_CONTEXT* fc) {
     svt_memcpy(fc->palette_y_size_cdf, default_palette_y_size_cdf, sizeof(default_palette_y_size_cdf));
     svt_memcpy(fc->palette_uv_size_cdf, default_palette_uv_size_cdf, sizeof(default_palette_uv_size_cdf));
     svt_memcpy(
@@ -2577,7 +2577,7 @@ static int32_t get_q_ctx(int32_t q) {
     return 3;
 }
 
-void svt_av1_default_coef_probs(FRAME_CONTEXT *fc, int32_t base_qindex) {
+void svt_av1_default_coef_probs(FRAME_CONTEXT* fc, int32_t base_qindex) {
     const int32_t index = get_q_ctx(base_qindex);
 
 #if CONFIG_ENTROPY_STATS
@@ -2638,7 +2638,7 @@ void svt_av1_default_coef_probs(FRAME_CONTEXT *fc, int32_t base_qindex) {
     }
 }
 
-static void reset_cdf_symbol_counter(AomCdfProb *cdf_ptr, int32_t num_cdfs, int32_t cdf_stride, int32_t nsymbs) {
+static void reset_cdf_symbol_counter(AomCdfProb* cdf_ptr, int32_t num_cdfs, int32_t cdf_stride, int32_t nsymbs) {
     for (int32_t i = 0; i < num_cdfs; i++) {
         cdf_ptr[i * cdf_stride + nsymbs] = 0;
     }
@@ -2648,13 +2648,13 @@ static void reset_cdf_symbol_counter(AomCdfProb *cdf_ptr, int32_t num_cdfs, int3
 
 #define RESET_CDF_COUNTER_STRIDE(cname, nsymbs, cdf_stride)                   \
     do {                                                                      \
-        AomCdfProb *cdf_ptr    = (AomCdfProb *)cname;                         \
+        AomCdfProb* cdf_ptr    = (AomCdfProb*)cname;                          \
         int32_t     array_size = (int32_t)sizeof(cname) / sizeof(AomCdfProb); \
         int32_t     num_cdfs   = array_size / cdf_stride;                     \
         reset_cdf_symbol_counter(cdf_ptr, num_cdfs, cdf_stride, nsymbs);      \
     } while (0)
 
-static void reset_nmv_counter(NmvContext *nmv) {
+static void reset_nmv_counter(NmvContext* nmv) {
     RESET_CDF_COUNTER(nmv->joints_cdf, 4);
     for (int32_t i = 0; i < 2; i++) {
         RESET_CDF_COUNTER(nmv->comps[i].classes_cdf, MV_CLASSES);
@@ -2668,7 +2668,7 @@ static void reset_nmv_counter(NmvContext *nmv) {
     }
 }
 
-void svt_av1_reset_cdf_symbol_counters(FRAME_CONTEXT *fc) {
+void svt_av1_reset_cdf_symbol_counters(FRAME_CONTEXT* fc) {
     RESET_CDF_COUNTER(fc->txb_skip_cdf, 2);
     RESET_CDF_COUNTER(fc->eob_extra_cdf, 2);
     RESET_CDF_COUNTER(fc->dc_sign_cdf, 2);
@@ -2767,8 +2767,8 @@ int svt_aom_palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1] = {-1
 
 #define NUM_PALETTE_NEIGHBORS 3 // left, top-left and top.
 
-int svt_aom_get_palette_color_index_context_optimized(const uint8_t *color_map, int stride, int r, int c,
-                                                      int *color_idx) {
+int svt_aom_get_palette_color_index_context_optimized(const uint8_t* color_map, int stride, int r, int c,
+                                                      int* color_idx) {
     assert(r > 0 || c > 0);
 
     // This goes in the order of left, top, and top-left. This has the advantage

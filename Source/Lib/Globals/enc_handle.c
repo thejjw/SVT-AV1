@@ -174,7 +174,7 @@ void    svt_aom_init_intra_dc_predictors_c_internal(void);
 void    svt_aom_init_intra_predictors_internal(void);
 void    svt_av1_init_me_luts(void);
 uint8_t svt_aom_get_tpl_group_level(uint8_t tpl, int8_t enc_mode);
-uint8_t svt_aom_set_tpl_group(PictureParentControlSet *pcs, uint8_t tpl_group_level, uint32_t source_width,
+uint8_t svt_aom_set_tpl_group(PictureParentControlSet* pcs, uint8_t tpl_group_level, uint32_t source_width,
                               uint32_t source_height);
 
 static void enc_switch_to_real_time() {
@@ -223,7 +223,7 @@ static bool is_pic_dimension_single_sb(uint32_t sb_size, uint16_t pic_dimension)
 /*********************************************************************************
 * set_segments_numbers: Set the segment numbers for difference processes
 ***********************************************************************************/
-void set_segments_numbers(SequenceControlSet *scs) {
+void set_segments_numbers(SequenceControlSet* scs) {
     const uint32_t lp = scs->lp;
 
     scs->enc_dec_segment_row_count_array =
@@ -281,7 +281,7 @@ void set_segments_numbers(SequenceControlSet *scs) {
                                                               : MIN(rest_seg_h, 6);
 }
 
-static EbErrorType load_default_buffer_configuration_settings(SequenceControlSet *scs) {
+static EbErrorType load_default_buffer_configuration_settings(SequenceControlSet* scs) {
     EbErrorType return_error = EB_ErrorNone;
     uint32_t    core_count   = get_num_processors();
 
@@ -804,8 +804,8 @@ static uint32_t enc_dec_port_total_count(void) {
 
 static void lib_svt_encoder_send_error_exit(EbPtr hComponent, uint32_t error_code);
 
-static void svt_enc_handle_stop_threads(EbEncHandle *enc_handle_ptr) {
-    SequenceControlSet *scs = enc_handle_ptr->scs_instance->scs;
+static void svt_enc_handle_stop_threads(EbEncHandle* enc_handle_ptr) {
+    SequenceControlSet* scs = enc_handle_ptr->scs_instance->scs;
     // Resource Coordination
     EB_DESTROY_THREAD(enc_handle_ptr->resource_coordination_thread_handle);
     EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,
@@ -861,7 +861,7 @@ static void svt_enc_handle_stop_threads(EbEncHandle *enc_handle_ptr) {
 * Encoder Library Handle Deonstructor
 **********************************/
 static void svt_enc_handle_dctor(EbPtr p) {
-    EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
+    EbEncHandle* enc_handle_ptr = (EbEncHandle*)p;
     svt_enc_handle_stop_threads(enc_handle_ptr);
     EB_FREE(enc_handle_ptr->app_callback_ptr);
     EB_DELETE(enc_handle_ptr->scs_pool_ptr);
@@ -880,9 +880,9 @@ static void svt_enc_handle_dctor(EbPtr p) {
     //to prevent releasing twice, we need to reset the buffer back to NULL
     if (enc_handle_ptr->input_buffer_resource_ptr) {
         for (uint32_t w_i = 0; w_i < enc_handle_ptr->input_buffer_resource_ptr->object_total_count; ++w_i) {
-            EbObjectWrapper     *wrp  = enc_handle_ptr->input_buffer_resource_ptr->wrapper_ptr_pool[w_i];
-            EbBufferHeaderType  *obj  = (EbBufferHeaderType *)wrp->object_ptr;
-            EbPictureBufferDesc *desc = (EbPictureBufferDesc *)obj->p_buffer;
+            EbObjectWrapper*     wrp  = enc_handle_ptr->input_buffer_resource_ptr->wrapper_ptr_pool[w_i];
+            EbBufferHeaderType*  obj  = (EbBufferHeaderType*)wrp->object_ptr;
+            EbPictureBufferDesc* desc = (EbPictureBufferDesc*)obj->p_buffer;
             desc->buffer_y            = 0;
         }
     }
@@ -906,7 +906,7 @@ static void svt_enc_handle_dctor(EbPtr p) {
     EB_DELETE(enc_handle_ptr->entropy_coding_results_resource_ptr);
 
     EB_DELETE(enc_handle_ptr->resource_coordination_context_ptr);
-    SequenceControlSet *scs = enc_handle_ptr->scs_instance->scs;
+    SequenceControlSet* scs = enc_handle_ptr->scs_instance->scs;
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, scs->picture_analysis_process_init_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->motion_estimation_context_ptr_array, scs->motion_estimation_process_init_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->tpl_disp_context_ptr_array, scs->tpl_disp_process_init_count);
@@ -930,7 +930,7 @@ static void svt_enc_handle_dctor(EbPtr p) {
 /**********************************
 * Encoder Library Handle Constructor
 **********************************/
-static EbErrorType svt_enc_handle_ctor(EbEncHandle *enc_handle_ptr, EbComponentType *ebHandlePtr) {
+static EbErrorType svt_enc_handle_ctor(EbEncHandle* enc_handle_ptr, EbComponentType* ebHandlePtr) {
     enc_handle_ptr->dctor = svt_enc_handle_dctor;
 
     // Initialize Callbacks
@@ -950,22 +950,22 @@ static EbErrorType svt_enc_handle_ctor(EbEncHandle *enc_handle_ptr, EbComponentT
     return EB_ErrorNone;
 }
 
-EbErrorType svt_input_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_input_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 
-EbErrorType svt_output_recon_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_output_recon_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 
-EbErrorType svt_overlay_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_overlay_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 
-EbErrorType svt_output_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_output_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 
 void svt_input_buffer_header_destroyer(EbPtr p);
 void svt_output_recon_buffer_header_destroyer(EbPtr p);
 void svt_output_buffer_header_destroyer(EbPtr p);
 
-EbErrorType svt_input_y8b_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr);
+EbErrorType svt_input_y8b_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 void        svt_input_y8b_destroyer(EbPtr p);
 
-static EbErrorType in_cmd_ctor(InputCommand *context_ptr, EbPtr object_init_data_ptr) {
+static EbErrorType in_cmd_ctor(InputCommand* context_ptr, EbPtr object_init_data_ptr) {
     (void)context_ptr;
     (void)object_init_data_ptr;
 
@@ -975,8 +975,8 @@ static EbErrorType in_cmd_ctor(InputCommand *context_ptr, EbPtr object_init_data
 /*
 * Input Command Constructor
 */
-EbErrorType svt_input_cmd_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    InputCommand *obj;
+EbErrorType svt_input_cmd_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    InputCommand* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, in_cmd_ctor, object_init_data_ptr);
@@ -985,15 +985,15 @@ EbErrorType svt_input_cmd_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_
     return EB_ErrorNone;
 }
 
-static EbErrorType dlf_results_ctor(DlfResults *context_ptr, EbPtr object_init_data_ptr) {
+static EbErrorType dlf_results_ctor(DlfResults* context_ptr, EbPtr object_init_data_ptr) {
     (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
 }
 
-static EbErrorType dlf_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    DlfResults *obj;
+static EbErrorType dlf_results_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    DlfResults* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, dlf_results_ctor, object_init_data_ptr);
@@ -1005,7 +1005,7 @@ static EbErrorType dlf_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_
 /*
    TPL results ctor
 */
-EbErrorType tpl_disp_results_ctor(TplDispResults *context_ptr, EbPtr object_init_data_ptr) {
+EbErrorType tpl_disp_results_ctor(TplDispResults* context_ptr, EbPtr object_init_data_ptr) {
     (void)context_ptr;
     (void)object_init_data_ptr;
 
@@ -1015,8 +1015,8 @@ EbErrorType tpl_disp_results_ctor(TplDispResults *context_ptr, EbPtr object_init
 /*
    TPL results creator
 */
-static EbErrorType tpl_disp_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    TplDispResults *obj;
+static EbErrorType tpl_disp_results_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    TplDispResults* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, tpl_disp_results_ctor, object_init_data_ptr);
@@ -1025,15 +1025,15 @@ static EbErrorType tpl_disp_results_creator(EbPtr *object_dbl_ptr, EbPtr object_
     return EB_ErrorNone;
 }
 
-static EbErrorType cdef_results_ctor(CdefResults *context_ptr, EbPtr object_init_data_ptr) {
+static EbErrorType cdef_results_ctor(CdefResults* context_ptr, EbPtr object_init_data_ptr) {
     (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
 }
 
-static EbErrorType cdef_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    CdefResults *obj;
+static EbErrorType cdef_results_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    CdefResults* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, cdef_results_ctor, object_init_data_ptr);
@@ -1042,15 +1042,15 @@ static EbErrorType cdef_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init
     return EB_ErrorNone;
 }
 
-EbErrorType rest_results_ctor(RestResults *context_ptr, EbPtr object_init_data_ptr) {
+EbErrorType rest_results_ctor(RestResults* context_ptr, EbPtr object_init_data_ptr) {
     (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
 }
 
-static EbErrorType rest_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    RestResults *obj;
+static EbErrorType rest_results_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    RestResults* obj;
 
     *object_dbl_ptr = NULL;
     EB_NEW(obj, rest_results_ctor, object_init_data_ptr);
@@ -1059,8 +1059,8 @@ static EbErrorType rest_results_creator(EbPtr *object_dbl_ptr, EbPtr object_init
     return EB_ErrorNone;
 }
 
-static int create_pa_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
-    SequenceControlSet             *scs = enc_handle_ptr->scs_instance->scs;
+static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
+    SequenceControlSet*             scs = enc_handle_ptr->scs_instance->scs;
     EbPaReferenceObjectDescInitData eb_pa_ref_obj_ect_desc_init_data_structure;
     EbPictureBufferDescInitData     ref_pic_buf_desc_init_data;
     EbPictureBufferDescInitData     quart_pic_buf_desc_init_data;
@@ -1137,8 +1137,8 @@ static int create_pa_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
     return 0;
 }
 
-static int create_tpl_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
-    SequenceControlSet              *scs = enc_handle_ptr->scs_instance->scs;
+static int create_tpl_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
+    SequenceControlSet*              scs = enc_handle_ptr->scs_instance->scs;
     EbTplReferenceObjectDescInitData eb_tpl_ref_obj_ect_desc_init_data_structure;
     EbPictureBufferDescInitData      ref_pic_buf_desc_init_data;
     // PA Reference Picture Buffers
@@ -1182,10 +1182,10 @@ static int create_tpl_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
     return 0;
 }
 
-static int create_ref_buf_descs(EbEncHandle *enc_handle_ptr) {
+static int create_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     EbReferenceObjectDescInitData eb_ref_obj_ect_desc_init_data_structure;
     EbPictureBufferDescInitData   ref_pic_buf_desc_init_data;
-    SequenceControlSet           *scs      = enc_handle_ptr->scs_instance->scs;
+    SequenceControlSet*           scs      = enc_handle_ptr->scs_instance->scs;
     bool                          is_16bit = scs->static_config.encoder_bit_depth > EB_EIGHT_BIT;
     // Initialize the various Picture types
     ref_pic_buf_desc_init_data.max_width           = scs->max_input_luma_width;
@@ -1270,13 +1270,13 @@ DEFINE_ONCE(global_tables_once);
 /**********************************
 * Initialize Encoder Library
 **********************************/
-EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
+EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
     if (svt_enc_component == NULL) {
         return EB_ErrorBadParameter;
     }
-    EbEncHandle        *enc_handle_ptr = (EbEncHandle *)svt_enc_component->p_component_private;
+    EbEncHandle*        enc_handle_ptr = (EbEncHandle*)svt_enc_component->p_component_private;
     EbErrorType         return_error   = EB_ErrorNone;
-    SequenceControlSet *scs            = enc_handle_ptr->scs_instance->scs;
+    SequenceControlSet* scs            = enc_handle_ptr->scs_instance->scs;
     EbColorFormat       color_format   = scs->static_config.encoder_color_format;
 
     svt_aom_setup_common_rtcd_internal(scs->static_config.use_cpu_flags);
@@ -1323,7 +1323,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
         input_data.enable_tpl_la        = scs->tpl;
         input_data.enc_dec_segment_col  = (uint16_t)scs->tpl_segment_col_count_array;
         input_data.enc_dec_segment_row  = (uint16_t)scs->tpl_segment_row_count_array;
-        MrpCtrls *mrp_ctrl              = &(scs->mrp_ctrls);
+        MrpCtrls* mrp_ctrl              = &(scs->mrp_ctrls);
         input_data.ref_count_used_list0 = MAX(
             mrp_ctrl->sc_base_ref_list0_count,
             MAX(mrp_ctrl->base_ref_list0_count,
@@ -1401,8 +1401,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
         input_data.hbd_md         = scs->enable_hbd_mode_decision;
         input_data.mfmv           = scs->mfmv_enabled;
         //Jing: Get tile info from parent_pcs
-        PictureParentControlSet *parent_pcs =
-            (PictureParentControlSet *)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]
+        PictureParentControlSet* parent_pcs =
+            (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]
                 ->object_ptr;
         input_data.tile_row_count    = parent_pcs->av1_cm->tiles_info.tile_rows;
         input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
@@ -1448,8 +1448,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
         input_data.hbd_md              = scs->enable_hbd_mode_decision;
         input_data.mfmv                = scs->mfmv_enabled;
         //Jing: Get tile info from parent_pcs
-        PictureParentControlSet *parent_pcs =
-            (PictureParentControlSet *)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]
+        PictureParentControlSet* parent_pcs =
+            (PictureParentControlSet*)enc_handle_ptr->picture_parent_control_set_pool_ptr->wrapper_ptr_pool[0]
                 ->object_ptr;
         input_data.tile_row_count    = parent_pcs->av1_cm->tiles_info.tile_rows;
         input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
@@ -1493,8 +1493,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
     {
         // Must always allocate mem b/c don't know if restoration is on or off at this point
         // The restoration assumes only 1 tile is used, so only allocate for 1 tile... see svt_av1_alloc_restoration_struct()
-        PictureControlSet *pcs =
-            (PictureControlSet *)enc_handle_ptr->picture_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
+        PictureControlSet* pcs =
+            (PictureControlSet*)enc_handle_ptr->picture_control_set_pool_ptr->wrapper_ptr_pool[0]->object_ptr;
         scs->rest_units_per_tile = pcs->rst_info[0 /*Y-plane*/].units_per_tile;
         scs->b64_total_count     = pcs->b64_total_count;
         create_ref_buf_descs(enc_handle_ptr);
@@ -2052,10 +2052,10 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component) {
     return return_error;
 }
 
-static EbErrorType enc_drain_queue(EbComponentType *svt_enc_component) {
+static EbErrorType enc_drain_queue(EbComponentType* svt_enc_component) {
     bool eos = false;
     do {
-        EbBufferHeaderType *receive_buffer = NULL;
+        EbBufferHeaderType* receive_buffer = NULL;
         EbErrorType         return_error;
         switch ((return_error = svt_av1_enc_get_packet(svt_enc_component, &receive_buffer, 1))) {
         case EB_ErrorMax:
@@ -2078,12 +2078,12 @@ static EbErrorType enc_drain_queue(EbComponentType *svt_enc_component) {
 /**********************************
 * DeInitialize Encoder Library
 **********************************/
-EB_API EbErrorType svt_av1_enc_deinit(EbComponentType *svt_enc_component) {
+EB_API EbErrorType svt_av1_enc_deinit(EbComponentType* svt_enc_component) {
     if (!svt_enc_component || !svt_enc_component->p_component_private) {
         return EB_ErrorBadParameter;
     }
 
-    EbEncHandle *handle = svt_enc_component->p_component_private;
+    EbEncHandle* handle = svt_enc_component->p_component_private;
 
     if (handle->input_y8b_buffer_producer_fifo_ptr && handle->frame_received) {
         if (!handle->eos_received) {
@@ -2123,14 +2123,14 @@ EB_API EbErrorType svt_av1_enc_deinit(EbComponentType *svt_enc_component) {
     return EB_ErrorNone;
 }
 
-static EbErrorType init_svt_av1_encoder_handle(EbComponentType *hComponent);
+static EbErrorType init_svt_av1_encoder_handle(EbComponentType* hComponent);
 
 /**********************************
 * GetHandle
 **********************************/
 EB_API EbErrorType svt_av1_enc_init_handle(
-    EbComponentType         **p_handle, // Function to be called in the future for manipulating the component
-    EbSvtAv1EncConfiguration *config_ptr) // pointer passed back to the client during callbacks
+    EbComponentType**         p_handle, // Function to be called in the future for manipulating the component
+    EbSvtAv1EncConfiguration* config_ptr) // pointer passed back to the client during callbacks
 
 {
     if (p_handle == NULL) {
@@ -2158,11 +2158,11 @@ EB_API EbErrorType svt_av1_enc_init_handle(
 /**********************************
 * Encoder Componenet DeInit
 **********************************/
-EbErrorType svt_av1_enc_component_de_init(EbComponentType *svt_enc_component) {
+EbErrorType svt_av1_enc_component_de_init(EbComponentType* svt_enc_component) {
     EbErrorType return_error = EB_ErrorNone;
 
     if (svt_enc_component->p_component_private) {
-        EbEncHandle *handle = (EbEncHandle *)svt_enc_component->p_component_private;
+        EbEncHandle* handle = (EbEncHandle*)svt_enc_component->p_component_private;
         EB_DELETE(handle);
         svt_enc_component->p_component_private = NULL;
     } else {
@@ -2174,7 +2174,7 @@ EbErrorType svt_av1_enc_component_de_init(EbComponentType *svt_enc_component) {
 /**********************************
 * svt_av1_enc_deinit_handle
 **********************************/
-EB_API EbErrorType svt_av1_enc_deinit_handle(EbComponentType *svt_enc_component) {
+EB_API EbErrorType svt_av1_enc_deinit_handle(EbComponentType* svt_enc_component) {
     if (svt_enc_component) {
         EbErrorType return_error = svt_av1_enc_component_de_init(svt_enc_component);
 
@@ -2186,8 +2186,8 @@ EB_API EbErrorType svt_av1_enc_deinit_handle(EbComponentType *svt_enc_component)
 }
 
 // Sets the default intra period the closest possible to 1 second without breaking the minigop
-static int32_t compute_default_intra_period(SequenceControlSet *scs) {
-    EbSvtAv1EncConfiguration *config = &scs->static_config;
+static int32_t compute_default_intra_period(SequenceControlSet* scs) {
+    EbSvtAv1EncConfiguration* config = &scs->static_config;
 
     double  fps           = scs->frame_rate;
     int32_t mini_gop_size = (1 << (config->hierarchical_levels));
@@ -2204,7 +2204,7 @@ static int32_t compute_default_intra_period(SequenceControlSet *scs) {
 /*
 Calculates the default LAD value
 */
-static uint32_t compute_default_look_ahead(EbSvtAv1EncConfiguration *config) {
+static uint32_t compute_default_look_ahead(EbSvtAv1EncConfiguration* config) {
     int32_t  lad;
     uint32_t mg_size = 1 << config->hierarchical_levels;
 
@@ -2227,7 +2227,7 @@ static uint32_t compute_default_look_ahead(EbSvtAv1EncConfiguration *config) {
 /*
 Updates the LAD value
 */
-static void update_look_ahead(SequenceControlSet *scs) {
+static void update_look_ahead(SequenceControlSet* scs) {
     /*To accomodate FFMPEG EOS, 1 frame delay is needed in Resource coordination.
            note that we have the option to not add 1 frame delay of Resource Coordination. In this case we have wait for first I frame
            to be released back to be able to start first base(16). Anyway poc16 needs to wait for poc0 to finish.*/
@@ -2294,7 +2294,7 @@ uint8_t svt_aom_tf_max_ref_per_struct(uint32_t hierarchical_levels, uint8_t type
 * tf_ld_controls
 * TF control functions for low delay mode
 *******************************************************************************/
-static void tf_ld_controls(SequenceControlSet *scs, uint8_t tf_level) {
+static void tf_ld_controls(SequenceControlSet* scs, uint8_t tf_level) {
     switch (tf_level) {
     case 0:
         // I_SLICE TF Params
@@ -2378,7 +2378,7 @@ static void tf_ld_controls(SequenceControlSet *scs, uint8_t tf_level) {
     scs->tf_params_per_type[2].enable_8x8_pred = 0;
 }
 
-void tf_controls(SequenceControlSet *scs, uint8_t tf_level) {
+void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
     switch (tf_level) {
     case 0:
         // I_SLICE TF Params
@@ -3045,8 +3045,8 @@ void tf_controls(SequenceControlSet *scs, uint8_t tf_level) {
 /*
  * Derive tune Params; 0: use objective mode params, 1: use subjective mode params
  */
-static void derive_vq_params(SequenceControlSet *scs) {
-    VqCtrls *vq_ctrl = &scs->vq_ctrls;
+static void derive_vq_params(SequenceControlSet* scs) {
+    VqCtrls* vq_ctrl = &scs->vq_ctrls;
 
     if (scs->static_config.tune == TUNE_VQ) {
         // Sharpness
@@ -3076,7 +3076,7 @@ static void derive_vq_params(SequenceControlSet *scs) {
 /*
  * Derive TF Params
  */
-static void derive_tf_params(SequenceControlSet *scs) {
+static void derive_tf_params(SequenceControlSet* scs) {
     const uint32_t hierarchical_levels = scs->static_config.hierarchical_levels;
     // Do not perform TF if LD or 1 Layer or 1st pass
     const bool    do_tf    = scs->static_config.enable_tf && hierarchical_levels >= 1 && !scs->static_config.lossless;
@@ -3113,8 +3113,8 @@ static void derive_tf_params(SequenceControlSet *scs) {
 /*
  * Set the MRP control
  */
-static void set_mrp_ctrl(SequenceControlSet *scs, uint8_t mrp_level) {
-    MrpCtrls *mrp_ctrl = &scs->mrp_ctrls;
+static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
+    MrpCtrls* mrp_ctrl = &scs->mrp_ctrls;
 
     switch (mrp_level) {
     case 0:
@@ -3422,8 +3422,8 @@ static uint8_t get_tpl(uint8_t pred_structure, uint8_t superres_mode, uint8_t re
 /*
 * Set multi Pass Params
 */
-void set_multi_pass_params(SequenceControlSet *scs) {
-    EbSvtAv1EncConfiguration *config = &scs->static_config;
+void set_multi_pass_params(SequenceControlSet* scs) {
+    EbSvtAv1EncConfiguration* config = &scs->static_config;
 
     // Update passes
     if (scs->static_config.pass != ENC_SINGLE_PASS) {
@@ -3501,7 +3501,7 @@ void set_multi_pass_params(SequenceControlSet *scs) {
     scs->enc_ctx->recode_loop = scs->static_config.recode_loop;
 }
 
-static void validate_scaling_params(SequenceControlSet *scs) {
+static void validate_scaling_params(SequenceControlSet* scs) {
     if (scs->static_config.superres_mode == SUPERRES_FIXED && scs->static_config.superres_denom == SCALE_NUMERATOR &&
         scs->static_config.superres_kf_denom == SCALE_NUMERATOR) {
         scs->static_config.superres_mode = SUPERRES_NONE;
@@ -3523,8 +3523,8 @@ static void validate_scaling_params(SequenceControlSet *scs) {
     }
 }
 
-void set_qp_based_th_scaling_ctrls(SequenceControlSet *scs) {
-    QpBasedThScaling *qp_ctrls = &scs->qp_based_th_scaling_ctrls;
+void set_qp_based_th_scaling_ctrls(SequenceControlSet* scs) {
+    QpBasedThScaling* qp_ctrls = &scs->qp_based_th_scaling_ctrls;
     const EncMode     enc_mode = scs->static_config.enc_mode;
     const bool        allintra = scs->allintra;
     if (allintra) {
@@ -3604,7 +3604,7 @@ void set_qp_based_th_scaling_ctrls(SequenceControlSet *scs) {
     }
 }
 
-static void set_param_based_on_input(SequenceControlSet *scs) {
+static void set_param_based_on_input(SequenceControlSet* scs) {
     const bool allintra = scs->allintra;
 
     set_multi_pass_params(scs);
@@ -4024,7 +4024,7 @@ static void set_param_based_on_input(SequenceControlSet *scs) {
     scs->fast_aa_aware_screen_detection_mode = (scs->static_config.enc_mode >= ENC_M3) ? 1 : 0;
 }
 
-static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration *config_struct) {
+static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration* config_struct) {
     scs->max_input_luma_width  = config_struct->source_width;
     scs->max_input_luma_height = config_struct->source_height;
     // SB Definitions
@@ -4480,14 +4480,14 @@ static void copy_api_from_app(SequenceControlSet *scs, EbSvtAv1EncConfiguration 
 
 * Set Parameter
 **********************************/
-EB_API EbErrorType svt_av1_enc_set_parameter(EbComponentType          *svt_enc_component,
-                                             EbSvtAv1EncConfiguration *config_struct) {
+EB_API EbErrorType svt_av1_enc_set_parameter(EbComponentType*          svt_enc_component,
+                                             EbSvtAv1EncConfiguration* config_struct) {
     if (svt_enc_component == NULL) {
         return EB_ErrorBadParameter;
     }
 
-    EbEncHandle        *enc_handle = (EbEncHandle *)svt_enc_component->p_component_private;
-    SequenceControlSet *scs        = enc_handle->scs_instance->scs;
+    EbEncHandle*        enc_handle = (EbEncHandle*)svt_enc_component->p_component_private;
+    SequenceControlSet* scs        = enc_handle->scs_instance->scs;
     copy_api_from_app(scs, config_struct);
 
     EbErrorType return_error = svt_av1_verify_settings(scs);
@@ -4538,19 +4538,19 @@ EB_API EbErrorType svt_av1_enc_set_parameter(EbComponentType          *svt_enc_c
     return return_error;
 }
 
-EB_API EbErrorType svt_av1_enc_stream_header(EbComponentType     *svt_enc_component,
-                                             EbBufferHeaderType **output_stream_ptr) {
+EB_API EbErrorType svt_av1_enc_stream_header(EbComponentType*     svt_enc_component,
+                                             EbBufferHeaderType** output_stream_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
     if (!svt_enc_component) {
         return EB_ErrorBadParameter;
     }
 
-    EbEncHandle        *enc_handle = (EbEncHandle *)svt_enc_component->p_component_private;
-    SequenceControlSet *scs        = enc_handle->scs_instance->scs;
+    EbEncHandle*        enc_handle = (EbEncHandle*)svt_enc_component->p_component_private;
+    SequenceControlSet* scs        = enc_handle->scs_instance->scs;
     Bitstream           bitstream;
     OutputBitstreamUnit output_bitstream;
-    EbBufferHeaderType *output_stream_buffer;
+    EbBufferHeaderType* output_stream_buffer;
     uint32_t output_buffer_size = svt_aom_get_out_buffer_size(scs->max_input_luma_width, scs->max_input_luma_height);
     memset(&bitstream, 0, sizeof(Bitstream));
     memset(&output_bitstream, 0, sizeof(OutputBitstreamUnit));
@@ -4583,7 +4583,7 @@ EB_API EbErrorType svt_av1_enc_stream_header(EbComponentType     *svt_enc_compon
     return return_error;
 }
 
-EB_API EbErrorType svt_av1_enc_stream_header_release(EbBufferHeaderType *stream_header_ptr) {
+EB_API EbErrorType svt_av1_enc_stream_header_release(EbBufferHeaderType* stream_header_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
     if (!stream_header_ptr || !(stream_header_ptr->p_buffer)) {
@@ -4608,11 +4608,11 @@ from the sample application to the library buffers
  * downsample_2d_c_16_zero2bit_skipall
  *      downsample the input by skipping three pixels and zero out the two LSB bit
  ********************************************/
-static void downsample_2d_c_16_zero2bit_skipall(uint16_t *input_samples, // input parameter, input samples Ptr
+static void downsample_2d_c_16_zero2bit_skipall(uint16_t* input_samples, // input parameter, input samples Ptr
                                                 uint32_t  input_stride, // input parameter, input stride
                                                 uint32_t  input_area_width, // input parameter, input area width
                                                 uint32_t  input_area_height, // input parameter, input area height
-                                                uint8_t  *decim_8b_samples, // output parameter, decimated samples Ptr
+                                                uint8_t*  decim_8b_samples, // output parameter, decimated samples Ptr
                                                 uint32_t  decim_stride, // input parameter, output stride
                                                 uint32_t  decim_step) // input parameter, decimation amount in pixels
 {
@@ -4625,7 +4625,7 @@ static void downsample_2d_c_16_zero2bit_skipall(uint16_t *input_samples, // inpu
     for (input_samples += half_decim_step * input_stride, vertical_index = half_decim_step;
          vertical_index < input_area_height;
          vertical_index += decim_step) {
-        uint16_t *prev_input_line = input_samples - input_stride;
+        uint16_t* prev_input_line = input_samples - input_stride;
         for (horizontal_index = half_decim_step, decim_horizontal_index = 0; horizontal_index < input_area_width;
              horizontal_index += decim_step, decim_horizontal_index++) {
             decim_8b_samples[decim_horizontal_index] = (uint8_t)((prev_input_line[horizontal_index - 1]) >> 2);
@@ -4641,11 +4641,11 @@ static void downsample_2d_c_16_zero2bit_skipall(uint16_t *input_samples, // inpu
  * downsample_2d_c_skipall
  *      downsample the input by skipping three pixels
  ********************************************/
-static void downsample_2d_c_skipall(uint8_t *input_samples, // input parameter, input samples Ptr
+static void downsample_2d_c_skipall(uint8_t* input_samples, // input parameter, input samples Ptr
                                     uint32_t input_stride, // input parameter, input stride
                                     uint32_t input_area_width, // input parameter, input area width
                                     uint32_t input_area_height, // input parameter, input area height
-                                    uint8_t *decim_samples, // output parameter, decimated samples Ptr
+                                    uint8_t* decim_samples, // output parameter, decimated samples Ptr
                                     uint32_t decim_stride, // input parameter, output stride
                                     uint32_t decim_step) // input parameter, decimation amount in pixels
 {
@@ -4658,7 +4658,7 @@ static void downsample_2d_c_skipall(uint8_t *input_samples, // input parameter, 
     for (input_samples += half_decim_step * input_stride, vertical_index = half_decim_step;
          vertical_index < input_area_height;
          vertical_index += decim_step) {
-        uint8_t *prev_input_line = input_samples - input_stride;
+        uint8_t* prev_input_line = input_samples - input_stride;
         for (horizontal_index = half_decim_step, decim_horizontal_index = 0; horizontal_index < input_area_width;
              horizontal_index += decim_step, decim_horizontal_index++) {
             decim_samples[decim_horizontal_index] = (uint32_t)prev_input_line[horizontal_index - 1];
@@ -4674,13 +4674,13 @@ static void downsample_2d_c_skipall(uint8_t *input_samples, // input parameter, 
  Down sample and Copy the input buffer
 from the sample application to the library buffers
 ************************************************/
-static EbErrorType downsample_copy_frame_buffer(SequenceControlSet *scs, uint8_t *destination, uint8_t *destination_y8b,
-                                                uint8_t *source, int pass) {
+static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t* destination, uint8_t* destination_y8b,
+                                                uint8_t* source, int pass) {
     EbErrorType return_error = EB_ErrorNone;
 
-    EbPictureBufferDesc *input_pic             = (EbPictureBufferDesc *)destination;
-    EbPictureBufferDesc *y8b_input_picture_ptr = (EbPictureBufferDesc *)destination_y8b;
-    EbSvtIOFormat       *input_ptr             = (EbSvtIOFormat *)source;
+    EbPictureBufferDesc* input_pic             = (EbPictureBufferDesc*)destination;
+    EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
+    EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
     uint32_t luma_buffer_offset   = input_pic->stride_y * scs->top_padding + scs->left_padding;
@@ -4720,7 +4720,7 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet *scs, uint8_t
                                     2);
         }
     } else { // 10bit packed
-        downsample_2d_c_16_zero2bit_skipall((uint16_t *)input_ptr->luma,
+        downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->luma,
                                             input_ptr->y_stride,
                                             luma_width << 1,
                                             luma_height << 1,
@@ -4731,7 +4731,7 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet *scs, uint8_t
         memset(input_pic->buffer_bit_inc_y, 0, input_pic->luma_size / 4);
 
         if (pass != ENCODE_FIRST_PASS) {
-            downsample_2d_c_16_zero2bit_skipall((uint16_t *)input_ptr->cb,
+            downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cb,
                                                 input_ptr->cb_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
@@ -4741,7 +4741,7 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet *scs, uint8_t
 
             memset(input_pic->buffer_bit_inc_cb, 0, input_pic->chroma_size / 4);
 
-            downsample_2d_c_16_zero2bit_skipall((uint16_t *)input_ptr->cr,
+            downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cr,
                                                 input_ptr->cr_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
@@ -4760,13 +4760,13 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet *scs, uint8_t
 from the sample application to the library buffers
 */
 
-static EbErrorType copy_frame_buffer(SequenceControlSet *scs, uint8_t *destination, uint8_t *destination_y8b,
-                                     uint8_t *source, int pass) {
+static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destination, uint8_t* destination_y8b,
+                                     uint8_t* source, int pass) {
     EbErrorType return_error = EB_ErrorNone;
 
-    EbPictureBufferDesc *input_pic             = (EbPictureBufferDesc *)destination;
-    EbPictureBufferDesc *y8b_input_picture_ptr = (EbPictureBufferDesc *)destination_y8b;
-    EbSvtIOFormat       *input_ptr             = (EbSvtIOFormat *)source;
+    EbPictureBufferDesc* input_pic             = (EbPictureBufferDesc*)destination;
+    EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
+    EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
 
@@ -4807,7 +4807,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs, uint8_t *destinati
         uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
         uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
 
-        svt_unpack_and_2bcompress((uint16_t *)input_ptr->luma,
+        svt_unpack_and_2bcompress((uint16_t*)input_ptr->luma,
                                   input_ptr->y_stride,
                                   y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
                                   y8b_input_picture_ptr->stride_y,
@@ -4816,7 +4816,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs, uint8_t *destinati
                                   luma_width,
                                   luma_height);
         if (pass != ENCODE_FIRST_PASS) {
-            svt_unpack_and_2bcompress((uint16_t *)input_ptr->cb,
+            svt_unpack_and_2bcompress((uint16_t*)input_ptr->cb,
                                       input_ptr->cb_stride,
                                       input_pic->buffer_cb + chroma_buffer_offset,
                                       input_pic->stride_cb,
@@ -4825,7 +4825,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs, uint8_t *destinati
                                       chroma_width,
                                       chroma_height);
 
-            svt_unpack_and_2bcompress((uint16_t *)input_ptr->cr,
+            svt_unpack_and_2bcompress((uint16_t*)input_ptr->cr,
                                       input_ptr->cr_stride,
                                       input_pic->buffer_cr + chroma_buffer_offset,
                                       input_pic->stride_cr,
@@ -4838,11 +4838,11 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs, uint8_t *destinati
     return return_error;
 }
 
-static EbErrorType copy_private_data_list(EbBufferHeaderType *dst, EbBufferHeaderType *src) {
+static EbErrorType copy_private_data_list(EbBufferHeaderType* dst, EbBufferHeaderType* src) {
     EbErrorType     return_error = EB_ErrorNone;
-    EbPrivDataNode *p_src_node   = (EbPrivDataNode *)src->p_app_private;
-    EbPrivDataNode *p_first_node = NULL;
-    EbPrivDataNode *p_new_node   = NULL;
+    EbPrivDataNode* p_src_node   = (EbPrivDataNode*)src->p_app_private;
+    EbPrivDataNode* p_first_node = NULL;
+    EbPrivDataNode* p_new_node   = NULL;
     while (p_src_node) {
         // skip undefined data type and throw an error in debugging
         if (p_src_node->node_type < PRIVATE_DATA || p_src_node->node_type >= PRIVATE_DATA_TYPES) {
@@ -4875,9 +4875,9 @@ static EbErrorType copy_private_data_list(EbBufferHeaderType *dst, EbBufferHeade
 /**************************************
 * svt_input_buffer_header_update: update the parameters in input_buffer_header for changing the resolution on the fly
 **************************************/
-EbErrorType svt_input_buffer_header_update(EbBufferHeaderType *input_buffer, SequenceControlSet *scs, bool noy8b) {
+EbErrorType svt_input_buffer_header_update(EbBufferHeaderType* input_buffer, SequenceControlSet* scs, bool noy8b) {
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
-    EbSvtAv1EncConfiguration   *config   = &scs->static_config;
+    EbSvtAv1EncConfiguration*   config   = &scs->static_config;
     uint8_t                     is_16bit = config->encoder_bit_depth > 8 ? 1 : 0;
 
     input_pic_buf_desc_init_data.max_width = !(scs->max_input_luma_width % 8)
@@ -4903,10 +4903,10 @@ EbErrorType svt_input_buffer_header_update(EbBufferHeaderType *input_buffer, Seq
 
     // Enhanced Picture Buffer
     if (!noy8b) {
-        svt_picture_buffer_desc_update((EbPictureBufferDesc *)input_buffer->p_buffer,
+        svt_picture_buffer_desc_update((EbPictureBufferDesc*)input_buffer->p_buffer,
                                        (EbPtr)&input_pic_buf_desc_init_data);
     } else {
-        svt_picture_buffer_desc_noy8b_update((EbPictureBufferDesc *)input_buffer->p_buffer,
+        svt_picture_buffer_desc_noy8b_update((EbPictureBufferDesc*)input_buffer->p_buffer,
                                              (EbPtr)&input_pic_buf_desc_init_data);
     }
 
@@ -4916,9 +4916,9 @@ EbErrorType svt_input_buffer_header_update(EbBufferHeaderType *input_buffer, Seq
 /**************************************
 * svt_input_y8b_update: update the parameters in input_y8b for changing the resolution on the fly
 **************************************/
-EbErrorType svt_input_y8b_update(EbBufferHeaderType *input_buffer, SequenceControlSet *scs) {
+EbErrorType svt_input_y8b_update(EbBufferHeaderType* input_buffer, SequenceControlSet* scs) {
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
-    EbSvtAv1EncConfiguration   *config   = &scs->static_config;
+    EbSvtAv1EncConfiguration*   config   = &scs->static_config;
     uint8_t                     is_16bit = 0;
 
     input_pic_buf_desc_init_data.max_width = !(scs->max_input_luma_width % 8)
@@ -4942,7 +4942,7 @@ EbErrorType svt_input_y8b_update(EbBufferHeaderType *input_buffer, SequenceContr
     input_pic_buf_desc_init_data.is_16bit_pipeline  = 0;
 
     // Enhanced Picture Buffer
-    svt_picture_buffer_desc_update((EbPictureBufferDesc *)input_buffer->p_buffer, (EbPtr)&input_pic_buf_desc_init_data);
+    svt_picture_buffer_desc_update((EbPictureBufferDesc*)input_buffer->p_buffer, (EbPtr)&input_pic_buf_desc_init_data);
 
     return EB_ErrorNone;
 }
@@ -4950,8 +4950,8 @@ EbErrorType svt_input_y8b_update(EbBufferHeaderType *input_buffer, SequenceContr
 /*
     memset the library input buffer(s)
 */
-static void memset_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst, EbBufferHeaderType *dst_y8b,
-                                EbBufferHeaderType *src, int pass) {
+static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst, EbBufferHeaderType* dst_y8b,
+                                EbBufferHeaderType* src, int pass) {
     // Copy the higher level structure
     dst->n_alloc_len  = src->n_alloc_len;
     dst->n_filled_len = src->n_filled_len;
@@ -4964,9 +4964,9 @@ static void memset_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst
     if (scs->first_pass_downsample) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
-            EbPictureBufferDesc      *y8b_input_picture_ptr = (EbPictureBufferDesc *)dst_y8b->p_buffer;
-            EbPictureBufferDesc      *input_pic             = (EbPictureBufferDesc *)dst->p_buffer;
-            EbSvtAv1EncConfiguration *config                = &scs->static_config;
+            EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
+            EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
+            EbSvtAv1EncConfiguration* config                = &scs->static_config;
             bool                      is_16bit_input        = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t             subsampling_y =
@@ -4995,9 +4995,9 @@ static void memset_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst
     } else if (pass != ENCODE_FIRST_PASS) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
-            EbPictureBufferDesc      *y8b_input_picture_ptr = (EbPictureBufferDesc *)dst_y8b->p_buffer;
-            EbPictureBufferDesc      *input_pic             = (EbPictureBufferDesc *)dst->p_buffer;
-            EbSvtAv1EncConfiguration *config                = &scs->static_config;
+            EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
+            EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
+            EbSvtAv1EncConfiguration* config                = &scs->static_config;
             bool                      is_16bit_input        = config->encoder_bit_depth > EB_EIGHT_BIT;
             const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t             subsampling_y =
@@ -5041,8 +5041,8 @@ static void memset_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst
  Copy the input buffer header content
 from the sample application to the library buffers
 */
-static void copy_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst, EbBufferHeaderType *dst_y8b,
-                              EbBufferHeaderType *src, int pass) {
+static void copy_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst, EbBufferHeaderType* dst_y8b,
+                              EbBufferHeaderType* src, int pass) {
     // Copy the higher level structure
     dst->n_alloc_len  = src->n_alloc_len;
     dst->n_filled_len = src->n_filled_len;
@@ -5078,12 +5078,12 @@ static void copy_input_buffer(SequenceControlSet *scs, EbBufferHeaderType *dst, 
 }
 
 // Update the input picture definitions: resolution of the sequence
-static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, SequenceControlSet *scs,
+static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType* input_ptr, SequenceControlSet* scs,
                                                 EbHandle config_mutex) {
-    EbPrivDataNode *node = (EbPrivDataNode *)input_ptr->p_app_private;
+    EbPrivDataNode* node = (EbPrivDataNode*)input_ptr->p_app_private;
     while (node) {
         if (node->node_type == RES_CHANGE_EVENT) {
-            SvtAv1InputPicDef *node_data = (SvtAv1InputPicDef *)node->data;
+            SvtAv1InputPicDef* node_data = (SvtAv1InputPicDef*)node->data;
             if (input_ptr->pic_type != EB_AV1_KEY_PICTURE) {
                 input_ptr->flags = EB_BUFFERFLAG_EOS;
                 SVT_ERROR("Resolution change on the fly not supported for non key frames\n");
@@ -5135,7 +5135,7 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
             } else {
                 svt_aom_assert_err(node->size == sizeof(SvtAv1InputPicDef),
                                    "invalid private data of type RES_CHANGE_EVENT");
-                SvtAv1InputPicDef *input_pic_def = (SvtAv1InputPicDef *)node->data;
+                SvtAv1InputPicDef* input_pic_def = (SvtAv1InputPicDef*)node->data;
                 svt_block_on_mutex(config_mutex);
                 // Check if a resolution change occurred
                 scs->max_input_luma_width  = input_pic_def->input_luma_width;
@@ -5145,7 +5145,7 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
                 svt_release_mutex(config_mutex);
             }
         } else if (node->node_type == RATE_CHANGE_EVENT) {
-            SvtAv1RateInfo *node_data = (SvtAv1RateInfo *)node->data;
+            SvtAv1RateInfo* node_data = (SvtAv1RateInfo*)node->data;
             if ((scs->static_config.target_bit_rate != node_data->target_bit_rate) &&
                 !((scs->static_config.pred_structure == LOW_DELAY) &&
                   (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR))) {
@@ -5166,7 +5166,7 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
                 return EB_ErrorBadParameter;
             }
         } else if (node->node_type == FRAME_RATE_CHANGE_EVENT) {
-            SvtAv1FrameRateInfo *node_data = (SvtAv1FrameRateInfo *)node->data;
+            SvtAv1FrameRateInfo* node_data = (SvtAv1FrameRateInfo*)node->data;
             if (!((scs->static_config.pred_structure == LOW_DELAY) &&
                   (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR))) {
                 input_ptr->flags = EB_BUFFERFLAG_EOS;
@@ -5189,14 +5189,14 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, S
 /**********************************
 * Empty This Buffer
 **********************************/
-EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, EbBufferHeaderType *p_buffer) {
+EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType* svt_enc_component, EbBufferHeaderType* p_buffer) {
     EbErrorType         return_val     = EB_ErrorNone;
-    EbEncHandle        *enc_handle_ptr = (EbEncHandle *)svt_enc_component->p_component_private;
-    EbObjectWrapper    *eb_wrapper_ptr;
-    EbBufferHeaderType *app_hdr    = p_buffer;
+    EbEncHandle*        enc_handle_ptr = (EbEncHandle*)svt_enc_component->p_component_private;
+    EbObjectWrapper*    eb_wrapper_ptr;
+    EbBufferHeaderType* app_hdr    = p_buffer;
     enc_handle_ptr->frame_received = true;
 
-    SequenceControlSet *scs = enc_handle_ptr->scs_instance->scs;
+    SequenceControlSet* scs = enc_handle_ptr->scs_instance->scs;
     if (scs->static_config.avif && (p_buffer->flags & EB_BUFFERFLAG_EOS) != EB_BUFFERFLAG_EOS && p_buffer->pts == 3) {
         p_buffer->flags              = EB_BUFFERFLAG_EOS;
         p_buffer->pic_type           = EB_AV1_INVALID_PICTURE;
@@ -5217,7 +5217,7 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
     }
 
     // Get new Luma-8b buffer & a new (Chroma-8b + Luma-Chroma-2bit) buffers; Lib will release once done.
-    EbObjectWrapper *y8b_wrapper;
+    EbObjectWrapper* y8b_wrapper;
     svt_get_empty_object(enc_handle_ptr->input_y8b_buffer_producer_fifo_ptr, &y8b_wrapper);
     // Update the input picture definitions: resolution of the sequence
     if (validate_on_the_fly_settings(p_buffer, scs, enc_handle_ptr->scs_instance->config_mutex)) {
@@ -5225,8 +5225,8 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
         enc_handle_ptr->eos_received = 1;
     }
     // if resolution has changed, and the y8b_wrapper settings do not match scs settings, update y8b_wrapper settings
-    if (buffer_update_needed((EbBufferHeaderType *)y8b_wrapper->object_ptr, scs)) {
-        svt_input_y8b_update((EbBufferHeaderType *)y8b_wrapper->object_ptr, scs);
+    if (buffer_update_needed((EbBufferHeaderType*)y8b_wrapper->object_ptr, scs)) {
+        svt_input_y8b_update((EbBufferHeaderType*)y8b_wrapper->object_ptr, scs);
     }
     //set live count to 1 to be decremented at the end of the encode in RC
     svt_object_inc_live_count(y8b_wrapper, 1);
@@ -5235,8 +5235,8 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
 
     svt_get_empty_object(enc_handle_ptr->input_buffer_producer_fifo_ptr, &eb_wrapper_ptr);
     // if resolution has changed, and the input_buffer settings do not match scs settings, update input_buffer settings
-    if (buffer_update_needed((EbBufferHeaderType *)eb_wrapper_ptr->object_ptr, scs)) {
-        svt_input_buffer_header_update((EbBufferHeaderType *)eb_wrapper_ptr->object_ptr, scs, true);
+    if (buffer_update_needed((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, scs)) {
+        svt_input_buffer_header_update((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, scs, true);
     }
 
     //set live count to 1 to be decremented at the end of the encode in RC, and released
@@ -5246,12 +5246,12 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
     enc_handle_ptr->eos_received += p_buffer->flags & EB_BUFFERFLAG_EOS;
 
     // copy the Luma 8bit part into y8b buffer and the rest of samples into the regular buffer
-    EbBufferHeaderType *lib_y8b_hdr = (EbBufferHeaderType *)y8b_wrapper->object_ptr;
-    EbBufferHeaderType *lib_reg_hdr = (EbBufferHeaderType *)eb_wrapper_ptr->object_ptr;
+    EbBufferHeaderType* lib_y8b_hdr = (EbBufferHeaderType*)y8b_wrapper->object_ptr;
+    EbBufferHeaderType* lib_reg_hdr = (EbBufferHeaderType*)eb_wrapper_ptr->object_ptr;
 
     // check whether the n_filled_len has enough samples to be processed
-    EbPictureBufferDesc      *input_pic      = (EbPictureBufferDesc *)lib_y8b_hdr->p_buffer;
-    EbSvtAv1EncConfiguration *config         = &scs->static_config;
+    EbPictureBufferDesc*      input_pic      = (EbPictureBufferDesc*)lib_y8b_hdr->p_buffer;
+    EbSvtAv1EncConfiguration* config         = &scs->static_config;
     bool                      is_16bit_input = config->encoder_bit_depth > EB_EIGHT_BIT;
 
     const uint8_t subsampling_x = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
@@ -5274,9 +5274,9 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
     }
 
     //Take a new App-RessCoord command
-    EbObjectWrapper *input_cmd_wrp;
+    EbObjectWrapper* input_cmd_wrp;
     svt_get_empty_object(enc_handle_ptr->input_cmd_producer_fifo_ptr, &input_cmd_wrp);
-    InputCommand *input_cmd_obj = (InputCommand *)input_cmd_wrp->object_ptr;
+    InputCommand* input_cmd_obj = (InputCommand*)input_cmd_wrp->object_ptr;
     //Fill the command with two picture buffers
     input_cmd_obj->eb_input_wrapper_ptr = eb_wrapper_ptr;
     input_cmd_obj->y8b_wrapper          = y8b_wrapper;
@@ -5285,7 +5285,7 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType *svt_enc_component, 
     return return_val;
 }
 
-static void copy_output_recon_buffer(EbBufferHeaderType *dst, EbBufferHeaderType *src) {
+static void copy_output_recon_buffer(EbBufferHeaderType* dst, EbBufferHeaderType* src) {
     // copy output Bitstream fileds
     dst->size          = src->size;
     dst->n_alloc_len   = src->n_alloc_len;
@@ -5313,13 +5313,13 @@ static void copy_output_recon_buffer(EbBufferHeaderType *dst, EbBufferHeaderType
 /**********************************
 * svt_av1_enc_get_packet sends out packet
 **********************************/
-EB_API EbErrorType svt_av1_enc_get_packet(EbComponentType *svt_enc_component, EbBufferHeaderType **p_buffer,
+EB_API EbErrorType svt_av1_enc_get_packet(EbComponentType* svt_enc_component, EbBufferHeaderType** p_buffer,
                                           unsigned char pic_send_done) {
     EbErrorType                     return_error   = EB_ErrorNone;
-    EbEncHandle                    *enc_handle     = (EbEncHandle *)svt_enc_component->p_component_private;
-    EbObjectWrapper                *eb_wrapper_ptr = NULL;
-    EbBufferHeaderType             *packet;
-    const EbSvtAv1EncConfiguration *cfg = &enc_handle->scs_instance->scs->static_config;
+    EbEncHandle*                    enc_handle     = (EbEncHandle*)svt_enc_component->p_component_private;
+    EbObjectWrapper*                eb_wrapper_ptr = NULL;
+    EbBufferHeaderType*             packet;
+    const EbSvtAv1EncConfiguration* cfg = &enc_handle->scs_instance->scs->static_config;
 
     // check if the user is claiming that the last picture has been sent
     // without actually signalling it through svt_av1_enc_send_picture()
@@ -5339,7 +5339,7 @@ EB_API EbErrorType svt_av1_enc_get_packet(EbComponentType *svt_enc_component, Eb
     }
 
     if (eb_wrapper_ptr) {
-        packet = (EbBufferHeaderType *)eb_wrapper_ptr->object_ptr;
+        packet = (EbBufferHeaderType*)eb_wrapper_ptr->object_ptr;
         if (packet->flags & 0xfffffff0) {
             return_error = EB_ErrorMax;
         }
@@ -5350,20 +5350,20 @@ EB_API EbErrorType svt_av1_enc_get_packet(EbComponentType *svt_enc_component, Eb
         enc_handle->eos_sent += packet->flags & EB_BUFFERFLAG_EOS;
 
         // save the wrapper pointer for the release
-        (*p_buffer)->wrapper_ptr = (void *)eb_wrapper_ptr;
+        (*p_buffer)->wrapper_ptr = (void*)eb_wrapper_ptr;
     } else {
         return_error = EB_NoErrorEmptyQueue;
     }
     return return_error;
 }
 
-EB_API void svt_av1_enc_release_out_buffer(EbBufferHeaderType **p_buffer) {
+EB_API void svt_av1_enc_release_out_buffer(EbBufferHeaderType** p_buffer) {
     if (p_buffer && (*p_buffer)->wrapper_ptr) {
         if ((*p_buffer)->p_buffer) {
             EB_FREE((*p_buffer)->p_buffer);
         }
         // Release out put buffer back into the pool
-        svt_release_object((EbObjectWrapper *)(*p_buffer)->wrapper_ptr);
+        svt_release_object((EbObjectWrapper*)(*p_buffer)->wrapper_ptr);
     }
     return;
 }
@@ -5371,16 +5371,16 @@ EB_API void svt_av1_enc_release_out_buffer(EbBufferHeaderType **p_buffer) {
 /**********************************
 * Fill This Buffer
 **********************************/
-EB_API EbErrorType svt_av1_get_recon(EbComponentType *svt_enc_component, EbBufferHeaderType *p_buffer) {
+EB_API EbErrorType svt_av1_get_recon(EbComponentType* svt_enc_component, EbBufferHeaderType* p_buffer) {
     EbErrorType      return_error   = EB_ErrorNone;
-    EbEncHandle     *enc_handle     = (EbEncHandle *)svt_enc_component->p_component_private;
-    EbObjectWrapper *eb_wrapper_ptr = NULL;
+    EbEncHandle*     enc_handle     = (EbEncHandle*)svt_enc_component->p_component_private;
+    EbObjectWrapper* eb_wrapper_ptr = NULL;
 
     if (enc_handle->scs_instance->scs->static_config.recon_enabled) {
         svt_get_full_object_non_blocking(enc_handle->output_recon_buffer_consumer_fifo_ptr, &eb_wrapper_ptr);
 
         if (eb_wrapper_ptr) {
-            EbBufferHeaderType *obj_ptr = (EbBufferHeaderType *)eb_wrapper_ptr->object_ptr;
+            EbBufferHeaderType* obj_ptr = (EbBufferHeaderType*)eb_wrapper_ptr->object_ptr;
             copy_output_recon_buffer(p_buffer, obj_ptr);
 
             if (p_buffer->flags != EB_BUFFERFLAG_EOS && p_buffer->flags != 0) {
@@ -5389,7 +5389,7 @@ EB_API EbErrorType svt_av1_get_recon(EbComponentType *svt_enc_component, EbBuffe
             if (obj_ptr->metadata) {
                 svt_metadata_array_free(&obj_ptr->metadata);
             }
-            svt_release_object((EbObjectWrapper *)eb_wrapper_ptr);
+            svt_release_object((EbObjectWrapper*)eb_wrapper_ptr);
         } else {
             return_error = EB_NoErrorEmptyQueue;
         }
@@ -5405,14 +5405,14 @@ EB_API EbErrorType svt_av1_get_recon(EbComponentType *svt_enc_component, EbBuffe
 * Encoder Error Handling
 **********************************/
 static void lib_svt_encoder_send_error_exit(EbPtr hComponent, uint32_t error_code) {
-    EbComponentType    *svt_enc_component = (EbComponentType *)hComponent;
-    EbEncHandle        *enc_handle        = (EbEncHandle *)svt_enc_component->p_component_private;
-    EbObjectWrapper    *eb_wrapper_ptr    = NULL;
-    EbBufferHeaderType *output_packet;
+    EbComponentType*    svt_enc_component = (EbComponentType*)hComponent;
+    EbEncHandle*        enc_handle        = (EbEncHandle*)svt_enc_component->p_component_private;
+    EbObjectWrapper*    eb_wrapper_ptr    = NULL;
+    EbBufferHeaderType* output_packet;
 
     svt_get_empty_object(enc_handle->output_stream_buffer_consumer_fifo_ptr, &eb_wrapper_ptr);
 
-    output_packet = (EbBufferHeaderType *)eb_wrapper_ptr->object_ptr;
+    output_packet = (EbBufferHeaderType*)eb_wrapper_ptr->object_ptr;
 
     output_packet->size     = 0;
     output_packet->flags    = error_code;
@@ -5421,14 +5421,14 @@ static void lib_svt_encoder_send_error_exit(EbPtr hComponent, uint32_t error_cod
     svt_post_full_object(eb_wrapper_ptr);
 }
 
-EB_API const char *svt_av1_get_version(void) {
+EB_API const char* svt_av1_get_version(void) {
     return SVT_AV1_CVS_VERSION;
 }
 
 EB_API void svt_av1_print_version(void) {
     SVT_INFO("-------------------------------------------\n");
     SVT_INFO("SVT [version]:\tSVT-AV1 Encoder Lib %s\n", SVT_AV1_CVS_VERSION);
-    const char *compiler =
+    const char* compiler =
 #if defined(__clang__)
         __VERSION__ "\t"
 #elif defined(__GNUC__)
@@ -5447,7 +5447,7 @@ EB_API void svt_av1_print_version(void) {
         "unknown compiler"
 #endif
         ;
-    SVT_INFO("SVT [build]  :\t%s %zu bit\n", compiler, sizeof(void *) * 8);
+    SVT_INFO("SVT [build]  :\t%s %zu bit\n", compiler, sizeof(void*) * 8);
 #if !REPRODUCIBLE_BUILDS
     SVT_INFO("LIB Build date: %s %s\n", __DATE__, __TIME__);
 #endif
@@ -5457,7 +5457,7 @@ EB_API void svt_av1_print_version(void) {
 /**
  * Set log callback, wrapper around internal function to ensure public functions are stored in one place.
  */
-EB_API void svt_av1_set_log_callback(SvtAv1LogCallback callback, void *context) {
+EB_API void svt_av1_set_log_callback(SvtAv1LogCallback callback, void* context) {
 #if !CONFIG_LOG_QUIET
     svt_aom_log_set_callback(callback, context);
 #else
@@ -5469,10 +5469,10 @@ EB_API void svt_av1_set_log_callback(SvtAv1LogCallback callback, void *context) 
 /**********************************
 * Encoder Handle Initialization
 **********************************/
-static EbErrorType init_svt_av1_encoder_handle(EbComponentType *hComponent) {
+static EbErrorType init_svt_av1_encoder_handle(EbComponentType* hComponent) {
     EbErrorType      return_error      = EB_ErrorNone;
-    EbComponentType *svt_enc_component = hComponent;
-    EbEncHandle     *handle;
+    EbComponentType* svt_enc_component = hComponent;
+    EbEncHandle*     handle;
     svt_av1_print_version();
 
     enc_switch_to_real_time();
@@ -5486,10 +5486,10 @@ static EbErrorType init_svt_av1_encoder_handle(EbComponentType *hComponent) {
     return return_error;
 }
 
-static EbErrorType allocate_frame_buffer(SequenceControlSet *scs, EbBufferHeaderType *input_buffer, bool noy8b) {
+static EbErrorType allocate_frame_buffer(SequenceControlSet* scs, EbBufferHeaderType* input_buffer, bool noy8b) {
     EbErrorType                 return_error = EB_ErrorNone;
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
-    EbSvtAv1EncConfiguration   *config   = &scs->static_config;
+    EbSvtAv1EncConfiguration*   config   = &scs->static_config;
     uint8_t                     is_16bit = config->encoder_bit_depth > 8 ? 1 : 0;
 
     input_pic_buf_desc_init_data.max_width = !(scs->max_input_luma_width % 8)
@@ -5515,13 +5515,13 @@ static EbErrorType allocate_frame_buffer(SequenceControlSet *scs, EbBufferHeader
 
     // Enhanced Picture Buffer
     {
-        EbPictureBufferDesc *buf;
+        EbPictureBufferDesc* buf;
         if (!noy8b) {
             EB_NEW(buf, svt_picture_buffer_desc_ctor, (EbPtr)&input_pic_buf_desc_init_data);
         } else {
             EB_NEW(buf, svt_picture_buffer_desc_ctor_noy8b, (EbPtr)&input_pic_buf_desc_init_data);
         }
-        input_buffer->p_buffer = (uint8_t *)buf;
+        input_buffer->p_buffer = (uint8_t*)buf;
     }
 
     return return_error;
@@ -5530,10 +5530,10 @@ static EbErrorType allocate_frame_buffer(SequenceControlSet *scs, EbBufferHeader
 /*
   allocate an input sample Luma-8bit buffer
 */
-static EbErrorType allocate_y8b_frame_buffer(SequenceControlSet *scs, EbBufferHeaderType *input_buffer) {
+static EbErrorType allocate_y8b_frame_buffer(SequenceControlSet* scs, EbBufferHeaderType* input_buffer) {
     EbErrorType                 return_error = EB_ErrorNone;
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
-    EbSvtAv1EncConfiguration   *config   = &scs->static_config;
+    EbSvtAv1EncConfiguration*   config   = &scs->static_config;
     uint8_t                     is_16bit = 0;
 
     input_pic_buf_desc_init_data.max_width = !(scs->max_input_luma_width % 8)
@@ -5558,9 +5558,9 @@ static EbErrorType allocate_y8b_frame_buffer(SequenceControlSet *scs, EbBufferHe
 
     // Enhanced Picture Buffer
     {
-        EbPictureBufferDesc *buf;
+        EbPictureBufferDesc* buf;
         EB_NEW(buf, svt_picture_buffer_desc_ctor, (EbPtr)&input_pic_buf_desc_init_data);
-        input_buffer->p_buffer = (uint8_t *)buf;
+        input_buffer->p_buffer = (uint8_t*)buf;
     }
 
     return return_error;
@@ -5569,9 +5569,9 @@ static EbErrorType allocate_y8b_frame_buffer(SequenceControlSet *scs, EbBufferHe
 /*
   create a luma 8bit buffer descriptor
 */
-EbErrorType svt_input_y8b_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbBufferHeaderType *input_buffer;
-    SequenceControlSet *scs = (SequenceControlSet *)object_init_data_ptr;
+EbErrorType svt_input_y8b_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbBufferHeaderType* input_buffer;
+    SequenceControlSet* scs = (SequenceControlSet*)object_init_data_ptr;
 
     *object_dbl_ptr = NULL;
     EB_CALLOC(input_buffer, 1, sizeof(EbBufferHeaderType));
@@ -5593,8 +5593,8 @@ EbErrorType svt_input_y8b_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_
   free a luma 8bit buffer descriptor
 */
 void svt_input_y8b_destroyer(EbPtr p) {
-    EbBufferHeaderType  *obj = (EbBufferHeaderType *)p;
-    EbPictureBufferDesc *buf = (EbPictureBufferDesc *)obj->p_buffer;
+    EbBufferHeaderType*  obj = (EbBufferHeaderType*)p;
+    EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
     if (buf) {
         EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_y);
         EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cb);
@@ -5608,9 +5608,9 @@ void svt_input_y8b_destroyer(EbPtr p) {
 /**************************************
 * EbBufferHeaderType Constructor
 **************************************/
-EbErrorType svt_input_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbBufferHeaderType *input_buffer;
-    SequenceControlSet *scs = (SequenceControlSet *)object_init_data_ptr;
+EbErrorType svt_input_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbBufferHeaderType* input_buffer;
+    SequenceControlSet* scs = (SequenceControlSet*)object_init_data_ptr;
 
     *object_dbl_ptr = NULL;
     EB_CALLOC(input_buffer, 1, sizeof(EbBufferHeaderType));
@@ -5629,8 +5629,8 @@ EbErrorType svt_input_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_
 }
 
 void svt_input_buffer_header_destroyer(EbPtr p) {
-    EbBufferHeaderType  *obj = (EbBufferHeaderType *)p;
-    EbPictureBufferDesc *buf = (EbPictureBufferDesc *)obj->p_buffer;
+    EbBufferHeaderType*  obj = (EbBufferHeaderType*)p;
+    EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
     if (buf) {
         EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_y);
         EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cb);
@@ -5641,9 +5641,9 @@ void svt_input_buffer_header_destroyer(EbPtr p) {
     EB_FREE(obj);
 }
 
-EbErrorType svt_overlay_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbBufferHeaderType *input_buffer;
-    SequenceControlSet *scs = (SequenceControlSet *)object_init_data_ptr;
+EbErrorType svt_overlay_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbBufferHeaderType* input_buffer;
+    SequenceControlSet* scs = (SequenceControlSet*)object_init_data_ptr;
 
     *object_dbl_ptr = NULL;
     EB_CALLOC(input_buffer, 1, sizeof(EbBufferHeaderType));
@@ -5664,9 +5664,9 @@ EbErrorType svt_overlay_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr objec
 /**************************************
 * EbBufferHeaderType Constructor
 **************************************/
-EbErrorType svt_output_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
+EbErrorType svt_output_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
     (void)object_init_data_ptr;
-    EbBufferHeaderType *out_buf_ptr;
+    EbBufferHeaderType* out_buf_ptr;
 
     *object_dbl_ptr = NULL;
     EB_CALLOC(out_buf_ptr, 1, sizeof(EbBufferHeaderType));
@@ -5682,16 +5682,16 @@ EbErrorType svt_output_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object
 }
 
 void svt_output_buffer_header_destroyer(EbPtr p) {
-    EbBufferHeaderType *obj = (EbBufferHeaderType *)p;
+    EbBufferHeaderType* obj = (EbBufferHeaderType*)p;
     EB_FREE(obj);
 }
 
 /**************************************
 * EbBufferHeaderType Constructor
 **************************************/
-EbErrorType svt_output_recon_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr object_init_data_ptr) {
-    EbBufferHeaderType *recon_buffer;
-    SequenceControlSet *scs       = (SequenceControlSet *)object_init_data_ptr;
+EbErrorType svt_output_recon_buffer_header_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr) {
+    EbBufferHeaderType* recon_buffer;
+    SequenceControlSet* scs       = (SequenceControlSet*)object_init_data_ptr;
     const uint32_t      luma_size = scs->seq_header.max_frame_width * scs->seq_header.max_frame_height;
     // both u and v
     const uint32_t chroma_size = luma_size >> 1;
@@ -5715,7 +5715,7 @@ EbErrorType svt_output_recon_buffer_header_creator(EbPtr *object_dbl_ptr, EbPtr 
 }
 
 void svt_output_recon_buffer_header_destroyer(EbPtr p) {
-    EbBufferHeaderType *obj = (EbBufferHeaderType *)p;
+    EbBufferHeaderType* obj = (EbBufferHeaderType*)p;
     EB_FREE(obj->p_buffer);
     EB_FREE(obj);
 }
@@ -5723,14 +5723,14 @@ void svt_output_recon_buffer_header_destroyer(EbPtr p) {
 /**********************************
 * svt_av1_enc_get_stream_info get stream information from encoder
 **********************************/
-EB_API EbErrorType svt_av1_enc_get_stream_info(EbComponentType *svt_enc_component, uint32_t stream_info_id,
-                                               void *info) {
+EB_API EbErrorType svt_av1_enc_get_stream_info(EbComponentType* svt_enc_component, uint32_t stream_info_id,
+                                               void* info) {
     if (stream_info_id >= SVT_AV1_STREAM_INFO_END || stream_info_id < SVT_AV1_STREAM_INFO_START) {
         return EB_ErrorBadParameter;
     }
-    EbEncHandle    *enc_handle       = svt_enc_component->p_component_private;
-    EncodeContext  *context          = enc_handle->scs_instance->enc_ctx;
-    SvtAv1FixedBuf *first_pass_stats = info;
+    EbEncHandle*    enc_handle       = svt_enc_component->p_component_private;
+    EncodeContext*  context          = enc_handle->scs_instance->enc_ctx;
+    SvtAv1FixedBuf* first_pass_stats = info;
     first_pass_stats->buf            = context->stats_out.stat;
     first_pass_stats->sz             = context->stats_out.size * sizeof(FIRSTPASS_STATS);
     return EB_ErrorNone;

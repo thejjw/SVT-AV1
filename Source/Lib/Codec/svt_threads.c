@@ -51,7 +51,7 @@
 #if PRINTF_TIME
 #include <time.h>
 #ifdef _WIN32
-void printfTime(const char *fmt, ...) {
+void printfTime(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     SVT_LOG("  [%i ms]\t", ((int32_t)clock()));
@@ -62,7 +62,7 @@ void printfTime(const char *fmt, ...) {
 #endif
 
 #ifndef _WIN32
-static void *dummy_func(void *arg) {
+static void* dummy_func(void* arg) {
     (void)arg;
     return NULL;
 }
@@ -120,7 +120,7 @@ end:
 /****************************************
  * svt_create_thread
  ****************************************/
-EbHandle svt_create_thread(void *thread_function(void *), void *thread_context) {
+EbHandle svt_create_thread(void* thread_function(void*), void* thread_context) {
     EbHandle thread_handle = NULL;
 
 #ifdef _WIN32
@@ -158,7 +158,7 @@ EbHandle svt_create_thread(void *thread_function(void *), void *thread_context) 
     // We don't care if this fails, it's just a hint for the min size we are expecting.
     (void)pthread_attr_setstacksize(&attr, min_stack_size);
 
-    pthread_t *th = malloc(sizeof(*th));
+    pthread_t* th = malloc(sizeof(*th));
     if (th == NULL) {
         SVT_ERROR("Failed to allocate thread handle\n");
         pthread_attr_destroy(&attr);
@@ -191,7 +191,7 @@ EbErrorType svt_destroy_thread(EbHandle thread_handle) {
     WaitForSingleObject(thread_handle, INFINITE);
     error_return = CloseHandle(thread_handle) ? EB_ErrorNone : EB_ErrorDestroyThreadFailed;
 #else
-    error_return = pthread_join(*((pthread_t *)thread_handle), NULL) ? EB_ErrorDestroyThreadFailed : EB_ErrorNone;
+    error_return = pthread_join(*((pthread_t*)thread_handle), NULL) ? EB_ErrorDestroyThreadFailed : EB_ErrorNone;
     free(thread_handle);
 #endif // _WIN32
 
@@ -215,9 +215,9 @@ EbHandle svt_create_semaphore(uint32_t initial_count, uint32_t max_count) {
 #else
     UNUSED(max_count);
 
-    semaphore_handle = (sem_t *)malloc(sizeof(sem_t));
+    semaphore_handle = (sem_t*)malloc(sizeof(sem_t));
     if (semaphore_handle != NULL) {
-        sem_init((sem_t *)semaphore_handle, // semaphore handle
+        sem_init((sem_t*)semaphore_handle, // semaphore handle
                  0, // shared semaphore (not local)
                  initial_count); // initial count
     }
@@ -242,7 +242,7 @@ EbErrorType svt_post_semaphore(EbHandle semaphore_handle) {
     dispatch_semaphore_signal((dispatch_semaphore_t)semaphore_handle);
     return_error = EB_ErrorNone;
 #else
-    return_error = sem_post((sem_t *)semaphore_handle) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
+    return_error = sem_post((sem_t*)semaphore_handle) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
 #endif
 
     return return_error;
@@ -264,7 +264,7 @@ EbErrorType svt_block_on_semaphore(EbHandle semaphore_handle) {
 #else
     int ret;
     do {
-        ret = sem_wait((sem_t *)semaphore_handle);
+        ret = sem_wait((sem_t*)semaphore_handle);
     } while (ret == -1 && errno == EINTR);
     return_error = ret ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
 #endif
@@ -284,7 +284,7 @@ EbErrorType svt_destroy_semaphore(EbHandle semaphore_handle) {
     dispatch_release((dispatch_semaphore_t)semaphore_handle);
     return_error = EB_ErrorNone;
 #else
-    return_error = sem_destroy((sem_t *)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
+    return_error = sem_destroy((sem_t*)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
     free(semaphore_handle);
 #endif
 
@@ -307,7 +307,7 @@ EbHandle svt_create_mutex(void) {
     mutex_handle = (EbHandle)malloc(sizeof(pthread_mutex_t));
 
     if (mutex_handle != NULL) {
-        pthread_mutex_init((pthread_mutex_t *)mutex_handle,
+        pthread_mutex_init((pthread_mutex_t*)mutex_handle,
                            NULL); // default attributes
     }
 #endif
@@ -324,7 +324,7 @@ EbErrorType svt_release_mutex(EbHandle mutex_handle) {
 #ifdef _WIN32
     return_error = !ReleaseMutex((HANDLE)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_unlock((pthread_mutex_t *)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
+    return_error = pthread_mutex_unlock((pthread_mutex_t*)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
 #endif
 
     return return_error;
@@ -339,7 +339,7 @@ EbErrorType svt_block_on_mutex(EbHandle mutex_handle) {
 #ifdef _WIN32
     return_error = WaitForSingleObject((HANDLE)mutex_handle, INFINITE) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_lock((pthread_mutex_t *)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
+    return_error = pthread_mutex_lock((pthread_mutex_t*)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
 #endif
 
     return return_error;
@@ -354,7 +354,7 @@ EbErrorType svt_destroy_mutex(EbHandle mutex_handle) {
 #ifdef _WIN32
     return_error = CloseHandle((HANDLE)mutex_handle) ? EB_ErrorDestroyMutexFailed : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_destroy((pthread_mutex_t *)mutex_handle) ? EB_ErrorDestroyMutexFailed : EB_ErrorNone;
+    return_error = pthread_mutex_destroy((pthread_mutex_t*)mutex_handle) ? EB_ErrorDestroyMutexFailed : EB_ErrorNone;
     free(mutex_handle);
 #endif
 
@@ -364,7 +364,7 @@ EbErrorType svt_destroy_mutex(EbHandle mutex_handle) {
 /*
     set an atomic variable to an input value
 */
-void svt_aom_atomic_set_u32(AtomicVarU32 *var, uint32_t in) {
+void svt_aom_atomic_set_u32(AtomicVarU32* var, uint32_t in) {
     svt_block_on_mutex(var->mutex);
     var->obj = in;
     svt_release_mutex(var->mutex);
@@ -379,7 +379,7 @@ void svt_aom_atomic_set_u32(AtomicVarU32 *var, uint32_t in) {
     a lock(mutex) and enter the sleeping state.
     it could be seen as a combined: wait and release mutex
 */
-EbErrorType svt_create_cond_var(CondVar *cond_var) {
+EbErrorType svt_create_cond_var(CondVar* cond_var) {
     EbErrorType return_error;
     cond_var->val = 0;
 #ifdef _WIN32
@@ -397,7 +397,7 @@ EbErrorType svt_create_cond_var(CondVar *cond_var) {
 /*
     set a  condition variable to the new value
 */
-EbErrorType svt_set_cond_var(CondVar *cond_var, int32_t newval) {
+EbErrorType svt_set_cond_var(CondVar* cond_var, int32_t newval) {
     EbErrorType return_error;
 #ifdef _WIN32
     EnterCriticalSection(&cond_var->cs);
@@ -419,7 +419,7 @@ EbErrorType svt_set_cond_var(CondVar *cond_var, int32_t newval) {
     different than input
 */
 
-EbErrorType svt_wait_cond_var(CondVar *cond_var, int32_t input) {
+EbErrorType svt_wait_cond_var(CondVar* cond_var, int32_t input) {
     EbErrorType return_error;
 
 #ifdef _WIN32
@@ -440,7 +440,7 @@ EbErrorType svt_wait_cond_var(CondVar *cond_var, int32_t input) {
     return return_error;
 }
 
-void svt_run_once(OnceType *once_control, OnceFn init_routine) {
+void svt_run_once(OnceType* once_control, OnceFn init_routine) {
 #ifdef _WIN32
     InitOnceExecuteOnce(once_control, init_routine, NULL, NULL);
 #else

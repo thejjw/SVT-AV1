@@ -417,7 +417,7 @@ void svt_av1_dr_prediction_z2_c(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
 * svt_cfl_luma_subsampling_420_lbd_c
 * Subsample luma samples to match chroma size. Low bit depth and C
 ************************************************************************************************/
-void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t *input, int32_t input_stride, int16_t *output_q3, int32_t width,
+void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t* input, int32_t input_stride, int16_t* output_q3, int32_t width,
                                         int32_t height) {
     for (int32_t j = 0; j < height; j += 2) {
         for (int32_t i = 0; i < width; i += 2) {
@@ -433,7 +433,7 @@ void svt_cfl_luma_subsampling_420_lbd_c(const uint8_t *input, int32_t input_stri
 * svt_cfl_luma_subsampling_420_hbd_c
 * Subsample luma samples to match chroma size. High bit depth and C
 ************************************************************************************************/
-void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t *input, int32_t input_stride, int16_t *output_q3, int32_t width,
+void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t* input, int32_t input_stride, int16_t* output_q3, int32_t width,
                                         int32_t height) {
     for (int32_t j = 0; j < height; j += 2, input += input_stride << 1, output_q3 += CFL_BUF_LINE) {
         for (int32_t i = 0; i < width; i += 2) {
@@ -447,10 +447,10 @@ void svt_cfl_luma_subsampling_420_hbd_c(const uint16_t *input, int32_t input_str
 * svt_subtract_average_c
 * Calculate the DC value by averaging over all sample. Subtract DC value to get AC values In C
 ************************************************************************************************/
-void svt_subtract_average_c(int16_t *pred_buf_q3, int32_t width, int32_t height, int32_t round_offset,
+void svt_subtract_average_c(int16_t* pred_buf_q3, int32_t width, int32_t height, int32_t round_offset,
                             int32_t num_pel_log2) {
     int32_t  sum_q3   = 0;
-    int16_t *pred_buf = pred_buf_q3;
+    int16_t* pred_buf = pred_buf_q3;
     for (int32_t j = 0; j < height; j++) {
         // assert(pred_buf_q3 + tx_width <= cfl->pred_buf_q3 + CFL_BUF_SQUARE);
         for (int32_t i = 0; i < width; i++) {
@@ -604,7 +604,7 @@ static uint8_t has_tr_32x8[8] = {
 static uint8_t has_tr_16x64[2] = {255, 127};
 static uint8_t has_tr_64x16[2] = {3, 1};
 
-static const uint8_t *const has_tr_tables[BlockSizeS_ALL] = {
+static const uint8_t* const has_tr_tables[BlockSizeS_ALL] = {
     // 4X4
     has_tr_4x4,
     // 4X8,       8X4,            8X8
@@ -662,7 +662,7 @@ static uint8_t has_tr_vert_64x64[1] = {3};
 //
 // There are tables for each of the square sizes. Vertical rectangles (like
 // BLOCK_16X32) use their respective "non-vert" table
-static const uint8_t *const has_tr_vert_tables[BlockSizeS] = {
+static const uint8_t* const has_tr_vert_tables[BlockSizeS] = {
     // 4X4
     NULL,
     // 4X8,      8X4,         8X8
@@ -686,8 +686,8 @@ static const uint8_t *const has_tr_vert_tables[BlockSizeS] = {
     NULL,
     has_tr_128x128};
 
-static const uint8_t *get_has_tr_table(PartitionType partition, BlockSize bsize) {
-    const uint8_t *ret = NULL;
+static const uint8_t* get_has_tr_table(PartitionType partition, BlockSize bsize) {
+    const uint8_t* ret = NULL;
     // If this is a mixed vertical partition, look up bsize in orders_vert.
     if (partition == PARTITION_VERT_A || partition == PARTITION_VERT_B) {
         assert(bsize < BlockSizeS);
@@ -752,7 +752,7 @@ int32_t svt_aom_intra_has_top_right(BlockSize sb_size, BlockSize bsize, int32_t 
         const int32_t this_blk_index = ((blk_row_in_sb + 0) << (MAX_MIB_SIZE_LOG2 - bw_in_mi_log2)) + blk_col_in_sb + 0;
         const int32_t idx1           = this_blk_index / 8;
         const int32_t idx2           = this_blk_index % 8;
-        const uint8_t *has_tr_table  = get_has_tr_table(partition, bsize);
+        const uint8_t* has_tr_table  = get_has_tr_table(partition, bsize);
         return (has_tr_table[idx1] >> idx2) & 1;
     }
 }
@@ -864,7 +864,7 @@ static uint8_t has_bl_32x8[8] = {
 static uint8_t has_bl_16x64[2] = {0, 0};
 static uint8_t has_bl_64x16[2] = {42, 42};
 
-static const uint8_t *const has_bl_tables[BlockSizeS_ALL] = {
+static const uint8_t* const has_bl_tables[BlockSizeS_ALL] = {
     // 4X4
     has_bl_4x4,
     // 4X8,         8X4,         8X8
@@ -922,7 +922,7 @@ static uint8_t has_bl_vert_64x64[1] = {2};
 //
 // There are tables for each of the square sizes. Vertical rectangles (like
 // BLOCK_16X32) use their respective "non-vert" table
-static const uint8_t *const has_bl_vert_tables[BlockSizeS] = {
+static const uint8_t* const has_bl_vert_tables[BlockSizeS] = {
     // 4X4
     NULL,
     // 4X8,     8X4,         8X8
@@ -946,8 +946,8 @@ static const uint8_t *const has_bl_vert_tables[BlockSizeS] = {
     NULL,
     has_bl_128x128};
 
-static const uint8_t *get_has_bl_table(PartitionType partition, BlockSize bsize) {
-    const uint8_t *ret = NULL;
+static const uint8_t* get_has_bl_table(PartitionType partition, BlockSize bsize) {
+    const uint8_t* ret = NULL;
     // If this is a mixed vertical partition, look up bsize in orders_vert.
     if (partition == PARTITION_VERT_A || partition == PARTITION_VERT_B) {
         assert(bsize < BlockSizeS);
@@ -1024,7 +1024,7 @@ int32_t svt_aom_intra_has_bottom_left(BlockSize sb_size, BlockSize bsize, int32_
         const int32_t this_blk_index = ((blk_row_in_sb + 0) << (MAX_MIB_SIZE_LOG2 - bw_in_mi_log2)) + blk_col_in_sb + 0;
         const int32_t idx1           = this_blk_index / 8;
         const int32_t idx2           = this_blk_index % 8;
-        const uint8_t *has_bl_table  = get_has_bl_table(partition, bsize);
+        const uint8_t* has_bl_table  = get_has_bl_table(partition, bsize);
         return (has_bl_table[idx1] >> idx2) & 1;
     }
 }
@@ -1035,8 +1035,8 @@ IntraPredFn svt_aom_dc_pred[2][2][TX_SIZES_ALL];
 IntraHighPredFn svt_aom_pred_high[INTRA_MODES][TX_SIZES_ALL];
 IntraHighPredFn svt_aom_dc_pred_high[2][2][TX_SIZES_ALL];
 
-static INLINE void dc_128_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                    const uint8_t *left) {
+static INLINE void dc_128_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                    const uint8_t* left) {
     (void)above;
     (void)left;
 
@@ -1046,8 +1046,8 @@ static INLINE void dc_128_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
     }
 }
 
-static INLINE void dc_left_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                     const uint8_t *left) {
+static INLINE void dc_left_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                     const uint8_t* left) {
     int32_t sum = 0;
     (void)above;
 
@@ -1062,8 +1062,8 @@ static INLINE void dc_left_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw,
     }
 }
 
-static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                    const uint8_t *left) {
+static INLINE void dc_top_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                    const uint8_t* left) {
     int32_t sum = 0;
     (void)left;
 
@@ -1078,8 +1078,8 @@ static INLINE void dc_top_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
     }
 }
 
-static INLINE void dc_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                const uint8_t *left) {
+static INLINE void dc_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                const uint8_t* left) {
     int32_t       sum   = 0;
     const int32_t count = bw + bh;
 
@@ -1097,8 +1097,8 @@ static INLINE void dc_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int3
     }
 }
 
-static INLINE void v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                               const uint8_t *left) {
+static INLINE void v_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                               const uint8_t* left) {
     (void)left;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1107,8 +1107,8 @@ static INLINE void v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32
     }
 }
 
-static INLINE void h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                               const uint8_t *left) {
+static INLINE void h_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                               const uint8_t* left) {
     (void)above;
 
     for (int32_t r = 0; r < bh; r++) {
@@ -1117,12 +1117,12 @@ static INLINE void h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32
     }
 }
 
-static INLINE void smooth_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                    const uint8_t *left) {
+static INLINE void smooth_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                    const uint8_t* left) {
     const uint8_t        below_pred   = left[bh - 1]; // estimated by bottom-left pixel
     const uint8_t        right_pred   = above[bw - 1]; // estimated by top-right pixel
-    const uint8_t *const sm_weights_w = sm_weight_arrays + bw;
-    const uint8_t *const sm_weights_h = sm_weight_arrays + bh;
+    const uint8_t* const sm_weights_w = sm_weight_arrays + bw;
+    const uint8_t* const sm_weights_h = sm_weight_arrays + bh;
     // scale = 2 * 2^sm_weight_log2_scale
     const int32_t  log2_scale = 1 + sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1144,10 +1144,10 @@ static INLINE void smooth_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, 
     }
 }
 
-static INLINE void smooth_v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                      const uint8_t *left) {
+static INLINE void smooth_v_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                      const uint8_t* left) {
     const uint8_t        below_pred = left[bh - 1]; // estimated by bottom-left pixel
-    const uint8_t *const sm_weights = sm_weight_arrays + bh;
+    const uint8_t* const sm_weights = sm_weight_arrays + bh;
     // scale = 2^sm_weight_log2_scale
     const int32_t  log2_scale = sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1167,10 +1167,10 @@ static INLINE void smooth_v_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw
     }
 }
 
-static INLINE void smooth_h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t *above,
-                                      const uint8_t *left) {
+static INLINE void smooth_h_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint8_t* above,
+                                      const uint8_t* left) {
     const uint8_t        right_pred = above[bw - 1]; // estimated by top-right pixel
-    const uint8_t *const sm_weights = sm_weight_arrays + bw;
+    const uint8_t* const sm_weights = sm_weight_arrays + bw;
     // scale = 2^sm_weight_log2_scale
     const int32_t  log2_scale = sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1194,8 +1194,8 @@ static INLINE void smooth_h_predictor(uint8_t *dst, ptrdiff_t stride, int32_t bw
 #undef DC_MULTIPLIER_1X4
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-static INLINE void highbd_v_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t *above,
-                                      const uint16_t *left, int32_t bd) {
+static INLINE void highbd_v_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t* above,
+                                      const uint16_t* left, int32_t bd) {
     (void)left;
     (void)bd;
     for (int32_t r = 0; r < bh; r++) {
@@ -1204,8 +1204,8 @@ static INLINE void highbd_v_predictor(uint16_t *dst, ptrdiff_t stride, int32_t b
     }
 }
 
-static INLINE void highbd_h_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t *above,
-                                      const uint16_t *left, int32_t bd) {
+static INLINE void highbd_h_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t* above,
+                                      const uint16_t* left, int32_t bd) {
     (void)above;
     (void)bd;
     for (int32_t r = 0; r < bh; r++) {
@@ -1228,8 +1228,8 @@ static INLINE uint16_t paeth_predictor_single(uint16_t left, uint16_t top, uint1
     return (p_left <= p_top && p_left <= p_top_left) ? left : (p_top <= p_top_left) ? top : top_left;
 }
 
-static INLINE void paeth_predictor(uint8_t *dst, ptrdiff_t stride, int bw, int bh, const uint8_t *above,
-                                   const uint8_t *left) {
+static INLINE void paeth_predictor(uint8_t* dst, ptrdiff_t stride, int bw, int bh, const uint8_t* above,
+                                   const uint8_t* left) {
     const uint8_t ytop_left = above[-1];
 
     for (int r = 0; r < bh; ++r, dst += stride) {
@@ -1240,8 +1240,8 @@ static INLINE void paeth_predictor(uint8_t *dst, ptrdiff_t stride, int bw, int b
 }
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride, int bw, int bh, const uint16_t *above,
-                                          const uint16_t *left, int bd) {
+static INLINE void highbd_paeth_predictor(uint16_t* dst, ptrdiff_t stride, int bw, int bh, const uint16_t* above,
+                                          const uint16_t* left, int bd) {
     const uint16_t ytop_left = above[-1];
     (void)bd;
 
@@ -1252,13 +1252,13 @@ static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride, int b
     }
 }
 
-static INLINE void highbd_smooth_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                           const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_smooth_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                           const uint16_t* above, const uint16_t* left, int32_t bd) {
     (void)bd;
     const uint16_t       below_pred   = left[bh - 1]; // estimated by bottom-left pixel
     const uint16_t       right_pred   = above[bw - 1]; // estimated by top-right pixel
-    const uint8_t *const sm_weights_w = sm_weight_arrays + bw;
-    const uint8_t *const sm_weights_h = sm_weight_arrays + bh;
+    const uint8_t* const sm_weights_w = sm_weight_arrays + bw;
+    const uint8_t* const sm_weights_h = sm_weight_arrays + bh;
     // scale = 2 * 2^sm_weight_log2_scale
     const int32_t  log2_scale = 1 + sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1280,11 +1280,11 @@ static INLINE void highbd_smooth_predictor(uint16_t *dst, ptrdiff_t stride, int3
     }
 }
 
-static INLINE void highbd_smooth_v_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                             const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_smooth_v_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                             const uint16_t* above, const uint16_t* left, int32_t bd) {
     (void)bd;
     const uint16_t       below_pred = left[bh - 1]; // estimated by bottom-left pixel
-    const uint8_t *const sm_weights = sm_weight_arrays + bh;
+    const uint8_t* const sm_weights = sm_weight_arrays + bh;
     // scale = 2^sm_weight_log2_scale
     const int32_t  log2_scale = sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1304,11 +1304,11 @@ static INLINE void highbd_smooth_v_predictor(uint16_t *dst, ptrdiff_t stride, in
     }
 }
 
-static INLINE void highbd_smooth_h_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                             const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_smooth_h_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                             const uint16_t* above, const uint16_t* left, int32_t bd) {
     (void)bd;
     const uint16_t       right_pred = above[bw - 1]; // estimated by top-right pixel
-    const uint8_t *const sm_weights = sm_weight_arrays + bw;
+    const uint8_t* const sm_weights = sm_weight_arrays + bw;
     // scale = 2^sm_weight_log2_scale
     const int32_t  log2_scale = sm_weight_log2_scale;
     const uint16_t scale      = (1 << sm_weight_log2_scale);
@@ -1328,8 +1328,8 @@ static INLINE void highbd_smooth_h_predictor(uint16_t *dst, ptrdiff_t stride, in
     }
 }
 
-static INLINE void highbd_dc_128_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                           const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_dc_128_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                           const uint16_t* above, const uint16_t* left, int32_t bd) {
     (void)above;
     (void)left;
 
@@ -1339,8 +1339,8 @@ static INLINE void highbd_dc_128_predictor(uint16_t *dst, ptrdiff_t stride, int3
     }
 }
 
-static INLINE void highbd_dc_left_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                            const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_dc_left_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                            const uint16_t* above, const uint16_t* left, int32_t bd) {
     int32_t sum = 0;
     (void)above;
     (void)bd;
@@ -1356,8 +1356,8 @@ static INLINE void highbd_dc_left_predictor(uint16_t *dst, ptrdiff_t stride, int
     }
 }
 
-static INLINE void highbd_dc_top_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh,
-                                           const uint16_t *above, const uint16_t *left, int32_t bd) {
+static INLINE void highbd_dc_top_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh,
+                                           const uint16_t* above, const uint16_t* left, int32_t bd) {
     int32_t sum = 0;
     (void)left;
     (void)bd;
@@ -1373,8 +1373,8 @@ static INLINE void highbd_dc_top_predictor(uint16_t *dst, ptrdiff_t stride, int3
     }
 }
 
-static INLINE void highbd_dc_predictor(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t *above,
-                                       const uint16_t *left, int32_t bd) {
+static INLINE void highbd_dc_predictor(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t* above,
+                                       const uint16_t* left, int32_t bd) {
     int32_t       sum   = 0;
     const int32_t count = bw + bh;
     (void)bd;
@@ -1396,7 +1396,7 @@ static INLINE void highbd_dc_predictor(uint16_t *dst, ptrdiff_t stride, int32_t 
 
 #define intra_pred_sized(type, width, height)                                        \
     void svt_aom_##type##_predictor_##width##x##height##_c(                          \
-        uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left) { \
+        uint8_t* dst, ptrdiff_t stride, const uint8_t* above, const uint8_t* left) { \
         type##_predictor(dst, stride, width, height, above, left);                   \
     }
 
@@ -1596,7 +1596,7 @@ intra_pred_sized(paeth, 64, 32);
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
 #define intra_pred_highbd_sized(type, width, height)                                                \
     void svt_aom_highbd_##type##_predictor_##width##x##height##_c(                                  \
-        uint16_t *dst, ptrdiff_t stride, const uint16_t *above, const uint16_t *left, int32_t bd) { \
+        uint16_t* dst, ptrdiff_t stride, const uint16_t* above, const uint16_t* left, int32_t bd) { \
         highbd_##type##_predictor(dst, stride, width, height, above, left, bd);                     \
     };
 
@@ -2327,7 +2327,7 @@ void svt_aom_init_intra_dc_predictors_c_internal(void) {
 #endif
 }
 
-void svt_aom_dr_predictor(uint8_t *dst, ptrdiff_t stride, TxSize tx_size, const uint8_t *above, const uint8_t *left,
+void svt_aom_dr_predictor(uint8_t* dst, ptrdiff_t stride, TxSize tx_size, const uint8_t* above, const uint8_t* left,
                           int32_t upsample_above, int32_t upsample_left, int32_t angle) {
     const int32_t dx = get_dx(angle);
     const int32_t dy = get_dy(angle);
@@ -2348,7 +2348,7 @@ void svt_aom_dr_predictor(uint8_t *dst, ptrdiff_t stride, TxSize tx_size, const 
     }
 }
 
-void filter_intra_edge_corner(uint8_t *p_above, uint8_t *p_left) {
+void filter_intra_edge_corner(uint8_t* p_above, uint8_t* p_left) {
     const int32_t kernel[3] = {5, 6, 5};
 
     int32_t s   = (p_left[0] * kernel[0]) + (p_above[-1] * kernel[1]) + (p_above[0] * kernel[2]);
@@ -2359,8 +2359,8 @@ void filter_intra_edge_corner(uint8_t *p_above, uint8_t *p_left) {
 
 // Directional prediction, zone 1: 0 < angle < 90
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-void svt_av1_highbd_dr_prediction_z1_c(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t *above,
-                                       const uint16_t *left, int32_t upsample_above, int32_t dx, int32_t dy,
+void svt_av1_highbd_dr_prediction_z1_c(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t* above,
+                                       const uint16_t* left, int32_t upsample_above, int32_t dx, int32_t dy,
                                        int32_t bd) {
     (void)left;
     (void)dy;
@@ -2396,8 +2396,8 @@ void svt_av1_highbd_dr_prediction_z1_c(uint16_t *dst, ptrdiff_t stride, int32_t 
 }
 
 // Directional prediction, zone 2: 90 < angle < 180
-void svt_av1_highbd_dr_prediction_z2_c(uint16_t *dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t *above,
-                                       const uint16_t *left, int32_t upsample_above, int32_t upsample_left, int32_t dx,
+void svt_av1_highbd_dr_prediction_z2_c(uint16_t* dst, ptrdiff_t stride, int32_t bw, int32_t bh, const uint16_t* above,
+                                       const uint16_t* left, int32_t upsample_above, int32_t upsample_left, int32_t dx,
                                        int32_t dy, int32_t bd) {
     (void)bd;
     assert(dx > 0);
@@ -2429,8 +2429,8 @@ void svt_av1_highbd_dr_prediction_z2_c(uint16_t *dst, ptrdiff_t stride, int32_t 
     }
 }
 
-void svt_aom_highbd_dr_predictor(uint16_t *dst, ptrdiff_t stride, TxSize tx_size, const uint16_t *above,
-                                 const uint16_t *left, int32_t upsample_above, int32_t upsample_left, int32_t angle,
+void svt_aom_highbd_dr_predictor(uint16_t* dst, ptrdiff_t stride, TxSize tx_size, const uint16_t* above,
+                                 const uint16_t* left, int32_t upsample_above, int32_t upsample_left, int32_t angle,
                                  int32_t bd) {
     const int32_t dx = get_dx(angle);
     const int32_t dy = get_dy(angle);
@@ -2451,7 +2451,7 @@ void svt_aom_highbd_dr_predictor(uint16_t *dst, ptrdiff_t stride, TxSize tx_size
     }
 }
 
-void svt_av1_filter_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t strength) {
+void svt_av1_filter_intra_edge_high_c(uint16_t* p, int32_t sz, int32_t strength) {
     if (!strength) {
         return;
     }
@@ -2474,7 +2474,7 @@ void svt_av1_filter_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t strength)
     }
 }
 
-void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left) {
+void filter_intra_edge_corner_high(uint16_t* p_above, uint16_t* p_left) {
     const int32_t kernel[3] = {5, 6, 5};
 
     int32_t s   = (p_left[0] * kernel[0]) + (p_above[-1] * kernel[1]) + (p_above[0] * kernel[2]);
@@ -2541,8 +2541,8 @@ void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left) {
 ////////////########...........Recurssive intra prediction starting...........#########
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-void svt_aom_highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride, TxSize tx_size, const uint16_t *above,
-                                           const uint16_t *left, int mode, int bd) {
+void svt_aom_highbd_filter_intra_predictor(uint16_t* dst, ptrdiff_t stride, TxSize tx_size, const uint16_t* above,
+                                           const uint16_t* left, int mode, int bd) {
     uint16_t  buffer[33][33];
     const int bw = tx_size_wide[tx_size];
     const int bh = tx_size_high[tx_size];
@@ -2590,7 +2590,7 @@ void svt_aom_highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride, TxSi
 }
 #endif
 void svt_aom_filter_intra_edge(uint8_t mode, uint16_t max_frame_width, uint16_t max_frame_height, int32_t p_angle,
-                               int32_t cu_origin_x, int32_t cu_origin_y, uint8_t *above_row, uint8_t *left_col) {
+                               int32_t cu_origin_x, int32_t cu_origin_y, uint8_t* above_row, uint8_t* left_col) {
     const int mb_stride       = (max_frame_width + 15) / 16;
     const int mb_height       = (max_frame_height + 15) / 16;
     const int txwpx           = tx_size_wide[TX_16X16];
@@ -2647,8 +2647,8 @@ void svt_aom_filter_intra_edge(uint8_t mode, uint16_t max_frame_width, uint16_t 
 }
 
 EbErrorType svt_aom_intra_prediction_open_loop_mb(int32_t p_angle, uint8_t ois_intra_mode, uint32_t src_origin_x,
-                                                  uint32_t src_origin_y, TxSize tx_size, uint8_t *above_row,
-                                                  uint8_t *left_col, uint8_t *dst, uint32_t dst_stride)
+                                                  uint32_t src_origin_y, TxSize tx_size, uint8_t* above_row,
+                                                  uint8_t* left_col, uint8_t* dst, uint32_t dst_stride)
 
 {
     EbErrorType    return_error = EB_ErrorNone;

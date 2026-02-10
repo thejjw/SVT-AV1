@@ -20,7 +20,7 @@
 #include "rd_cost.h"
 #include "rc_process.h"
 
-static INLINE uint64_t mse_8xn_16bit_c(const uint16_t *src, const uint16_t *dst, const int32_t dstride,
+static INLINE uint64_t mse_8xn_16bit_c(const uint16_t* src, const uint16_t* dst, const int32_t dstride,
                                        const int32_t height, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  i, j;
@@ -33,7 +33,7 @@ static INLINE uint64_t mse_8xn_16bit_c(const uint16_t *src, const uint16_t *dst,
     return sum;
 }
 
-static INLINE uint64_t mse_4xn_16bit_c(const uint16_t *src, const uint16_t *dst, const int32_t dstride,
+static INLINE uint64_t mse_4xn_16bit_c(const uint16_t* src, const uint16_t* dst, const int32_t dstride,
                                        const int32_t height, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  i, j;
@@ -46,7 +46,7 @@ static INLINE uint64_t mse_4xn_16bit_c(const uint16_t *src, const uint16_t *dst,
     return sum;
 }
 
-static INLINE uint64_t mse_8xn_8bit_c(const uint8_t *src, const uint8_t *dst, const int32_t dstride,
+static INLINE uint64_t mse_8xn_8bit_c(const uint8_t* src, const uint8_t* dst, const int32_t dstride,
                                       const int32_t height, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  i, j;
@@ -59,7 +59,7 @@ static INLINE uint64_t mse_8xn_8bit_c(const uint8_t *src, const uint8_t *dst, co
     return sum;
 }
 
-static INLINE uint64_t mse_4xn_8bit_c(const uint8_t *src, const uint8_t *dst, const int32_t dstride,
+static INLINE uint64_t mse_4xn_8bit_c(const uint8_t* src, const uint8_t* dst, const int32_t dstride,
                                       const int32_t height, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  i, j;
@@ -73,8 +73,8 @@ static INLINE uint64_t mse_4xn_8bit_c(const uint8_t *src, const uint8_t *dst, co
 }
 
 /* Compute MSE only on the blocks we filtered. */
-uint64_t svt_aom_compute_cdef_dist_16bit_c(const uint16_t *dst, int32_t dstride, const uint16_t *src,
-                                           const CdefList *dlist, int32_t cdef_count, BlockSize bsize,
+uint64_t svt_aom_compute_cdef_dist_16bit_c(const uint16_t* dst, int32_t dstride, const uint16_t* src,
+                                           const CdefList* dlist, int32_t cdef_count, BlockSize bsize,
                                            int32_t coeff_shift, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  bi, bx, by;
@@ -111,8 +111,8 @@ uint64_t svt_aom_compute_cdef_dist_16bit_c(const uint16_t *dst, int32_t dstride,
     return sum >> 2 * coeff_shift;
 }
 
-uint64_t svt_aom_compute_cdef_dist_8bit_c(const uint8_t *dst8, int32_t dstride, const uint8_t *src8,
-                                          const CdefList *dlist, int32_t cdef_count, BlockSize bsize,
+uint64_t svt_aom_compute_cdef_dist_8bit_c(const uint8_t* dst8, int32_t dstride, const uint8_t* src8,
+                                          const CdefList* dlist, int32_t cdef_count, BlockSize bsize,
                                           int32_t coeff_shift, uint8_t subsampling_factor) {
     uint64_t sum = 0;
     int32_t  bi, bx, by;
@@ -149,7 +149,7 @@ uint64_t svt_aom_compute_cdef_dist_8bit_c(const uint8_t *dst8, int32_t dstride, 
     return sum >> 2 * coeff_shift;
 }
 
-static int32_t svt_sb_all_skip(PictureControlSet *pcs, const Av1Common *const cm, int32_t mi_row, int32_t mi_col) {
+static int32_t svt_sb_all_skip(PictureControlSet* pcs, const Av1Common* const cm, int32_t mi_row, int32_t mi_col) {
     int32_t maxc, maxr;
     maxc = cm->mi_cols - mi_col;
     maxr = cm->mi_rows - mi_row;
@@ -167,9 +167,9 @@ static int32_t svt_sb_all_skip(PictureControlSet *pcs, const Av1Common *const cm
     return 1;
 }
 
-int32_t svt_sb_compute_cdef_list(PictureControlSet *pcs, const Av1Common *const cm, int32_t mi_row, int32_t mi_col,
-                                 CdefList *dlist, BlockSize bs) {
-    MbModeInfo **grid      = pcs->mi_grid_base;
+int32_t svt_sb_compute_cdef_list(PictureControlSet* pcs, const Av1Common* const cm, int32_t mi_row, int32_t mi_col,
+                                 CdefList* dlist, BlockSize bs) {
+    MbModeInfo** grid      = pcs->mi_grid_base;
     int32_t      mi_stride = pcs->mi_stride;
 
     int32_t maxc = cm->mi_cols - mi_col;
@@ -210,7 +210,7 @@ int32_t svt_sb_compute_cdef_list(PictureControlSet *pcs, const Av1Common *const 
     return count;
 }
 
-static inline void svt_aom_fill_rect(uint16_t *dst, int32_t dstride, int32_t v, int32_t h, uint16_t x) {
+static inline void svt_aom_fill_rect(uint16_t* dst, int32_t dstride, int32_t v, int32_t h, uint16_t x) {
     for (int32_t i = 0; i < v; i++) {
         for (int32_t j = 0; j < h; j++) {
             dst[i * dstride + j] = x;
@@ -218,7 +218,7 @@ static inline void svt_aom_fill_rect(uint16_t *dst, int32_t dstride, int32_t v, 
     }
 }
 
-static inline void svt_aom_copy_rect(uint16_t *dst, int32_t dstride, const uint16_t *src, int32_t sstride, int32_t v,
+static inline void svt_aom_copy_rect(uint16_t* dst, int32_t dstride, const uint16_t* src, int32_t sstride, int32_t v,
                                      int32_t h) {
     for (int32_t i = 0; i < v; i++) {
         svt_memcpy(dst, src, sizeof(dst[0]) * h);
@@ -231,13 +231,13 @@ static inline void svt_aom_copy_rect(uint16_t *dst, int32_t dstride, const uint1
 Loop over all 64x64 filter blocks and perform the CDEF filtering for each block, using
 the filter strength pairs chosen in finish_cdef_search().
 */
-void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
-    PictureParentControlSet *ppcs     = pcs->ppcs;
-    Av1Common               *cm       = ppcs->av1_cm;
-    FrameHeader             *frm_hdr  = &ppcs->frm_hdr;
+void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
+    PictureParentControlSet* ppcs     = pcs->ppcs;
+    Av1Common*               cm       = ppcs->av1_cm;
+    FrameHeader*             frm_hdr  = &ppcs->frm_hdr;
     bool                     is_16bit = scs->is_16bit_pipeline;
 
-    EbPictureBufferDesc *recon_pic;
+    EbPictureBufferDesc* recon_pic;
     svt_aom_get_recon_pic(pcs, &recon_pic, is_16bit);
 
     const uint32_t offset_y       = recon_pic->org_x + recon_pic->org_y * recon_pic->stride_y;
@@ -250,10 +250,10 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
 
     const int32_t num_planes = av1_num_planes(&scs->seq_header.color_config);
     DECLARE_ALIGNED(16, uint16_t, src[CDEF_INBUF_SIZE]);
-    uint16_t      *linebuf[3];
-    uint16_t      *colbuf[3];
+    uint16_t*      linebuf[3];
+    uint16_t*      colbuf[3];
     CdefList       dlist[MI_SIZE_64X64 * MI_SIZE_64X64];
-    uint8_t       *row_cdef, *prev_row_cdef, *curr_row_cdef;
+    uint8_t *      row_cdef, *prev_row_cdef, *curr_row_cdef;
     int32_t        cdef_count;
     const uint32_t sb_size = scs->super_block_size;
     int32_t        mi_wide_l2[3];
@@ -265,7 +265,7 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
     const int32_t  nhfb        = (cm->mi_cols + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
     const uint32_t cdef_size   = sizeof(*row_cdef) * (nhfb + 2) * 2;
 
-    row_cdef = (uint8_t *)svt_aom_malloc(cdef_size);
+    row_cdef = (uint8_t*)svt_aom_malloc(cdef_size);
     assert(row_cdef != NULL);
     memset(row_cdef, 1, cdef_size);
     prev_row_cdef = row_cdef + 1;
@@ -281,8 +281,8 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
 
     const int32_t stride = (cm->mi_cols << MI_SIZE_LOG2) + 2 * CDEF_HBORDER;
     for (int32_t pli = 0; pli < num_planes; pli++) {
-        linebuf[pli] = (uint16_t *)svt_aom_malloc(sizeof(*linebuf) * CDEF_VBORDER * stride);
-        colbuf[pli]  = (uint16_t *)svt_aom_malloc(
+        linebuf[pli] = (uint16_t*)svt_aom_malloc(sizeof(*linebuf) * CDEF_VBORDER * stride);
+        colbuf[pli]  = (uint16_t*)svt_aom_malloc(
             sizeof(*colbuf) * ((CDEF_BLOCKSIZE << mi_high_l2[pli]) + 2 * CDEF_VBORDER) * CDEF_HBORDER);
     }
 
@@ -358,7 +358,7 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
             if (sb_size == 128) {
                 const uint32_t    lc    = MI_SIZE_64X64 * fbc;
                 const uint32_t    lr    = MI_SIZE_64X64 * fbr;
-                const MbModeInfo *mbmi  = pcs->mi_grid_base[lr * cm->mi_stride + lc];
+                const MbModeInfo* mbmi  = pcs->mi_grid_base[lr * cm->mi_stride + lc];
                 const BlockSize   bsize = mbmi->bsize;
                 if (((fbc & 1) && (bsize == BLOCK_128X128 || bsize == BLOCK_128X64)) ||
                     ((fbr & 1) && (bsize == BLOCK_128X128 || bsize == BLOCK_64X128))) {
@@ -529,8 +529,8 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
                         is_16bit ? NULL
                                  : &rec_buff[rec_stride * (MI_SIZE_64X64 * fbr << mi_high_l2[pli]) +
                                              (fbc * MI_SIZE_64X64 << mi_wide_l2[pli])],
-                        is_16bit ? &((uint16_t *)rec_buff)[rec_stride * (MI_SIZE_64X64 * fbr << mi_high_l2[pli]) +
-                                                           (fbc * MI_SIZE_64X64 << mi_wide_l2[pli])]
+                        is_16bit ? &((uint16_t*)rec_buff)[rec_stride * (MI_SIZE_64X64 * fbr << mi_high_l2[pli]) +
+                                                          (fbc * MI_SIZE_64X64 << mi_wide_l2[pli])]
                                  : NULL,
                         rec_stride,
                         &src[CDEF_VBORDER * CDEF_BSTRIDE + CDEF_HBORDER],
@@ -553,7 +553,7 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
             cdef_left = 1; //CHKN filtered data is written back directy to recFrame.
         }
         {
-            uint8_t *tmp  = prev_row_cdef;
+            uint8_t* tmp  = prev_row_cdef;
             prev_row_cdef = curr_row_cdef;
             curr_row_cdef = tmp;
         }
@@ -580,7 +580,7 @@ void svt_av1_cdef_frame(SequenceControlSet *scs, PictureControlSet *pcs) {
  * start_gi : starting strength index for the search of the additional strengths.
  * end_gi : End index for the for the search of the additional strengths.
 */
-uint64_t svt_search_one_dual_c(int *lev0, int *lev1, int nb_strengths, uint64_t **mse[2], int sb_count, int start_gi,
+uint64_t svt_search_one_dual_c(int* lev0, int* lev1, int nb_strengths, uint64_t** mse[2], int sb_count, int start_gi,
                                int end_gi) {
     uint64_t      tot_mse[TOTAL_STRENGTHS][TOTAL_STRENGTHS];
     int32_t       i, j;
@@ -653,8 +653,8 @@ uint64_t svt_search_one_dual_c(int *lev0, int *lev1, int nb_strengths, uint64_t 
  * start_gi : starting strength index for the search of the additional strengths.
  * end_gi : End index for the for the search of the additional strengths.
 */
-static uint64_t joint_strength_search_dual(int32_t *best_lev0, int32_t *best_lev1, int32_t nb_strengths,
-                                           uint64_t **mse[2], int32_t sb_count, int32_t start_gi, int32_t end_gi) {
+static uint64_t joint_strength_search_dual(int32_t* best_lev0, int32_t* best_lev1, int32_t nb_strengths,
+                                           uint64_t** mse[2], int32_t sb_count, int32_t start_gi, int32_t end_gi) {
     uint64_t best_tot_mse;
     int32_t  i;
     best_tot_mse = (uint64_t)1 << 63;
@@ -686,10 +686,10 @@ static uint64_t joint_strength_search_dual(int32_t *best_lev0, int32_t *best_lev
     return best_tot_mse;
 }
 
-void finish_cdef_search(PictureControlSet *pcs) {
-    PictureParentControlSet *ppcs    = pcs->ppcs;
-    FrameHeader             *frm_hdr = &ppcs->frm_hdr;
-    Av1Common               *cm      = ppcs->av1_cm;
+void finish_cdef_search(PictureControlSet* pcs) {
+    PictureParentControlSet* ppcs    = pcs->ppcs;
+    FrameHeader*             frm_hdr = &ppcs->frm_hdr;
+    Av1Common*               cm      = ppcs->av1_cm;
     int32_t                  mi_rows = ppcs->av1_cm->mi_rows;
     int32_t                  mi_cols = ppcs->av1_cm->mi_cols;
 
@@ -699,19 +699,19 @@ void finish_cdef_search(PictureControlSet *pcs) {
     int32_t  nvfb = (mi_rows + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
     int32_t  nhfb = (mi_cols + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
     //CDEF Settings
-    CdefSearchControls *cdef_search_ctrls          = &pcs->ppcs->cdef_search_ctrls;
-    CdefReconControls  *cdef_recon_ctrls           = &pcs->ppcs->cdef_recon_ctrls;
+    CdefSearchControls* cdef_search_ctrls          = &pcs->ppcs->cdef_search_ctrls;
+    CdefReconControls*  cdef_recon_ctrls           = &pcs->ppcs->cdef_recon_ctrls;
     const int           first_pass_fs_num          = cdef_search_ctrls->first_pass_fs_num;
     const int           default_second_pass_fs_num = cdef_search_ctrls->default_second_pass_fs_num;
     if (cdef_search_ctrls->use_reference_cdef_fs) {
-        int32_t *sb_index;
+        int32_t* sb_index;
         EB_MALLOC_ARRAY_NO_CHECK(sb_index, nvfb * nhfb);
         int32_t best_gi = 0;
         sb_count        = 0;
         assert(sb_index != NULL);
         for (fbr = 0; fbr < nvfb; ++fbr) {
             for (fbc = 0; fbc < nhfb; ++fbc) {
-                const MbModeInfo *mbmi = pcs->mi_grid_base[MI_SIZE_64X64 * fbr * cm->mi_stride + MI_SIZE_64X64 * fbc];
+                const MbModeInfo* mbmi = pcs->mi_grid_base[MI_SIZE_64X64 * fbr * cm->mi_stride + MI_SIZE_64X64 * fbc];
                 if (((fbc & 1) && (mbmi->bsize == BLOCK_128X128 || mbmi->bsize == BLOCK_128X64)) ||
                     ((fbr & 1) && (mbmi->bsize == BLOCK_128X128 || mbmi->bsize == BLOCK_64X128))) {
                     continue;
@@ -756,15 +756,15 @@ void finish_cdef_search(PictureControlSet *pcs) {
         EB_FREE_ARRAY(sb_index);
         return;
     }
-    int32_t *sb_index;
+    int32_t* sb_index;
     // to keep track of the sb_address in units of SBs (not mi_size)
-    int32_t *sb_addr;
+    int32_t* sb_addr;
     EB_MALLOC_ARRAY_NO_CHECK(sb_index, nvfb * nhfb);
     EB_MALLOC_ARRAY_NO_CHECK(sb_addr, nvfb * nhfb);
     assert(sb_index != NULL);
     assert(sb_addr != NULL);
 
-    uint64_t **mse[2];
+    uint64_t** mse[2];
     EB_MALLOC_ARRAY_NO_CHECK(mse[0], nvfb * nhfb);
     EB_MALLOC_ARRAY_NO_CHECK(mse[1], nvfb * nhfb);
     assert(mse[0] != NULL);
@@ -788,7 +788,7 @@ void finish_cdef_search(PictureControlSet *pcs) {
     sb_count = 0;
     for (fbr = 0; fbr < nvfb; ++fbr) {
         for (fbc = 0; fbc < nhfb; ++fbc) {
-            const MbModeInfo *mbmi = pcs->mi_grid_base[MI_SIZE_64X64 * fbr * cm->mi_stride + MI_SIZE_64X64 * fbc];
+            const MbModeInfo* mbmi = pcs->mi_grid_base[MI_SIZE_64X64 * fbr * cm->mi_stride + MI_SIZE_64X64 * fbc];
             if (((fbc & 1) && (mbmi->bsize == BLOCK_128X128 || mbmi->bsize == BLOCK_128X64)) ||
                 ((fbr & 1) && (mbmi->bsize == BLOCK_128X128 || mbmi->bsize == BLOCK_64X128))) {
                 continue;

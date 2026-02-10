@@ -60,7 +60,7 @@ extern "C" {
 #define OUT_Q_ADVANCE(h, size) (((h) == (size) - 1) ? 0 : (h) + 1)
 #define MIN_LAD_MG 1
 #define RC_DEFAULT_LAD_MG 2 // default look ahead value for rate control
-void svt_aom_assert_err(uint32_t condition, char *err_msg);
+void svt_aom_assert_err(uint32_t condition, char* err_msg);
 
 #define TPL_DEP_COST_SCALE_LOG2 4
 #define MAX_TX_WEIGHT 500
@@ -85,7 +85,7 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 #define VQ_PIC_AVG_VARIANCE_TH 1000
 #define NUM_MV_COMPONENTS 2
 #define NUM_MV_HIST 2
-#define MAX_MV_HIST_SIZE 2 * REF_LIST_MAX_DEPTH *NUM_MV_COMPONENTS *NUM_MV_HIST
+#define MAX_MV_HIST_SIZE (2 * REF_LIST_MAX_DEPTH * NUM_MV_COMPONENTS * NUM_MV_HIST)
 
 #define INVALID_LUMA 256
 
@@ -265,8 +265,8 @@ typedef enum InputCoeffLvl {
 } InputCoeffLvl;
 
 typedef struct Buf2D {
-    uint8_t *buf;
-    uint8_t *buf0;
+    uint8_t* buf;
+    uint8_t* buf0;
     int      width;
     int      height;
     int      stride;
@@ -534,23 +534,23 @@ typedef int16_t InterpKernel[SUBPEL_TAPS];
 #undef MEM_VALUE_T_SZ_BITS
 #define MEM_VALUE_T_SZ_BITS (sizeof(MEM_VALUE_T) << 3)
 
-static __inline void mem_put_le16(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le16(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
 }
 
-static __inline void mem_put_le24(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le24(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
     mem[2] = (MAU_T)((val >> 16) & 0xff);
 }
 
-static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
-    MAU_T *mem = (MAU_T *)vmem;
+static __inline void mem_put_le32(void* vmem, MEM_VALUE_T val) {
+    MAU_T* mem = (MAU_T*)vmem;
 
     mem[0] = (MAU_T)((val >> 0) & 0xff);
     mem[1] = (MAU_T)((val >> 8) & 0xff);
@@ -565,7 +565,7 @@ typedef uint16_t ConvBufType;
 typedef struct ConvolveParams {
     int32_t      ref;
     int32_t      do_average;
-    ConvBufType *dst;
+    ConvBufType* dst;
     int32_t      dst_stride;
     int32_t      round_0;
     int32_t      round_1;
@@ -620,7 +620,7 @@ static INLINE unsigned int negative_to_zero(int value) {
     return (value < 0) ? 0 : value;
 }
 
-static INLINE int av1_num_planes(EbColorConfig *color_info) {
+static INLINE int av1_num_planes(EbColorConfig* color_info) {
     return color_info->mono_chrome ? 1 : MAX_MB_PLANE;
 }
 
@@ -747,7 +747,7 @@ enum {
 enum { EIGHTH_PEL, QUARTER_PEL, HALF_PEL, FULL_PEL } UENUM1BYTE(SUBPEL_FORCE_STOP);
 
 typedef struct InterpFilterParams {
-    const int16_t *filter_ptr;
+    const int16_t* filter_ptr;
     uint16_t       taps;
     uint16_t       subpel_shifts;
     InterpFilter   interp_filter;
@@ -1946,8 +1946,8 @@ typedef struct ScaleFactors {
     int32_t x_step_q4;
     int32_t y_step_q4;
 
-    int32_t (*scale_value_x)(int32_t val, const struct ScaleFactors *sf);
-    int32_t (*scale_value_y)(int32_t val, const struct ScaleFactors *sf);
+    int32_t (*scale_value_x)(int32_t val, const struct ScaleFactors* sf);
+    int32_t (*scale_value_y)(int32_t val, const struct ScaleFactors* sf);
 } ScaleFactors;
 
 /* clang-format off */

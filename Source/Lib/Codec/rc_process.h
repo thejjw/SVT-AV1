@@ -83,7 +83,7 @@ typedef struct {
     uint8_t      resize_denom;
 } ResizePendingParams;
 
-EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry *entry_ptr,
+EbErrorType svt_aom_rate_control_coded_frames_stats_context_ctor(coded_frames_stats_entry* entry_ptr,
                                                                  uint64_t                  picture_number);
 
 typedef struct {
@@ -150,7 +150,7 @@ typedef struct {
     // gop bit budget
     int64_t gf_group_bits;
     // Rate Control stat Queue
-    coded_frames_stats_entry **coded_frames_stat_queue;
+    coded_frames_stats_entry** coded_frames_stat_queue;
     uint32_t                   coded_frames_stat_queue_head_index;
     uint32_t                   coded_frames_stat_queue_tail_index;
 
@@ -215,22 +215,22 @@ typedef struct PicMgrPorts {
 int32_t svt_av1_convert_qindex_to_q_fp8(int32_t qindex, EbBitDepth bit_depth);
 double  svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
 double  svt_av1_get_gfu_boost_projection_factor(double min_factor, double max_factor, int frame_count);
-void    svt_av1_normalize_sb_delta_q(struct PictureControlSet *pcs);
+void    svt_av1_normalize_sb_delta_q(struct PictureControlSet* pcs);
 
-EbErrorType svt_aom_rate_control_context_ctor(EbThreadContext *thread_ctx, const EbEncHandle *enc_handle_ptr,
+EbErrorType svt_aom_rate_control_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr,
                                               int me_port_index);
 
-void *svt_aom_rate_control_kernel(void *input_ptr);
+void* svt_aom_rate_control_kernel(void* input_ptr);
 int   svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex);
 struct PictureControlSet;
-int  svt_aom_compute_rd_mult(struct PictureControlSet *pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
-int  svt_aom_compute_fast_lambda(struct PictureControlSet *pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
-void svt_aom_lambda_assign(struct PictureControlSet *pcs, uint32_t *fast_lambda, uint32_t *full_lambda,
+int  svt_aom_compute_rd_mult(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
+int  svt_aom_compute_fast_lambda(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
+void svt_aom_lambda_assign(struct PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda,
                            uint8_t bit_depth, uint16_t qp_index, bool multiply_lambda);
 struct PictureParentControlSet;
-void svt_aom_cyclic_refresh_init(struct PictureParentControlSet *ppcs);
-void recode_loop_update_q(struct PictureParentControlSet *ppcs, bool *const loop, int *const q, int *const q_low,
-                          int *const q_high, const int top_index, const int bottom_index, int *const undershoot_seen,
-                          int *const overshoot_seen, int *const low_cr_seen, const int loop_count);
+void svt_aom_cyclic_refresh_init(struct PictureParentControlSet* ppcs);
+void recode_loop_update_q(struct PictureParentControlSet* ppcs, bool* const loop, int* const q, int* const q_low,
+                          int* const q_high, const int top_index, const int bottom_index, int* const undershoot_seen,
+                          int* const overshoot_seen, int* const low_cr_seen, const int loop_count);
 
 #endif // EbRateControl_h

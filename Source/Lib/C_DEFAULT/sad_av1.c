@@ -15,7 +15,7 @@
 // pre: predictor being evaluated
 // wsrc: target weighted prediction (has been *4096 to keep precision)
 // mask: 2d weights (scaled by 4096)
-static INLINE unsigned int obmc_sad(const uint8_t *pre, int pre_stride, const int32_t *wsrc, const int32_t *mask,
+static INLINE unsigned int obmc_sad(const uint8_t* pre, int pre_stride, const int32_t* wsrc, const int32_t* mask,
                                     int width, int height) {
     int          y, x;
     unsigned int sad = 0;
@@ -35,7 +35,7 @@ static INLINE unsigned int obmc_sad(const uint8_t *pre, int pre_stride, const in
 
 #define OBMCSADMxN(m, n)                                                                \
     unsigned int svt_aom_obmc_sad##m##x##n##_c(                                         \
-        const uint8_t *ref, int ref_stride, const int32_t *wsrc, const int32_t *mask) { \
+        const uint8_t* ref, int ref_stride, const int32_t* wsrc, const int32_t* mask) { \
         return obmc_sad(ref, ref_stride, wsrc, mask, m, n);                             \
     }
 

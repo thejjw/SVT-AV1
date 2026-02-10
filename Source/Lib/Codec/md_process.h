@@ -872,11 +872,11 @@ typedef struct CompoundPredictionStore {
     //         NEAR_NEAR:  (1,0) (1,2)
     //pred1 for NEAR_NEAR could be retrived from  NRST_NRST
     uint8_t  pred0_cnt; //actual size for available predictions
-    uint8_t *pred0_buf[4]; //stores prediction for up to 4 different MVs (NEAREST + 3 NEAR)
+    uint8_t* pred0_buf[4]; //stores prediction for up to 4 different MVs (NEAREST + 3 NEAR)
     Mv       pred0_mv[4]; //MVs for availble predictions
 
     uint8_t  pred1_cnt;
-    uint8_t *pred1_buf[4];
+    uint8_t* pred1_buf[4];
     Mv       pred1_mv[4];
 } CompoundPredictionStore;
 
@@ -886,7 +886,7 @@ typedef struct MdScan {
     Part shapes[PART_S];
     // total number of shapes to test for the current SQ block
     uint8_t        tot_shapes;
-    struct MdScan *split[4];
+    struct MdScan* split[4];
     int            index; // should be written once when struct is initialized, then never overwritten
     BlockSize      bsize; // should be written once when struct is initialized, then never overwritten
     // for indexing blk_geom and assigning blk_ptr
@@ -898,9 +898,9 @@ typedef struct MdScan {
 /* Stores partition structure of the current block. */
 typedef struct PARTITION_TREE {
     // Pointers to the children if the current block is further split.
-    struct PARTITION_TREE *sub_tree[4];
+    struct PARTITION_TREE* sub_tree[4];
     // Pointers to the EcBlkStruct holding the block's data for entropy coding
-    EcBlkStruct *blk_data[4];
+    EcBlkStruct* blk_data[4];
     // The partition type used to split the current block.
     PartitionType partition;
     // Block size of the current depth.
@@ -920,60 +920,60 @@ typedef struct PC_TREE {
     PartitionType partition;
 
     RD_STATS        rdc;
-    BlkStruct      *block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
-    struct PC_TREE *split[4];
+    BlkStruct*      block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
+    struct PC_TREE* split[4];
     int             index; // should be written once when struct is initialized, then never overwritten
 } PC_TREE;
 
 typedef struct ModeDecisionContext {
     EbDctor dctor;
 
-    EbFifo                       *mode_decision_configuration_input_fifo_ptr;
-    EbFifo                       *mode_decision_output_fifo_ptr;
-    ModeDecisionCandidate        *fast_cand_array;
-    ModeDecisionCandidateBuffer **cand_bf_ptr_array;
-    ModeDecisionCandidateBuffer  *cand_bf_tx_depth_1;
-    ModeDecisionCandidateBuffer  *cand_bf_tx_depth_2;
-    MdRateEstimationContext      *md_rate_est_ctx;
-    MdRateEstimationContext      *rate_est_table;
-    BlkStruct                    *md_blk_arr_nsq;
-    uint8_t                      *avail_blk_flag;
-    uint8_t                      *cost_avail;
+    EbFifo*                       mode_decision_configuration_input_fifo_ptr;
+    EbFifo*                       mode_decision_output_fifo_ptr;
+    ModeDecisionCandidate*        fast_cand_array;
+    ModeDecisionCandidateBuffer** cand_bf_ptr_array;
+    ModeDecisionCandidateBuffer*  cand_bf_tx_depth_1;
+    ModeDecisionCandidateBuffer*  cand_bf_tx_depth_2;
+    MdRateEstimationContext*      md_rate_est_ctx;
+    MdRateEstimationContext*      rate_est_table;
+    BlkStruct*                    md_blk_arr_nsq;
+    uint8_t*                      avail_blk_flag;
+    uint8_t*                      cost_avail;
     // Used to track which blocks should be tested in MD in each PD stage
-    MdScan *mds;
+    MdScan* mds;
     // Used to store results of MD
-    PC_TREE         *pc_tree;
+    PC_TREE*         pc_tree;
     bool             copied_neigh_arrays;
     MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
     uint8_t          tot_ref_frame_types;
 
-    NeighborArrayUnit *recon_neigh_y;
-    NeighborArrayUnit *recon_neigh_cb;
-    NeighborArrayUnit *recon_neigh_cr;
-    NeighborArrayUnit *tx_search_luma_recon_na;
-    NeighborArrayUnit *luma_recon_na_16bit;
-    NeighborArrayUnit *cb_recon_na_16bit;
-    NeighborArrayUnit *cr_recon_na_16bit;
-    NeighborArrayUnit *tx_search_luma_recon_na_16bit;
+    NeighborArrayUnit* recon_neigh_y;
+    NeighborArrayUnit* recon_neigh_cb;
+    NeighborArrayUnit* recon_neigh_cr;
+    NeighborArrayUnit* tx_search_luma_recon_na;
+    NeighborArrayUnit* luma_recon_na_16bit;
+    NeighborArrayUnit* cb_recon_na_16bit;
+    NeighborArrayUnit* cr_recon_na_16bit;
+    NeighborArrayUnit* tx_search_luma_recon_na_16bit;
     // Stored per 4x4. 8 bit: lower 6 bits (COEFF_CONTEXT_BITS), shows if there is at least one
     // Coef. Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit *luma_dc_sign_level_coeff_na;
+    NeighborArrayUnit* luma_dc_sign_level_coeff_na;
     // Stored per 4x4. 8 bit: lower 6 bits (COEFF_CONTEXT_BITS), shows if there is at least one
     // Coef. Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit *full_loop_luma_dc_sign_level_coeff_na;
+    NeighborArrayUnit* full_loop_luma_dc_sign_level_coeff_na;
     // Stored per 4x4. 8 bit: lower 6 bits(COEFF_CONTEXT_BITS), shows if there is at least one Coef.
     // Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit *cr_dc_sign_level_coeff_na;
+    NeighborArrayUnit* cr_dc_sign_level_coeff_na;
     // Stored per 4x4. 8 bit: lower 6 bits(COEFF_CONTEXT_BITS), shows if there is at least one Coef.
     // Top 2 bit store the sign of DC as follow: 0->0,1->-1,2-> 1
-    NeighborArrayUnit    *cb_dc_sign_level_coeff_na;
-    NeighborArrayUnit    *txfm_context_array;
-    NeighborArrayUnit    *leaf_partition_na;
-    struct EncDecContext *ed_ctx;
+    NeighborArrayUnit*    cb_dc_sign_level_coeff_na;
+    NeighborArrayUnit*    txfm_context_array;
+    NeighborArrayUnit*    leaf_partition_na;
+    struct EncDecContext* ed_ctx;
 
-    uint64_t *fast_cost_array;
-    uint64_t *full_cost_array;
-    uint64_t *full_cost_ssim_array;
+    uint64_t* fast_cost_array;
+    uint64_t* full_cost_array;
+    uint64_t* full_cost_ssim_array;
     // Lambda
     uint32_t fast_lambda_md[2];
     uint32_t full_lambda_md[2];
@@ -982,16 +982,16 @@ typedef struct ModeDecisionContext {
     uint32_t full_sb_lambda_md[2];
     bool     blk_lambda_tuning;
     // Context Variables---------------------------------
-    SuperBlock      *sb_ptr;
-    BlkStruct       *blk_ptr;
-    const BlockGeom *blk_geom;
+    SuperBlock*      sb_ptr;
+    BlkStruct*       blk_ptr;
+    const BlockGeom* blk_geom;
     // MD palette search
-    PALETTE_BUFFER *palette_buffer;
-    PaletteInfo    *palette_cand_array;
-    uint8_t        *palette_size_array_0;
+    PALETTE_BUFFER* palette_buffer;
+    PaletteInfo*    palette_cand_array;
+    uint8_t*        palette_size_array_0;
     // simple geometry 64x64SB, Sq only, no 4xN
     uint8_t          sb64_sq_no4xn_geom;
-    uint32_t        *best_candidate_index_array;
+    uint32_t*        best_candidate_index_array;
     uint16_t         blk_org_x;
     uint16_t         blk_org_y;
     uint32_t         sb_origin_x;
@@ -1017,16 +1017,16 @@ typedef struct ModeDecisionContext {
     uint8_t intra_luma_top_ctx;
 
     WarpSampleInfo wm_sample_info[REF_FRAMES];
-    int16_t       *pred_buf_q3;
+    int16_t*       pred_buf_q3;
     // Track all MVs that are prepared for candidates prior to MDS0. Used to avoid MV duplication.
-    Mv **injected_mvs;
+    Mv** injected_mvs;
     // Track the reference types for each MV
-    MvReferenceFrame *injected_ref_types;
+    MvReferenceFrame* injected_ref_types;
     uint16_t          injected_mv_count;
     uint32_t          me_block_offset;
     uint32_t          me_cand_offset;
     // Pointer to a scratch buffer used by CFL & IFS
-    EbPictureBufferDesc *scratch_prediction_ptr;
+    EbPictureBufferDesc* scratch_prediction_ptr;
     uint8_t              tx_depth;
     uint8_t              txb_itr;
     uint32_t             me_sb_addr;
@@ -1047,8 +1047,8 @@ typedef struct ModeDecisionContext {
     uint8_t           unipred3x3_injection;
     Bipred3x3Controls bipred3x3_ctrls;
     uint8_t           redundant_blk;
-    uint8_t          *cfl_temp_luma_recon;
-    uint16_t         *cfl_temp_luma_recon16bit;
+    uint8_t*          cfl_temp_luma_recon;
+    uint16_t*         cfl_temp_luma_recon16bit;
     bool              blk_skip_decision;
     Mv                sb_me_mv[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
     // Store ME MV of the square to use with NSQ shapes; 4x4 will also use the 8x8 ME MVs
@@ -1062,19 +1062,19 @@ typedef struct ModeDecisionContext {
     CandidateMv ref_mv_stack[MODE_CTX_REF_FRAMES][MAX_REF_MV_STACK_SIZE];
     // Store inter_mode_ctx for each reference during MD search - only ctx for winning ref frame is forwarded to encdec
     int16_t              inter_mode_ctx[MODE_CTX_REF_FRAMES];
-    EbPictureBufferDesc *input_sample16bit_buffer;
+    EbPictureBufferDesc* input_sample16bit_buffer;
     // set to 1 once the packing of 10bit source is done for each SB
     uint8_t  hbd_pack_done;
     uint16_t tile_index;
     // Store buffers for inter-inter compound search
     CompoundPredictionStore cmp_store;
 
-    uint8_t  *pred0;
-    uint8_t  *pred1;
-    int16_t  *residual1;
-    int16_t  *diff10;
+    uint8_t*  pred0;
+    uint8_t*  pred1;
+    int16_t*  residual1;
+    int16_t*  diff10;
     MdStage   md_stage;
-    uint32_t *cand_buff_indices[CAND_CLASS_TOTAL];
+    uint32_t* cand_buff_indices[CAND_CLASS_TOTAL];
     uint8_t   bypass_md_stage_1;
     uint8_t   bypass_md_stage_2;
     uint32_t  md_stage_0_count[CAND_CLASS_TOTAL];
@@ -1096,14 +1096,14 @@ typedef struct ModeDecisionContext {
     bool mds_do_spatial_sse;
     bool mds_do_chroma;
     // Store intra prediction for inter-intra
-    uint8_t **intrapred_buf;
+    uint8_t** intrapred_buf;
     // Store OBMC pre-computed data
-    uint8_t       *obmc_buff_0;
-    uint8_t       *obmc_buff_1;
-    int32_t       *wsrc_buf;
-    int32_t       *mask_buf;
-    uint8_t       *above_txfm_context;
-    uint8_t       *left_txfm_context;
+    uint8_t*       obmc_buff_0;
+    uint8_t*       obmc_buff_1;
+    int32_t*       wsrc_buf;
+    int32_t*       mask_buf;
+    uint8_t*       above_txfm_context;
+    uint8_t*       left_txfm_context;
     IntraCtrls     intra_ctrls;
     MdRateEstCtrls rate_est_ctrls;
     // use coeff rate and slipt flag rate only (no MVP derivation)
@@ -1150,16 +1150,16 @@ typedef struct ModeDecisionContext {
     uint8_t              params_status; // specifies the status of MD parameters; 0: default, 1: modified
     NsqPsqTxsCtrls       nsq_psq_txs_ctrls;
     uint8_t              sb_size;
-    EbPictureBufferDesc *recon_coeff_ptr[TX_TYPES];
-    EbPictureBufferDesc *recon_ptr[TX_TYPES];
-    EbPictureBufferDesc *quant_coeff_ptr[TX_TYPES];
+    EbPictureBufferDesc* recon_coeff_ptr[TX_TYPES];
+    EbPictureBufferDesc* recon_ptr[TX_TYPES];
+    EbPictureBufferDesc* quant_coeff_ptr[TX_TYPES];
     // buffer used to store transformed coeffs during TX/Q/IQ. TX'd coeffs are only needed
     // temporarily, so no need to save for each TX type.
-    EbPictureBufferDesc *tx_coeffs;
+    EbPictureBufferDesc* tx_coeffs;
 
     uint8_t              skip_intra;
-    EbPictureBufferDesc *temp_residual;
-    EbPictureBufferDesc *temp_recon_ptr;
+    EbPictureBufferDesc* temp_residual;
+    EbPictureBufferDesc* temp_recon_ptr;
     // Array for all nearest/near MVs for a block for single ref case
     Mv mvp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][MAX_MVP_CANIDATES];
     // Count of all nearest/near MVs for a block for single ref case
@@ -1289,11 +1289,11 @@ typedef struct ModeDecisionContext {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext *ctx, SequenceControlSet *scs,
+extern EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, SequenceControlSet* scs,
                                                       EbColorFormat color_format, uint8_t sb_size, EncMode enc_mode,
                                                       uint16_t max_block_cnt, uint32_t encoder_bit_depth,
-                                                      EbFifo *mode_decision_configuration_input_fifo_ptr,
-                                                      EbFifo *mode_decision_output_fifo_ptr,
+                                                      EbFifo* mode_decision_configuration_input_fifo_ptr,
+                                                      EbFifo* mode_decision_output_fifo_ptr,
                                                       uint8_t enable_hbd_mode_decision, uint8_t seq_qp_mod);
 
 // Table that converts 0-63 Q-range values passed in outside to the Qindex
@@ -1305,10 +1305,10 @@ extern const int percents[2][FIXED_QP_OFFSET_COUNT];
 
 extern const uint8_t uni_psy_bias[64];
 
-extern void svt_aom_reset_mode_decision(SequenceControlSet *scs, ModeDecisionContext *ctx, PictureControlSet *pcs,
+extern void svt_aom_reset_mode_decision(SequenceControlSet* scs, ModeDecisionContext* ctx, PictureControlSet* pcs,
                                         uint16_t tile_row_idx, uint32_t segment_index);
 
-extern void svt_aom_mode_decision_configure_sb(ModeDecisionContext *ctx, PictureControlSet *pcs, uint8_t sb_qp,
+extern void svt_aom_mode_decision_configure_sb(ModeDecisionContext* ctx, PictureControlSet* pcs, uint8_t sb_qp,
                                                uint8_t me_sb_qp);
 #ifdef __cplusplus
 }

@@ -15,7 +15,7 @@
 #include "EbSvtAv1ErrorCodes.h"
 #include "svt_threads.h"
 
-static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer, STATS_BUFFER_CTX *stats_buf_context,
+static EbErrorType create_stats_buffer(FIRSTPASS_STATS** frame_stats_buffer, STATS_BUFFER_CTX* stats_buf_context,
                                        int num_lap_buffers) {
     EbErrorType res = EB_ErrorNone;
 
@@ -48,7 +48,7 @@ static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer, STA
     return res;
 }
 
-static void destroy_stats_buffer(STATS_BUFFER_CTX *stats_buf_context, FIRSTPASS_STATS *frame_stats_buffer) {
+static void destroy_stats_buffer(STATS_BUFFER_CTX* stats_buf_context, FIRSTPASS_STATS* frame_stats_buffer) {
     EB_FREE_ARRAY(stats_buf_context->total_left_stats);
     EB_FREE_ARRAY(stats_buf_context->total_stats);
     EB_FREE_ARRAY(frame_stats_buffer);
@@ -56,7 +56,7 @@ static void destroy_stats_buffer(STATS_BUFFER_CTX *stats_buf_context, FIRSTPASS_
 }
 
 static void encode_context_dctor(EbPtr p) {
-    EncodeContext *obj = (EncodeContext *)p;
+    EncodeContext* obj = (EncodeContext*)p;
     EB_DESTROY_MUTEX(obj->total_number_of_recon_frame_mutex);
     EB_DESTROY_MUTEX(obj->total_number_of_shown_frames_mutex);
     EB_DESTROY_MUTEX(obj->sc_buffer_mutex);
@@ -85,7 +85,7 @@ static void encode_context_dctor(EbPtr p) {
     EB_DESTROY_MUTEX(obj->rc.rc_mutex);
 }
 
-EbErrorType svt_aom_encode_context_ctor(EncodeContext *enc_ctx, EbPtr object_init_data_ptr) {
+EbErrorType svt_aom_encode_context_ctor(EncodeContext* enc_ctx, EbPtr object_init_data_ptr) {
     uint32_t picture_index;
 
     enc_ctx->dctor = encode_context_dctor;
@@ -119,7 +119,7 @@ EbErrorType svt_aom_encode_context_ctor(EncodeContext *enc_ctx, EbPtr object_ini
     enc_ctx->rc_cfg.min_cr    = 0;
     EB_CREATE_MUTEX(enc_ctx->stat_file_mutex);
     enc_ctx->num_lap_buffers = 0; // lap not supported for now
-    int *num_lap_buffers     = &enc_ctx->num_lap_buffers;
+    int* num_lap_buffers     = &enc_ctx->num_lap_buffers;
     create_stats_buffer(&enc_ctx->frame_stats_buffer, &enc_ctx->stats_buf_context, *num_lap_buffers);
     EB_ALLOC_PTR_ARRAY(enc_ctx->rc.coded_frames_stat_queue, CODED_FRAMES_STAT_QUEUE_MAX_DEPTH);
 

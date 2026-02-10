@@ -52,11 +52,11 @@ Use `CamelCase` for types and `under_score` for variable names (`TypeName my_ins
 
 ## Pointer Alignment
 
-Pointers are aligned to the right (next to the variable name):
+Pointers are aligned to the left (next to the type):
 
 ``` c
-int *pointer;
-const char *string;
+int* pointer;
+const char* string;
 ```
 
 ## Const Usage
@@ -64,11 +64,11 @@ const char *string;
 Use const where possible, except in forward function declarations in header files, where we only use it for const-arrays:
 
 ``` c
-int my_func(const array *values, int arg);
+int my_func(const array* values, int arg);
 
 [..]
 
-int my_func(const array *const values, const int num) {
+int my_func(const array* const values, const int num) {
     [..]
 }
 ```

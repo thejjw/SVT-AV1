@@ -103,25 +103,25 @@ typedef struct MbModeInfo {
     int8_t              cdef_strength;
 } MbModeInfo;
 
-static AOM_INLINE int has_second_ref(const BlockModeInfo *block_mi) {
+static AOM_INLINE int has_second_ref(const BlockModeInfo* block_mi) {
     return block_mi->ref_frame[1] > INTRA_FRAME;
 }
 
-static AOM_INLINE int has_uni_comp_refs(const BlockModeInfo *block_mi) {
+static AOM_INLINE int has_uni_comp_refs(const BlockModeInfo* block_mi) {
     return has_second_ref(block_mi) &&
         (!((block_mi->ref_frame[0] >= BWDREF_FRAME) ^ (block_mi->ref_frame[1] >= BWDREF_FRAME)));
 }
 
-static AOM_INLINE int is_intrabc_block(const BlockModeInfo *block_mi) {
+static AOM_INLINE int is_intrabc_block(const BlockModeInfo* block_mi) {
     return block_mi->use_intrabc;
 }
 
-static AOM_INLINE int is_inter_block(const BlockModeInfo *block_mi) {
+static AOM_INLINE int is_inter_block(const BlockModeInfo* block_mi) {
     return is_intrabc_block(block_mi) || block_mi->ref_frame[0] > INTRA_FRAME;
 }
 
-void svt_av1_tile_set_col(TileInfo *tile, const TilesInfo *tiles_info, int32_t mi_cols, int col);
-void svt_av1_tile_set_row(TileInfo *tile, TilesInfo *tiles_info, int32_t mi_rows, int row);
+void svt_av1_tile_set_col(TileInfo* tile, const TilesInfo* tiles_info, int32_t mi_cols, int col);
+void svt_av1_tile_set_row(TileInfo* tile, TilesInfo* tiles_info, int32_t mi_rows, int row);
 
 static INLINE int32_t tile_log2(int32_t blk_size, int32_t target) {
     int32_t k;

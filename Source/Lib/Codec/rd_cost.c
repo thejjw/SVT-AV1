@@ -24,27 +24,27 @@
 #include <assert.h>
 
 #define MV_COST_WEIGHT 108
-int svt_aom_get_reference_mode_context_new(const MacroBlockD *xd);
-int svt_av1_get_pred_context_uni_comp_ref_p(const MacroBlockD *xd);
-int svt_av1_get_pred_context_uni_comp_ref_p1(const MacroBlockD *xd);
-int svt_av1_get_pred_context_uni_comp_ref_p2(const MacroBlockD *xd);
-int svt_aom_get_comp_reference_type_context_new(const MacroBlockD *xd);
+int svt_aom_get_reference_mode_context_new(const MacroBlockD* xd);
+int svt_av1_get_pred_context_uni_comp_ref_p(const MacroBlockD* xd);
+int svt_av1_get_pred_context_uni_comp_ref_p1(const MacroBlockD* xd);
+int svt_av1_get_pred_context_uni_comp_ref_p2(const MacroBlockD* xd);
+int svt_aom_get_comp_reference_type_context_new(const MacroBlockD* xd);
 
 int  svt_aom_get_palette_bsize_ctx(BlockSize bsize);
-int  svt_aom_get_palette_mode_ctx(const MacroBlockD *xd);
+int  svt_aom_get_palette_mode_ctx(const MacroBlockD* xd);
 int  svt_aom_write_uniform_cost(int n, int v);
-int  svt_get_palette_cache_y(const MacroBlockD *const xd, uint16_t *cache);
-int  svt_av1_palette_color_cost_y(const PaletteModeInfo *const pmi, uint16_t *color_cache, const int palette_size,
+int  svt_get_palette_cache_y(const MacroBlockD* const xd, uint16_t* cache);
+int  svt_av1_palette_color_cost_y(const PaletteModeInfo* const pmi, uint16_t* color_cache, const int palette_size,
                                   int n_cache, int bit_depth);
-int  svt_av1_cost_color_map(ModeDecisionCandidate *cand, MdRateEstimationContext *rate_table,
+int  svt_av1_cost_color_map(ModeDecisionCandidate* cand, MdRateEstimationContext* rate_table,
 
-                            BlkStruct *blk_ptr, int plane, BlockSize bsize, COLOR_MAP_TYPE type);
-void svt_aom_get_block_dimensions(BlockSize bsize, int plane, const MacroBlockD *xd, int *width, int *height,
-                                  int *rows_within_bounds, int *cols_within_bounds);
+                            BlkStruct* blk_ptr, int plane, BlockSize bsize, COLOR_MAP_TYPE type);
+void svt_aom_get_block_dimensions(BlockSize bsize, int plane, const MacroBlockD* xd, int* width, int* height,
+                                  int* rows_within_bounds, int* cols_within_bounds);
 int  svt_aom_allow_palette(int allow_screen_content_tools, BlockSize bsize);
-int  svt_aom_allow_intrabc(const FrameHeader *frm_hdr, SliceType slice_type);
+int  svt_aom_allow_intrabc(const FrameHeader* frm_hdr, SliceType slice_type);
 
-MvJointType svt_av1_get_mv_joint(const Mv *mv) {
+MvJointType svt_av1_get_mv_joint(const Mv* mv) {
     if (mv->y == 0) {
         return mv->x == 0 ? MV_JOINT_ZERO : MV_JOINT_HNZVZ;
     } else {
@@ -52,14 +52,14 @@ MvJointType svt_av1_get_mv_joint(const Mv *mv) {
     }
 }
 
-static int32_t mv_cost(const Mv *mv, const int32_t *joint_cost, const int32_t *const comp_cost[2]) {
+static int32_t mv_cost(const Mv* mv, const int32_t* joint_cost, const int32_t* const comp_cost[2]) {
     int32_t jn_c = svt_av1_get_mv_joint(mv);
     int32_t res  = joint_cost[jn_c] + comp_cost[0][CLIP3(MV_LOW, MV_UPP, mv->y)] +
         comp_cost[1][CLIP3(MV_LOW, MV_UPP, mv->x)];
     return res;
 }
 
-int32_t svt_av1_mv_bit_cost_light(const Mv *mv, const Mv *ref) {
+int32_t svt_av1_mv_bit_cost_light(const Mv* mv, const Mv* ref) {
     const uint32_t factor     = 50;
     const uint32_t absmvdiffx = ABS(mv->x - ref->x);
     const uint32_t absmvdiffy = ABS(mv->y - ref->y);
@@ -67,7 +67,7 @@ int32_t svt_av1_mv_bit_cost_light(const Mv *mv, const Mv *ref) {
     return mv_rate;
 }
 
-int32_t svt_av1_mv_bit_cost(const Mv *mv, const Mv *ref, const int32_t *mvjcost, const int32_t *const mvcost[2],
+int32_t svt_av1_mv_bit_cost(const Mv* mv, const Mv* ref, const int32_t* mvjcost, const int32_t* const mvcost[2],
                             int32_t weight) {
     // Restrict the size of the MV diff to be within the max AV1 range.  If the MV diff
     // is outside this range, the diff will index beyond the cost array, causing a seg fault.
@@ -90,10 +90,10 @@ static INLINE int32_t get_golomb_cost(int32_t abs_qc) {
     return 0;
 }
 
-void svt_av1_txb_init_levels_c(const TranLow *const coeff, const int32_t width, const int32_t height,
-                               uint8_t *const levels) {
+void svt_av1_txb_init_levels_c(const TranLow* const coeff, const int32_t width, const int32_t height,
+                               uint8_t* const levels) {
     const int32_t stride = width + TX_PAD_HOR;
-    uint8_t      *ls     = levels;
+    uint8_t*      ls     = levels;
 
     memset(levels - TX_PAD_TOP * stride, 0, sizeof(*levels) * TX_PAD_TOP * stride);
     memset(levels + stride * height, 0, sizeof(*levels) * (TX_PAD_BOTTOM * stride + TX_PAD_END));
@@ -108,8 +108,8 @@ void svt_av1_txb_init_levels_c(const TranLow *const coeff, const int32_t width, 
     }
 }
 
-static int32_t av1_transform_type_rate_estimation(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *fc,
-                                                  ModeDecisionCandidateBuffer *cand_bf, bool is_inter,
+static int32_t av1_transform_type_rate_estimation(ModeDecisionContext* ctx, uint8_t allow_update_cdf, FRAME_CONTEXT* fc,
+                                                  ModeDecisionCandidateBuffer* cand_bf, bool is_inter,
                                                   TxSize transform_size, TxType transform_type,
                                                   bool reduced_tx_set_used) {
     // const MbModeInfo *mbmi = &xd->mi[0]->mbmi;
@@ -158,7 +158,7 @@ static int32_t av1_transform_type_rate_estimation(ModeDecisionContext *ctx, uint
 
 // Update the eob-related CDFs. Function assumes allow_update_cdf is true
 // as the only action of the function is to update the CDFs.
-static void update_eob_context(int eob, TxSize tx_size, TxClass tx_class, PlaneType plane, FRAME_CONTEXT *ec_ctx) {
+static void update_eob_context(int eob, TxSize tx_size, TxClass tx_class, PlaneType plane, FRAME_CONTEXT* ec_ctx) {
     int          eob_extra;
     const int    eob_pt  = get_eob_pos_token(eob, &eob_extra);
     const TxSize txs_ctx = (TxSize)((txsize_sqr_map[tx_size] + txsize_sqr_up_map[tx_size] + 1) >> 1);
@@ -201,7 +201,7 @@ static void update_eob_context(int eob, TxSize tx_size, TxClass tx_class, PlaneT
 }
 
 // Transform end of block bit estimation
-int get_eob_cost(int eob, const LvMapEobCost *txb_eob_costs, const LvMapCoeffCost *txb_costs, TxClass tx_class) {
+int get_eob_cost(int eob, const LvMapEobCost* txb_eob_costs, const LvMapCoeffCost* txb_costs, TxClass tx_class) {
     int       eob_extra;
     const int eob_pt        = get_eob_pos_token(eob, &eob_extra);
     const int eob_multi_ctx = (tx_class == TX_CLASS_2D) ? 0 : 1;
@@ -220,19 +220,19 @@ int get_eob_cost(int eob, const LvMapEobCost *txb_eob_costs, const LvMapCoeffCos
     return eob_cost;
 }
 
-static INLINE int32_t av1_cost_skip_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
+static INLINE int32_t av1_cost_skip_txb(ModeDecisionContext* ctx, uint8_t allow_update_cdf, FRAME_CONTEXT* ec_ctx,
                                         TxSize transform_size, PlaneType plane_type, int16_t txb_skip_ctx) {
     const TxSize txs_ctx = (TxSize)((txsize_sqr_map[transform_size] + txsize_sqr_up_map[transform_size] + 1) >> 1);
     assert(txs_ctx < TX_SIZES);
-    const LvMapCoeffCost *const coeff_costs = &ctx->md_rate_est_ctx->coeff_fac_bits[txs_ctx][plane_type];
+    const LvMapCoeffCost* const coeff_costs = &ctx->md_rate_est_ctx->coeff_fac_bits[txs_ctx][plane_type];
     if (allow_update_cdf) {
         update_cdf(ec_ctx->txb_skip_cdf[txs_ctx][txb_skip_ctx], 1, 2);
     }
     return coeff_costs->txb_skip_cost[txb_skip_ctx][1];
 }
 
-static INLINE int32_t av1_cost_coeffs_txb_loop_cost_one_eob(const TranLow *const qcoeff, int8_t *const coeff_contexts,
-                                                            const LvMapCoeffCost *coeff_costs, int16_t dc_sign_ctx) {
+static INLINE int32_t av1_cost_coeffs_txb_loop_cost_one_eob(const TranLow* const qcoeff, int8_t* const coeff_contexts,
+                                                            const LvMapCoeffCost* coeff_costs, int16_t dc_sign_ctx) {
     const TranLow v         = qcoeff[0];
     const int32_t level     = abs(v);
     const int32_t coeff_ctx = coeff_contexts[0];
@@ -262,10 +262,10 @@ static INLINE int32_t av1_cost_coeffs_txb_loop_cost_one_eob(const TranLow *const
     return cost;
 }
 
-static INLINE int32_t av1_cost_coeffs_txb_loop_cost_eob(ModeDecisionContext *md_ctx, uint16_t eob,
-                                                        const int16_t *const scan, const TranLow *const qcoeff,
-                                                        int8_t *const coeff_contexts, const LvMapCoeffCost *coeff_costs,
-                                                        int16_t dc_sign_ctx, uint8_t *const levels, const int32_t bwl,
+static INLINE int32_t av1_cost_coeffs_txb_loop_cost_eob(ModeDecisionContext* md_ctx, uint16_t eob,
+                                                        const int16_t* const scan, const TranLow* const qcoeff,
+                                                        int8_t* const coeff_contexts, const LvMapCoeffCost* coeff_costs,
+                                                        int16_t dc_sign_ctx, uint8_t* const levels, const int32_t bwl,
                                                         TxType transform_type) {
     const uint32_t cost_literal = av1_cost_literal(1);
     int32_t        cost         = 0;
@@ -362,8 +362,8 @@ static INLINE int32_t av1_cost_coeffs_txb_loop_cost_eob(ModeDecisionContext *md_
 }
 
 // Note: don't call this function when eob is 0.
-uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
-                                 ModeDecisionCandidateBuffer *cand_bf, const TranLow *const qcoeff, uint16_t eob,
+uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext* ctx, uint8_t allow_update_cdf, FRAME_CONTEXT* ec_ctx,
+                                 ModeDecisionCandidateBuffer* cand_bf, const TranLow* const qcoeff, uint16_t eob,
                                  PlaneType plane_type, TxSize transform_size, TxType transform_type,
                                  int16_t txb_skip_ctx, int16_t dc_sign_ctx, bool reduced_transform_set_flag)
 
@@ -378,16 +378,16 @@ uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_
     const int32_t width  = get_txb_wide_tab[transform_size];
     const int32_t height = get_txb_high_tab[transform_size];
 
-    const ScanOrder *const scan_order = get_scan_order(transform_size, transform_type);
-    const int16_t *const   scan       = scan_order->scan;
+    const ScanOrder* const scan_order = get_scan_order(transform_size, transform_type);
+    const int16_t* const   scan       = scan_order->scan;
     uint8_t                levels_buf[TX_PAD_2D];
-    uint8_t *const         levels = set_levels(levels_buf, width);
+    uint8_t* const         levels = set_levels(levels_buf, width);
     DECLARE_ALIGNED(16, int8_t, coeff_contexts[MAX_TX_SQUARE]);
     assert(txs_ctx < TX_SIZES);
-    const LvMapCoeffCost *const coeff_costs = &ctx->md_rate_est_ctx->coeff_fac_bits[txs_ctx][plane_type];
+    const LvMapCoeffCost* const coeff_costs = &ctx->md_rate_est_ctx->coeff_fac_bits[txs_ctx][plane_type];
 
     const int32_t             eob_multi_size = txsize_log2_minus4[transform_size];
-    const LvMapEobCost *const eob_bits       = &ctx->md_rate_est_ctx->eob_frac_bits[eob_multi_size][plane_type];
+    const LvMapEobCost* const eob_bits       = &ctx->md_rate_est_ctx->eob_frac_bits[eob_multi_size][plane_type];
     // eob must be greater than 0 here.
     assert(eob > 0);
     cost = coeff_costs->txb_skip_cost[txb_skip_ctx][0];
@@ -496,13 +496,13 @@ uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext *ctx, uint8_t allow_update_
     return cost;
 }
 
-uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                        ModeDecisionCandidateBuffer *cand_bf, bool use_accurate_cfl) {
-    const BlockGeom *const blk_geom = ctx->blk_geom;
-    ModeDecisionCandidate *cand     = cand_bf->cand;
+uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                        ModeDecisionCandidateBuffer* cand_bf, bool use_accurate_cfl) {
+    const BlockGeom* const blk_geom = ctx->blk_geom;
+    ModeDecisionCandidate* cand     = cand_bf->cand;
     assert(blk_geom->has_uv);
     assert(!(svt_aom_allow_intrabc(&pcs->ppcs->frm_hdr, pcs->ppcs->slice_type) && cand->block_mi.use_intrabc));
-    MdRateEstimationContext *md_rate_est_ctx = ctx->md_rate_est_ctx;
+    MdRateEstimationContext* md_rate_est_ctx = ctx->md_rate_est_ctx;
     const uint8_t            is_cfl_allowed  = (blk_geom->bwidth <= 32 && blk_geom->bheight <= 32) ? 1 : 0;
     PredictionMode           intra_mode      = (PredictionMode)cand->block_mi.mode;
     // If CFL alphas are not known yet, calculate the chroma mode bits based on DC Mode. If CFL is selected the chroma mode bits must be updated later
@@ -546,18 +546,18 @@ uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet *pcs, ModeDecisionCont
     return chroma_rate;
 }
 
-uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+uint64_t svt_aom_intra_fast_cost(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
                                  uint64_t lambda, uint64_t luma_distortion) {
-    const BlockGeom       *blk_geom = ctx->blk_geom;
-    BlkStruct             *blk_ptr  = ctx->blk_ptr;
-    ModeDecisionCandidate *cand     = cand_bf->cand;
+    const BlockGeom*       blk_geom = ctx->blk_geom;
+    BlkStruct*             blk_ptr  = ctx->blk_ptr;
+    ModeDecisionCandidate* cand     = cand_bf->cand;
     if (svt_aom_allow_intrabc(&pcs->ppcs->frm_hdr, pcs->ppcs->slice_type) && cand->block_mi.use_intrabc) {
         uint64_t rate = 0;
 
         Mv         mv        = {.as_int = cand->block_mi.mv[0].as_int};
         Mv         ref_mv    = {.as_int = cand->pred_mv[0].as_int};
-        const int *dvcost[2] = {(int *)&ctx->md_rate_est_ctx->dv_cost[0][MV_MAX],
-                                (int *)&ctx->md_rate_est_ctx->dv_cost[1][MV_MAX]};
+        const int* dvcost[2] = {(int*)&ctx->md_rate_est_ctx->dv_cost[0][MV_MAX],
+                                (int*)&ctx->md_rate_est_ctx->dv_cost[1][MV_MAX]};
         int32_t    mv_rate   = svt_av1_mv_bit_cost(
             &mv, &ref_mv, ctx->md_rate_est_ctx->dv_joint_cost, dvcost, MV_COST_WEIGHT_SUB);
 
@@ -606,7 +606,7 @@ uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ct
             const int mode_ctx    = svt_aom_get_palette_mode_ctx(blk_ptr->av1xd);
             intra_luma_mode_bits_num += ctx->md_rate_est_ctx->palette_ymode_fac_bits[bsize_ctx][mode_ctx][use_palette];
             if (use_palette) {
-                const uint8_t *const color_map = cand->palette_info->color_idx_map;
+                const uint8_t* const color_map = cand->palette_info->color_idx_map;
                 int                  block_width, block_height, rows, cols;
                 svt_aom_get_block_dimensions(
                     blk_geom->bsize, 0, blk_ptr->av1xd, &block_width, &block_height, &rows, &cols);
@@ -665,11 +665,11 @@ uint64_t svt_aom_intra_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ct
 }
 
 // This function encodes the reference frame
-uint64_t estimate_ref_frame_type_bits(ModeDecisionContext *ctx, BlkStruct *blk_ptr, uint8_t ref_frame_type,
+uint64_t estimate_ref_frame_type_bits(ModeDecisionContext* ctx, BlkStruct* blk_ptr, uint8_t ref_frame_type,
                                       bool is_compound) {
     uint64_t ref_rate_bits = 0;
 
-    MbModeInfo *const mbmi = blk_ptr->av1xd->mi[0];
+    MbModeInfo* const mbmi = blk_ptr->av1xd->mi[0];
     MvReferenceFrame  ref_type[2];
     av1_set_ref_frame(ref_type, ref_frame_type);
     mbmi->block_mi.ref_frame[0] = ref_type[0];
@@ -802,15 +802,15 @@ uint64_t estimate_ref_frame_type_bits(ModeDecisionContext *ctx, BlkStruct *blk_p
     return ref_rate_bits;
 }
 
-int svt_aom_get_comp_group_idx_context_enc(const MacroBlockD *xd);
+int svt_aom_get_comp_group_idx_context_enc(const MacroBlockD* xd);
 int is_any_masked_compound_used(BlockSize bsize);
 
-static INLINE uint32_t get_compound_mode_rate(PictureControlSet *pcs, ModeDecisionContext *ctx,
-                                              ModeDecisionCandidate *cand, BlockSize bsize) {
-    BlkStruct          *blk_ptr   = ctx->blk_ptr;
-    SequenceControlSet *scs       = pcs->ppcs->scs;
+static INLINE uint32_t get_compound_mode_rate(PictureControlSet* pcs, ModeDecisionContext* ctx,
+                                              ModeDecisionCandidate* cand, BlockSize bsize) {
+    BlkStruct*          blk_ptr   = ctx->blk_ptr;
+    SequenceControlSet* scs       = pcs->ppcs->scs;
     uint32_t            comp_rate = 0;
-    MbModeInfo *const   mbmi      = blk_ptr->av1xd->mi[0];
+    MbModeInfo* const   mbmi      = blk_ptr->av1xd->mi[0];
     MvReferenceFrame    rf[2]     = {cand->block_mi.ref_frame[0], cand->block_mi.ref_frame[1]};
     mbmi->block_mi.ref_frame[0]   = rf[0];
     mbmi->block_mi.ref_frame[1]   = rf[1];
@@ -871,7 +871,7 @@ static INLINE uint32_t get_compound_mode_rate(PictureControlSet *pcs, ModeDecisi
     return comp_rate;
 }
 
-int32_t svt_aom_get_switchable_rate(BlockModeInfo *block_mi, const FrameHeader *const frm_hdr, ModeDecisionContext *ctx,
+int32_t svt_aom_get_switchable_rate(BlockModeInfo* block_mi, const FrameHeader* const frm_hdr, ModeDecisionContext* ctx,
                                     const bool enable_dual_filter) {
     if (frm_hdr->interpolation_filter != SWITCHABLE) {
         return 0;
@@ -892,12 +892,12 @@ int32_t svt_aom_get_switchable_rate(BlockModeInfo *block_mi, const FrameHeader *
 
 int svt_aom_is_interintra_wedge_used(BlockSize bsize);
 
-static uint64_t av1_inter_fast_cost_light(ModeDecisionContext *ctx, BlkStruct *blk_ptr,
-                                          ModeDecisionCandidateBuffer *cand_bf, uint64_t luma_distortion,
-                                          uint64_t lambda, PictureControlSet *pcs, CandidateMv *ref_mv_stack) {
-    ModeDecisionCandidate *cand = cand_bf->cand;
+static uint64_t av1_inter_fast_cost_light(ModeDecisionContext* ctx, BlkStruct* blk_ptr,
+                                          ModeDecisionCandidateBuffer* cand_bf, uint64_t luma_distortion,
+                                          uint64_t lambda, PictureControlSet* pcs, CandidateMv* ref_mv_stack) {
+    ModeDecisionCandidate* cand = cand_bf->cand;
     // NM - fast inter cost estimation
-    MdRateEstimationContext *r = ctx->md_rate_est_ctx;
+    MdRateEstimationContext* r = ctx->md_rate_est_ctx;
     //_mm_prefetch(p, _MM_HINT_T2);
     // Luma rate
     uint32_t             luma_rate           = 0;
@@ -1027,19 +1027,19 @@ static uint64_t av1_inter_fast_cost_light(ModeDecisionContext *ctx, BlkStruct *b
     return (RDCOST(lambda, luma_rate, luma_distortion));
 }
 
-uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+uint64_t svt_aom_inter_fast_cost(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
                                  uint64_t lambda, uint64_t luma_distortion) {
-    const BlockGeom       *blk_geom       = ctx->blk_geom;
-    BlkStruct             *blk_ptr        = ctx->blk_ptr;
-    ModeDecisionCandidate *cand           = cand_bf->cand;
+    const BlockGeom*       blk_geom       = ctx->blk_geom;
+    BlkStruct*             blk_ptr        = ctx->blk_ptr;
+    ModeDecisionCandidate* cand           = cand_bf->cand;
     MvReferenceFrame       rf[2]          = {cand->block_mi.ref_frame[0], cand->block_mi.ref_frame[1]};
     const int8_t           ref_frame_type = av1_ref_frame_type(cand->block_mi.ref_frame);
-    CandidateMv           *ref_mv_stack   = &(ctx->ref_mv_stack[ref_frame_type][0]);
+    CandidateMv*           ref_mv_stack   = &(ctx->ref_mv_stack[ref_frame_type][0]);
 
     if (ctx->approx_inter_rate) {
         return av1_inter_fast_cost_light(ctx, blk_ptr, cand_bf, luma_distortion, lambda, pcs, ref_mv_stack);
     }
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
 
     // Luma rate
     uint32_t       luma_rate  = 0;
@@ -1228,16 +1228,16 @@ uint64_t svt_aom_inter_fast_cost(PictureControlSet *pcs, ModeDecisionContext *ct
 
 /*
  */
-EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
-                                                      uint32_t txb_origin_index, EbPictureBufferDesc *coeff_buffer_sb,
-                                                      uint32_t y_eob, uint64_t *y_txb_coeff_bits, TxSize txsize) {
+EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
+                                                      uint32_t txb_origin_index, EbPictureBufferDesc* coeff_buffer_sb,
+                                                      uint32_t y_eob, uint64_t* y_txb_coeff_bits, TxSize txsize) {
     if (y_eob) {
         *y_txb_coeff_bits = svt_av1_cost_coeffs_txb(
             ctx,
             0,
             0,
             cand_bf,
-            (int32_t *)&coeff_buffer_sb->buffer_y[txb_origin_index * sizeof(int32_t)],
+            (int32_t*)&coeff_buffer_sb->buffer_y[txb_origin_index * sizeof(int32_t)],
             (uint16_t)y_eob,
             PLANE_TYPE_Y,
             txsize,
@@ -1255,18 +1255,18 @@ EbErrorType svt_aom_txb_estimate_coeff_bits_light_pd0(ModeDecisionContext *ctx, 
     return EB_ErrorNone;
 }
 
-EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
-                                            PictureControlSet *pcs, ModeDecisionCandidateBuffer *cand_bf,
+EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext* ctx, uint8_t allow_update_cdf, FRAME_CONTEXT* ec_ctx,
+                                            PictureControlSet* pcs, ModeDecisionCandidateBuffer* cand_bf,
                                             uint32_t txb_origin_index, uint32_t txb_chroma_origin_index,
-                                            EbPictureBufferDesc *coeff_buffer_sb, uint32_t y_eob, uint32_t cb_eob,
-                                            uint32_t cr_eob, uint64_t *y_txb_coeff_bits, uint64_t *cb_txb_coeff_bits,
-                                            uint64_t *cr_txb_coeff_bits, TxSize txsize, TxSize txsize_uv,
+                                            EbPictureBufferDesc* coeff_buffer_sb, uint32_t y_eob, uint32_t cb_eob,
+                                            uint32_t cr_eob, uint64_t* y_txb_coeff_bits, uint64_t* cb_txb_coeff_bits,
+                                            uint64_t* cr_txb_coeff_bits, TxSize txsize, TxSize txsize_uv,
                                             TxType tx_type, TxType tx_type_uv, COMPONENT_TYPE component_type) {
     EbErrorType return_error = EB_ErrorNone;
 
-    FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
 
-    int32_t *coeff_buffer;
+    int32_t* coeff_buffer;
     int16_t  luma_txb_skip_context = ctx->luma_txb_skip_context;
     int16_t  luma_dc_sign_context  = ctx->luma_dc_sign_context;
     int16_t  cb_txb_skip_context   = ctx->cb_txb_skip_context;
@@ -1280,7 +1280,7 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t al
 
     if (component_type == COMPONENT_LUMA || component_type == COMPONENT_ALL) {
         if (y_eob) {
-            coeff_buffer = (int32_t *)&coeff_buffer_sb->buffer_y[txb_origin_index * sizeof(int32_t)];
+            coeff_buffer = (int32_t*)&coeff_buffer_sb->buffer_y[txb_origin_index * sizeof(int32_t)];
 
             *y_txb_coeff_bits = svt_av1_cost_coeffs_txb(ctx,
                                                         allow_update_cdf,
@@ -1305,7 +1305,7 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t al
     if (component_type == COMPONENT_CHROMA_CB || component_type == COMPONENT_CHROMA ||
         component_type == COMPONENT_ALL) {
         if (cb_eob) {
-            coeff_buffer = (int32_t *)&coeff_buffer_sb->buffer_cb[txb_chroma_origin_index * sizeof(int32_t)];
+            coeff_buffer = (int32_t*)&coeff_buffer_sb->buffer_cb[txb_chroma_origin_index * sizeof(int32_t)];
 
             *cb_txb_coeff_bits = svt_av1_cost_coeffs_txb(ctx,
                                                          allow_update_cdf,
@@ -1329,7 +1329,7 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t al
         component_type == COMPONENT_ALL) {
         //Estimate the rate of the transform type and coefficient for chroma Cr
         if (cr_eob) {
-            coeff_buffer = (int32_t *)&coeff_buffer_sb->buffer_cr[txb_chroma_origin_index * sizeof(int32_t)];
+            coeff_buffer = (int32_t*)&coeff_buffer_sb->buffer_cr[txb_chroma_origin_index * sizeof(int32_t)];
 
             *cr_txb_coeff_bits = svt_av1_cost_coeffs_txb(ctx,
                                                          allow_update_cdf,
@@ -1352,8 +1352,8 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext *ctx, uint8_t al
     return return_error;
 }
 
-EbErrorType svt_aom_full_cost_light_pd0(ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
-                                        uint64_t *y_distortion, uint64_t lambda, uint64_t *y_coeff_bits) {
+EbErrorType svt_aom_full_cost_light_pd0(ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
+                                        uint64_t* y_distortion, uint64_t lambda, uint64_t* y_coeff_bits) {
     EbErrorType return_error = EB_ErrorNone;
 
     uint64_t coeff_rate = (*y_coeff_bits + (uint64_t)ctx->md_rate_est_ctx->skip_fac_bits[0][0]);
@@ -1371,11 +1371,11 @@ EbErrorType svt_aom_full_cost_light_pd0(ModeDecisionContext *ctx, ModeDecisionCa
  * svt_aom_av1_full_cost function is used to estimate the cost of a candidate mode
  * for full mode decision module.
  **********************************************************************************/
-void svt_aom_full_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDecisionCandidateBuffer *cand_bf,
+void svt_aom_full_cost(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
                        uint64_t lambda, uint64_t y_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
                        uint64_t cb_distortion[DIST_TOTAL][DIST_CALC_TOTAL],
-                       uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t *y_coeff_bits,
-                       uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits) {
+                       uint64_t cr_distortion[DIST_TOTAL][DIST_CALC_TOTAL], uint64_t* y_coeff_bits,
+                       uint64_t* cb_coeff_bits, uint64_t* cr_coeff_bits) {
     const uint8_t skip_coeff_ctx        = ctx->skip_coeff_ctx;
     const bool    update_full_cost_ssim = ctx->tune_ssim_level > SSIM_LVL_0 ? true : false;
 
@@ -1497,9 +1497,9 @@ void svt_aom_full_cost(PictureControlSet *pcs, ModeDecisionContext *ctx, ModeDec
 /************************************************************
  * Coding Loop Context Generation
  ************************************************************/
-void svt_aom_coding_loop_context_generation(PictureControlSet *pcs, ModeDecisionContext *ctx) {
-    BlkStruct   *blk_ptr = ctx->blk_ptr;
-    MacroBlockD *xd      = blk_ptr->av1xd;
+void svt_aom_coding_loop_context_generation(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+    BlkStruct*   blk_ptr = ctx->blk_ptr;
+    MacroBlockD* xd      = blk_ptr->av1xd;
     if (!ctx->shut_fast_rate) {
         if (pcs->slice_type == I_SLICE) {
             svt_aom_get_kf_y_mode_ctx(xd, &ctx->intra_luma_top_ctx, &ctx->intra_luma_left_ctx);
@@ -1529,7 +1529,7 @@ static INLINE int get_vartx_max_txsize(/*const MbModeInfo *xd,*/ BlockSize bsize
     return av1_get_adjusted_tx_size(max_txsize); // chroma
 }
 
-static INLINE int max_block_wide(const MacroBlockD *xd, BlockSize bsize, int plane) {
+static INLINE int max_block_wide(const MacroBlockD* xd, BlockSize bsize, int plane) {
     int max_blocks_wide = block_size_wide[bsize];
 
     if (xd->mb_to_right_edge < 0) {
@@ -1540,7 +1540,7 @@ static INLINE int max_block_wide(const MacroBlockD *xd, BlockSize bsize, int pla
     return max_blocks_wide >> tx_size_wide_log2[0];
 }
 
-static INLINE int max_block_high(const MacroBlockD *xd, BlockSize bsize, int plane) {
+static INLINE int max_block_high(const MacroBlockD* xd, BlockSize bsize, int plane) {
     int max_blocks_high = block_size_high[bsize];
 
     if (xd->mb_to_bottom_edge < 0) {
@@ -1551,7 +1551,7 @@ static INLINE int max_block_high(const MacroBlockD *xd, BlockSize bsize, int pla
     return max_blocks_high >> tx_size_high_log2[0];
 }
 
-static INLINE void txfm_partition_update(TXFM_CONTEXT *above_ctx, TXFM_CONTEXT *left_ctx, TxSize tx_size,
+static INLINE void txfm_partition_update(TXFM_CONTEXT* above_ctx, TXFM_CONTEXT* left_ctx, TxSize tx_size,
                                          TxSize txb_size) {
     BlockSize bsize = txsize_to_bsize[txb_size];
     assert(bsize < BlockSizeS_ALL);
@@ -1588,7 +1588,7 @@ static INLINE TxSize get_sqr_tx_size(int tx_dim) {
     }
 }
 
-static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx, TXFM_CONTEXT *left_ctx, BlockSize bsize,
+static INLINE int txfm_partition_context(TXFM_CONTEXT* above_ctx, TXFM_CONTEXT* left_ctx, BlockSize bsize,
                                          TxSize tx_size) {
     const uint8_t txw      = tx_size_wide[tx_size];
     const uint8_t txh      = tx_size_high[tx_size];
@@ -1611,8 +1611,8 @@ static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx, TXFM_CONTEXT *
     return category * 3 + above + left;
 }
 
-static uint64_t cost_tx_size_vartx(MacroBlockD *xd, const MbModeInfo *mbmi, TxSize tx_size, int depth, int blk_row,
-                                   int blk_col, MdRateEstimationContext *md_rate_est_ctx, FRAME_CONTEXT *ec_ctx,
+static uint64_t cost_tx_size_vartx(MacroBlockD* xd, const MbModeInfo* mbmi, TxSize tx_size, int depth, int blk_row,
+                                   int blk_col, MdRateEstimationContext* md_rate_est_ctx, FRAME_CONTEXT* ec_ctx,
                                    uint8_t allow_update_cdf) {
     uint64_t  bits            = 0;
     const int max_blocks_high = max_block_high(xd, mbmi->bsize, 0);
@@ -1671,14 +1671,14 @@ static uint64_t cost_tx_size_vartx(MacroBlockD *xd, const MbModeInfo *mbmi, TxSi
     return bits;
 }
 
-static INLINE void set_txfm_ctx(TXFM_CONTEXT *txfm_ctx, uint8_t txs, int len) {
+static INLINE void set_txfm_ctx(TXFM_CONTEXT* txfm_ctx, uint8_t txs, int len) {
     int i;
     for (i = 0; i < len; ++i) {
         txfm_ctx[i] = txs;
     }
 }
 
-static INLINE void set_txfm_ctxs(TxSize tx_size, int n8_w, int n8_h, int skip, const MacroBlockD *xd) {
+static INLINE void set_txfm_ctxs(TxSize tx_size, int n8_w, int n8_h, int skip, const MacroBlockD* xd) {
     uint8_t bw = tx_size_wide[tx_size];
     uint8_t bh = tx_size_high[tx_size];
 
@@ -1706,10 +1706,10 @@ static INLINE int tx_size_to_depth(TxSize tx_size, BlockSize bsize) {
 // The mode info data structure has a one element border above and to the
 // left of the entries corresponding to real blocks.
 // The prediction flags in these dummy entries are initialized to 0.
-static INLINE int get_tx_size_context(const MacroBlockD *xd) {
-    const MbModeInfo       *mbmi        = xd->mi[0];
-    const MbModeInfo *const above_mbmi  = xd->above_mbmi;
-    const MbModeInfo *const left_mbmi   = xd->left_mbmi;
+static INLINE int get_tx_size_context(const MacroBlockD* xd) {
+    const MbModeInfo*       mbmi        = xd->mi[0];
+    const MbModeInfo* const above_mbmi  = xd->above_mbmi;
+    const MbModeInfo* const left_mbmi   = xd->left_mbmi;
     const TxSize            max_tx_size = eb_max_txsize_rect_lookup[mbmi->bsize];
     const int               max_tx_wide = tx_size_wide[max_tx_size];
     const int               max_tx_high = tx_size_high[max_tx_size];
@@ -1742,9 +1742,9 @@ static INLINE int get_tx_size_context(const MacroBlockD *xd) {
     }
 }
 
-static uint64_t cost_selected_tx_size(const MacroBlockD *xd, MdRateEstimationContext *md_rate_est_ctx, TxSize tx_size,
-                                      FRAME_CONTEXT *ec_ctx, uint8_t allow_update_cdf) {
-    const MbModeInfo *const mbmi  = xd->mi[0];
+static uint64_t cost_selected_tx_size(const MacroBlockD* xd, MdRateEstimationContext* md_rate_est_ctx, TxSize tx_size,
+                                      FRAME_CONTEXT* ec_ctx, uint8_t allow_update_cdf) {
+    const MbModeInfo* const mbmi  = xd->mi[0];
     const BlockSize         bsize = mbmi->bsize;
     uint64_t                bits  = 0;
 
@@ -1769,9 +1769,9 @@ static uint64_t cost_selected_tx_size(const MacroBlockD *xd, MdRateEstimationCon
 
 /* Get the TXS rate and update the txfm context.  If allow_update_cdf is true, the TX size CDFs will
 be updated. */
-uint64_t svt_aom_tx_size_bits(PictureControlSet *pcs, uint8_t segment_id, MdRateEstimationContext *md_rate_est_ctx,
-                              MacroBlockD *xd, const MbModeInfo *mbmi, TxSize tx_size, TxMode tx_mode, BlockSize bsize,
-                              uint8_t skip, FRAME_CONTEXT *ec_ctx, uint8_t allow_update_cdf) {
+uint64_t svt_aom_tx_size_bits(PictureControlSet* pcs, uint8_t segment_id, MdRateEstimationContext* md_rate_est_ctx,
+                              MacroBlockD* xd, const MbModeInfo* mbmi, TxSize tx_size, TxMode tx_mode, BlockSize bsize,
+                              uint8_t skip, FRAME_CONTEXT* ec_ctx, uint8_t allow_update_cdf) {
     uint64_t bits        = 0;
     int      is_inter_tx = is_inter_block(&mbmi->block_mi);
     if (tx_mode == TX_MODE_SELECT && block_signals_txsize(bsize) && !(is_inter_tx && skip) &&
@@ -1802,16 +1802,16 @@ uint64_t svt_aom_tx_size_bits(PictureControlSet *pcs, uint8_t segment_id, MdRate
 
 /* Get the TXS rate.  A dummy txfm context array will be used, so context updates will not be saved for
 future blocks. */
-uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, ModeDecisionContext *ctx,
-                                  PictureControlSet *pcs, uint8_t tx_depth, bool block_has_coeff) {
-    NeighborArrayUnit *txfm_context_array      = ctx->txfm_context_array;
+uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer* candidateBuffer, ModeDecisionContext* ctx,
+                                  PictureControlSet* pcs, uint8_t tx_depth, bool block_has_coeff) {
+    NeighborArrayUnit* txfm_context_array      = ctx->txfm_context_array;
     uint32_t           txfm_context_left_index = get_neighbor_array_unit_left_index(txfm_context_array, ctx->blk_org_y);
     uint32_t           txfm_context_above_index = get_neighbor_array_unit_top_index(txfm_context_array, ctx->blk_org_x);
 
     TxMode       tx_mode = pcs->ppcs->frm_hdr.tx_mode;
-    MacroBlockD *xd      = ctx->blk_ptr->av1xd;
+    MacroBlockD* xd      = ctx->blk_ptr->av1xd;
     BlockSize    bsize   = ctx->blk_geom->bsize;
-    MbModeInfo  *mbmi    = xd->mi[0];
+    MbModeInfo*  mbmi    = xd->mi[0];
 
     svt_memcpy(ctx->above_txfm_context,
                &(txfm_context_array->top_array[txfm_context_above_index]),
@@ -1845,8 +1845,8 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer *candidateBuffer, 
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
  */
-int64_t svt_aom_partition_rate_cost(PictureParentControlSet *pcs, const BlockSize bsize, const int mi_row,
-                                    const int mi_col, MdRateEstimationContext *md_rate_est_ctx, PartitionType p,
+int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSize bsize, const int mi_row,
+                                    const int mi_col, MdRateEstimationContext* md_rate_est_ctx, PartitionType p,
                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
     assert(bsize < BlockSizeS_ALL);

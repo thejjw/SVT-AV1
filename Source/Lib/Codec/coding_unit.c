@@ -17,13 +17,13 @@
 #include "enc_mode_config.h"
 
 void svt_aom_largest_coding_unit_dctor(EbPtr p) {
-    SuperBlock *obj = (SuperBlock *)p;
+    SuperBlock* obj = (SuperBlock*)p;
     EB_FREE_ARRAY(obj->av1xd);
     EB_FREE_ARRAY(obj->final_blk_arr);
     EB_FREE_ARRAY(obj->ptree);
 }
 
-static void setup_ptree(PARTITION_TREE *pc_tree, int index, BlockSize bsize, const int min_sq_size) {
+static void setup_ptree(PARTITION_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
     pc_tree->bsize = bsize;
     pc_tree->index = index;
 
@@ -55,10 +55,10 @@ Tasks & Questions
     -Need a ReconPicture for each candidate.
     -I don't see a way around doing the copies in temp memory and then copying it in...
 */
-EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t sb_size_pix,
+EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr, uint8_t sb_size_pix,
                                              uint16_t sb_origin_x, uint16_t sb_origin_y, uint16_t sb_index,
                                              EncMode enc_mode, bool rtc, bool allintra,
-                                             ResolutionRange input_resolution, PictureControlSet *picture_control_set) {
+                                             ResolutionRange input_resolution, PictureControlSet* picture_control_set) {
     larget_coding_unit_ptr->dctor = svt_aom_largest_coding_unit_dctor;
 
     // ************ SB ***************

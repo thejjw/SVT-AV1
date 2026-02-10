@@ -19,7 +19,7 @@
 #include "memory_avx2.h"
 #include "synonyms_avx512.h"
 
-uint64_t svt_search_one_dual_avx512(int *lev0, int *lev1, int nb_strengths, uint64_t **mse[2], int sb_count,
+uint64_t svt_search_one_dual_avx512(int* lev0, int* lev1, int nb_strengths, uint64_t** mse[2], int sb_count,
                                     int start_gi, int end_gi) {
     const int start        = start_gi & ~7;
     uint64_t  best_tot_mse = (uint64_t)1 << 63;
@@ -50,7 +50,7 @@ uint64_t svt_search_one_dual_avx512(int *lev0, int *lev1, int nb_strengths, uint
             const __m512i mse0 = _mm512_set1_epi64(mse[0][i][j]);
 
             for (k = start; k < end_gi; k += 8) {
-                const __m512i mse1 = _mm512_loadu_si512((const __m512i *)&mse[1][i][k]);
+                const __m512i mse1 = _mm512_loadu_si512((const __m512i*)&mse[1][i][k]);
                 const __m512i tot  = zz_load_512(&tot_mse[j][k]);
                 const __m512i curr = _mm512_add_epi64(mse0, mse1);
                 const __m512i best = _mm512_min_epu64(best_mse_, curr);

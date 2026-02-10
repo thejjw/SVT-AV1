@@ -69,7 +69,7 @@ static INLINE int32_t adjust_strength(int32_t strength, int32_t var) {
     return var ? (strength * (4 + i) + 8) >> 4 : 0;
 }
 
-void svt_aom_copy_rect8_8bit_to_16bit_c(uint16_t *dst, int32_t dstride, const uint8_t *src, int32_t sstride, int32_t v,
+void svt_aom_copy_rect8_8bit_to_16bit_c(uint16_t* dst, int32_t dstride, const uint8_t* src, int32_t sstride, int32_t v,
                                         int32_t h) {
     for (int32_t i = 0; i < v; i++) {
         for (int32_t j = 0; j < h; j++) {
@@ -85,7 +85,7 @@ particular direction, i.e. the squared error between the input and a
 in a particular direction. Since each direction have the same sum(x^2) term,
 that term is never computed. See Section 2, step 2, of:
 http://jmvalin.ca/notes/intra_paint.pdf */
-uint8_t svt_aom_cdef_find_dir_c(const uint16_t *img, int32_t stride, int32_t *var, int32_t coeff_shift) {
+uint8_t svt_aom_cdef_find_dir_c(const uint16_t* img, int32_t stride, int32_t* var, int32_t coeff_shift) {
     int32_t cost[8]        = {0};
     int32_t partial[8][15] = {{0}};
     int32_t best_cost      = 0;
@@ -149,13 +149,13 @@ uint8_t svt_aom_cdef_find_dir_c(const uint16_t *img, int32_t stride, int32_t *va
     return best_dir;
 }
 
-void svt_aom_cdef_find_dir_dual_c(const uint16_t *img1, const uint16_t *img2, int stride, int32_t *var1, int32_t *var2,
-                                  int32_t coeff_shift, uint8_t *out1, uint8_t *out2) {
+void svt_aom_cdef_find_dir_dual_c(const uint16_t* img1, const uint16_t* img2, int stride, int32_t* var1, int32_t* var2,
+                                  int32_t coeff_shift, uint8_t* out1, uint8_t* out2) {
     *out1 = svt_aom_cdef_find_dir_c(img1, stride, var1, coeff_shift);
     *out2 = svt_aom_cdef_find_dir_c(img2, stride, var2, coeff_shift);
 }
 
-static AOM_INLINE void cdef_find_dir(uint16_t *in, CdefList *dlist, int32_t var[CDEF_NBLOCKS][CDEF_NBLOCKS],
+static AOM_INLINE void cdef_find_dir(uint16_t* in, CdefList* dlist, int32_t var[CDEF_NBLOCKS][CDEF_NBLOCKS],
                                      int32_t cdef_count, int32_t coeff_shift, uint8_t dir[CDEF_NBLOCKS][CDEF_NBLOCKS]) {
     int bi;
 
@@ -190,13 +190,13 @@ const int32_t svt_aom_eb_cdef_pri_taps[2][2] = {{4, 2}, {3, 3}};
 const int32_t svt_aom_eb_cdef_sec_taps[2][2] = {{2, 1}, {2, 1}};
 
 /* Smooth in the direction detected. */
-void svt_cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int32_t dstride, const uint16_t *in, int32_t pri_strength,
+void svt_cdef_filter_block_c(uint8_t* dst8, uint16_t* dst16, int32_t dstride, const uint16_t* in, int32_t pri_strength,
                              int32_t sec_strength, int32_t dir, int32_t pri_damping, int32_t sec_damping, int32_t bsize,
                              int32_t coeff_shift, uint8_t subsampling_factor) {
     int32_t        i, j, k;
     const int32_t  s        = CDEF_BSTRIDE;
-    const int32_t *pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
-    const int32_t *sec_taps = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
+    const int32_t* pri_taps = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
+    const int32_t* sec_taps = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
 
     for (i = 0; i < (4 << (int32_t)(bsize == BLOCK_8X8 || bsize == BLOCK_4X8)); i += subsampling_factor) {
         for (j = 0; j < (4 << (int32_t)(bsize == BLOCK_8X8 || bsize == BLOCK_8X4)); j++) {
@@ -253,17 +253,17 @@ void svt_cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int32_t dstride, co
     }
 }
 
-void svt_aom_copy_sb8_16(uint16_t *dst, int32_t dstride, const uint8_t *src, int32_t src_voffset, int32_t src_hoffset,
+void svt_aom_copy_sb8_16(uint16_t* dst, int32_t dstride, const uint8_t* src, int32_t src_voffset, int32_t src_hoffset,
                          int32_t sstride, int32_t vsize, int32_t hsize, bool is_16bit) {
     if (is_16bit) {
-        const uint16_t *base = ((uint16_t *)src) + (src_voffset * sstride + src_hoffset);
+        const uint16_t* base = ((uint16_t*)src) + (src_voffset * sstride + src_hoffset);
         for (int r = 0; r < vsize; r++) {
             svt_memcpy(dst, base, 2 * hsize);
             dst += dstride;
             base += sstride;
         }
     } else {
-        const uint8_t *base = &src[src_voffset * sstride + src_hoffset];
+        const uint8_t* base = &src[src_voffset * sstride + src_hoffset];
         svt_aom_copy_rect8_8bit_to_16bit(dst, dstride, base, sstride, vsize, hsize);
     }
 }
@@ -271,9 +271,9 @@ void svt_aom_copy_sb8_16(uint16_t *dst, int32_t dstride, const uint8_t *src, int
 /*
  * Loop over the non-skip 8x8 blocks.  For each block, find the CDEF direction, then apply the specified filter.
 */
-void svt_cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int32_t dstride, uint16_t *in, int32_t xdec, int32_t ydec,
-                        uint8_t dir[CDEF_NBLOCKS][CDEF_NBLOCKS], int32_t *dirinit,
-                        int32_t var[CDEF_NBLOCKS][CDEF_NBLOCKS], int32_t pli, CdefList *dlist, int32_t cdef_count,
+void svt_cdef_filter_fb(uint8_t* dst8, uint16_t* dst16, int32_t dstride, uint16_t* in, int32_t xdec, int32_t ydec,
+                        uint8_t dir[CDEF_NBLOCKS][CDEF_NBLOCKS], int32_t* dirinit,
+                        int32_t var[CDEF_NBLOCKS][CDEF_NBLOCKS], int32_t pli, CdefList* dlist, int32_t cdef_count,
                         int32_t level, int32_t sec_strength, int32_t pri_damping, int32_t sec_damping,
                         int32_t coeff_shift, uint8_t subsampling_factor) {
     int32_t bi;
@@ -295,9 +295,9 @@ void svt_cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int32_t dstride, uint16_
             int32_t   by = dlist[bi].by << bsizey;
             int32_t   bx = dlist[bi].bx << bsizex;
             int32_t   iy;
-            uint16_t *src_16 = in + (by * CDEF_BSTRIDE + bx);
+            uint16_t* src_16 = in + (by * CDEF_BSTRIDE + bx);
             if (dst8) {
-                uint8_t *dst_8 = dst8 + (bi << (bsizex + bsizey));
+                uint8_t* dst_8 = dst8 + (bi << (bsizex + bsizey));
                 //size 2x2 and 3x3, no gain to use SIMD
                 for (iy = 0; iy < 1 << bsizey; iy += subsampling_factor) {
                     for (int32_t ix = 0; ix < 1 << bsizex; ix++) {
@@ -305,7 +305,7 @@ void svt_cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int32_t dstride, uint16_
                     }
                 }
             } else {
-                uint16_t *dst_16 = dst16 + (bi << (bsizex + bsizey));
+                uint16_t* dst_16 = dst16 + (bi << (bsizex + bsizey));
                 for (iy = 0; iy < 1 << bsizey; iy += subsampling_factor) {
                     memcpy(dst_16 + (iy << bsizex),
                            src_16 + iy * CDEF_BSTRIDE,

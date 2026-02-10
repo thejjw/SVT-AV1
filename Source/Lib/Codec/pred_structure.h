@@ -37,7 +37,7 @@ typedef struct PredictionStructureEntry {
 typedef struct PredictionStructure {
     EbDctor                    dctor;
     uint32_t                   pred_struct_entry_count;
-    PredictionStructureEntry **pred_struct_entry_ptr_array;
+    PredictionStructureEntry** pred_struct_entry_ptr_array;
     PredStructure              pred_type;
     // Section Indices
     uint32_t init_pic_index;
@@ -50,14 +50,14 @@ typedef struct PredictionStructure {
      ************************************************/
 typedef struct PredictionStructureGroup {
     EbDctor               dctor;
-    PredictionStructure **prediction_structure_ptr_array;
+    PredictionStructure** prediction_structure_ptr_array;
     uint32_t              prediction_structure_count;
 } PredictionStructureGroup;
 
 /************************************************
      * Declarations
      ************************************************/
-PredictionStructure *svt_aom_get_prediction_structure(PredictionStructureGroup *prediction_structure_group_ptr,
+PredictionStructure* svt_aom_get_prediction_structure(PredictionStructureGroup* prediction_structure_group_ptr,
                                                       PredStructure pred_structure, uint32_t levels_of_hierarchy);
 
 typedef enum { LAST = 0, LAST2 = 1, LAST3 = 2, GOLD = 3, BWD = 4, ALT2 = 5, ALT = 6 } REF_FRAME_MINUS1;

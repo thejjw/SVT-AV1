@@ -14,8 +14,8 @@
 
 #include "aom_dsp_rtcd.h"
 
-void svt_aom_subtract_block_neon(int rows, int cols, int16_t *diff, ptrdiff_t diff_stride, const uint8_t *src,
-                                 ptrdiff_t src_stride, const uint8_t *pred, ptrdiff_t pred_stride) {
+void svt_aom_subtract_block_neon(int rows, int cols, int16_t* diff, ptrdiff_t diff_stride, const uint8_t* src,
+                                 ptrdiff_t src_stride, const uint8_t* pred, ptrdiff_t pred_stride) {
     int r, c;
     if (cols > 16) {
         r = rows;

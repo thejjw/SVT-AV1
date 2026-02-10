@@ -50,7 +50,7 @@ static const MeshPattern intrabc_mesh_patterns[MAX_MESH_SPEED + 1][MAX_MESH_STEP
     {{64, 4}, {16, 1}, {0, 0}, {0, 0}},
 };
 
-static void set_global_motion_field(PictureControlSet *pcs) {
+static void set_global_motion_field(PictureControlSet* pcs) {
     // Init Global Motion Vector
     uint8_t frame_index;
     for (frame_index = INTRA_FRAME; frame_index <= ALTREF_FRAME; ++frame_index) {
@@ -69,7 +69,7 @@ static void set_global_motion_field(PictureControlSet *pcs) {
     }
 
     //Update MV
-    PictureParentControlSet *ppcs = pcs->ppcs;
+    PictureParentControlSet* ppcs = pcs->ppcs;
     for (frame_index = INTRA_FRAME; frame_index <= ALTREF_FRAME; ++frame_index) {
         const uint8_t list_idx = get_list_idx(frame_index);
         const uint8_t ref_idx  = get_ref_frame_idx(frame_index);
@@ -110,9 +110,9 @@ static void set_global_motion_field(PictureControlSet *pcs) {
     }
 }
 
-void svt_av1_build_quantizer(PictureParentControlSet *pcs, EbBitDepth bit_depth, int32_t y_dc_delta_q,
+void svt_av1_build_quantizer(PictureParentControlSet* pcs, EbBitDepth bit_depth, int32_t y_dc_delta_q,
                              int32_t u_dc_delta_q, int32_t u_ac_delta_q, int32_t v_dc_delta_q, int32_t v_ac_delta_q,
-                             Quants *const quants, Dequants *const deq) {
+                             Quants* const quants, Dequants* const deq) {
     int32_t i, q, quant_qtx;
 
     for (q = 0; q < QINDEX_RANGE; q++) {
@@ -224,7 +224,7 @@ static INLINE int svt_av1_still_get_qmlevel(int qindex, int min, int max) {
     return CLIP3(min, max, qm_level);
 }
 
-static void svt_av1_qm_init(PictureParentControlSet *pcs) {
+static void svt_av1_qm_init(PictureParentControlSet* pcs) {
     const uint8_t num_planes = 3; // MAX_MB_PLANE;// NM- No monochroma
     uint8_t       q, c, t;
 #if CONFIG_ENABLE_QUANT_MATRIX
@@ -306,10 +306,10 @@ static void svt_av1_qm_init(PictureParentControlSet *pcs) {
 }
 
 // Initialize the rate cost tables for the frame
-static void init_frame_rate_tables(PictureControlSet *pcs) {
-    PictureParentControlSet *ppcs            = pcs->ppcs;
-    FrameHeader             *frm_hdr         = &ppcs->frm_hdr;
-    MdRateEstimationContext *md_rate_est_ctx = pcs->md_rate_est_ctx;
+static void init_frame_rate_tables(PictureControlSet* pcs) {
+    PictureParentControlSet* ppcs            = pcs->ppcs;
+    FrameHeader*             frm_hdr         = &ppcs->frm_hdr;
+    MdRateEstimationContext* md_rate_est_ctx = pcs->md_rate_est_ctx;
 
     // Get the frame cdf contexts
     if (frm_hdr->primary_ref_frame != PRIMARY_REF_NONE) {
@@ -318,7 +318,7 @@ static void init_frame_rate_tables(PictureControlSet *pcs) {
         // Therefore, add 1 to the primary ref frame (e.g. LAST --> LAST_FRAME)
         const uint8_t      list_idx = get_list_idx(primary_ref_frame + 1);
         const uint8_t      ref_idx  = get_ref_frame_idx(primary_ref_frame + 1);
-        EbReferenceObject *ref      = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+        EbReferenceObject* ref      = (EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
         memcpy(&pcs->md_frame_context, &ref->frame_context, sizeof(FRAME_CONTEXT));
     } else {
         svt_av1_default_coef_probs(&pcs->md_frame_context, frm_hdr->quantization_params.base_q_idx);
@@ -341,7 +341,7 @@ static void init_frame_rate_tables(PictureControlSet *pcs) {
 }
 
 // Perform initializations needed for MD
-void mdc_init_qp_update(PictureControlSet *pcs) {
+void mdc_init_qp_update(PictureControlSet* pcs) {
     pcs->intra_coded_area = 0;
     pcs->skip_coded_area  = 0;
     pcs->hp_coded_area    = 0;
@@ -360,8 +360,8 @@ void mdc_init_qp_update(PictureControlSet *pcs) {
  ******************************************************/
 
 static void mode_decision_configuration_context_dctor(EbPtr p) {
-    EbThreadContext                  *thread_ctx = (EbThreadContext *)p;
-    ModeDecisionConfigurationContext *obj        = (ModeDecisionConfigurationContext *)thread_ctx->priv;
+    EbThreadContext*                  thread_ctx = (EbThreadContext*)p;
+    ModeDecisionConfigurationContext* obj        = (ModeDecisionConfigurationContext*)thread_ctx->priv;
 
     EB_FREE_ARRAY(obj);
 }
@@ -369,10 +369,10 @@ static void mode_decision_configuration_context_dctor(EbPtr p) {
 /******************************************************
  * Mode Decision Configuration Context Constructor
  ******************************************************/
-EbErrorType svt_aom_mode_decision_configuration_context_ctor(EbThreadContext   *thread_ctx,
-                                                             const EbEncHandle *enc_handle_ptr, int input_index,
+EbErrorType svt_aom_mode_decision_configuration_context_ctor(EbThreadContext*   thread_ctx,
+                                                             const EbEncHandle* enc_handle_ptr, int input_index,
                                                              int output_index) {
-    ModeDecisionConfigurationContext *context_ptr;
+    ModeDecisionConfigurationContext* context_ptr;
     EB_CALLOC_ARRAY(context_ptr, 1);
     thread_ctx->priv  = context_ptr;
     thread_ctx->dctor = mode_decision_configuration_context_dctor;
@@ -390,7 +390,7 @@ EbErrorType svt_aom_mode_decision_configuration_context_ctor(EbThreadContext   *
 Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
-static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
+static INLINE int get_relative_dist(const OrderHintInfo* oh, int a, int b) {
     if (!oh->enable_order_hint) {
         return 0;
     }
@@ -407,7 +407,7 @@ static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
     return diff;
 }
 
-static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, int blk_col, Mv mv, int sign_bias) {
+static int get_block_position(Av1Common* cm, int* mi_r, int* mi_c, int blk_row, int blk_col, Mv mv, int sign_bias) {
     const int base_blk_row = (blk_row >> 3) << 3;
     const int base_blk_col = (blk_col >> 3) << 3;
 
@@ -441,14 +441,14 @@ static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, 
 // Call Start frame's reference frames as reference frames.
 // Call ref_offset as frame distances between start frame and its reference
 // frames.
-static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvReferenceFrame start_frame, int dir) {
-    TPL_MV_REF *tpl_mvs_base           = pcs->tpl_mvs;
+static int motion_field_projection(Av1Common* cm, PictureControlSet* pcs, MvReferenceFrame start_frame, int dir) {
+    TPL_MV_REF* tpl_mvs_base           = pcs->tpl_mvs;
     int         ref_offset[REF_FRAMES] = {0};
 
     uint8_t list_idx0, ref_idx_l0;
     list_idx0                          = get_list_idx(start_frame);
     ref_idx_l0                         = get_ref_frame_idx(start_frame);
-    EbReferenceObject *start_frame_buf = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
+    EbReferenceObject* start_frame_buf = (EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
 
     if (start_frame_buf == NULL) {
         return 0;
@@ -465,7 +465,7 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
     }
 
     const int                 start_frame_order_hint        = start_frame_buf->order_hint;
-    const unsigned int *const ref_order_hints               = &start_frame_buf->ref_order_hint[0];
+    const unsigned int* const ref_order_hints               = &start_frame_buf->ref_order_hint[0];
     int                       start_to_current_frame_offset = get_relative_dist(
         &pcs->ppcs->scs->seq_header.order_hint_info, start_frame_order_hint, pcs->ppcs->cur_order_hint);
 
@@ -478,13 +478,13 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
         start_to_current_frame_offset = -start_to_current_frame_offset;
     }
 
-    const MV_REF *const mv_ref_base = start_frame_buf->mvs;
+    const MV_REF* const mv_ref_base = start_frame_buf->mvs;
     const int           mvs_rows    = (cm->mi_rows + 1) >> 1;
     const int           mvs_cols    = (cm->mi_cols + 1) >> 1;
 
     for (int blk_row = 0; blk_row < mvs_rows; ++blk_row) {
         for (int blk_col = 0; blk_col < mvs_cols; ++blk_col) {
-            const MV_REF *const mv_ref = &mv_ref_base[blk_row * mvs_cols + blk_col];
+            const MV_REF* const mv_ref = &mv_ref_base[blk_row * mvs_cols + blk_col];
             Mv                  fwd_mv = mv_ref->mv;
 
             if (mv_ref->ref_frame > INTRA_FRAME) {
@@ -513,18 +513,18 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs, MvRefe
     return 1;
 }
 
-static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
-    const OrderHintInfo *const order_hint_info = &pcs->ppcs->scs->seq_header.order_hint_info;
+static void av1_setup_motion_field(Av1Common* cm, PictureControlSet* pcs) {
+    const OrderHintInfo* const order_hint_info = &pcs->ppcs->scs->seq_header.order_hint_info;
     memset(pcs->ref_frame_side, 0, sizeof(pcs->ref_frame_side));
     if (!order_hint_info->enable_order_hint) {
         return;
     }
 
-    TPL_MV_REF *tpl_mvs_base = pcs->tpl_mvs;
+    TPL_MV_REF* tpl_mvs_base = pcs->tpl_mvs;
     int         size         = ((cm->mi_rows + MAX_MIB_SIZE) >> 1) * (cm->mi_stride >> 1);
 
     const int                cur_order_hint = pcs->ppcs->cur_order_hint;
-    const EbReferenceObject *ref_buf[INTER_REFS_PER_FRAME];
+    const EbReferenceObject* ref_buf[INTER_REFS_PER_FRAME];
     int                      ref_order_hint[INTER_REFS_PER_FRAME];
 
     for (int ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ref_frame++) {
@@ -533,7 +533,7 @@ static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
         uint8_t   list_idx0, ref_idx_l0;
         list_idx0              = get_list_idx(ref_frame);
         ref_idx_l0             = get_ref_frame_idx(ref_frame);
-        EbReferenceObject *buf = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
+        EbReferenceObject* buf = (EbReferenceObject*)pcs->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr;
 
         if (buf != NULL) {
             order_hint = buf->order_hint;
@@ -595,17 +595,17 @@ static void av1_setup_motion_field(Av1Common *cm, PictureControlSet *pcs) {
     }
 }
 
-EbErrorType svt_av1_hash_table_create(HashTable *p_hash_table);
+EbErrorType svt_av1_hash_table_create(HashTable* p_hash_table);
 int32_t     svt_aom_noise_log1p_fp16(int32_t noise_level_fp16);
 
-static void generate_ibc_data(PictureControlSet *pcs) {
+static void generate_ibc_data(PictureControlSet* pcs) {
     if (!pcs->ppcs->frm_hdr.allow_intrabc) {
         return;
     }
 
     int            i;
     int            speed = 1;
-    SpeedFeatures *sf    = &pcs->sf;
+    SpeedFeatures* sf    = &pcs->sf;
 
     const int mesh_speed           = AOMMIN(speed, MAX_MESH_SPEED);
     sf->exhaustive_searches_thresh = (1 << 25);
@@ -630,7 +630,7 @@ static void generate_ibc_data(PictureControlSet *pcs) {
         const int pic_width  = pcs->ppcs->aligned_width;
         const int pic_height = pcs->ppcs->aligned_height;
 
-        uint32_t *block_hash_values[2];
+        uint32_t* block_hash_values[2];
         int       j;
 
         for (j = 0; j < 2; j++) {
@@ -662,9 +662,9 @@ static void generate_ibc_data(PictureControlSet *pcs) {
 
 /* Determine the frame complexity level (stored under pcs->coeff_lvl) based
 on the ME distortion and QP. */
-static void set_frame_coeff_lvl(PictureControlSet *pcs) {
+static void set_frame_coeff_lvl(PictureControlSet* pcs) {
     // Derive the input nois level
-    EbPictureBufferDesc *input_pic = pcs->ppcs->enhanced_pic;
+    EbPictureBufferDesc* input_pic = pcs->ppcs->enhanced_pic;
 
     EbByte buffer_y = input_pic->buffer_y + input_pic->org_y * input_pic->stride_y + input_pic->org_x;
 
@@ -714,15 +714,15 @@ static void set_frame_coeff_lvl(PictureControlSet *pcs) {
 
 // When the relevant speed features are used, update the filters to use/test for CDEF
 // based on the ref pics' filters.
-static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
-    CdefSearchControls *cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
+static void update_cdef_filters_on_ref_info(PictureControlSet* pcs) {
+    CdefSearchControls* cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
     if (cdef_ctrls->use_reference_cdef_fs) {
         if (pcs->slice_type != I_SLICE) {
             uint8_t lowest_sg  = TOTAL_STRENGTHS - 1;
             uint8_t highest_sg = 0;
             // Determine luma pred filter
             // Add filter from list0
-            EbReferenceObject *ref_obj_l0 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+            EbReferenceObject* ref_obj_l0 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
             for (uint8_t fs = 0; fs < ref_obj_l0->ref_cdef_strengths_num; fs++) {
                 if (ref_obj_l0->ref_cdef_strengths[0][fs] < lowest_sg) {
                     lowest_sg = ref_obj_l0->ref_cdef_strengths[0][fs];
@@ -733,7 +733,7 @@ static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
             }
             if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
                 // Add filter from list1
-                EbReferenceObject *ref_obj_l1 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                EbReferenceObject* ref_obj_l1 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                 for (uint8_t fs = 0; fs < ref_obj_l1->ref_cdef_strengths_num; fs++) {
                     if (ref_obj_l1->ref_cdef_strengths[0][fs] < lowest_sg) {
                         lowest_sg = ref_obj_l1->ref_cdef_strengths[0][fs];
@@ -759,14 +759,14 @@ static void update_cdef_filters_on_ref_info(PictureControlSet *pcs) {
             cdef_ctrls->default_second_pass_fs_num = 0;
 
             // Add filter from list0, if not the same as the default
-            EbReferenceObject *ref_obj_l0 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+            EbReferenceObject* ref_obj_l0 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
             if (ref_obj_l0->ref_cdef_strengths[0][0] != cdef_ctrls->default_first_pass_fs[0]) {
                 cdef_ctrls->default_first_pass_fs[1] = ref_obj_l0->ref_cdef_strengths[0][0];
                 (cdef_ctrls->first_pass_fs_num)++;
             }
 
             if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
-                EbReferenceObject *ref_obj_l1 = (EbReferenceObject *)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                EbReferenceObject* ref_obj_l1 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
                 // Add filter from list1, if different from default filter and list0 filter
                 if (ref_obj_l1->ref_cdef_strengths[0][0] != cdef_ctrls->default_first_pass_fs[0] &&
                     ref_obj_l1->ref_cdef_strengths[0][0] !=
@@ -814,7 +814,7 @@ static const uint32_t disable_cdef_th[4][INPUT_SIZE_COUNT] = {{0, 0, 0, 0, 0, 0,
                                                               {6000, 7000, 8000, 9000, 10000, 10000, 10000}};
 
 // Return true if CDEF can be skipped, false if it should be performed
-static bool me_based_cdef_skip(PictureControlSet *pcs) {
+static bool me_based_cdef_skip(PictureControlSet* pcs) {
     if (pcs->slice_type == I_SLICE) {
         return false;
     }
@@ -844,7 +844,7 @@ static bool me_based_cdef_skip(PictureControlSet *pcs) {
             if (rf[1] == NONE_FRAME) {
                 uint8_t            list_idx = get_list_idx(rf[0]);
                 uint8_t            ref_idx  = get_ref_frame_idx(rf[0]);
-                EbReferenceObject *ref_obj  = pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+                EbReferenceObject* ref_obj  = pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
 
                 if (ref_obj->cdef_dist_dev >= 0 && ref_obj->tmp_layer_idx <= pcs->temporal_layer_index) {
                     prev_cdef_dist += ref_obj->cdef_dist_dev;
@@ -893,23 +893,23 @@ static bool me_based_cdef_skip(PictureControlSet *pcs) {
  *  Initializations for various flags and variables
  *
  ********************************************************************************/
-void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
+void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
     // Context & SCS & PCS
-    EbThreadContext                  *thread_ctx  = (EbThreadContext *)input_ptr;
-    ModeDecisionConfigurationContext *context_ptr = (ModeDecisionConfigurationContext *)thread_ctx->priv;
+    EbThreadContext*                  thread_ctx  = (EbThreadContext*)input_ptr;
+    ModeDecisionConfigurationContext* context_ptr = (ModeDecisionConfigurationContext*)thread_ctx->priv;
     // Input
-    EbObjectWrapper *rc_results_wrapper;
+    EbObjectWrapper* rc_results_wrapper;
 
     // Output
-    EbObjectWrapper *enc_dec_tasks_wrapper;
+    EbObjectWrapper* enc_dec_tasks_wrapper;
 
     for (;;) {
         // Get RateControl Results
         EB_GET_FULL_OBJECT(context_ptr->rate_control_input_fifo_ptr, &rc_results_wrapper);
 
-        RateControlResults *rc_results = (RateControlResults *)rc_results_wrapper->object_ptr;
-        PictureControlSet  *pcs        = (PictureControlSet *)rc_results->pcs_wrapper->object_ptr;
-        SequenceControlSet *scs        = pcs->scs;
+        RateControlResults* rc_results = (RateControlResults*)rc_results_wrapper->object_ptr;
+        PictureControlSet*  pcs        = (PictureControlSet*)rc_results->pcs_wrapper->object_ptr;
+        SequenceControlSet* scs        = pcs->scs;
         pcs->min_me_clpx               = 0;
         pcs->max_me_clpx               = 0;
         pcs->avg_me_clpx               = 0;
@@ -942,7 +942,7 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
             if (pcs->ppcs->is_ref == true && pcs->ppcs->ref_pic_wrapper != NULL) {
                 // update mi_rows and mi_cols for the reference pic wrapper (used in mfmv for other
                 // pictures)
-                EbReferenceObject *ref_object = pcs->ppcs->ref_pic_wrapper->object_ptr;
+                EbReferenceObject* ref_object = pcs->ppcs->ref_pic_wrapper->object_ptr;
                 ref_object->mi_rows           = pcs->ppcs->aligned_height >> MI_SIZE_LOG2;
                 ref_object->mi_cols           = pcs->ppcs->aligned_width >> MI_SIZE_LOG2;
             }
@@ -950,7 +950,7 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
             svt_aom_scale_rec_references(pcs, pcs->ppcs->enhanced_pic);
         }
 
-        FrameHeader *frm_hdr = &pcs->ppcs->frm_hdr;
+        FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
         // Mode Decision Configuration Kernel Signal(s) derivation
         svt_aom_sig_deriv_mode_decision_config(scs, pcs);
 
@@ -973,7 +973,7 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         if (frm_hdr->allow_intrabc) {
             generate_ibc_data(pcs);
         }
-        CdefSearchControls *cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
+        CdefSearchControls* cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
         const uint8_t       skip_perc  = pcs->ref_skip_percentage;
         if (me_based_cdef_skip(pcs) || (skip_perc > 75 && cdef_ctrls->use_skip_detector) ||
             (scs->vq_ctrls.sharpness_ctrls.cdef && pcs->ppcs->is_noise_level)) {
@@ -1049,7 +1049,7 @@ void *svt_aom_mode_decision_configuration_kernel(void *input_ptr) {
         for (uint16_t tile_group_idx = 0; tile_group_idx < tg_count; tile_group_idx++) {
             svt_get_empty_object(context_ptr->mode_decision_configuration_output_fifo_ptr, &enc_dec_tasks_wrapper);
 
-            EncDecTasks *enc_dec_tasks      = (EncDecTasks *)enc_dec_tasks_wrapper->object_ptr;
+            EncDecTasks* enc_dec_tasks      = (EncDecTasks*)enc_dec_tasks_wrapper->object_ptr;
             enc_dec_tasks->pcs_wrapper      = rc_results->pcs_wrapper;
             enc_dec_tasks->input_type       = rc_results->superres_recode ? ENCDEC_TASKS_SUPERRES_INPUT
                                                                           : ENCDEC_TASKS_MDC_INPUT;

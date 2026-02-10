@@ -18,8 +18,8 @@
 
 #define WARP_ERROR_BLOCK 32
 
-static int64_t warp_error(WarpedMotionParams *wm, const uint8_t *const ref, int width, int height, int stride,
-                          const uint8_t *const dst, int p_col, int p_row, int p_width, int p_height, int p_stride,
+static int64_t warp_error(WarpedMotionParams* wm, const uint8_t* const ref, int width, int height, int stride,
+                          const uint8_t* const dst, int p_col, int p_row, int p_width, int p_height, int p_stride,
                           int subsampling_x, int subsampling_y, uint8_t chess_refn, int64_t best_error) {
     int64_t        gm_sumerr = 0;
     int            warp_w, warp_h;
@@ -74,7 +74,7 @@ static int64_t warp_error(WarpedMotionParams *wm, const uint8_t *const ref, int 
     return gm_sumerr;
 }
 
-int64_t svt_av1_warp_error(WarpedMotionParams *wm, const uint8_t *ref, int width, int height, int stride, uint8_t *dst,
+int64_t svt_av1_warp_error(WarpedMotionParams* wm, const uint8_t* ref, int width, int height, int stride, uint8_t* dst,
                            int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x,
                            int subsampling_y, uint8_t chess_refn, int64_t best_error) {
     if (wm->wmtype <= AFFINE) {

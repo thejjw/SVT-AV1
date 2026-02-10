@@ -26,22 +26,22 @@ extern "C" {
 #endif
 
 typedef struct ModeDecisionConfigurationContext {
-    EbFifo *rate_control_input_fifo_ptr;
-    EbFifo *mode_decision_configuration_output_fifo_ptr;
+    EbFifo* rate_control_input_fifo_ptr;
+    EbFifo* mode_decision_configuration_output_fifo_ptr;
 } ModeDecisionConfigurationContext;
 
 /**************************************
  * Extern Function Declarations
  **************************************/
-EbErrorType svt_aom_mode_decision_configuration_context_ctor(EbThreadContext   *thread_ctx,
-                                                             const EbEncHandle *enc_handle_ptr, int input_index,
+EbErrorType svt_aom_mode_decision_configuration_context_ctor(EbThreadContext*   thread_ctx,
+                                                             const EbEncHandle* enc_handle_ptr, int input_index,
                                                              int output_index);
 
-void svt_av1_build_quantizer(PictureParentControlSet *pcs, EbBitDepth bit_depth, int32_t y_dc_delta_q,
+void svt_av1_build_quantizer(PictureParentControlSet* pcs, EbBitDepth bit_depth, int32_t y_dc_delta_q,
                              int32_t u_dc_delta_q, int32_t u_ac_delta_q, int32_t v_dc_delta_q, int32_t v_ac_delta_q,
-                             Quants *const quants, Dequants *const deq);
+                             Quants* const quants, Dequants* const deq);
 
-void *svt_aom_mode_decision_configuration_kernel(void *input_ptr);
+void* svt_aom_mode_decision_configuration_kernel(void* input_ptr);
 
 #ifdef __cplusplus
 }

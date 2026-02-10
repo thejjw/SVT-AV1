@@ -25,76 +25,76 @@
   * Intrinsics prefixed with yy_ operate on or return 256bit YMM registers.
   */
 
-static INLINE __m128i xx_loadl_32(const void *a) {
+static INLINE __m128i xx_loadl_32(const void* a) {
     int val;
     svt_memcpy_intrin_sse(&val, a, sizeof(val));
     return _mm_cvtsi32_si128(val);
 }
 
-static INLINE __m128i xx_loadl_64(const void *a) {
-    return _mm_loadl_epi64((const __m128i *)a);
+static INLINE __m128i xx_loadl_64(const void* a) {
+    return _mm_loadl_epi64((const __m128i*)a);
 }
 
-static INLINE __m128i xx_loadu_128(const void *a) {
-    return _mm_loadu_si128((const __m128i *)a);
+static INLINE __m128i xx_loadu_128(const void* a) {
+    return _mm_loadu_si128((const __m128i*)a);
 }
 
-static INLINE void xx_storel_32(void *const a, const __m128i v) {
-    *(uint32_t *)a = _mm_cvtsi128_si32(v);
+static INLINE void xx_storel_32(void* const a, const __m128i v) {
+    *(uint32_t*)a = _mm_cvtsi128_si32(v);
 }
 
-static INLINE void xx_storel_64(void *const a, const __m128i v) {
-    _mm_storel_epi64((__m128i *)a, v);
+static INLINE void xx_storel_64(void* const a, const __m128i v) {
+    _mm_storel_epi64((__m128i*)a, v);
 }
 
-static INLINE void xx_storeu_128(void *const a, const __m128i v) {
-    _mm_storeu_si128((__m128i *)a, v);
+static INLINE void xx_storeu_128(void* const a, const __m128i v) {
+    _mm_storeu_si128((__m128i*)a, v);
 }
 
-static INLINE __m128i _mm_loadh_epi64(const void *const p, const __m128i s) {
-    return _mm_castpd_si128(_mm_loadh_pd(_mm_castsi128_pd(s), (double *)p));
+static INLINE __m128i _mm_loadh_epi64(const void* const p, const __m128i s) {
+    return _mm_castpd_si128(_mm_loadh_pd(_mm_castsi128_pd(s), (double*)p));
 }
 
-static INLINE void _mm_storeh_epi64(__m128i *const p, const __m128i x) {
-    _mm_storeh_pd((double *)p, _mm_castsi128_pd(x));
+static INLINE void _mm_storeh_epi64(__m128i* const p, const __m128i x) {
+    _mm_storeh_pd((double*)p, _mm_castsi128_pd(x));
 }
 
-static INLINE __m128i load_u8_2x2_sse2(const uint8_t *const src, const uint32_t stride) {
-    const __m128i s = _mm_cvtsi32_si128(*(int16_t *)src);
-    return _mm_insert_epi16(s, *(int16_t *)(src + stride), 1);
+static INLINE __m128i load_u8_2x2_sse2(const uint8_t* const src, const uint32_t stride) {
+    const __m128i s = _mm_cvtsi32_si128(*(int16_t*)src);
+    return _mm_insert_epi16(s, *(int16_t*)(src + stride), 1);
 }
 
-static INLINE __m128i load8bit_8x2_sse2(const void *const src, const ptrdiff_t strideInByte) {
-    const __m128i s = _mm_loadl_epi64((__m128i *)src);
-    return _mm_loadh_epi64((__m128i *)((uint8_t *)src + strideInByte), s);
+static INLINE __m128i load8bit_8x2_sse2(const void* const src, const ptrdiff_t strideInByte) {
+    const __m128i s = _mm_loadl_epi64((__m128i*)src);
+    return _mm_loadh_epi64((__m128i*)((uint8_t*)src + strideInByte), s);
 }
 
-static INLINE __m128i load_u8_8x2_sse2(const uint8_t *const src, const ptrdiff_t stride) {
+static INLINE __m128i load_u8_8x2_sse2(const uint8_t* const src, const ptrdiff_t stride) {
     return load8bit_8x2_sse2(src, sizeof(*src) * stride);
 }
 
-static INLINE __m128i load_u16_4x2_sse2(const uint16_t *const src, const ptrdiff_t stride) {
+static INLINE __m128i load_u16_4x2_sse2(const uint16_t* const src, const ptrdiff_t stride) {
     return load8bit_8x2_sse2(src, sizeof(*src) * stride);
 }
 
-SIMD_INLINE void store_u8_4x2_sse2(const __m128i src, uint8_t *const dst, const ptrdiff_t stride) {
+SIMD_INLINE void store_u8_4x2_sse2(const __m128i src, uint8_t* const dst, const ptrdiff_t stride) {
     xx_storel_32(dst, src);
-    *(int32_t *)(dst + stride) = (_mm_extract_epi16(src, 3) << 16) | _mm_extract_epi16(src, 2);
+    *(int32_t*)(dst + stride) = (_mm_extract_epi16(src, 3) << 16) | _mm_extract_epi16(src, 2);
 }
 
-SIMD_INLINE void store_u16_2x2_sse2(const __m128i src, uint16_t *const dst, const ptrdiff_t stride) {
+SIMD_INLINE void store_u16_2x2_sse2(const __m128i src, uint16_t* const dst, const ptrdiff_t stride) {
     xx_storel_32(dst, src);
-    *(int32_t *)(dst + stride) = (_mm_extract_epi16(src, 3) << 16) | _mm_extract_epi16(src, 2);
+    *(int32_t*)(dst + stride) = (_mm_extract_epi16(src, 3) << 16) | _mm_extract_epi16(src, 2);
 }
 
-SIMD_INLINE void store_s16_4x2_sse2(const __m128i src, int16_t *const dst, const ptrdiff_t stride) {
-    _mm_storel_epi64((__m128i *)dst, src);
-    _mm_storeh_epi64((__m128i *)(dst + stride), src);
+SIMD_INLINE void store_s16_4x2_sse2(const __m128i src, int16_t* const dst, const ptrdiff_t stride) {
+    _mm_storel_epi64((__m128i*)dst, src);
+    _mm_storeh_epi64((__m128i*)(dst + stride), src);
 }
 
-SIMD_INLINE void store_u16_4x2_sse2(const __m128i src, uint16_t *const dst, const ptrdiff_t stride) {
-    _mm_storel_epi64((__m128i *)dst, src);
-    _mm_storeh_epi64((__m128i *)(dst + stride), src);
+SIMD_INLINE void store_u16_4x2_sse2(const __m128i src, uint16_t* const dst, const ptrdiff_t stride) {
+    _mm_storel_epi64((__m128i*)dst, src);
+    _mm_storeh_epi64((__m128i*)(dst + stride), src);
 }
 
 // The _mm_set_epi64x() intrinsic is undefined for some Visual Studio

@@ -356,32 +356,32 @@ typedef struct MeContext {
     double     tf_decay_factor[3];
     TfControls tf_ctrls;
 
-    uint8_t *b64_src_ptr;
+    uint8_t* b64_src_ptr;
     uint32_t b64_src_stride;
 
-    uint8_t           *quarter_b64_buffer;
+    uint8_t*           quarter_b64_buffer;
     uint32_t           quarter_b64_buffer_stride;
-    uint8_t           *sixteenth_b64_buffer;
+    uint8_t*           sixteenth_b64_buffer;
     uint32_t           sixteenth_b64_buffer_stride;
-    uint8_t           *integer_buffer_ptr[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
-    uint32_t          *p_best_sad_8x8;
-    uint32_t          *p_best_sad_16x16;
-    uint32_t          *p_best_sad_32x32;
-    uint32_t          *p_best_sad_64x64;
-    uint32_t          *p_best_mv8x8;
-    uint32_t          *p_best_mv16x16;
-    uint32_t          *p_best_mv32x32;
-    uint32_t          *p_best_mv64x64;
+    uint8_t*           integer_buffer_ptr[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
+    uint32_t*          p_best_sad_8x8;
+    uint32_t*          p_best_sad_16x16;
+    uint32_t*          p_best_sad_32x32;
+    uint32_t*          p_best_sad_64x64;
+    uint32_t*          p_best_mv8x8;
+    uint32_t*          p_best_mv16x16;
+    uint32_t*          p_best_mv32x32;
+    uint32_t*          p_best_mv64x64;
     uint32_t           p_sad32x32[4];
     uint32_t           p_sad16x16[16];
     uint32_t           p_sad8x8[64];
     uint32_t           p_sb_best_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SQUARE_PU_COUNT];
     uint32_t           p_sb_best_mv[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SQUARE_PU_COUNT];
-    uint32_t          *p_best_full_pel_mv8x8;
-    uint32_t          *p_best_full_pel_mv16x16;
-    uint32_t          *p_best_full_pel_mv32x32;
-    uint32_t          *p_best_full_pel_mv64x64;
-    uint16_t          *p_eight_pos_sad16x16;
+    uint32_t*          p_best_full_pel_mv8x8;
+    uint32_t*          p_best_full_pel_mv16x16;
+    uint32_t*          p_best_full_pel_mv32x32;
+    uint32_t*          p_best_full_pel_mv64x64;
+    uint16_t*          p_eight_pos_sad16x16;
     uint32_t           p_eight_sad32x32[4][8];
     uint32_t           p_eight_sad16x16[16][8];
     uint32_t           p_eight_sad8x8[64][8];
@@ -431,7 +431,7 @@ typedef struct MeContext {
     uint64_t hme_level2_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
                            [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     // ------- Context for Alt-Ref ME ------
-    void *alt_ref_reference_ptr;
+    void* alt_ref_reference_ptr;
     // Open Loop ME
     EbMeType me_type;
 
@@ -482,9 +482,9 @@ typedef struct MeContext {
     uint32_t prev_me_stage_based_exit_th;
 } MeContext;
 
-typedef uint64_t (*EB_ME_DISTORTION_FUNC)(uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride,
+typedef uint64_t (*EB_ME_DISTORTION_FUNC)(uint8_t* src, uint32_t src_stride, uint8_t* ref, uint32_t ref_stride,
                                           uint32_t width, uint32_t height);
-EbErrorType svt_aom_me_context_ctor(MeContext *object_ptr);
+EbErrorType svt_aom_me_context_ctor(MeContext* object_ptr);
 
 #ifdef __cplusplus
 }

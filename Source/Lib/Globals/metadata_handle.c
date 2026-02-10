@@ -19,11 +19,11 @@
 #include "svt_log.h"
 #include "svt_malloc.h"
 
-EB_API SvtMetadataT *svt_metadata_alloc(const uint32_t type, const uint8_t *data, const size_t sz) {
+EB_API SvtMetadataT* svt_metadata_alloc(const uint32_t type, const uint8_t* data, const size_t sz) {
     if (!data || sz == 0) {
         return NULL;
     }
-    SvtMetadataT *metadata;
+    SvtMetadataT* metadata;
     EB_MALLOC_OBJECT_NO_CHECK(metadata);
     if (!metadata) {
         return NULL;
@@ -39,8 +39,8 @@ EB_API SvtMetadataT *svt_metadata_alloc(const uint32_t type, const uint8_t *data
     return metadata;
 }
 
-EB_API void svt_metadata_free(void *ptr) {
-    SvtMetadataT **metadata = (SvtMetadataT **)ptr;
+EB_API void svt_metadata_free(void* ptr) {
+    SvtMetadataT** metadata = (SvtMetadataT**)ptr;
     if (*metadata) {
         if ((*metadata)->payload) {
             EB_FREE_ARRAY((*metadata)->payload);
@@ -51,8 +51,8 @@ EB_API void svt_metadata_free(void *ptr) {
     }
 }
 
-EB_API SvtMetadataArrayT *svt_metadata_array_alloc(const size_t sz) {
-    SvtMetadataArrayT *arr;
+EB_API SvtMetadataArrayT* svt_metadata_array_alloc(const size_t sz) {
+    SvtMetadataArrayT* arr;
     EB_CALLOC_ARRAY_NO_CHECK(arr, 1);
     if (!arr) {
         return NULL;
@@ -68,8 +68,8 @@ EB_API SvtMetadataArrayT *svt_metadata_array_alloc(const size_t sz) {
     return arr;
 }
 
-EB_API void svt_metadata_array_free(void *arr) {
-    SvtMetadataArrayT **metadata = (SvtMetadataArrayT **)arr;
+EB_API void svt_metadata_array_free(void* arr) {
+    SvtMetadataArrayT** metadata = (SvtMetadataArrayT**)arr;
     if (*metadata) {
         if ((*metadata)->metadata_array) {
             for (size_t i = 0; i < (*metadata)->sz; i++) {
@@ -82,7 +82,7 @@ EB_API void svt_metadata_array_free(void *arr) {
     *metadata = NULL;
 }
 
-EB_API int svt_add_metadata(EbBufferHeaderType *buffer, const uint32_t type, const uint8_t *data, const size_t sz) {
+EB_API int svt_add_metadata(EbBufferHeaderType* buffer, const uint32_t type, const uint8_t* data, const size_t sz) {
     if (!buffer) {
         return -1;
     }
@@ -92,7 +92,7 @@ EB_API int svt_add_metadata(EbBufferHeaderType *buffer, const uint32_t type, con
             return -1;
         }
     }
-    SvtMetadataT *metadata = svt_metadata_alloc(type, data, sz);
+    SvtMetadataT* metadata = svt_metadata_alloc(type, data, sz);
     if (!metadata) {
         return -1;
     }
@@ -106,15 +106,15 @@ EB_API int svt_add_metadata(EbBufferHeaderType *buffer, const uint32_t type, con
     return 0;
 }
 
-EbErrorType svt_aom_copy_metadata_buffer(EbBufferHeaderType *dst, const SvtMetadataArrayT *const src) {
+EbErrorType svt_aom_copy_metadata_buffer(EbBufferHeaderType* dst, const SvtMetadataArrayT* const src) {
     if (!dst || !src) {
         return EB_ErrorBadParameter;
     }
     EbErrorType return_error = EB_ErrorNone;
     for (size_t i = 0; i < src->sz; ++i) {
-        SvtMetadataT  *current_metadata = src->metadata_array[i];
+        SvtMetadataT*  current_metadata = src->metadata_array[i];
         const uint32_t type             = current_metadata->type;
-        const uint8_t *payload          = current_metadata->payload;
+        const uint8_t* payload          = current_metadata->payload;
         const size_t   sz               = current_metadata->sz;
 
         if (svt_add_metadata(dst, type, payload, sz)) {
@@ -125,13 +125,13 @@ EbErrorType svt_aom_copy_metadata_buffer(EbBufferHeaderType *dst, const SvtMetad
     return return_error;
 }
 
-EB_API size_t svt_metadata_size(SvtMetadataArrayT *metadata, const EbAv1MetadataType type) {
+EB_API size_t svt_metadata_size(SvtMetadataArrayT* metadata, const EbAv1MetadataType type) {
     size_t sz = 0;
     if (!metadata || !metadata->metadata_array || metadata->sz == 0) {
         return 0;
     } else {
         for (size_t i = 0; i < metadata->sz; i++) {
-            SvtMetadataT *current_metadata = metadata->metadata_array[i];
+            SvtMetadataT* current_metadata = metadata->metadata_array[i];
             if (current_metadata && current_metadata->payload && current_metadata->type == type) {
                 sz += current_metadata->sz + 1 //obu type
                     + 1 //trailing byte
@@ -157,8 +157,8 @@ static inline uint16_t clip16be(double x) {
 
 // Parses "(d1,d2)" into two double values and returns the pointer to after the closing parenthesis.
 // returns NULL if it fails
-static inline char *parse_double(const char *p, double *d1, double *d2) {
-    char *endptr;
+static inline char* parse_double(const char* p, double* d1, double* d2) {
+    char* endptr;
     if (*p != '(') {
         return NULL;
     }
@@ -170,7 +170,7 @@ static inline char *parse_double(const char *p, double *d1, double *d2) {
     return *endptr == ')' ? endptr + 1 : NULL;
 }
 
-EB_API int svt_aom_parse_mastering_display(struct EbSvtAv1MasteringDisplayInfo *mdi, const char *md_str) {
+EB_API int svt_aom_parse_mastering_display(struct EbSvtAv1MasteringDisplayInfo* mdi, const char* md_str) {
     if (!mdi || !md_str) {
         return 0;
     }
@@ -240,11 +240,11 @@ EB_API int svt_aom_parse_mastering_display(struct EbSvtAv1MasteringDisplayInfo *
     return 1;
 }
 
-EB_API int svt_aom_parse_content_light_level(struct EbContentLightLevel *cll, const char *cll_str) {
+EB_API int svt_aom_parse_content_light_level(struct EbContentLightLevel* cll, const char* cll_str) {
     if (!cll || !cll_str) {
         return 0;
     }
-    char  *endptr;
+    char*  endptr;
     double max_cll = strtod(cll_str, &endptr);
     if (*endptr != ',') {
         goto fail;

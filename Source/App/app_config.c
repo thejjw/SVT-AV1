@@ -206,7 +206,7 @@
 #define MAX_TX_SIZE_TOKEN "--max-tx-size"
 #define AC_BIAS_TOKEN "--ac-bias"
 
-static EbErrorType validate_error(EbErrorType err, const char *token, const char *value) {
+static EbErrorType validate_error(EbErrorType err, const char* token, const char* value) {
     switch (err) {
     case EB_ErrorNone:
         return EB_ErrorNone;
@@ -217,8 +217,8 @@ static EbErrorType validate_error(EbErrorType err, const char *token, const char
 }
 
 /* copied from EbEncSettings.c */
-static EbErrorType str_to_int64(const char *token, const char *nptr, int64_t *out) {
-    char   *endptr;
+static EbErrorType str_to_int64(const char* token, const char* nptr, int64_t* out) {
+    char*   endptr;
     int64_t val;
 
     val = strtoll(nptr, &endptr, 0);
@@ -231,8 +231,8 @@ static EbErrorType str_to_int64(const char *token, const char *nptr, int64_t *ou
     return EB_ErrorNone;
 }
 
-static EbErrorType str_to_int(const char *token, const char *nptr, int32_t *out) {
-    char   *endptr;
+static EbErrorType str_to_int(const char* token, const char* nptr, int32_t* out) {
+    char*   endptr;
     int32_t val;
 
     val = strtol(nptr, &endptr, 0);
@@ -245,8 +245,8 @@ static EbErrorType str_to_int(const char *token, const char *nptr, int32_t *out)
     return EB_ErrorNone;
 }
 
-static EbErrorType str_to_uint(const char *token, const char *nptr, uint32_t *out) {
-    char    *endptr;
+static EbErrorType str_to_uint(const char* token, const char* nptr, uint32_t* out) {
+    char*    endptr;
     uint32_t val;
 
     if (strtol(nptr, NULL, 0) < 0) {
@@ -268,14 +268,14 @@ static EbErrorType str_to_uint(const char *token, const char *nptr, uint32_t *ou
     return EB_ErrorNone;
 }
 
-static EbErrorType str_to_str(const char *nptr, char **out, const char *token) {
+static EbErrorType str_to_str(const char* nptr, char** out, const char* token) {
     (void)token;
     if (*out) {
         free(*out);
         *out = NULL;
     }
     const size_t len = strlen(nptr) + 1;
-    char        *buf = (char *)malloc(len);
+    char*        buf = (char*)malloc(len);
     if (!buf) {
         return validate_error(EB_ErrorInsufficientResources, token, nptr);
     }
@@ -288,17 +288,17 @@ static EbErrorType str_to_str(const char *nptr, char **out, const char *token) {
 }
 
 #ifdef _WIN32
-static HANDLE get_file_handle(FILE *fp) {
+static HANDLE get_file_handle(FILE* fp) {
     return (HANDLE)_get_osfhandle(_fileno(fp));
 }
 #endif
 
-static bool fopen_and_lock(FILE **file, const char *name, bool write) {
+static bool fopen_and_lock(FILE** file, const char* name, bool write) {
     if (!file || !name) {
         return false;
     }
 
-    const char *mode = write ? "wb" : "rb";
+    const char* mode = write ? "wb" : "rb";
     FOPEN(*file, name, mode);
     if (!*file) {
         return false;
@@ -322,7 +322,7 @@ static bool fopen_and_lock(FILE **file, const char *name, bool write) {
     return false;
 }
 
-static EbErrorType open_file(FILE **file, const char *token, const char *name, const char *mode) {
+static EbErrorType open_file(FILE** file, const char* token, const char* name, const char* mode) {
     if (!file || !name) {
         return validate_error(EB_ErrorBadParameter, token, "");
     }
@@ -332,7 +332,7 @@ static EbErrorType open_file(FILE **file, const char *token, const char *name, c
         *file = NULL;
     }
 
-    FILE *f;
+    FILE* f;
     FOPEN(f, name, mode);
     if (!f) {
         return validate_error(EB_ErrorBadParameter, token, name);
@@ -346,7 +346,7 @@ static EbErrorType open_file(FILE **file, const char *token, const char *name, c
  * Set Cfg Functions
  **********************************/
 // file options
-static EbErrorType set_cfg_input_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_input_file(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     if (cfg->input_file && !cfg->input_file_is_fifo) {
         fclose(cfg->input_file);
@@ -386,7 +386,7 @@ static EbErrorType set_cfg_input_file(EbConfig *cfg, const char *token, const ch
     return EB_ErrorNone;
 }
 
-static EbErrorType set_allow_mmap_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_allow_mmap_file(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     switch (value ? *value : '1') {
     case '0':
@@ -399,7 +399,7 @@ static EbErrorType set_allow_mmap_file(EbConfig *cfg, const char *token, const c
     return EB_ErrorNone;
 }
 
-static EbErrorType set_cfg_stream_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_stream_file(EbConfig* cfg, const char* token, const char* value) {
     if (!strcmp(value, "stdout") || !strcmp(value, "-")) {
         if (cfg->bitstream_file && cfg->bitstream_file != stdout) {
             fclose(cfg->bitstream_file);
@@ -410,7 +410,7 @@ static EbErrorType set_cfg_stream_file(EbConfig *cfg, const char *token, const c
     return open_file(&cfg->bitstream_file, token, value, "wb");
 }
 
-static EbErrorType set_cfg_error_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_error_file(EbConfig* cfg, const char* token, const char* value) {
     if (!strcmp(value, "stderr")) {
         if (cfg->error_log_file && cfg->error_log_file != stderr) {
             fclose(cfg->error_log_file);
@@ -421,25 +421,25 @@ static EbErrorType set_cfg_error_file(EbConfig *cfg, const char *token, const ch
     return open_file(&cfg->error_log_file, token, value, "w+");
 }
 
-static EbErrorType set_cfg_recon_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_recon_file(EbConfig* cfg, const char* token, const char* value) {
     return open_file(&cfg->recon_file, token, value, "wb");
 }
 
-static EbErrorType set_cfg_qp_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_qp_file(EbConfig* cfg, const char* token, const char* value) {
     return open_file(&cfg->qp_file, token, value, "r");
 }
 
-static EbErrorType set_cfg_stat_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_stat_file(EbConfig* cfg, const char* token, const char* value) {
     return open_file(&cfg->stat_file, token, value, "wb");
 }
 
-static EbErrorType set_cfg_roi_map_file(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_roi_map_file(EbConfig* cfg, const char* token, const char* value) {
     return open_file(&cfg->roi_map_file, token, value, "r");
 }
 #if CONFIG_ENABLE_FILM_GRAIN
-static EbErrorType set_cfg_fgs_table_path(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_fgs_table_path(EbConfig* cfg, const char* token, const char* value) {
     EbErrorType ret  = EB_ErrorBadParameter;
-    FILE       *file = NULL;
+    FILE*       file = NULL;
     if ((ret = open_file(&file, token, value, "r")) < 0) {
         return ret;
     }
@@ -448,11 +448,11 @@ static EbErrorType set_cfg_fgs_table_path(EbConfig *cfg, const char *token, cons
     return str_to_str(value, &cfg->fgs_table_path, token);
 }
 #endif
-static EbErrorType set_two_pass_stats(EbConfig *cfg, const char *token, const char *value) {
-    return str_to_str(value, (char **)&cfg->stats, token);
+static EbErrorType set_two_pass_stats(EbConfig* cfg, const char* token, const char* value) {
+    return str_to_str(value, (char**)&cfg->stats, token);
 }
 
-static EbErrorType set_passes(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_passes(EbConfig* cfg, const char* token, const char* value) {
     (void)cfg;
     (void)token;
     (void)value;
@@ -460,11 +460,11 @@ static EbErrorType set_passes(EbConfig *cfg, const char *token, const char *valu
     return EB_ErrorNone;
 }
 
-static EbErrorType set_cfg_frames_to_be_encoded(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_frames_to_be_encoded(EbConfig* cfg, const char* token, const char* value) {
     return str_to_int64(token, value, &cfg->frames_to_be_encoded);
 }
 
-static EbErrorType set_cfg_frames_to_be_skipped(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_frames_to_be_skipped(EbConfig* cfg, const char* token, const char* value) {
     EbErrorType ret = str_to_int64(token, value, &cfg->frames_to_be_skipped);
     if (cfg->frames_to_be_skipped > 0) {
         cfg->need_to_skip = true;
@@ -472,11 +472,11 @@ static EbErrorType set_cfg_frames_to_be_skipped(EbConfig *cfg, const char *token
     return ret;
 }
 
-static EbErrorType set_buffered_input(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_buffered_input(EbConfig* cfg, const char* token, const char* value) {
     return str_to_int(token, value, &cfg->buffered_input);
 }
 
-static EbErrorType set_cfg_force_key_frames(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_force_key_frames(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     struct forced_key_frames fkf;
     fkf.specifiers = NULL;
@@ -486,15 +486,15 @@ static EbErrorType set_cfg_force_key_frames(EbConfig *cfg, const char *token, co
     if (!value) {
         return EB_ErrorBadParameter;
     }
-    const char *p = value;
+    const char* p = value;
     while (p) {
         const size_t len       = strcspn(p, ",");
-        char        *specifier = (char *)calloc(len + 1, sizeof(*specifier));
+        char*        specifier = (char*)calloc(len + 1, sizeof(*specifier));
         if (!specifier) {
             goto err;
         }
         memcpy(specifier, p, len);
-        char **tmp = (char **)realloc(fkf.specifiers, sizeof(*fkf.specifiers) * (fkf.count + 1));
+        char** tmp = (char**)realloc(fkf.specifiers, sizeof(*fkf.specifiers) * (fkf.count + 1));
         if (!tmp) {
             free(specifier);
             goto err;
@@ -511,7 +511,7 @@ static EbErrorType set_cfg_force_key_frames(EbConfig *cfg, const char *token, co
         goto err;
     }
 
-    fkf.frames = (uint64_t *)calloc(fkf.count, sizeof(*fkf.frames));
+    fkf.frames = (uint64_t*)calloc(fkf.count, sizeof(*fkf.frames));
     if (!fkf.frames) {
         goto err;
     }
@@ -532,7 +532,7 @@ err:
     return EB_ErrorBadParameter;
 }
 
-static EbErrorType set_no_progress(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_no_progress(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     switch (value ? *value : '1') {
     case '0':
@@ -545,7 +545,7 @@ static EbErrorType set_no_progress(EbConfig *cfg, const char *token, const char 
     return EB_ErrorNone;
 }
 
-static EbErrorType set_progress(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_progress(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     switch (value ? *value : '1') {
     case '0':
@@ -568,16 +568,16 @@ static EbErrorType set_progress(EbConfig *cfg, const char *token, const char *va
  * @param[out] opt key and val, both need to be freed
  */
 struct ParseOpt {
-    char *key;
-    char *val;
+    char* key;
+    char* val;
 };
 
-static struct ParseOpt split_colon_keyequalval_pairs(const char **p) {
-    const char     *str        = *p;
+static struct ParseOpt split_colon_keyequalval_pairs(const char** p) {
+    const char*     str        = *p;
     struct ParseOpt opt        = {NULL, NULL};
     const size_t    string_len = strcspn(str, ":");
 
-    const char *val = strchr(str, '=');
+    const char* val = strchr(str, '=');
     if (!val || !*++val) {
         return opt;
     }
@@ -588,8 +588,8 @@ static struct ParseOpt split_colon_keyequalval_pairs(const char **p) {
         return opt;
     }
 
-    opt.key = (char *)malloc(key_len + 1);
-    opt.val = (char *)malloc(val_len + 1);
+    opt.key = (char*)malloc(key_len + 1);
+    opt.val = (char*)malloc(val_len + 1);
     if (!opt.key || !opt.val) {
         free(opt.key);
         opt.key = NULL;
@@ -610,9 +610,9 @@ static struct ParseOpt split_colon_keyequalval_pairs(const char **p) {
     return opt;
 }
 
-static EbErrorType parse_svtav1_params(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType parse_svtav1_params(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
-    const char *p   = value;
+    const char* p   = value;
     EbErrorType err = EB_ErrorNone;
     while (*p) {
         struct ParseOpt opt = split_colon_keyequalval_pairs(&p);
@@ -629,7 +629,7 @@ static EbErrorType parse_svtav1_params(EbConfig *cfg, const char *token, const c
     return err;
 }
 
-static EbErrorType set_cdef_enable(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cdef_enable(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     // Set CDEF to either DEFAULT or 0
     int32_t     cdef_enable = DEFAULT;
@@ -638,7 +638,7 @@ static EbErrorType set_cdef_enable(EbConfig *cfg, const char *token, const char 
     return err;
 };
 
-static EbErrorType set_level(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_level(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     if (strtoul(value, NULL, 0) != 0 || strcmp(value, "0") == 0) {
         cfg->config.level = (uint32_t)(10 * strtod(value, NULL));
@@ -648,15 +648,15 @@ static EbErrorType set_level(EbConfig *cfg, const char *token, const char *value
     return EB_ErrorNone;
 };
 
-static EbErrorType set_injector(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_injector(EbConfig* cfg, const char* token, const char* value) {
     return str_to_uint(token, value, &cfg->injector);
 }
 
-static EbErrorType set_injector_frame_rate(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_injector_frame_rate(EbConfig* cfg, const char* token, const char* value) {
     return str_to_uint(token, value, &cfg->injector_frame_rate);
 }
 
-static EbErrorType set_cfg_generic_token(EbConfig *cfg, const char *token, const char *value) {
+static EbErrorType set_cfg_generic_token(EbConfig* cfg, const char* token, const char* value) {
     if (!strncmp(token, "--", 2)) {
         token += 2;
     }
@@ -670,14 +670,14 @@ static EbErrorType set_cfg_generic_token(EbConfig *cfg, const char *token, const
  * Config Entry Struct
  **********************************/
 typedef struct config_entry_s {
-    const char *token;
-    const char *name;
-    EbErrorType (*scf)(EbConfig *cfg, const char *token, const char *value);
+    const char* token;
+    const char* name;
+    EbErrorType (*scf)(EbConfig* cfg, const char* token, const char* value);
 } ConfigEntry;
 
 typedef struct config_description_s {
-    const char *token;
-    const char *desc;
+    const char* token;
+    const char* desc;
 } ConfigDescription;
 
 /**********************************
@@ -1229,8 +1229,8 @@ ConfigEntry config_entry[] = {
 /**********************************
  * Constructor
  **********************************/
-EbConfig *svt_config_ctor() {
-    EbConfig *app_cfg = (EbConfig *)calloc(1, sizeof(EbConfig));
+EbConfig* svt_config_ctor() {
+    EbConfig* app_cfg = (EbConfig*)calloc(1, sizeof(EbConfig));
     if (!app_cfg) {
         return NULL;
     }
@@ -1248,7 +1248,7 @@ EbConfig *svt_config_ctor() {
 /**********************************
  * Destructor
  **********************************/
-void svt_config_dtor(EbConfig *app_cfg) {
+void svt_config_dtor(EbConfig* app_cfg) {
     if (!app_cfg) {
         return;
     }
@@ -1309,12 +1309,12 @@ void svt_config_dtor(EbConfig *app_cfg) {
     free(app_cfg->forced_keyframes.specifiers);
     free(app_cfg->forced_keyframes.frames);
 
-    free((void *)app_cfg->stats);
+    free((void*)app_cfg->stats);
     free(app_cfg);
     return;
 }
 
-EbErrorType enc_channel_ctor(EncChannel *c) {
+EbErrorType enc_channel_ctor(EncChannel* c) {
     c->app_cfg = svt_config_ctor();
     if (!c->app_cfg) {
         return EB_ErrorInsufficientResources;
@@ -1328,8 +1328,8 @@ EbErrorType enc_channel_ctor(EncChannel *c) {
     return svt_av1_enc_init_handle(&c->app_cfg->svt_encoder_handle, &c->app_cfg->config);
 }
 
-void enc_channel_dctor(EncChannel *c) {
-    EbConfig *ctx = c->app_cfg;
+void enc_channel_dctor(EncChannel* c) {
+    EbConfig* ctx = c->app_cfg;
     if (ctx && ctx->svt_encoder_handle) {
         svt_av1_enc_deinit(ctx->svt_encoder_handle);
         de_init_encoder(ctx);
@@ -1354,7 +1354,7 @@ void enc_channel_dctor(EncChannel *c) {
 // cppcheck warns about argv being able to be const, but doing so would require consting everying going up it looks like
 // as this file is also included in a C++ file, so we can't easily actually const qualify it.
 // cppcheck-suppress constParameter
-static int32_t find_token(int32_t argc, char *const argv[], char const *token, char *configStr) {
+static int32_t find_token(int32_t argc, char* const argv[], char const* token, char* configStr) {
     assert(argv[argc] == NULL);
 
     if (argc == 0) {
@@ -1385,7 +1385,7 @@ static int32_t find_token(int32_t argc, char *const argv[], char const *token, c
  * @param name config token
  * @return ConfigEntry*
  */
-static ConfigEntry *find_entry(const char *name) {
+static ConfigEntry* find_entry(const char* name) {
     for (size_t i = 0; config_entry[i].name != NULL; ++i) {
         if (!strcmp(config_entry[i].name, name)) {
             return &config_entry[i];
@@ -1400,8 +1400,8 @@ static ConfigEntry *find_entry(const char *name) {
  * @param fp file to read from
  * @return char* malloc'd word, or NULL if EOF or error
  */
-static char *read_word(FILE *fp) {
-    char  *word     = NULL;
+static char* read_word(FILE* fp) {
+    char*  word     = NULL;
     size_t word_len = 0;
     int    c;
     while ((c = fgetc(fp)) != EOF) {
@@ -1424,7 +1424,7 @@ static char *read_word(FILE *fp) {
             if (c == ':') {
                 break;
             }
-            char *temp = (char *)realloc(word, ++word_len + 1);
+            char* temp = (char*)realloc(word, ++word_len + 1);
             if (!temp) {
                 free(word);
                 return NULL;
@@ -1440,8 +1440,8 @@ static char *read_word(FILE *fp) {
     return word;
 }
 
-static EbErrorType set_config_value(EbConfig *app_cfg, const char *word, const char *value) {
-    const ConfigEntry *entry = find_entry(word);
+static EbErrorType set_config_value(EbConfig* app_cfg, const char* word, const char* value) {
+    const ConfigEntry* entry = find_entry(word);
     if (!entry) {
         fprintf(stderr, "Error: Config File contains unknown token %s\n", word);
         return EB_ErrorBadParameter;
@@ -1457,8 +1457,8 @@ static EbErrorType set_config_value(EbConfig *app_cfg, const char *word, const c
 /**********************************
 * Read Config File
 **********************************/
-static EbErrorType read_config_file(EbConfig *app_cfg, const char *config_path) {
-    FILE *config_file;
+static EbErrorType read_config_file(EbConfig* app_cfg, const char* config_path) {
+    FILE* config_file;
 
     // Open the config file
     FOPEN(config_file, config_path, "rb");
@@ -1468,8 +1468,8 @@ static EbErrorType read_config_file(EbConfig *app_cfg, const char *config_path) 
     }
 
     EbErrorType return_error = EB_ErrorNone;
-    char       *word         = NULL;
-    char       *value        = NULL;
+    char*       word         = NULL;
+    char*       value        = NULL;
     while (return_error == EB_ErrorNone && (word = read_word(config_file))) {
         value = read_word(config_file);
         if (value && !strcmp(value, ":")) {
@@ -1490,8 +1490,8 @@ static EbErrorType read_config_file(EbConfig *app_cfg, const char *config_path) 
 }
 
 /* get config->rc_stats_buffer from config->input_stat_file */
-bool load_twopass_stats_in(EbConfig *cfg) {
-    EbSvtAv1EncConfiguration *config = &cfg->config;
+bool load_twopass_stats_in(EbConfig* cfg) {
+    EbSvtAv1EncConfiguration* config = &cfg->config;
 #ifdef _WIN32
     int          fd = _fileno(cfg->input_stat_file);
     struct _stat file_stat;
@@ -1518,10 +1518,10 @@ bool load_twopass_stats_in(EbConfig *cfg) {
     return config->rc_stats_buffer.buf != NULL;
 }
 
-EbErrorType handle_stats_file(EbConfig *app_cfg, EncPass enc_pass, const SvtAv1FixedBuf *rc_stats_buffer) {
+EbErrorType handle_stats_file(EbConfig* app_cfg, EncPass enc_pass, const SvtAv1FixedBuf* rc_stats_buffer) {
     switch (enc_pass) {
     case ENC_SINGLE_PASS: {
-        const char *stats = app_cfg->stats ? app_cfg->stats : "svtav1_2pass.log";
+        const char* stats = app_cfg->stats ? app_cfg->stats : "svtav1_2pass.log";
         if (app_cfg->config.pass == 1) {
             if (!fopen_and_lock(&app_cfg->output_stat_file, stats, true)) {
                 fprintf(app_cfg->error_log_file, "Error: can't open stats file %s for write \n", stats);
@@ -1573,7 +1573,7 @@ EbErrorType handle_stats_file(EbConfig *app_cfg, EncPass enc_pass, const SvtAv1F
 /******************************************
 * Verify Settings
 ******************************************/
-static EbErrorType app_verify_config(EbConfig *app_cfg) {
+static EbErrorType app_verify_config(EbConfig* app_cfg) {
     EbErrorType return_error = EB_ErrorNone;
 
     // Check Input File
@@ -1643,8 +1643,8 @@ static EbErrorType app_verify_config(EbConfig *app_cfg) {
     return return_error;
 }
 
-static const char *TOKEN_READ_MARKER  = "THIS_TOKEN_HAS_BEEN_READ";
-static const char *TOKEN_ERROR_MARKER = "THIS_TOKEN_HAS_ERROR";
+static const char* TOKEN_READ_MARKER  = "THIS_TOKEN_HAS_BEEN_READ";
+static const char* TOKEN_ERROR_MARKER = "THIS_TOKEN_HAS_ERROR";
 
 /**
  * @brief Finds the arguments for a specific token
@@ -1659,8 +1659,8 @@ static const char *TOKEN_ERROR_MARKER = "THIS_TOKEN_HAS_ERROR";
  * @return false token was not found and configStr was not populated
  */
 // cppcheck-suppress constParameter
-static bool find_token_multiple_inputs(int argc, char *const argv[], const char *token, char *configStr,
-                                       const char *cmd_copy[MAX_NUM_TOKENS], const char *arg_copy[MAX_NUM_TOKENS]) {
+static bool find_token_multiple_inputs(int argc, char* const argv[], const char* token, char* configStr,
+                                       const char* cmd_copy[MAX_NUM_TOKENS], const char* arg_copy[MAX_NUM_TOKENS]) {
     bool return_error   = false;
     bool has_duplicates = false;
     // Loop over all the arguments
@@ -1707,14 +1707,14 @@ static bool find_token_multiple_inputs(int argc, char *const argv[], const char 
     return return_error;
 }
 
-static bool check_long(const ConfigDescription *cfg_entry, const ConfigDescription *cfg_entry_next) {
+static bool check_long(const ConfigDescription* cfg_entry, const ConfigDescription* cfg_entry_next) {
     return cfg_entry_next->desc && !strcmp(cfg_entry->desc, cfg_entry_next->desc);
 }
 
-static void print_options(const char *title, const ConfigDescription *options) {
+static void print_options(const char* title, const ConfigDescription* options) {
     printf("\n%s:\n", title);
 
-    for (const ConfigDescription *index = options; index->token; ++index) {
+    for (const ConfigDescription* index = options; index->token; ++index) {
         // this only works if short and long token are one after another
         if (check_long(index, &index[1])) {
             printf("  %s, %-25s    %-25s\n", index->token, index[1].token, index->desc);
@@ -1725,7 +1725,7 @@ static void print_options(const char *title, const ConfigDescription *options) {
     }
 }
 
-int get_version(int argc, char *const argv[]) {
+int get_version(int argc, char* const argv[]) {
 #ifdef NDEBUG
 #define BUILD_TYPE_STRING "release"
 #else
@@ -1739,7 +1739,7 @@ int get_version(int argc, char *const argv[]) {
 #undef BUILD_TYPE_STRING
 }
 
-uint32_t get_help(int32_t argc, char *const argv[]) {
+uint32_t get_help(int32_t argc, char* const argv[]) {
     char config_string[COMMAND_LINE_MAX_SIZE];
     if (find_token(argc, argv, HELP_TOKEN, config_string)) {
         return 0;
@@ -1769,7 +1769,7 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
     return 1;
 }
 
-uint32_t get_color_help(int32_t argc, char *const argv[]) {
+uint32_t get_color_help(int32_t argc, char* const argv[]) {
     char config_string[COMMAND_LINE_MAX_SIZE];
     if (find_token(argc, argv, COLORH_TOKEN, config_string)) {
         return 0;
@@ -1918,14 +1918,14 @@ uint32_t get_color_help(int32_t argc, char *const argv[]) {
     return 1;
 }
 
-static bool check_two_pass_conflicts(int32_t argc, char *const argv[]) {
+static bool check_two_pass_conflicts(int32_t argc, char* const argv[]) {
     char        config_string[COMMAND_LINE_MAX_SIZE];
-    const char *conflicts[] = {
+    const char* conflicts[] = {
         PASS_TOKEN,
         NULL,
     };
     int         i = 0;
-    const char *token;
+    const char* token;
     while ((token = conflicts[i])) {
         if (find_token(argc, argv, token, config_string) == 0) {
             fprintf(stderr, "[SVT-Error]: --passes is not accepted in combination with %s\n", token);
@@ -1939,7 +1939,7 @@ static bool check_two_pass_conflicts(int32_t argc, char *const argv[]) {
 /*
 * Returns the number of passes, multi_pass_mode
 */
-uint32_t get_passes(int32_t argc, char *const argv[], EncPass enc_pass[MAX_ENC_PASS]) {
+uint32_t get_passes(int32_t argc, char* const argv[], EncPass enc_pass[MAX_ENC_PASS]) {
     char           config_string[COMMAND_LINE_MAX_SIZE];
     MultiPassModes multi_pass_mode;
 
@@ -1947,7 +1947,7 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncPass enc_pass[MAX_ENC_P
 
     // copied from str_to_rc_mode()
     const struct {
-        const char *name;
+        const char* name;
         uint32_t    mode;
     } rc[] = {
         {"0", 0},
@@ -2104,20 +2104,20 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncPass enc_pass[MAX_ENC_P
     return passes;
 }
 
-static bool is_negative_number(const char *string) {
-    char *end;
+static bool is_negative_number(const char* string) {
+    char* end;
     return strtol(string, &end, 10) < 0 && *end == '\0';
 }
 
 // this function is to check if the parameter value is a list starting with
 // a negative number, for example: "--sframe-qp-offset -10,5,-15"
-static bool is_negative_number_in_list(const char *string) {
-    char *end;
+static bool is_negative_number_in_list(const char* string) {
+    char* end;
     return strtol(string, &end, 10) < 0 && *end == ',';
 }
 
 // Computes the number of frames in the input file
-int32_t compute_frames_to_be_encoded(EbConfig *app_cfg) {
+int32_t compute_frames_to_be_encoded(EbConfig* app_cfg) {
     uint64_t file_size   = 0;
     int32_t  frame_count = 0;
     uint32_t frame_size;
@@ -2151,10 +2151,10 @@ int32_t compute_frames_to_be_encoded(EbConfig *app_cfg) {
     return frame_count;
 }
 
-static bool warn_legacy_token(const char *const token) {
+static bool warn_legacy_token(const char* const token) {
     static struct warn_set {
-        const char *old_token;
-        const char *new_token;
+        const char* old_token;
+        const char* new_token;
     } warning_set[] = {
         {"-adaptive-quantization", ADAPTIVE_QP_ENABLE_NEW_TOKEN},
         {"-bit-depth", INPUT_DEPTH_TOKEN},
@@ -2167,7 +2167,7 @@ static bool warn_legacy_token(const char *const token) {
         {NULL, NULL},
     };
 
-    for (struct warn_set *tok = warning_set; tok->old_token; ++tok) {
+    for (struct warn_set* tok = warning_set; tok->old_token; ++tok) {
         if (strcmp(token, tok->old_token)) {
             continue;
         }
@@ -2178,10 +2178,10 @@ static bool warn_legacy_token(const char *const token) {
 }
 
 #if CONFIG_ENABLE_FILM_GRAIN
-static EbErrorType read_fgs_table(EbConfig *cfg) {
+static EbErrorType read_fgs_table(EbConfig* cfg) {
     EbErrorType   ret = EB_ErrorBadParameter;
-    AomFilmGrain *film_grain;
-    FILE         *file;
+    AomFilmGrain* film_grain;
+    FILE*         file;
     FOPEN(file, cfg->fgs_table_path, "r");
 
     if (!file) {
@@ -2196,7 +2196,7 @@ static EbErrorType read_fgs_table(EbConfig *cfg) {
         return ret;
     }
 
-    film_grain = (AomFilmGrain *)calloc(1, sizeof(AomFilmGrain));
+    film_grain = (AomFilmGrain*)calloc(1, sizeof(AomFilmGrain));
 
     while (!feof(file)) {
         int num_read = fscanf(file,
@@ -2325,14 +2325,14 @@ fail:
 /******************************************
 * Read Command Line
 ******************************************/
-EbErrorType read_command_line(int32_t argc, char *const argv[], EncChannel *channel) {
+EbErrorType read_command_line(int32_t argc, char* const argv[], EncChannel* channel) {
     EbErrorType return_error = EB_ErrorNone;
     char        config_string[COMMAND_LINE_MAX_SIZE]; // for one input options
-    char       *config_strings; // for multiple input options
-    const char *cmd_copy[MAX_NUM_TOKENS]; // keep track of extra tokens
-    const char *arg_copy[MAX_NUM_TOKENS]; // keep track of extra arguments
+    char*       config_strings; // for multiple input options
+    const char* cmd_copy[MAX_NUM_TOKENS]; // keep track of extra tokens
+    const char* arg_copy[MAX_NUM_TOKENS]; // keep track of extra arguments
 
-    config_strings = (char *)malloc(sizeof(char) * COMMAND_LINE_MAX_SIZE);
+    config_strings = (char*)malloc(sizeof(char) * COMMAND_LINE_MAX_SIZE);
     for (int i = 0; i < MAX_NUM_TOKENS; ++i) {
         cmd_copy[i] = NULL;
         arg_copy[i] = NULL;
@@ -2380,7 +2380,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EncChannel *chan
     // Check tokens for invalid tokens
     {
         bool next_is_value = false;
-        for (char *const *indx = argv + 1; *indx; ++indx) {
+        for (char* const* indx = argv + 1; *indx; ++indx) {
             // stop at --
             if (!strcmp(*indx, "--")) {
                 break;
@@ -2407,7 +2407,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EncChannel *chan
     }
 
     // Parse command line for tokens
-    for (ConfigEntry *entry = config_entry; entry->token; ++entry) {
+    for (ConfigEntry* entry = config_entry; entry->token; ++entry) {
         if (!find_token_multiple_inputs(argc, argv, entry->token, config_strings, cmd_copy, arg_copy)) {
             continue;
         }
@@ -2439,7 +2439,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EncChannel *chan
     }
 
 #if CONFIG_ENABLE_FILM_GRAIN
-    EbConfig *cfg = channel->app_cfg;
+    EbConfig* cfg = channel->app_cfg;
     if (cfg->fgs_table_path) {
         if (cfg->config.film_grain_denoise_strength > 0) {
             fprintf(stderr,
@@ -2458,7 +2458,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EncChannel *chan
     if (return_error == EB_ErrorNone) {
         return_error = EB_ErrorBadParameter;
         if (channel->return_error == EB_ErrorNone) {
-            EbConfig *app_cfg     = channel->app_cfg;
+            EbConfig* app_cfg     = channel->app_cfg;
             channel->return_error = app_verify_config(app_cfg);
             // set inj_frame_rate to q16 format
             if (channel->return_error == EB_ErrorNone && app_cfg->injector == 1) {
