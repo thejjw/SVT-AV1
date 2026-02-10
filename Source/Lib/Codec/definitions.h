@@ -1515,12 +1515,9 @@ typedef enum ATTRIBUTE_PACKED {
 
 #define MAX_NUM_TEMPORAL_LAYERS 8
 #define MAX_NUM_SPATIAL_LAYERS 4
-/* clang-format off */
-// clang-format seems to think this is a pointer dereference and not a
-// multiplication.
-#define MAX_NUM_OPERATING_POINTS \
-MAX_NUM_TEMPORAL_LAYERS * MAX_NUM_SPATIAL_LAYERS
+#define MAX_NUM_OPERATING_POINTS (MAX_NUM_TEMPORAL_LAYERS * MAX_NUM_SPATIAL_LAYERS)
 
+/* clang-format off */
 static INLINE int32_t is_valid_seq_level_idx(uint8_t seq_level_idx) {
     return seq_level_idx == 31 ||
         (seq_level_idx < 24 &&
@@ -1532,16 +1529,16 @@ static INLINE int32_t is_valid_seq_level_idx(uint8_t seq_level_idx) {
         seq_level_idx != 22 && seq_level_idx != 23);
 }
 
-typedef enum
-{
-    SINGLE_REFERENCE = 0,
-    COMPOUND_REFERENCE = 1,
+/* clang-format on */
+
+typedef enum {
+    SINGLE_REFERENCE      = 0,
+    COMPOUND_REFERENCE    = 1,
     REFERENCE_MODE_SELECT = 2,
-    REFERENCE_MODES = 3,
+    REFERENCE_MODES       = 3,
 } ReferenceMode;
 
-typedef enum RefreshFrameContextMode
-{
+typedef enum RefreshFrameContextMode {
     /**
     * Frame context updates are disabled
     */
@@ -1665,28 +1662,28 @@ static const struct
     PartitionContextType above;
     PartitionContextType left;
 } partition_context_lookup[BlockSizeS_ALL] = {
-{ 31, 31 },  // 4X4   - {0b11111, 0b11111}
-{ 31, 30 },  // 4X8   - {0b11111, 0b11110}
-{ 30, 31 },  // 8X4   - {0b11110, 0b11111}
-{ 30, 30 },  // 8X8   - {0b11110, 0b11110}
-{ 30, 28 },  // 8X16  - {0b11110, 0b11100}
-{ 28, 30 },  // 16X8  - {0b11100, 0b11110}
-{ 28, 28 },  // 16X16 - {0b11100, 0b11100}
-{ 28, 24 },  // 16X32 - {0b11100, 0b11000}
-{ 24, 28 },  // 32X16 - {0b11000, 0b11100}
-{ 24, 24 },  // 32X32 - {0b11000, 0b11000}
-{ 24, 16 },  // 32X64 - {0b11000, 0b10000}
-{ 16, 24 },  // 64X32 - {0b10000, 0b11000}
-{ 16, 16 },  // 64X64 - {0b10000, 0b10000}
-{ 16, 0 },   // 64X128- {0b10000, 0b00000}
-{ 0, 16 },   // 128X64- {0b00000, 0b10000}
-{ 0, 0 },    // 128X128-{0b00000, 0b00000}
-{ 31, 28 },  // 4X16  - {0b11111, 0b11100}
-{ 28, 31 },  // 16X4  - {0b11100, 0b11111}
-{ 30, 24 },  // 8X32  - {0b11110, 0b11000}
-{ 24, 30 },  // 32X8  - {0b11000, 0b11110}
-{ 28, 16 },  // 16X64 - {0b11100, 0b10000}
-{ 16, 28 },  // 64X16 - {0b10000, 0b11100}
+    { 31, 31 },  // 4X4   - {0b11111, 0b11111}
+    { 31, 30 },  // 4X8   - {0b11111, 0b11110}
+    { 30, 31 },  // 8X4   - {0b11110, 0b11111}
+    { 30, 30 },  // 8X8   - {0b11110, 0b11110}
+    { 30, 28 },  // 8X16  - {0b11110, 0b11100}
+    { 28, 30 },  // 16X8  - {0b11100, 0b11110}
+    { 28, 28 },  // 16X16 - {0b11100, 0b11100}
+    { 28, 24 },  // 16X32 - {0b11100, 0b11000}
+    { 24, 28 },  // 32X16 - {0b11000, 0b11100}
+    { 24, 24 },  // 32X32 - {0b11000, 0b11000}
+    { 24, 16 },  // 32X64 - {0b11000, 0b10000}
+    { 16, 24 },  // 64X32 - {0b10000, 0b11000}
+    { 16, 16 },  // 64X64 - {0b10000, 0b10000}
+    { 16, 0 },   // 64X128- {0b10000, 0b00000}
+    { 0, 16 },   // 128X64- {0b00000, 0b10000}
+    { 0, 0 },    // 128X128-{0b00000, 0b00000}
+    { 31, 28 },  // 4X16  - {0b11111, 0b11100}
+    { 28, 31 },  // 16X4  - {0b11100, 0b11111}
+    { 30, 24 },  // 8X32  - {0b11110, 0b11000}
+    { 24, 30 },  // 32X8  - {0b11000, 0b11110}
+    { 28, 16 },  // 16X64 - {0b11100, 0b10000}
+    { 16, 28 },  // 64X16 - {0b10000, 0b11100}
 };
 
 /* clang-format on */
@@ -1909,15 +1906,16 @@ typedef struct LoopFilterInfoN {
 #define GM_TRANS_MIN -GM_TRANS_MAX
 #define GM_ALPHA_MIN -GM_ALPHA_MAX
 
-/* clang-format off */
 typedef enum TransformationType {
-    IDENTITY = 0,      // identity transformation, 0-parameter
-    TRANSLATION = 1,   // translational motion 2-parameter
-    ROTZOOM = 2,       // simplified affine with rotation + zoom only, 4-parameter
-    AFFINE = 3,        // affine, 6-parameter
+    IDENTITY    = 0, // identity transformation, 0-parameter
+    TRANSLATION = 1, // translational motion 2-parameter
+    ROTZOOM     = 2, // simplified affine with rotation + zoom only, 4-parameter
+    AFFINE      = 3, // affine, 6-parameter
     TRANS_TYPES,
 } TransformationType;
+
 #define MAX_PARAMDIM 6
+
 // The order of values in the wmmat matrix below is best described
 // by the affine transformation:
 //      [x'     (m2 m3 m0   [x
@@ -1937,16 +1935,16 @@ typedef struct ScaleFactors {
     int32_t x_step_q4;
     int32_t y_step_q4;
 
-    int32_t(*scale_value_x)(int32_t val, const struct ScaleFactors *sf);
-    int32_t(*scale_value_y)(int32_t val, const struct ScaleFactors *sf);
+    int32_t (*scale_value_x)(int32_t val, const struct ScaleFactors *sf);
+    int32_t (*scale_value_y)(int32_t val, const struct ScaleFactors *sf);
 } ScaleFactors;
 
 /* clang-format off */
 static const WarpedMotionParams default_warp_params = {
     IDENTITY,
-{ 0, 0, (1 << WARPEDMODEL_PREC_BITS), 0, 0, (1 << WARPEDMODEL_PREC_BITS) },
-0, 0, 0, 0,
-0,
+    {0, 0, (1 << WARPEDMODEL_PREC_BITS), 0, 0, (1 << WARPEDMODEL_PREC_BITS)},
+    0, 0, 0, 0,
+    0,
 };
 
 /***********************************    AV1_OBU     ********************************/
@@ -1956,7 +1954,7 @@ static const WarpedMotionParams default_warp_params = {
 
 // ***************************** Definitions *****************************
 
-#define SC_FRAMES_TO_IGNORE     1000 // The speed control algorith starts after SC_FRAMES_TO_IGNORE number frames.
+#define SC_FRAMES_TO_IGNORE         1000 // The speed control algorith starts after SC_FRAMES_TO_IGNORE number frames.
 #define SC_FRAMES_INTERVAL_SPEED      60 // The speed control Interval To Check the speed
 #define SC_FRAMES_INTERVAL_T1         60 // The speed control Interval Threshold1
 #define SC_FRAMES_INTERVAL_T2        180 // The speed control Interval Threshold2
@@ -1987,22 +1985,22 @@ static const WarpedMotionParams default_warp_params = {
 #define ASSERT(exp) ((void)sizeof(exp))
 #endif
 
-#define    ME_FILTER_TAP       4
-#define    SUB_SAD_SEARCH      0
-#define    FULL_SAD_SEARCH     1
+#define ME_FILTER_TAP   4
+#define SUB_SAD_SEARCH  0
+#define FULL_SAD_SEARCH 1
 /************************ INPUT CLASS **************************/
 
-#define EbInputResolution             uint8_t
-typedef enum ResolutionRange
-{
-    INPUT_SIZE_240p_RANGE   = 0,
-    INPUT_SIZE_360p_RANGE   = 1,
-    INPUT_SIZE_480p_RANGE   = 2,
-    INPUT_SIZE_720p_RANGE   = 3,
-    INPUT_SIZE_1080p_RANGE  = 4,
-    INPUT_SIZE_4K_RANGE     = 5,
-    INPUT_SIZE_8K_RANGE     = 6,
-    INPUT_SIZE_COUNT        = 7
+#define EbInputResolution uint8_t
+
+typedef enum ResolutionRange {
+    INPUT_SIZE_240p_RANGE  = 0,
+    INPUT_SIZE_360p_RANGE  = 1,
+    INPUT_SIZE_480p_RANGE  = 2,
+    INPUT_SIZE_720p_RANGE  = 3,
+    INPUT_SIZE_1080p_RANGE = 4,
+    INPUT_SIZE_4K_RANGE    = 5,
+    INPUT_SIZE_8K_RANGE    = 6,
+    INPUT_SIZE_COUNT       = 7
 } ResolutionRange;
 
 /** The EbPtr type is intended to be used to pass pointers to and from the eBrisk
@@ -2260,104 +2258,102 @@ typedef enum {
 
 // Multi-Pass Partitioning Depth(Multi - Pass PD) performs multiple PD stages for the same SB towards 1 final Partitioning Structure
 // As we go from PDn to PDn + 1, the prediction accuracy of the MD feature(s) increases while the number of block(s) decreases
-typedef enum MultiPassPdLevel
-{
+typedef enum MultiPassPdLevel {
     MULTI_PASS_PD_OFF     = 0, // Multi-Pass PD OFF = 1-single PD Pass
     MULTI_PASS_PD_ON      = 1, // Multi-Pass PD ON  = PD0 | PD0_REFINEMENT | PD1
     MULTI_PASS_PD_INVALID = 0, // Invalid Multi-Pass PD Mode
 } MultiPassPdLevel;
-typedef enum RasterScanCuIndex
-{
+
+typedef enum RasterScanCuIndex {
     // 2Nx2N [85 partitions]
-    RASTER_SCAN_CU_INDEX_64x64 = 0,
-    RASTER_SCAN_CU_INDEX_32x32_0 = 1,
-    RASTER_SCAN_CU_INDEX_32x32_1 = 2,
-    RASTER_SCAN_CU_INDEX_32x32_2 = 3,
-    RASTER_SCAN_CU_INDEX_32x32_3 = 4,
-    RASTER_SCAN_CU_INDEX_16x16_0 = 5,
-    RASTER_SCAN_CU_INDEX_16x16_1 = 6,
-    RASTER_SCAN_CU_INDEX_16x16_2 = 7,
-    RASTER_SCAN_CU_INDEX_16x16_3 = 8,
-    RASTER_SCAN_CU_INDEX_16x16_4 = 9,
-    RASTER_SCAN_CU_INDEX_16x16_5 = 10,
-    RASTER_SCAN_CU_INDEX_16x16_6 = 11,
-    RASTER_SCAN_CU_INDEX_16x16_7 = 12,
-    RASTER_SCAN_CU_INDEX_16x16_8 = 13,
-    RASTER_SCAN_CU_INDEX_16x16_9 = 14,
+    RASTER_SCAN_CU_INDEX_64x64    = 0,
+    RASTER_SCAN_CU_INDEX_32x32_0  = 1,
+    RASTER_SCAN_CU_INDEX_32x32_1  = 2,
+    RASTER_SCAN_CU_INDEX_32x32_2  = 3,
+    RASTER_SCAN_CU_INDEX_32x32_3  = 4,
+    RASTER_SCAN_CU_INDEX_16x16_0  = 5,
+    RASTER_SCAN_CU_INDEX_16x16_1  = 6,
+    RASTER_SCAN_CU_INDEX_16x16_2  = 7,
+    RASTER_SCAN_CU_INDEX_16x16_3  = 8,
+    RASTER_SCAN_CU_INDEX_16x16_4  = 9,
+    RASTER_SCAN_CU_INDEX_16x16_5  = 10,
+    RASTER_SCAN_CU_INDEX_16x16_6  = 11,
+    RASTER_SCAN_CU_INDEX_16x16_7  = 12,
+    RASTER_SCAN_CU_INDEX_16x16_8  = 13,
+    RASTER_SCAN_CU_INDEX_16x16_9  = 14,
     RASTER_SCAN_CU_INDEX_16x16_10 = 15,
     RASTER_SCAN_CU_INDEX_16x16_11 = 16,
     RASTER_SCAN_CU_INDEX_16x16_12 = 17,
     RASTER_SCAN_CU_INDEX_16x16_13 = 18,
     RASTER_SCAN_CU_INDEX_16x16_14 = 19,
     RASTER_SCAN_CU_INDEX_16x16_15 = 20,
-    RASTER_SCAN_CU_INDEX_8x8_0 = 21,
-    RASTER_SCAN_CU_INDEX_8x8_1 = 22,
-    RASTER_SCAN_CU_INDEX_8x8_2 = 23,
-    RASTER_SCAN_CU_INDEX_8x8_3 = 24,
-    RASTER_SCAN_CU_INDEX_8x8_4 = 25,
-    RASTER_SCAN_CU_INDEX_8x8_5 = 26,
-    RASTER_SCAN_CU_INDEX_8x8_6 = 27,
-    RASTER_SCAN_CU_INDEX_8x8_7 = 28,
-    RASTER_SCAN_CU_INDEX_8x8_8 = 29,
-    RASTER_SCAN_CU_INDEX_8x8_9 = 30,
-    RASTER_SCAN_CU_INDEX_8x8_10 = 31,
-    RASTER_SCAN_CU_INDEX_8x8_11 = 32,
-    RASTER_SCAN_CU_INDEX_8x8_12 = 33,
-    RASTER_SCAN_CU_INDEX_8x8_13 = 34,
-    RASTER_SCAN_CU_INDEX_8x8_14 = 35,
-    RASTER_SCAN_CU_INDEX_8x8_15 = 36,
-    RASTER_SCAN_CU_INDEX_8x8_16 = 37,
-    RASTER_SCAN_CU_INDEX_8x8_17 = 38,
-    RASTER_SCAN_CU_INDEX_8x8_18 = 39,
-    RASTER_SCAN_CU_INDEX_8x8_19 = 40,
-    RASTER_SCAN_CU_INDEX_8x8_20 = 41,
-    RASTER_SCAN_CU_INDEX_8x8_21 = 42,
-    RASTER_SCAN_CU_INDEX_8x8_22 = 43,
-    RASTER_SCAN_CU_INDEX_8x8_23 = 44,
-    RASTER_SCAN_CU_INDEX_8x8_24 = 45,
-    RASTER_SCAN_CU_INDEX_8x8_25 = 46,
-    RASTER_SCAN_CU_INDEX_8x8_26 = 47,
-    RASTER_SCAN_CU_INDEX_8x8_27 = 48,
-    RASTER_SCAN_CU_INDEX_8x8_28 = 49,
-    RASTER_SCAN_CU_INDEX_8x8_29 = 50,
-    RASTER_SCAN_CU_INDEX_8x8_30 = 51,
-    RASTER_SCAN_CU_INDEX_8x8_31 = 52,
-    RASTER_SCAN_CU_INDEX_8x8_32 = 53,
-    RASTER_SCAN_CU_INDEX_8x8_33 = 54,
-    RASTER_SCAN_CU_INDEX_8x8_34 = 55,
-    RASTER_SCAN_CU_INDEX_8x8_35 = 56,
-    RASTER_SCAN_CU_INDEX_8x8_36 = 57,
-    RASTER_SCAN_CU_INDEX_8x8_37 = 58,
-    RASTER_SCAN_CU_INDEX_8x8_38 = 59,
-    RASTER_SCAN_CU_INDEX_8x8_39 = 60,
-    RASTER_SCAN_CU_INDEX_8x8_40 = 61,
-    RASTER_SCAN_CU_INDEX_8x8_41 = 62,
-    RASTER_SCAN_CU_INDEX_8x8_42 = 63,
-    RASTER_SCAN_CU_INDEX_8x8_43 = 64,
-    RASTER_SCAN_CU_INDEX_8x8_44 = 65,
-    RASTER_SCAN_CU_INDEX_8x8_45 = 66,
-    RASTER_SCAN_CU_INDEX_8x8_46 = 67,
-    RASTER_SCAN_CU_INDEX_8x8_47 = 68,
-    RASTER_SCAN_CU_INDEX_8x8_48 = 69,
-    RASTER_SCAN_CU_INDEX_8x8_49 = 70,
-    RASTER_SCAN_CU_INDEX_8x8_50 = 71,
-    RASTER_SCAN_CU_INDEX_8x8_51 = 72,
-    RASTER_SCAN_CU_INDEX_8x8_52 = 73,
-    RASTER_SCAN_CU_INDEX_8x8_53 = 74,
-    RASTER_SCAN_CU_INDEX_8x8_54 = 75,
-    RASTER_SCAN_CU_INDEX_8x8_55 = 76,
-    RASTER_SCAN_CU_INDEX_8x8_56 = 77,
-    RASTER_SCAN_CU_INDEX_8x8_57 = 78,
-    RASTER_SCAN_CU_INDEX_8x8_58 = 79,
-    RASTER_SCAN_CU_INDEX_8x8_59 = 80,
-    RASTER_SCAN_CU_INDEX_8x8_60 = 81,
-    RASTER_SCAN_CU_INDEX_8x8_61 = 82,
-    RASTER_SCAN_CU_INDEX_8x8_62 = 83,
-    RASTER_SCAN_CU_INDEX_8x8_63 = 84
+    RASTER_SCAN_CU_INDEX_8x8_0    = 21,
+    RASTER_SCAN_CU_INDEX_8x8_1    = 22,
+    RASTER_SCAN_CU_INDEX_8x8_2    = 23,
+    RASTER_SCAN_CU_INDEX_8x8_3    = 24,
+    RASTER_SCAN_CU_INDEX_8x8_4    = 25,
+    RASTER_SCAN_CU_INDEX_8x8_5    = 26,
+    RASTER_SCAN_CU_INDEX_8x8_6    = 27,
+    RASTER_SCAN_CU_INDEX_8x8_7    = 28,
+    RASTER_SCAN_CU_INDEX_8x8_8    = 29,
+    RASTER_SCAN_CU_INDEX_8x8_9    = 30,
+    RASTER_SCAN_CU_INDEX_8x8_10   = 31,
+    RASTER_SCAN_CU_INDEX_8x8_11   = 32,
+    RASTER_SCAN_CU_INDEX_8x8_12   = 33,
+    RASTER_SCAN_CU_INDEX_8x8_13   = 34,
+    RASTER_SCAN_CU_INDEX_8x8_14   = 35,
+    RASTER_SCAN_CU_INDEX_8x8_15   = 36,
+    RASTER_SCAN_CU_INDEX_8x8_16   = 37,
+    RASTER_SCAN_CU_INDEX_8x8_17   = 38,
+    RASTER_SCAN_CU_INDEX_8x8_18   = 39,
+    RASTER_SCAN_CU_INDEX_8x8_19   = 40,
+    RASTER_SCAN_CU_INDEX_8x8_20   = 41,
+    RASTER_SCAN_CU_INDEX_8x8_21   = 42,
+    RASTER_SCAN_CU_INDEX_8x8_22   = 43,
+    RASTER_SCAN_CU_INDEX_8x8_23   = 44,
+    RASTER_SCAN_CU_INDEX_8x8_24   = 45,
+    RASTER_SCAN_CU_INDEX_8x8_25   = 46,
+    RASTER_SCAN_CU_INDEX_8x8_26   = 47,
+    RASTER_SCAN_CU_INDEX_8x8_27   = 48,
+    RASTER_SCAN_CU_INDEX_8x8_28   = 49,
+    RASTER_SCAN_CU_INDEX_8x8_29   = 50,
+    RASTER_SCAN_CU_INDEX_8x8_30   = 51,
+    RASTER_SCAN_CU_INDEX_8x8_31   = 52,
+    RASTER_SCAN_CU_INDEX_8x8_32   = 53,
+    RASTER_SCAN_CU_INDEX_8x8_33   = 54,
+    RASTER_SCAN_CU_INDEX_8x8_34   = 55,
+    RASTER_SCAN_CU_INDEX_8x8_35   = 56,
+    RASTER_SCAN_CU_INDEX_8x8_36   = 57,
+    RASTER_SCAN_CU_INDEX_8x8_37   = 58,
+    RASTER_SCAN_CU_INDEX_8x8_38   = 59,
+    RASTER_SCAN_CU_INDEX_8x8_39   = 60,
+    RASTER_SCAN_CU_INDEX_8x8_40   = 61,
+    RASTER_SCAN_CU_INDEX_8x8_41   = 62,
+    RASTER_SCAN_CU_INDEX_8x8_42   = 63,
+    RASTER_SCAN_CU_INDEX_8x8_43   = 64,
+    RASTER_SCAN_CU_INDEX_8x8_44   = 65,
+    RASTER_SCAN_CU_INDEX_8x8_45   = 66,
+    RASTER_SCAN_CU_INDEX_8x8_46   = 67,
+    RASTER_SCAN_CU_INDEX_8x8_47   = 68,
+    RASTER_SCAN_CU_INDEX_8x8_48   = 69,
+    RASTER_SCAN_CU_INDEX_8x8_49   = 70,
+    RASTER_SCAN_CU_INDEX_8x8_50   = 71,
+    RASTER_SCAN_CU_INDEX_8x8_51   = 72,
+    RASTER_SCAN_CU_INDEX_8x8_52   = 73,
+    RASTER_SCAN_CU_INDEX_8x8_53   = 74,
+    RASTER_SCAN_CU_INDEX_8x8_54   = 75,
+    RASTER_SCAN_CU_INDEX_8x8_55   = 76,
+    RASTER_SCAN_CU_INDEX_8x8_56   = 77,
+    RASTER_SCAN_CU_INDEX_8x8_57   = 78,
+    RASTER_SCAN_CU_INDEX_8x8_58   = 79,
+    RASTER_SCAN_CU_INDEX_8x8_59   = 80,
+    RASTER_SCAN_CU_INDEX_8x8_60   = 81,
+    RASTER_SCAN_CU_INDEX_8x8_61   = 82,
+    RASTER_SCAN_CU_INDEX_8x8_62   = 83,
+    RASTER_SCAN_CU_INDEX_8x8_63   = 84
 } RasterScanCuIndex;
 
-typedef struct StatStruct
-{
+typedef struct StatStruct {
     uint64_t   poc;
     uint64_t   total_num_bits;
     uint8_t    qindex;
@@ -2392,5 +2388,5 @@ typedef enum {
 #ifdef __cplusplus
 }
 #endif
+/* clang-format on */
 #endif // EbDefinitions_h
-/* File EOF */

@@ -11,11 +11,11 @@
 
 #include "warp_plane_neon_i8mm.h"
 
+// clang-format off
 DECLARE_ALIGNED(16, const uint8_t, svt_kTblIdx0_3[16]) = {
-    // clang-format off
     0, -1, -1, -1, 1, -1, -1, -1, 2, -1, -1, -1, 3, -1, -1, -1,
-    // clang-format on
 };
+// clang-format on
 
 static AOM_FORCE_INLINE void vertical_filter_4x1_f4(const int16x8_t *src, int32x4_t *res, int sy, int gamma) {
     int16x8_t s0, s1, s2, s3;

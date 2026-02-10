@@ -826,7 +826,6 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                     assert(ref_entry != 0);
                     CHECK_REPORT_ERROR((ref_entry), enc_ctx->app_callback_ptr, EB_ENC_PM_ERROR10);
 
-                    /* clang-format off */
                     if (entry_ppcs->frame_end_cdf_update_mode) {
                         if (max_temporal_index < (int8_t)ref_entry->temporal_layer_index &&
                             (int8_t)ref_entry->temporal_layer_index <= child_pcs->temporal_layer_index) {
@@ -837,17 +836,15 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                             ref_index = svt_get_ref_frame_type(list_idx, ref_idx) - LAST_FRAME;
                             assert(ref_index == (int)ref);
                             for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame) {
-                                EbReferenceObject* ref_obj =
-                                    (EbReferenceObject*)ref_entry->reference_object_ptr->object_ptr;
+                                EbReferenceObject *ref_obj = (EbReferenceObject *)
+                                                                 ref_entry->reference_object_ptr->object_ptr;
 
-                                child_pcs->ref_global_motion[frame] =
-                                    ref_obj->slice_type != I_SLICE
+                                child_pcs->ref_global_motion[frame] = ref_obj->slice_type != I_SLICE
                                     ? ref_obj->global_motion[frame]
                                     : default_warp_params;
                             }
                         }
                     }
-                    /* clang-format on */
                     // Set the Reference Object
                     child_pcs->ref_pic_ptr_array[list_idx][ref_idx] = ref_entry->reference_object_ptr;
                     child_pcs->ref_pic_qp_array[list_idx][ref_idx] =

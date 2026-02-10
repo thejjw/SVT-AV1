@@ -24,14 +24,12 @@
 DECLARE_ALIGNED(16, const uint16_t, svt_kDeinterleaveTbl[8]) = {
   0, 2, 4, 6, 1, 3, 5, 7,
 };
-// clang-format on
 
 DECLARE_ALIGNED(16, const uint16_t, svt_kHbdDotProdTbl[32]) = {
-    // clang-format off
     0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6,
     4, 5, 6, 7, 5, 6, 7, 0, 6, 7, 0, 1, 7, 0, 1, 2,
-    // clang-format on
 };
+// clang-format on
 
 static inline uint16x8_t convolve8_8_x(int16x8_t s0[8], int16x8_t filter, int64x2_t offset, uint16x8_t max) {
     int64x2_t sum[8];

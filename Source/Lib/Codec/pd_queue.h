@@ -25,11 +25,10 @@ typedef struct PaReferenceEntry {
     EbObjectWrapper *input_object_ptr;
     EbObjectWrapper *y8b_wrapper;
     uint64_t         picture_number;
-    /* clang-format off */
-    bool is_valid; // The entry will be valid when it represents a valid DPB entry.
-                   // This is used in case the DPB is accessed before being populated,
-                   // and for when the DPB is cleared at EOS.
-    /* clang-format on */
+    // The entry will be valid when it represents a valid DPB entry.
+    // This is used in case the DPB is accessed before being populated,
+    // and for when the DPB is cleared at EOS.
+    bool     is_valid;
     uint64_t decode_order;
     uint8_t  is_alt_ref;
 } PaReferenceEntry;

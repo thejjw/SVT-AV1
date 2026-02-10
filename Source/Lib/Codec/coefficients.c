@@ -13,46 +13,24 @@
 
 /* clang-format off */
 DECLARE_ALIGNED(16, static const int16_t, mcol_scan_4x4[16]) = {
-    0,
-    4,
-    8,
-    12,
-    1,
-    5,
-    9,
-    13,
-    2,
-    6,
-    10,
-    14,
-    3,
-    7,
-    11,
-    15,
+    0, 4, 8,12,
+    1, 5, 9,13,
+    2, 6,10,14,
+    3, 7,11,15,
 };
 DECLARE_ALIGNED(16, static const int16_t, mrow_scan_4x4[16]) = {
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
+    0, 1, 2, 3,
+    4, 5, 6, 7,
+    8, 9,10,11,
+    12,13,14,15,
 };
 
 DECLARE_ALIGNED(16, static const int16_t, default_scan_4x4[16]) = {
-    0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15};
+    0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15
+};
 DECLARE_ALIGNED(16, static const int16_t, av1_default_iscan_4x4[16]) = {
-    0, 1, 5, 6, 2, 4, 7, 12, 3, 8, 11, 13, 9, 10, 14, 15};
+    0, 1, 5, 6, 2, 4, 7, 12, 3, 8, 11, 13, 9, 10, 14, 15
+};
 
 DECLARE_ALIGNED(16, static const int16_t, default_scan_4x8[32]) = {
     0,  1,  4,  2,  5,  8,  3,  6,  9,  12, 7,  10, 13, 16, 11, 14,
@@ -1645,7 +1623,13 @@ const TxType g_intra_mode_to_tx_type[INTRA_MODES] = {
     ADST_ADST, // PAETH
 };
 
-const PredictionMode fimode_to_intradir[FILTER_INTRA_MODES] = {DC_PRED, V_PRED, H_PRED, D157_PRED, DC_PRED};
+const PredictionMode fimode_to_intradir[FILTER_INTRA_MODES] = {
+    DC_PRED,
+    V_PRED,
+    H_PRED,
+    D157_PRED,
+    DC_PRED
+};
 
 const int32_t av1_num_ext_tx_set[EXT_TX_SET_TYPES] = {
     1,

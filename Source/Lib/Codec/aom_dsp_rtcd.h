@@ -2279,14 +2279,9 @@ void svt_aom_ifft16x16_float_avx2(const float *input, float *temp, float *output
     double svt_ssim_4x4_hbd_avx2(const uint16_t* s, uint32_t sp, const uint16_t* r, uint32_t rp);
 #endif
 
-    /* Moved to aom_dsp_rtcd.c file:
-    static void svt_aom_setup_rtcd_internal(EbAsm asm_type)
-    */
-
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
 #endif
-// clang-format on
+    // clang-format on

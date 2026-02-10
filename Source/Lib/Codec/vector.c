@@ -159,14 +159,9 @@ int _vector_reallocate(Vector *vector, uint32_t new_capacity) {
         return VECTOR_ERROR;
     }
 #ifdef __STDC_LIB_EXT1__
-    /* clang-format off */
-    if (memcpy_s(vector->data,
-                             new_capacity_in_bytes,
-                             old,
-                             svt_aom_vector_byte_size(vector)) != 0) {
+    if (memcpy_s(vector->data, new_capacity_in_bytes, old, svt_aom_vector_byte_size(vector)) != 0) {
         return VECTOR_ERROR;
     }
-/* clang-format on */
 #else
     svt_memcpy(vector->data, old, svt_aom_vector_byte_size(vector));
 #endif

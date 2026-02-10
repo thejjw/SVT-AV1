@@ -19,25 +19,21 @@
 #include "sum_neon.h"
 #include "transpose_neon.h"
 
+// clang-format off
 DECLARE_ALIGNED(16, const uint8_t, svt_kMatMul6PermuteTbl[32]) = {
-    // clang-format off
     0,  1,  2,  3,  4,  5,  6,  7,  2,  3,  4,  5,  6,  7,  8,  9,
     4,  5,  6,  7,  8,  9, 10, 11,  6,  7,  8,  9, 10, 11, 12, 13
-    // clang-format on
 };
 
 DECLARE_ALIGNED(16, const uint8_t, svt_kMatMul8PermuteTbl[32]) = {
-    // clang-format off
     1,  2,  3,  4,  5,  6,  7,  8,  3,  4,  5,  6,  7,  8,  9, 10,
     5,  6,  7,  8,  9, 10, 11, 12,  7,  8,  9, 10, 11, 12, 13, 14
-    // clang-format on
 };
 
 DECLARE_ALIGNED(16, const uint8_t, svt_kFilterPermuteTbl[16]) = {
-    // clang-format off
     1,  2,  3,  4,  5,  6,  7, 16, 16,  1,  2,  3,  4,  5,  6,  7
-    // clang-format on
 };
+// clang-format on
 
 static inline uint8x8_t convolve8_8_x(uint8x16_t samples, const int8x16_t filter, const uint8x8_t f0,
                                       const uint8x16x2_t permute_tbl, const int16x8_t horiz_const) {

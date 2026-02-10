@@ -62,3 +62,4 @@ OBMCSADMxN(8, 32)
 OBMCSADMxN(32, 8)
 OBMCSADMxN(16, 64)
 OBMCSADMxN(64, 16)
+    /* clang-format on */

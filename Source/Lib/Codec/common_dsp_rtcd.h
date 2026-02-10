@@ -2891,10 +2891,9 @@ extern "C" {
 #endif
 #endif
 
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
 #endif
-// clang-format on
+    // clang-format on

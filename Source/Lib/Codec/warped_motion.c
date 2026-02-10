@@ -212,8 +212,7 @@ EB_ALIGN(16) const int16_t svt_aom_warped_filter[WARPEDPIXEL_PREC_SHIFTS * 3 + 1
   {0, 0, 0,  -1,   4, 127,  -3, 1},
 #endif  // WARPEDPIXEL_PREC_BITS == 6
 };
-
-
+/* clang-format on */
 
 #define USE_LIMITED_PREC_MULT 0
 
@@ -288,8 +287,6 @@ static int32_t get_mult_shift_diag(int64_t p_x, int16_t i_det, int shift) {
                             (1 << WARPEDMODEL_PREC_BITS) + WARPEDMODEL_NONDIAGAFFINE_CLAMP - 1);
 }
 #endif // USE_LIMITED_PREC_MULT
-
-/* clang-format on */
 
 #define DIV_LUT_PREC_BITS 14
 #define DIV_LUT_BITS 8
