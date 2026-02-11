@@ -26,21 +26,12 @@
 extern "C" {
 #endif
 
-// TODO(yunqing, any): Added suppression tag to quiet Doxygen warnings. Need to
-// adjust it while we work on documentation.
-/*!\cond */
-// Number of frames required to test for scene cut detection
-#define SCENE_CUT_KEY_TEST_INTERVAL 16
-
-#define FRAME_TYPE int
-
 //**********************************************************************************************************************//
 // aom_codec.h
 /*!\brief Rate control mode */
 enum aom_rc_mode {
     AOM_VBR, /**< Variable Bit Rate (VBR) mode */
     AOM_CBR, /**< Constant Bit Rate (CBR) mode */
-    AOM_CQ, /**< Constrained Quality (CQ)  mode */
     AOM_Q, /**< Constant Quality (Q) mode */
 };
 
@@ -70,8 +61,6 @@ typedef struct {
     // Indicates the maximum allowed bitrate for any inter frame as % of bitrate
     // target.
     unsigned int max_inter_bitrate_pct;
-    // Indicates the percentage of rate boost for golden frame in CBR mode.
-    unsigned int gf_cbr_boost_pct;
     // min_cr / 100 indicates the target minimum compression ratio for each frame.
     unsigned int min_cr;
     // under_shoot_pct indicates the tolerance of the VBR algorithm to undershoot

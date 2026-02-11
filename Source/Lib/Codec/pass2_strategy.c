@@ -154,29 +154,28 @@ static int get_twopass_worst_quality(PictureParentControlSet* pcs, const double 
 
     if (section_target_bandwidth <= 0) {
         return rc->worst_quality; // Highest value allowed
-    } else {
-        const int num_mbs = mb_cols * mb_rows;
-        //(oxcf->resize_cfg.resize_mode != RESIZE_NONE)
-        //    ? cpi->initial_mbs
-        //    : cpi->common.mi_params.MBs;
-        const int    active_mbs              = AOMMAX(1, num_mbs - (int)(num_mbs * inactive_zone));
-        const double av_err_per_mb           = section_err / active_mbs;
-        const int    target_norm_bits_per_mb = (int)(((uint64_t)section_target_bandwidth << BPER_MB_NORMBITS) /
-                                                  active_mbs);
-
-        int rate_err_tol = AOMMIN(rc_cfg->under_shoot_pct, rc_cfg->over_shoot_pct);
-
-        // Try and pick a max Q that will be high enough to encode the
-        // content at the given rate.
-        int q = find_qindex_by_rate_with_correction(target_norm_bits_per_mb,
-                                                    scs->encoder_bit_depth,
-                                                    av_err_per_mb,
-                                                    group_weight_factor,
-                                                    rate_err_tol,
-                                                    rc->best_quality,
-                                                    rc->worst_quality);
-        return q;
     }
+
+    const int num_mbs = mb_cols * mb_rows;
+    //(oxcf->resize_cfg.resize_mode != RESIZE_NONE)
+    //    ? cpi->initial_mbs
+    //    : cpi->common.mi_params.MBs;
+    const int    active_mbs              = AOMMAX(1, num_mbs - (int)(num_mbs * inactive_zone));
+    const double av_err_per_mb           = section_err / active_mbs;
+    const int    target_norm_bits_per_mb = (int)(((uint64_t)section_target_bandwidth << BPER_MB_NORMBITS) / active_mbs);
+
+    int rate_err_tol = AOMMIN(rc_cfg->under_shoot_pct, rc_cfg->over_shoot_pct);
+
+    // Try and pick a max Q that will be high enough to encode the
+    // content at the given rate.
+    int q = find_qindex_by_rate_with_correction(target_norm_bits_per_mb,
+                                                scs->encoder_bit_depth,
+                                                av_err_per_mb,
+                                                group_weight_factor,
+                                                rate_err_tol,
+                                                rc->best_quality,
+                                                rc->worst_quality);
+    return q;
 }
 
 static void accumulate_this_frame_stats(const FIRSTPASS_STATS* stats, const double mod_frame_err,
@@ -373,89 +372,7 @@ static void init_gf_stats(GF_GROUP_STATS* gf_stats) {
     gf_stats->gf_group_raw_error            = 0.0;
     gf_stats->gf_group_skip_pct             = 0.0;
     gf_stats->gf_group_inactive_zone_rows   = 0.0;
-
-    gf_stats->decay_accumulator       = 1.0;
-    gf_stats->zero_motion_accumulator = 1.0;
-    gf_stats->this_frame_mv_in_out    = 0.0;
 }
-
-static int av1_rc_clamp_iframe_target_size(PictureParentControlSet* pcs, int target) {
-    SequenceControlSet*         scs     = pcs->scs;
-    EncodeContext*              enc_ctx = scs->enc_ctx;
-    RATE_CONTROL* const         rc      = &enc_ctx->rc;
-    const RateControlCfg* const rc_cfg  = &enc_ctx->rc_cfg;
-    if (rc_cfg->max_intra_bitrate_pct) {
-        const int max_rate = rc->avg_frame_bandwidth * rc_cfg->max_intra_bitrate_pct / 100;
-        target             = AOMMIN(target, max_rate);
-    }
-    if (target > rc->max_frame_bandwidth) {
-        target = rc->max_frame_bandwidth;
-    }
-    return target;
-}
-
-static int av1_calc_pframe_target_size_one_pass_cbr(PictureParentControlSet* pcs,
-                                                    SvtAv1FrameUpdateType    frame_update_type) {
-    SequenceControlSet*         scs              = pcs->scs;
-    EncodeContext*              enc_ctx          = scs->enc_ctx;
-    RATE_CONTROL* const         rc               = &enc_ctx->rc;
-    const RateControlCfg* const rc_cfg           = &enc_ctx->rc_cfg;
-    const int64_t               diff             = rc->optimal_buffer_level - rc->buffer_level;
-    const int64_t               one_pct_bits     = 1 + rc->optimal_buffer_level / 100;
-    int                         min_frame_target = AOMMAX(rc->avg_frame_bandwidth >> 4, FRAME_OVERHEAD_BITS);
-    int                         target;
-
-    if (rc_cfg->gf_cbr_boost_pct) {
-        const int af_ratio_pct = rc_cfg->gf_cbr_boost_pct + 100;
-        if (frame_update_type == SVT_AV1_GF_UPDATE || frame_update_type == SVT_AV1_OVERLAY_UPDATE) {
-            target = (rc->avg_frame_bandwidth * rc->baseline_gf_interval * af_ratio_pct) /
-                (rc->baseline_gf_interval * 100 + af_ratio_pct - 100);
-        } else {
-            target = (rc->avg_frame_bandwidth * rc->baseline_gf_interval * 100) /
-                (rc->baseline_gf_interval * 100 + af_ratio_pct - 100);
-        }
-    } else {
-        target = rc->avg_frame_bandwidth;
-    }
-    if (diff > 0) {
-        // Lower the target bandwidth for this frame.
-        const int pct_low = (int)AOMMIN(diff / one_pct_bits, rc_cfg->under_shoot_pct);
-        target -= (target * pct_low) / 200;
-    } else if (diff < 0) {
-        // Increase the target bandwidth for this frame.
-        const int pct_high = (int)AOMMIN(-diff / one_pct_bits, rc_cfg->over_shoot_pct);
-        target += (target * pct_high) / 200;
-    }
-    if (rc_cfg->max_inter_bitrate_pct) {
-        const int max_rate = rc->avg_frame_bandwidth * rc_cfg->max_inter_bitrate_pct / 100;
-        target             = AOMMIN(target, max_rate);
-    }
-    return AOMMAX(min_frame_target, target);
-}
-
-// buffer level weights to calculate the target rate for Key frame
-static int av1_calc_iframe_target_size_one_pass_cbr(PictureParentControlSet* pcs) {
-    SequenceControlSet* scs     = pcs->scs;
-    EncodeContext*      enc_ctx = scs->enc_ctx;
-    RATE_CONTROL* const rc      = &enc_ctx->rc;
-    int                 target;
-    if (pcs->picture_number == 0) {
-        target = ((rc->starting_buffer_level / 2) > INT_MAX) ? INT_MAX : (int)(rc->starting_buffer_level / 2);
-    } else {
-        int    kf_boost  = 32;
-        double framerate = scs->new_framerate;
-        kf_boost         = AOMMAX(kf_boost, (int)(2 * framerate - 16));
-        if (rc->frames_since_key < framerate / 2) {
-            kf_boost = (int)(kf_boost * rc->frames_since_key / (framerate / 2));
-        }
-        target = ((16 + kf_boost) * rc->avg_frame_bandwidth) >> 4;
-    }
-    return av1_rc_clamp_iframe_target_size(pcs, target);
-}
-
-static void av1_gop_bit_allocation(PictureParentControlSet* ppcs, RATE_CONTROL* const rc, int is_key_frame,
-                                   int gf_interval, int use_arf, int64_t gf_group_bits);
-int         svt_aom_frame_is_kf_gf_arf(PictureParentControlSet* ppcs);
 
 /***********************************************************************************
 * calculate_gf_stats()
@@ -578,6 +495,14 @@ static void calculate_active_worst_quality(PictureParentControlSet* ppcs, GF_GRO
     }
 }
 
+static void av1_gop_bit_allocation(PictureParentControlSet* ppcs, RATE_CONTROL* const rc, int is_key_frame,
+                                   int gf_interval, int use_arf, int64_t gf_group_bits) {
+    // Calculate the extra bits to be used for boosted frame(s)
+    int gf_arf_bits = calculate_boost_bits(rc->baseline_gf_interval, rc->gfu_boost, gf_group_bits);
+    // Allocate bits to each of the frames in the GF group.
+    allocate_gf_group_bits(ppcs, rc, gf_group_bits, gf_arf_bits, gf_interval, is_key_frame, use_arf);
+}
+
 /*!\brief Assign rate to the GF group or mini gop.
  *
  * \ingroup gf_group_algo
@@ -618,14 +543,6 @@ static void gf_group_rate_assingment(PictureParentControlSet* pcs, FIRSTPASS_STA
                                use_alt_ref,
                                rc->gf_group_bits);
     }
-}
-
-static void av1_gop_bit_allocation(PictureParentControlSet* ppcs, RATE_CONTROL* const rc, int is_key_frame,
-                                   int gf_interval, int use_arf, int64_t gf_group_bits) {
-    // Calculate the extra bits to be used for boosted frame(s)
-    int gf_arf_bits = calculate_boost_bits(rc->baseline_gf_interval, rc->gfu_boost, gf_group_bits);
-    // Allocate bits to each of the frames in the GF group.
-    allocate_gf_group_bits(ppcs, rc, gf_group_bits, gf_arf_bits, gf_interval, is_key_frame, use_arf);
 }
 
 /*!\brief Variable initialization for lap_rc
@@ -969,189 +886,6 @@ static void is_new_gf_group(PictureParentControlSet* pcs) {
     }
 }
 
-#define DEFAULT_KF_BOOST_RT 2300
-#define DEFAULT_GF_BOOST_RT 2000
-
-static int set_gf_interval_update_onepass_rt(PictureParentControlSet* pcs) {
-    SequenceControlSet* scs       = pcs->scs;
-    EncodeContext*      enc_ctx   = scs->enc_ctx;
-    RATE_CONTROL* const rc        = &enc_ctx->rc;
-    int                 gf_update = 0;
-    // GF update based on frames_till_gf_update_due, also
-    // force upddate on resize pending frame or for scene change.
-    if ((pcs->frame_offset % MAX_GF_INTERVAL) == 0) {
-        rc->baseline_gf_interval = MAX_GF_INTERVAL;
-        if (rc->baseline_gf_interval > rc->frames_to_key) {
-            rc->baseline_gf_interval = rc->frames_to_key;
-        }
-        rc->gfu_boost            = DEFAULT_GF_BOOST_RT;
-        rc->constrained_gf_group = (rc->baseline_gf_interval >= rc->frames_to_key) ? 1 : 0;
-        gf_update                = 1;
-    }
-    return gf_update;
-}
-
-void svt_aom_reset_update_frame_target(PictureParentControlSet* ppcs) {
-    SequenceControlSet* scs     = ppcs->scs;
-    EncodeContext*      enc_ctx = scs->enc_ctx;
-    RATE_CONTROL*       rc      = &enc_ctx->rc;
-    rc->buffer_level            = rc->optimal_buffer_level;
-    rc->bits_off_target         = rc->optimal_buffer_level;
-    ppcs->this_frame_target     = av1_calc_pframe_target_size_one_pass_cbr(ppcs, SVT_AV1_LF_UPDATE);
-}
-
-void svt_av1_resize_reset_rc(PictureParentControlSet* ppcs, int32_t resize_width, int32_t resize_height,
-                             int32_t prev_width, int32_t prev_height);
-
-static void dynamic_resize_one_pass_cbr(PictureParentControlSet* ppcs) {
-    SequenceControlSet* scs           = ppcs->scs;
-    EncodeContext*      enc_ctx       = scs->enc_ctx;
-    RATE_CONTROL*       rc            = &enc_ctx->rc;
-    RESIZE_ACTION       resize_action = NO_RESIZE;
-    const int32_t       avg_qp_thr1   = 70;
-    const int32_t       avg_qp_thr2   = 50;
-    // Don't allow for resized frame to go below 160x90, resize in steps of 3/4.
-    const int32_t min_width    = (160 * 4) / 3;
-    const int32_t min_height   = (90 * 4) / 3;
-    bool          down_size_on = true;
-
-    // Step 1: check frame type
-    // Don't resize on key frame; reset the counters on key frame.
-    if (ppcs->frm_hdr.frame_type == KEY_FRAME) {
-        rc->resize_avg_qp           = 0;
-        rc->resize_count            = 0;
-        rc->resize_buffer_underflow = 0;
-        return;
-    }
-
-    // Step 2: check frame size
-    // No resizing down if frame size is below some limit.
-    if ((ppcs->frame_width * ppcs->frame_height) < min_width * min_height) {
-        down_size_on = false;
-    }
-
-    // Step 3: calculate dynamic resize state
-    // Resize based on average buffer underflow and QP over some window.
-    // Ignore samples close to key frame, since QP is usually high after key.
-    if (rc->frames_since_key > scs->new_framerate) {
-        const int32_t window = AOMMIN(30, (int32_t)(2 * scs->new_framerate));
-        rc->resize_avg_qp += rc->last_q[INTER_FRAME];
-        if (rc->buffer_level < (int32_t)(30 * rc->optimal_buffer_level / 100)) {
-            ++rc->resize_buffer_underflow;
-        }
-        ++rc->resize_count;
-        // Check for resize action every "window" frames.
-        if (rc->resize_count >= window) {
-            int32_t avg_qp = rc->resize_avg_qp / rc->resize_count;
-            // Resize down if buffer level has underflowed sufficient amount in past
-            // window, and we are at original or 3/4 of original resolution.
-            // Resize back up if average QP is low, and we are currently in a resized
-            // down state, i.e. 1/2 or 3/4 of original resolution.
-            // Currently, use a flag to turn 3/4 resizing feature on/off.
-            if (rc->resize_buffer_underflow > (rc->resize_count >> 2) && down_size_on) {
-                if (rc->resize_state == THREE_QUARTER) {
-                    resize_action = DOWN_ONEHALF;
-                    printf("Dynamic resize: %d --> %d\n", rc->resize_state, ONE_HALF);
-                    rc->resize_state = ONE_HALF;
-                } else if (rc->resize_state == ORIG) {
-                    resize_action = DOWN_THREEFOUR;
-                    printf("Dynamic resize: %d --> %d\n", rc->resize_state, THREE_QUARTER);
-                    rc->resize_state = THREE_QUARTER;
-                }
-            } else if (rc->resize_state != ORIG && avg_qp < avg_qp_thr1 * rc->worst_quality / 100) {
-                if (rc->resize_state == THREE_QUARTER || avg_qp < avg_qp_thr2 * rc->worst_quality / 100) {
-                    resize_action = UP_ORIG;
-                    printf("Dynamic resize: %d --> %d\n", rc->resize_state, ORIG);
-                    rc->resize_state = ORIG;
-                } else if (rc->resize_state == ONE_HALF) {
-                    resize_action = UP_THREEFOUR;
-                    printf("Dynamic resize: %d --> %d\n", rc->resize_state, THREE_QUARTER);
-                    rc->resize_state = THREE_QUARTER;
-                }
-            }
-            // Reset for next window measurement.
-            rc->resize_avg_qp           = 0;
-            rc->resize_count            = 0;
-            rc->resize_buffer_underflow = 0;
-        }
-    }
-
-    // Step 4: reset rate control configuration
-    // If decision is to resize, reset some quantities, and check is we should
-    // reduce rate correction factor,
-    if (resize_action != NO_RESIZE) {
-        int32_t resize_width     = ppcs->frame_width; // cpi->oxcf.frm_dim_cfg.width;
-        int32_t resize_height    = ppcs->frame_height; // cpi->oxcf.frm_dim_cfg.height;
-        int32_t resize_scale_num = 1;
-        int32_t resize_scale_den = 1;
-        if (resize_action == DOWN_THREEFOUR || resize_action == UP_THREEFOUR) {
-            resize_scale_num = 3;
-            resize_scale_den = 4;
-        } else if (resize_action == DOWN_ONEHALF) {
-            resize_scale_num = 1;
-            resize_scale_den = 2;
-        }
-        resize_width  = resize_width * resize_scale_num / resize_scale_den;
-        resize_height = resize_height * resize_scale_num / resize_scale_den;
-        svt_av1_resize_reset_rc(ppcs, resize_width, resize_height, ppcs->frame_width, ppcs->frame_height);
-    }
-    return;
-}
-
-void svt_aom_one_pass_rt_rate_alloc(PictureParentControlSet* pcs) {
-    SequenceControlSet* scs     = pcs->scs;
-    EncodeContext*      enc_ctx = scs->enc_ctx;
-    RATE_CONTROL* const rc      = &enc_ctx->rc;
-    int                 target  = 0;
-    // Set frame type.
-    if (frame_is_intra_only(pcs)) {
-        rc->kf_boost = DEFAULT_KF_BOOST_RT;
-    }
-
-    if (frame_is_intra_only(pcs)) {
-        rc->this_key_frame_forced = pcs->picture_number != 0 && rc->frames_to_key == 0;
-        rc->frames_to_key         = scs->static_config.intra_period_length + 1;
-    }
-
-    /* resize dynamic mode make desicion of scaling here and store it in resize_pending_params,
-     * the actual resizing performs on the next new input picture in PD, current picture and
-     * other pictures already in pipeline use their own resolution without resizing
-     */
-    // resize dynamic mode only works with 1-pass CBR low delay mode
-    if (scs->static_config.resize_mode == RESIZE_DYNAMIC && scs->static_config.pass == ENC_SINGLE_PASS &&
-        scs->static_config.pred_structure == LOW_DELAY) {
-        dynamic_resize_one_pass_cbr(pcs);
-        if (rc->resize_state != scs->resize_pending_params.resize_state) {
-            if (rc->resize_state == ORIG) {
-                scs->resize_pending_params.resize_denom = SCALE_NUMERATOR;
-            } else if (rc->resize_state == THREE_QUARTER) {
-                scs->resize_pending_params.resize_denom = SCALE_THREE_QUATER;
-            } else if (rc->resize_state == ONE_HALF) {
-                scs->resize_pending_params.resize_denom = SCALE_DENOMINATOR_MAX;
-            } else {
-                svt_aom_assert_err(0, "unknown resize denom");
-            }
-            scs->resize_pending_params.resize_state = rc->resize_state;
-        }
-    } else if (pcs->rc_reset_flag) {
-        svt_av1_resize_reset_rc(
-            pcs, pcs->render_width, pcs->render_height, scs->max_input_luma_width, scs->max_input_luma_height);
-    }
-
-    // Set the GF interval and update flag.
-    set_gf_interval_update_onepass_rt(pcs);
-    // Set target size.
-    if (enc_ctx->rc_cfg.mode == AOM_CBR) {
-        if (pcs->frm_hdr.frame_type == KEY_FRAME) {
-            target = av1_calc_iframe_target_size_one_pass_cbr(pcs);
-        } else {
-            target = av1_calc_pframe_target_size_one_pass_cbr(pcs, pcs->update_type);
-        }
-    }
-    pcs->this_frame_target = target;
-    pcs->base_frame_target = target;
-}
-
 void svt_aom_process_rc_stat(PictureParentControlSet* pcs) {
     SequenceControlSet* scs     = pcs->scs;
     TWO_PASS* const     twopass = &scs->twopass;
@@ -1231,7 +965,6 @@ void svt_aom_set_rc_param(SequenceControlSet* scs) {
     // input config  from options
     enc_ctx->two_pass_cfg.vbrmin_section = scs->static_config.vbr_min_section_pct;
     enc_ctx->two_pass_cfg.vbrmax_section = scs->static_config.vbr_max_section_pct;
-    enc_ctx->rc_cfg.gf_cbr_boost_pct     = 0;
     enc_ctx->rc_cfg.mode                 = scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR
                         ? AOM_VBR
                         : (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ? AOM_CBR : AOM_Q);

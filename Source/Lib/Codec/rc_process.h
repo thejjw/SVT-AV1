@@ -91,7 +91,6 @@ typedef struct {
     int     gfu_boost;
     int     kf_boost;
     double  rate_correction_factors[MAX_TEMPORAL_LAYERS + 1];
-    int     onepass_cbr_mode; // 0: not 1pass cbr, 1: 1pass cbr for low delay
     int     baseline_gf_interval;
     int     constrained_gf_group;
     int     frames_to_key;
@@ -206,29 +205,28 @@ typedef struct PicMgrPorts {
 } PicMgrPorts;
 
 /**************************************
- * Context
- **************************************/
-
-/**************************************
  * Extern Function Declarations
  **************************************/
+struct PictureControlSet;
+struct PictureParentControlSet;
+
 int32_t svt_av1_convert_qindex_to_q_fp8(int32_t qindex, EbBitDepth bit_depth);
+int32_t svt_av1_compute_qdelta(double qstart, double qtarget, EbBitDepth bit_depth);
+int32_t svt_av1_compute_qdelta_fp(int32_t qstart_fp8, int32_t qtarget_fp8, EbBitDepth bit_depth);
 double  svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
-double  svt_av1_get_gfu_boost_projection_factor(double min_factor, double max_factor, int frame_count);
 void    svt_av1_normalize_sb_delta_q(struct PictureControlSet* pcs);
+void    svt_variance_adjust_qp(struct PictureControlSet* pcs);
 
 EbErrorType svt_aom_rate_control_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr,
                                               int me_port_index);
 
 void* svt_aom_rate_control_kernel(void* input_ptr);
 int   svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex);
-struct PictureControlSet;
-int  svt_aom_compute_rd_mult(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
+void  svt_aom_sb_qp_derivation_tpl_la(struct PictureControlSet* pcs);
+int   svt_aom_compute_rd_mult(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
 int  svt_aom_compute_fast_lambda(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
 void svt_aom_lambda_assign(struct PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda,
                            uint8_t bit_depth, uint16_t qp_index, bool multiply_lambda);
-struct PictureParentControlSet;
-void svt_aom_cyclic_refresh_init(struct PictureParentControlSet* ppcs);
 void recode_loop_update_q(struct PictureParentControlSet* ppcs, bool* const loop, int* const q, int* const q_low,
                           int* const q_high, const int top_index, const int bottom_index, int* const undershoot_seen,
                           int* const overshoot_seen, int* const low_cr_seen, const int loop_count);

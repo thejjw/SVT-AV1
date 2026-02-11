@@ -345,10 +345,6 @@ static void result_model_store(PictureParentControlSet* pcs, TplStats* tpl_stats
     }
 }
 
-double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
-
-int32_t svt_av1_compute_qdelta(double qstart, double qtarget, EbBitDepth bit_depth);
-
 /*
     TPL Dispenser SB based (sz 64x64)
 */

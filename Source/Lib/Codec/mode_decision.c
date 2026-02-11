@@ -2990,8 +2990,6 @@ TxType svt_aom_get_intra_uv_tx_type(UvPredictionMode pred_mode_uv, TxSize tx_siz
     return !av1_ext_tx_used[tx_set_type][tx_type] ? DCT_DCT : tx_type;
 }
 
-double svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
-
 // Values are now correlated to quantizer.
 static INLINE int mv_check_bounds(const MvLimits* mv_limits, const Mv* mv) {
     return (mv->y >> 3) < mv_limits->row_min || (mv->y >> 3) > mv_limits->row_max ||

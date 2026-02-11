@@ -2150,8 +2150,6 @@ static void perform_pred_depth_refinement(PictureControlSet* pcs, ModeDecisionCo
     refine_depth(pcs, ctx, pc_tree, mds, mi_row, mi_col, max_pd0_size, min_pd0_size);
 }
 
-void svt_variance_adjust_qp(PictureControlSet* pcs);
-void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs);
 void mdc_init_qp_update(PictureControlSet* pcs);
 void svt_aom_init_enc_dec_segement(PictureParentControlSet* ppcs);
 
