@@ -857,6 +857,16 @@ static const PartitionType from_shape_to_part[EXT_PARTITION_TYPES] = {PARTITION_
                                                                       PARTITION_VERT_A,
                                                                       PARTITION_VERT_B,
                                                                       PARTITION_SPLIT};
+static const Part from_part_to_shape[PART_S + 1] = { PART_N,
+                                                     PART_H,
+                                                     PART_V,
+                                                     PART_S,
+                                                     PART_HA,
+                                                     PART_HB,
+                                                     PART_VA,
+                                                     PART_VB,
+                                                     PART_H4,
+                                                     PART_V4 };
 
 static const uint8_t mi_size_wide[BlockSizeS_ALL] = {1,  1,  2,  2,  2,  4, 4, 4, 8, 8, 8,
                                                      16, 16, 16, 32, 32, 1, 4, 2, 8, 4, 16};
