@@ -125,15 +125,15 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
 uint32_t product_full_mode_decision_light_pd0(struct ModeDecisionContext* ctx, BlkStruct* blk_ptr,
                                               ModeDecisionCandidateBuffer** buffer_ptr_array);
 
-void     svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
-                                                      ModeDecisionCandidateBuffer* cand_bf);
-uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
-                                            ModeDecisionCandidateBuffer** buffer_ptr_array,
-                                            uint32_t candidate_total_count, uint32_t* best_candidate_index_array);
-uint8_t  svt_aom_wm_motion_refinement(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
-                                      ModeDecisionCandidate* cand, const bool shut_approx);
-uint8_t  svt_aom_obmc_motion_refinement(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
-                                        ModeDecisionCandidate* cand, int refine_level);
+void        svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
+                                                         ModeDecisionCandidateBuffer* cand_bf);
+uint32_t    svt_aom_product_full_mode_decision(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
+                                               ModeDecisionCandidateBuffer** buffer_ptr_array,
+                                               uint32_t candidate_total_count, uint32_t* best_candidate_index_array);
+uint8_t     svt_aom_wm_motion_refinement(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
+                                         ModeDecisionCandidate* cand, const bool shut_approx);
+uint8_t     svt_aom_obmc_motion_refinement(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
+                                           ModeDecisionCandidate* cand, int refine_level);
 EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, struct ModeDecisionContext* ctx,
                                      uint32_t* fast_candidate_total_count);
 void        generate_md_stage_0_cand_light_pd1(struct ModeDecisionContext* ctx, uint32_t* fast_candidate_total_count,

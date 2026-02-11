@@ -175,18 +175,18 @@ typedef struct BlkStruct {
     // Used when encdec is bypassed
     EbPictureBufferDesc* recon_tmp;
     uint64_t             cost;
-    uint64_t     total_rate;
-    uint64_t     full_dist;
-    QuantDcData  quant_dc;
-    EobData      eob;
-    TxType       tx_type[MAX_TXB_COUNT];
-    TxType       tx_type_uv;
-    uint16_t     y_has_coeff;
-    uint8_t      u_has_coeff;
-    uint8_t      v_has_coeff;
-    PaletteInfo* palette_info;
-    uint8_t      palette_mem; // status of palette info alloc
-    uint8_t      palette_size[2];
+    uint64_t             total_rate;
+    uint64_t             full_dist;
+    QuantDcData          quant_dc;
+    EobData              eob;
+    TxType               tx_type[MAX_TXB_COUNT];
+    TxType               tx_type_uv;
+    uint16_t             y_has_coeff;
+    uint8_t              u_has_coeff;
+    uint8_t              v_has_coeff;
+    PaletteInfo*         palette_info;
+    uint8_t              palette_mem; // status of palette info alloc
+    uint8_t              palette_size[2];
 
     BlockModeInfo block_mi;
 

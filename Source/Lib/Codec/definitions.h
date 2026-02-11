@@ -810,10 +810,10 @@ typedef enum ATTRIBUTE_PACKED {
     BLOCK_32X8,
     BLOCK_16X64,
     BLOCK_64X16,
-    BlockSizeS_ALL,
-    BlockSizeS    = BLOCK_4X16,
+    BLOCK_SIZES_ALL,
+    BLOCK_SIZES   = BLOCK_4X16,
     BLOCK_INVALID = 255,
-    BLOCK_LARGEST = (BlockSizeS - 1)
+    BLOCK_LARGEST = (BLOCK_SIZES - 1)
 } BlockSize;
 
 typedef enum ATTRIBUTE_PACKED {
@@ -857,20 +857,12 @@ static const PartitionType from_shape_to_part[EXT_PARTITION_TYPES] = {PARTITION_
                                                                       PARTITION_VERT_A,
                                                                       PARTITION_VERT_B,
                                                                       PARTITION_SPLIT};
-static const Part from_part_to_shape[PART_S + 1] = { PART_N,
-                                                     PART_H,
-                                                     PART_V,
-                                                     PART_S,
-                                                     PART_HA,
-                                                     PART_HB,
-                                                     PART_VA,
-                                                     PART_VB,
-                                                     PART_H4,
-                                                     PART_V4 };
+static const Part          from_part_to_shape[PART_S + 1]          = {
+    PART_N, PART_H, PART_V, PART_S, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4};
 
-static const uint8_t mi_size_wide[BlockSizeS_ALL] = {1,  1,  2,  2,  2,  4, 4, 4, 8, 8, 8,
+static const uint8_t mi_size_wide[BLOCK_SIZES_ALL] = {1,  1,  2,  2,  2,  4, 4, 4, 8, 8, 8,
                                                      16, 16, 16, 32, 32, 1, 4, 2, 8, 4, 16};
-static const uint8_t mi_size_high[BlockSizeS_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
+static const uint8_t mi_size_high[BLOCK_SIZES_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
                                                      8, 16, 32, 16, 32, 4, 1, 8, 2, 16, 4};
 
 // 4X4, 8X8, 16X16, 32X32, 64X64, 128X128
@@ -958,8 +950,8 @@ static inline BlockSize get_partition_subsize(BlockSize bsize,
 
 typedef char PartitionContextType;
 #define PARTITION_PLOFFSET 4 // number of probability models per block size
-#define PARTITION_BlockSizeS 5
-#define PARTITION_CONTEXTS (PARTITION_BlockSizeS * PARTITION_PLOFFSET)
+#define PARTITION_BLOCK_SIZES 5
+#define PARTITION_CONTEXTS (PARTITION_BLOCK_SIZES * PARTITION_PLOFFSET)
 
 // block transform size
 #ifdef _MSC_VER
@@ -998,7 +990,7 @@ typedef enum ATTRIBUTE_PACKED {
 #else
 } TxSize;
 #endif
-static const TxSize tx_depth_to_tx_size[3][BlockSizeS_ALL] = {
+static const TxSize tx_depth_to_tx_size[3][BLOCK_SIZES_ALL] = {
     // tx_depth 0
     {TX_4X4,   TX_4X8,   TX_8X4,   TX_8X8,   TX_8X16,  TX_16X8,  TX_16X16,
      TX_16X32, TX_32X16, TX_32X32, TX_32X64, TX_64X32, TX_64X64,
@@ -1690,7 +1682,7 @@ static const struct
 {
     PartitionContextType above;
     PartitionContextType left;
-} partition_context_lookup[BlockSizeS_ALL] = {
+} partition_context_lookup[BLOCK_SIZES_ALL] = {
     { 31, 31 },  // 4X4   - {0b11111, 0b11111}
     { 31, 30 },  // 4X8   - {0b11111, 0b11110}
     { 30, 31 },  // 8X4   - {0b11110, 0b11111}
@@ -1718,16 +1710,16 @@ static const struct
 /* clang-format on */
 
 // Width/height lookup tables in units of various block sizes
-extern const uint8_t block_size_wide[BlockSizeS_ALL];
-extern const uint8_t block_size_high[BlockSizeS_ALL];
+extern const uint8_t block_size_wide[BLOCK_SIZES_ALL];
+extern const uint8_t block_size_high[BLOCK_SIZES_ALL];
 
 // AOMMIN(3, AOMMIN(b_width_log2(bsize), b_height_log2(bsize)))
-extern const uint8_t eb_size_group_lookup[BlockSizeS_ALL];
+extern const uint8_t eb_size_group_lookup[BLOCK_SIZES_ALL];
 
-extern const uint8_t eb_num_pels_log2_lookup[BlockSizeS_ALL];
-extern const TxSize  eb_max_txsize_lookup[BlockSizeS_ALL];
+extern const uint8_t eb_num_pels_log2_lookup[BLOCK_SIZES_ALL];
+extern const TxSize  eb_max_txsize_lookup[BLOCK_SIZES_ALL];
 
-extern const TxSize eb_max_txsize_rect_lookup[BlockSizeS_ALL];
+extern const TxSize eb_max_txsize_rect_lookup[BLOCK_SIZES_ALL];
 
 // Transform block width in unit
 extern const int32_t eb_tx_size_wide_unit[TX_SIZES_ALL];
@@ -1736,8 +1728,8 @@ extern const int32_t eb_tx_size_high_unit[TX_SIZES_ALL];
 
 extern const TxSize eb_sub_tx_size_map[TX_SIZES_ALL];
 
-extern const uint8_t mi_size_wide_log2[BlockSizeS_ALL];
-extern const uint8_t mi_size_high_log2[BlockSizeS_ALL];
+extern const uint8_t mi_size_wide_log2[BLOCK_SIZES_ALL];
+extern const uint8_t mi_size_high_log2[BLOCK_SIZES_ALL];
 
 typedef struct SgrParamsType {
     int32_t r[2]; // radii

@@ -87,7 +87,7 @@ typedef struct BlockGeom {
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);
 
-static const BlockSize ss_size_lookup[BlockSizeS_ALL][2][2] = {
+static const BlockSize ss_size_lookup[BLOCK_SIZES_ALL][2][2] = {
     //  ss_x == 0    ss_x == 0        ss_x == 1      ss_x == 1
     //  ss_y == 0    ss_y == 1        ss_y == 0      ss_y == 1
     {{BLOCK_4X4, BLOCK_4X4}, {BLOCK_4X4, BLOCK_4X4}},
@@ -123,7 +123,7 @@ static INLINE BlockSize get_plane_block_size(BlockSize bsize, int32_t subsamplin
 static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_x, int32_t subsampling_y) {
     const BlockSize plane_bsize = get_plane_block_size(bsize, subsampling_x, subsampling_y);
     TxSize          uv_tx       = TX_INVALID;
-    if (plane_bsize < BlockSizeS_ALL) {
+    if (plane_bsize < BLOCK_SIZES_ALL) {
         uv_tx = eb_max_txsize_rect_lookup[plane_bsize];
     }
     return av1_get_adjusted_tx_size(uv_tx);

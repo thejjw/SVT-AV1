@@ -4470,7 +4470,7 @@ static INLINE int max_block_high(const MacroBlockD* xd, BlockSize bsize, int pla
 static INLINE void txfm_partition_update(TXFM_CONTEXT* above_ctx, TXFM_CONTEXT* left_ctx, TxSize tx_size,
                                          TxSize txb_size) {
     BlockSize bsize = txsize_to_bsize[txb_size];
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     int     bh  = mi_size_high[bsize];
     int     bw  = mi_size_wide[bsize];
     uint8_t txw = tx_size_wide[tx_size];
@@ -4650,7 +4650,7 @@ static void write_selected_tx_size(const MacroBlockD* xd, FRAME_CONTEXT* ec_ctx,
 
     if (block_signals_txsize(bsize)) {
         const int tx_size_ctx = get_tx_size_context(xd);
-        assert(bsize < BlockSizeS_ALL);
+        assert(bsize < BLOCK_SIZES_ALL);
         const int     depth       = tx_size_to_depth(tx_size, bsize);
         const int     max_depths  = bsize_to_max_depth(bsize);
         const int32_t tx_size_cat = bsize_to_tx_size_cat(bsize);
@@ -4979,7 +4979,7 @@ static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* e
 
     const uint8_t skip_mode = mbmi->block_mi.skip_mode;
 
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     int32_t       mi_row              = blk_org_y >> MI_SIZE_LOG2;
     int32_t       mi_col              = blk_org_x >> MI_SIZE_LOG2;
     int           mi_stride           = pcs->ppcs->av1_cm->mi_stride;
@@ -5484,7 +5484,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext* ec_ctx, SuperBlock* sb_ptr, Pi
     NeighborArrayUnit* partition_context_na = pcs->partition_context_na[tile_idx];
 
     const BlockSize bsize = ptree->bsize;
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     const int           hbs          = mi_size_wide[bsize] >> 1;
     const int           quarter_step = mi_size_wide[bsize] >> 2;
     const PartitionType partition    = ptree->partition;

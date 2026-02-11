@@ -150,7 +150,7 @@ static void scan_row_mbmi(const Av1Common* cm, const MacroBlockD* xd, int32_t mi
     for (i = 0; i < end_mi;) {
         const MbModeInfo* const candidate       = candidate_mi0[col_offset + i];
         const int32_t           candidate_bsize = candidate->bsize;
-        assert(candidate_bsize < BlockSizeS_ALL);
+        assert(candidate_bsize < BLOCK_SIZES_ALL);
         const int32_t n8_w = mi_size_wide[candidate_bsize];
         int32_t       len  = AOMMIN(xd->n8_w, n8_w);
         if (use_step_16) {
@@ -205,7 +205,7 @@ static void scan_col_mbmi(const Av1Common* cm, const MacroBlockD* xd, int32_t mi
     for (i = 0; i < end_mi;) {
         const MbModeInfo* const candidate       = xd->mi[(row_offset + i) * xd->mi_stride + col_offset];
         const int32_t           candidate_bsize = candidate->bsize;
-        assert(candidate_bsize < BlockSizeS_ALL);
+        assert(candidate_bsize < BLOCK_SIZES_ALL);
         const int32_t n8_h = mi_size_high[candidate_bsize];
         int32_t       len  = AOMMIN(xd->n8_h, n8_h);
         if (use_step_16) {

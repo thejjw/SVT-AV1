@@ -193,7 +193,7 @@ static void av1_make_masked_scaled_inter_predictor(
                                            is_16bit);
 }
 
-static const uint8_t bsize_curvfit_model_cat_lookup[BlockSizeS_ALL] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
+static const uint8_t bsize_curvfit_model_cat_lookup[BLOCK_SIZES_ALL] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
                                                                        3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};
 
 static int sse_norm_curvfit_model_cat_lookup(double sse_norm) {
@@ -3159,7 +3159,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
                                      uint8_t ss_y, const BlockSize bsize, ConvolveParams* conv_params_cb,
                                      ConvolveParams* conv_params_cr, ScaleFactors* sf_identity, uint8_t* seg_mask,
                                      uint8_t bit_depth) {
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     assert(pcs != NULL);
 
     uint8_t is16bit = bit_depth > EB_EIGHT_BIT;
@@ -3202,7 +3202,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
     const int32_t   b4_w        = block_size_wide[bsize] >> ss_x;
     const int32_t   b4_h        = block_size_high[bsize] >> ss_y;
     const BlockSize plane_bsize = svt_aom_scale_chroma_bsize(bsize, ss_x, ss_y);
-    assert(plane_bsize < BlockSizeS_ALL);
+    assert(plane_bsize < BLOCK_SIZES_ALL);
     const int32_t b8_w = block_size_wide[plane_bsize] >> ss_x;
     const int32_t b8_h = block_size_high[plane_bsize] >> ss_y;
 

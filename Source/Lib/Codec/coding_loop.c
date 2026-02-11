@@ -1998,7 +1998,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
     }
 
     const BlockSize bsize = pc_tree->bsize;
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     const int           hbs          = mi_size_wide[bsize] >> 1;
     const PartitionType partition    = pc_tree->partition;
     const int           quarter_step = mi_size_wide[bsize] >> 2;

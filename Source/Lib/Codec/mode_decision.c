@@ -3015,7 +3015,7 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     x->nmv_vec_cost      = ctx->md_rate_est_ctx->nmv_vec_cost;
     x->mv_cost_stack     = ctx->md_rate_est_ctx->nmvcoststack;
     BlockSize bsize      = ctx->blk_geom->bsize;
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     FrameHeader*           frm_hdr    = &pcs->ppcs->frm_hdr;
     const Av1Common* const cm         = pcs->ppcs->av1_cm;
     MvReferenceFrame       ref_frame  = INTRA_FRAME;
@@ -3372,7 +3372,7 @@ static void inject_zz_backup_candidate(PictureControlSet* pcs, ModeDecisionConte
 }
 
 int svt_av1_allow_palette(int allow_palette, BlockSize bsize) {
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     return allow_palette && block_size_wide[bsize] <= 64 && block_size_high[bsize] <= 64 && bsize >= BLOCK_8X8;
 }
 
@@ -3790,7 +3790,8 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // only one TX unit, so no need to bitmask
         if (blk_ptr->u_has_coeff) {
             src_ptr = &(((int32_t*)cand_bf->quant->buffer_cb)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) + ctx->coded_area_sb_uv;
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) +
+                ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
         }
 
@@ -3798,7 +3799,8 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // only one TX unit, so no need to bitmask
         if (blk_ptr->v_has_coeff) {
             src_ptr = &(((int32_t*)cand_bf->quant->buffer_cr)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) + ctx->coded_area_sb_uv;
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) +
+                ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
         }
         ctx->coded_area_sb_uv += bwidth_uv * bheight_uv;
@@ -3884,7 +3886,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
         // When lambda tuning is on, lambda of each block is set separately, however at interdepth decision the sb lambda is used
         uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD] : ctx->full_sb_lambda_md[EB_8_BIT_MD];
         ctx->blk_ptr->cost   = RDCOST(full_lambda, cand_bf->total_rate, cand_bf->full_dist);
-        ctx->blk_ptr->full_dist    = cand_bf->full_dist;
+        ctx->blk_ptr->full_dist = cand_bf->full_dist;
     }
 
     // Set common signals (INTER/INTRA)
@@ -3993,7 +3995,8 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
             int32_t* dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_y)[txb_1d_offset]);
 
             if (ctx->fixed_partition) {
-                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) + ctx->coded_area_sb;
+                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) +
+                    ctx->coded_area_sb;
                 ctx->coded_area_sb += bwidth * bheight;
             }
 

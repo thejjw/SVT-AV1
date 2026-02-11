@@ -1554,7 +1554,7 @@ static INLINE int max_block_high(const MacroBlockD* xd, BlockSize bsize, int pla
 static INLINE void txfm_partition_update(TXFM_CONTEXT* above_ctx, TXFM_CONTEXT* left_ctx, TxSize tx_size,
                                          TxSize txb_size) {
     BlockSize bsize = txsize_to_bsize[txb_size];
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     int     bh  = mi_size_high[bsize];
     int     bw  = mi_size_wide[bsize];
     uint8_t txw = tx_size_wide[tx_size];
@@ -1750,7 +1750,7 @@ static uint64_t cost_selected_tx_size(const MacroBlockD* xd, MdRateEstimationCon
 
     if (block_signals_txsize(bsize)) {
         const int tx_size_ctx = get_tx_size_context(xd);
-        assert(bsize < BlockSizeS_ALL);
+        assert(bsize < BLOCK_SIZES_ALL);
         const int     depth       = tx_size_to_depth(tx_size, bsize);
         const int32_t tx_size_cat = bsize_to_tx_size_cat(bsize);
         bits += md_rate_est_ctx->tx_size_fac_bits[tx_size_cat][tx_size_ctx][depth];
@@ -1849,7 +1849,7 @@ int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSiz
                                     const int mi_col, MdRateEstimationContext* md_rate_est_ctx, PartitionType p,
                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     const bool is_partition_point = (bsize >= BLOCK_8X8);
 
     if (!is_partition_point) {

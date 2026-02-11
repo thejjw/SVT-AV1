@@ -32,8 +32,6 @@ static const int8_t fwd_cos_bit_row[MAX_TXWH_IDX /*txw_idx*/][MAX_TXWH_IDX /*txh
 
 extern const int8_t* fwd_txfm_shift_ls[TX_SIZES_ALL];
 
-#define BLOCK_SIZES_ALL 22
-
 static INLINE int is_rect_tx(TxSize tx_size) {
     return tx_size >= TX_SIZES;
 }

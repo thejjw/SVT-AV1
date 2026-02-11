@@ -153,7 +153,7 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool
     }
     if (pic_filter_intra_level) {
         svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->filter_intra_mode_fac_bits, fc->filter_intra_mode_cdf, NULL);
-        for (i = 0; i < BlockSizeS_ALL; ++i) {
+        for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
             if (svt_aom_filter_intra_allowed_bsize(i)) {
                 svt_aom_get_syntax_rate_from_cdf(
                     md_rate_est_ctx->filter_intra_fac_bits[i], fc->filter_intra_cdfs[i], NULL);
@@ -309,11 +309,11 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool
             svt_aom_get_syntax_rate_from_cdf(
                 md_rate_est_ctx->inter_compound_mode_fac_bits[i], fc->inter_compound_mode_cdf[i], NULL);
         }
-        for (i = 0; i < BlockSizeS_ALL; ++i) {
+        for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
             svt_aom_get_syntax_rate_from_cdf(
                 md_rate_est_ctx->compound_type_fac_bits[i], fc->compound_type_cdf[i], NULL);
         }
-        for (i = 0; i < BlockSizeS_ALL; ++i) {
+        for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
             if (get_interinter_wedge_bits((BlockSize)i)) {
                 svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->wedge_idx_fac_bits[i], fc->wedge_idx_cdf[i], NULL);
             }
@@ -323,14 +323,14 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool
             svt_aom_get_syntax_rate_from_cdf(
                 md_rate_est_ctx->inter_intra_mode_fac_bits[i], fc->interintra_mode_cdf[i], NULL);
         }
-        for (i = 0; i < BlockSizeS_ALL; ++i) {
+        for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
             svt_aom_get_syntax_rate_from_cdf(
                 md_rate_est_ctx->wedge_inter_intra_fac_bits[i], fc->wedge_interintra_cdf[i], NULL);
         }
-        for (i = BLOCK_8X8; i < BlockSizeS_ALL; i++) {
+        for (i = BLOCK_8X8; i < BLOCK_SIZES_ALL; i++) {
             svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->motion_mode_fac_bits[i], fc->motion_mode_cdf[i], NULL);
         }
-        for (i = BLOCK_8X8; i < BlockSizeS_ALL; i++) {
+        for (i = BLOCK_8X8; i < BLOCK_SIZES_ALL; i++) {
             svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->motion_mode_fac_bits1[i], fc->obmc_cdf[i], NULL);
         }
         for (i = 0; i < COMP_INDEX_CONTEXTS; ++i) {
@@ -773,7 +773,7 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_pt
     const PredictionMode    y_mode   = mbmi->block_mi.mode;
     const BlockGeom*        blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     const BlockSize         bsize    = mbmi->bsize;
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     assert(y_mode < 13);
 
     if (intraonly) {
@@ -839,7 +839,7 @@ void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row
 
     const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     BlockSize        bsize    = blk_geom->bsize;
-    assert(bsize < BlockSizeS_ALL);
+    assert(bsize < BLOCK_SIZES_ALL);
     FRAME_CONTEXT* fc             = xd->tile_ctx;
     const int      seg_ref_active = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled &&
         pcs->ppcs->frm_hdr.segmentation_params.seg_id_pre_skip;
@@ -1054,35 +1054,36 @@ void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row
 /*******************************************************************************
  * Updates the partition stats/CDF for the current block
  ******************************************************************************/
-void svt_aom_update_part_stats(PictureControlSet *pcs, const PartitionType partition, const BlockSize bsize,
-    const uint16_t tile_idx, const uint32_t sb_index, const int mi_row, const int mi_col) {
-    const Av1Common* const cm = pcs->ppcs->av1_cm;
-    FRAME_CONTEXT*         fc = &pcs->ec_ctx_array[sb_index];
-    const int is_partition_root = bsize >= BLOCK_8X8;
-    assert(bsize < BlockSizeS_ALL);
+void svt_aom_update_part_stats(PictureControlSet* pcs, const PartitionType partition, const BlockSize bsize,
+                               const uint16_t tile_idx, const uint32_t sb_index, const int mi_row, const int mi_col) {
+    const Av1Common* const cm                = pcs->ppcs->av1_cm;
+    FRAME_CONTEXT*         fc                = &pcs->ec_ctx_array[sb_index];
+    const int              is_partition_root = bsize >= BLOCK_8X8;
+    assert(bsize < BLOCK_SIZES_ALL);
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
-    if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols || !is_partition_root)
+    if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols || !is_partition_root) {
         return;
-    const int hbs               = mi_size_wide[bsize] >> 1;
+    }
+    const int hbs      = mi_size_wide[bsize] >> 1;
     const int has_rows = (mi_row + hbs) < cm->mi_rows;
     const int has_cols = (mi_col + hbs) < cm->mi_cols;
 
-    NeighborArrayUnit *partition_context_na        = pcs->ep_partition_context_na[tile_idx];
-    const uint32_t partition_context_left_neighbor_index = get_neighbor_array_unit_left_index(partition_context_na,
-                                                                                        (mi_row << MI_SIZE_LOG2));
-    const uint32_t partition_context_top_neighbor_index  = get_neighbor_array_unit_top_index(partition_context_na,
-                                                                                        (mi_col << MI_SIZE_LOG2));
+    NeighborArrayUnit* partition_context_na                  = pcs->ep_partition_context_na[tile_idx];
+    const uint32_t     partition_context_left_neighbor_index = get_neighbor_array_unit_left_index(partition_context_na,
+                                                                                              (mi_row << MI_SIZE_LOG2));
+    const uint32_t     partition_context_top_neighbor_index  = get_neighbor_array_unit_top_index(partition_context_na,
+                                                                                            (mi_col << MI_SIZE_LOG2));
 
     const PartitionContextType above_ctx =
-        (((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
-            (char)INVALID_NEIGHBOR_DATA)
+        (((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above ==
+         (char)INVALID_NEIGHBOR_DATA)
         ? 0
-        : ((PartitionContext *)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
+        : ((PartitionContext*)partition_context_na->top_array)[partition_context_top_neighbor_index].above;
     const PartitionContextType left_ctx =
-        (((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
-            (char)INVALID_NEIGHBOR_DATA)
+        (((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left ==
+         (char)INVALID_NEIGHBOR_DATA)
         ? 0
-        : ((PartitionContext *)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
+        : ((PartitionContext*)partition_context_na->left_array)[partition_context_left_neighbor_index].left;
     const int32_t bsl   = mi_size_wide_log2[bsize] - mi_size_wide_log2[BLOCK_8X8];
     const int32_t above = (above_ctx >> bsl) & 1, left = (left_ctx >> bsl) & 1;
     assert(bsl >= 0);

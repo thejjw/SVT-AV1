@@ -33,7 +33,7 @@ void svt_aom_assert_err(uint32_t condition, char* err_msg) {
 /*****************************************
  * Z-Order
  *****************************************/
-static TxSize blocksize_to_txsize[BlockSizeS_ALL] = {
+static TxSize blocksize_to_txsize[BLOCK_SIZES_ALL] = {
     TX_4X4, // BLOCK_4X4
     TX_4X8, // BLOCK_4X8
     TX_8X4, // BLOCK_8X4
