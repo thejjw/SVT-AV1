@@ -3870,8 +3870,9 @@ static int NOINLINE find_min_ref_qp(PictureControlSet* pcs, RefList k) {
     int ref_qp = INT_MAX;
     int cnt    = (k == REF_LIST_0) ? pcs->ppcs->ref_list0_count_try : pcs->ppcs->ref_list1_count_try;
     for (int i = 0; i < cnt; i++) {
-        EbReferenceObject* ref_obj = get_ref_obj(pcs, k, i);
-        if (pcs->ref_slice_type_array[k][i] != I_SLICE && ref_obj->tmp_layer_idx < pcs->temporal_layer_index) {
+        EbReferenceObject* ref_obj  = get_ref_obj(pcs, k, i);
+        bool               pic_used = ref_obj->tmp_layer_idx < pcs->temporal_layer_index || pcs->scs->use_flat_ipp;
+        if (pcs->ref_slice_type_array[k][i] != I_SLICE && pic_used) {
             ref_qp = MIN(ref_qp, pcs->ref_pic_qp_array[k][i]);
         }
     }

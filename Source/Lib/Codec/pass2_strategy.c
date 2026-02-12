@@ -985,6 +985,7 @@ void svt_aom_set_rc_param(SequenceControlSet* scs) {
 
     // todo: to expose to a cli parameter
     enc_ctx->rc_cfg.max_intra_bitrate_pct = 300;
+    enc_ctx->rc_cfg.max_inter_bitrate_pct = 0; // default
 
     enc_ctx->sf_cfg.sframe_dist = scs->static_config.sframe_dist;
     enc_ctx->sf_cfg.sframe_mode = scs->static_config.sframe_mode;
