@@ -58,8 +58,7 @@ Tasks & Questions
 #if TUNE_STILL_IMAGE
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr, uint8_t sb_size_pix,
                                              uint16_t sb_origin_x, uint16_t sb_origin_y, uint16_t sb_index,
-                                             EncMode enc_mode, bool rtc_tune, bool allintra,
-                                             PictureControlSet* picture_control_set) {
+                                             EncMode enc_mode, bool rtc, bool allintra, PictureControlSet* pcs) {
 #else
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr, uint8_t sb_size_pix,
                                              uint16_t sb_origin_x, uint16_t sb_origin_y, uint16_t sb_index,
@@ -72,7 +71,11 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr,
     // Which borderLargestCuSize is not a power of two
 
     // Which borderLargestCuSize is not a power of two
+#if TUNE_STILL_IMAGE
+    larget_coding_unit_ptr->pcs = pcs;
+#else
     larget_coding_unit_ptr->pcs = picture_control_set;
+#endif
 
     larget_coding_unit_ptr->org_x = sb_origin_x;
     larget_coding_unit_ptr->org_y = sb_origin_y;
@@ -85,7 +88,7 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr,
         uint8_t nsq_geom_lvl;
         if (allintra) {
             nsq_geom_lvl = svt_aom_get_nsq_geom_level_allintra(enc_mode);
-        } else if (rtc_tune) {
+        } else if (rtc) {
             nsq_geom_lvl = svt_aom_get_nsq_geom_level_rtc(enc_mode);
         } else {
             nsq_geom_lvl = svt_aom_get_nsq_geom_level_default(enc_mode, coeff_lvl);
@@ -111,10 +114,9 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr,
     if (allintra) {
         disallow_4x4 = svt_aom_get_disallow_4x4_allintra(enc_mode);
         disallow_8x8 = svt_aom_get_disallow_8x8_allintra();
-    } else if (rtc_tune) {
+    } else if (rtc) {
         disallow_4x4 = svt_aom_get_disallow_4x4_rtc(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_rtc(
-            enc_mode, picture_control_set->frame_width, picture_control_set->frame_height);
+        disallow_8x8 = svt_aom_get_disallow_8x8_rtc(enc_mode, pcs->frame_width, pcs->frame_height);
     } else {
         disallow_4x4 = svt_aom_get_disallow_4x4_default(enc_mode);
         disallow_8x8 = svt_aom_get_disallow_8x8_default();

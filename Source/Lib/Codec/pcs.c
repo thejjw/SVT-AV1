@@ -1146,14 +1146,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
             break;
         }
 #if TUNE_STILL_IMAGE
-        uint8_t nsq_geom_lvl;
-        if (allintra) {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_allintra(init_data_ptr->enc_mode);
-        } else if (init_data_ptr->static_config.rtc) {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_rtc(init_data_ptr->enc_mode);
-        } else {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_default(init_data_ptr->enc_mode, coeff_lvl);
-        }
+        uint8_t nsq_geom_lvl = allintra ? svt_aom_get_nsq_geom_level_allintra(init_data_ptr->enc_mode)
+            : rtc_tune                  ? svt_aom_get_nsq_geom_level_rtc(init_data_ptr->enc_mode)
+                                        : svt_aom_get_nsq_geom_level_default(init_data_ptr->enc_mode, coeff_lvl);
 #else
         const uint8_t nsq_geom_lvl = svt_aom_get_nsq_geom_level(allintra,
                                                                 init_data_ptr->input_resolution,
@@ -1175,28 +1170,20 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     }
 
 #if TUNE_STILL_IMAGE
-    if (init_data_ptr->allintra) {
-        disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4_allintra(init_data_ptr->enc_mode));
-    } else if (init_data_ptr->static_config.rtc) {
-        disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4_rtc(init_data_ptr->enc_mode));
-    } else {
-        disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4_default(init_data_ptr->enc_mode));
-    }
+    disallow_4x4 = allintra ? MIN(disallow_4x4, svt_aom_get_disallow_4x4_allintra(init_data_ptr->enc_mode))
+        : rtc_tune          ? MIN(disallow_4x4, svt_aom_get_disallow_4x4_rtc(init_data_ptr->enc_mode))
+                            : MIN(disallow_4x4, svt_aom_get_disallow_4x4_default(init_data_ptr->enc_mode));
 #else
     disallow_4x4 = MIN(disallow_4x4, svt_aom_get_disallow_4x4(init_data_ptr->enc_mode));
 #endif
 
     object_ptr->disallow_4x4_all_frames = disallow_4x4;
 #if TUNE_STILL_IMAGE
-    if (init_data_ptr->allintra) {
-        disallow_8x8 = MIN(disallow_8x8, svt_aom_get_disallow_8x8_allintra());
-    } else if (init_data_ptr->static_config.rtc) {
-        disallow_8x8 = MIN(disallow_8x8,
-                           svt_aom_get_disallow_8x8_rtc(
-                               init_data_ptr->enc_mode, init_data_ptr->picture_width, init_data_ptr->picture_height));
-    } else {
-        disallow_8x8 = MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
-    }
+    disallow_8x8 = allintra ? MIN(disallow_8x8, svt_aom_get_disallow_8x8_allintra())
+        : rtc_tune          ? MIN(disallow_8x8,
+                         svt_aom_get_disallow_8x8_rtc(
+                             init_data_ptr->enc_mode, init_data_ptr->picture_width, init_data_ptr->picture_height))
+                            : MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
 #else
     disallow_8x8 = MIN(disallow_8x8,
                        svt_aom_get_disallow_8x8(init_data_ptr->enc_mode,

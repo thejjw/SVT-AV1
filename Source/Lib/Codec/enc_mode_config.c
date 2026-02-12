@@ -5031,10 +5031,10 @@ uint8_t svt_aom_get_nic_level_default(EncMode enc_mode, uint8_t is_base, uint8_t
     return nic_level;
 }
 
-uint8_t svt_aom_get_nic_level_rtc(SequenceControlSet* scs, EncMode enc_mode) {
+uint8_t svt_aom_get_nic_level_rtc(EncMode enc_mode, bool use_flat_ipp) {
     uint8_t nic_level;
 
-    if (scs->use_flat_ipp) {
+    if (use_flat_ipp) {
         if (enc_mode <= ENC_M7) {
             nic_level = 8;
         } else if (enc_mode <= ENC_M8) {
@@ -11688,7 +11688,7 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
     // Set tx_mode for the frame header
     frm_hdr->tx_mode = (pcs->txs_level) ? TX_MODE_SELECT : TX_MODE_LARGEST;
     // Set the level for nic
-    pcs->nic_level = svt_aom_get_nic_level_rtc(pcs->scs, enc_mode);
+    pcs->nic_level = svt_aom_get_nic_level_rtc(enc_mode, scs->use_flat_ipp);
 
     // Set the level for SQ me-search
     pcs->md_sq_mv_search_level = 0;
