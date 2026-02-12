@@ -38,7 +38,7 @@ uint8_t svt_aom_get_bypass_encdec(EncMode enc_mode, uint8_t encoder_bit_depth);
 #endif
 #if TUNE_STILL_IMAGE
 uint8_t svt_aom_get_nic_level_default(EncMode enc_mode, uint8_t is_base, uint8_t sc_class1);
-uint8_t svt_aom_get_nic_level_rtc(SequenceControlSet* scs, EncMode enc_mode);
+uint8_t svt_aom_get_nic_level_rtc(EncMode enc_mode, bool use_flat_ipp);
 uint8_t svt_aom_get_nic_level_allintra(EncMode enc_mode);
 #else
 uint8_t svt_aom_get_nic_level(SequenceControlSet* scs, EncMode enc_mode, uint8_t is_base, bool rtc_tune,

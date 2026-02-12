@@ -2493,27 +2493,21 @@ static void lpd1_detector_skip_pd0(PictureControlSet* pcs, ModeDecisionContext* 
 }
 #if FTR_VLPD0 // classifier
 static void lpd0_detector_allintra(PictureControlSet* pcs, ModeDecisionContext* md_ctx) {
-    if (md_ctx->lpd0_ctrls.pd0_level > REGULAR_PD0 && md_ctx->lpd0_ctrls.pd0_level != VERY_LIGHT_PD0) {
-        return;
-    }
-
-    // VLPD0 not supported when super-block size is 128
-    if (pcs->scs->super_block_size == 128) {
-        md_ctx->lpd0_ctrls.pd0_level--;
+    if (md_ctx->lpd0_ctrls.pd0_level != VERY_LIGHT_PD0) {
         return;
     }
 
     uint16_t* sb_var = pcs->ppcs->variance[md_ctx->sb_index];
 
     // Variance accumulation
-    uint32_t var64 = sb_var[ME_TIER_ZERO_PU_64x64];
+    int32_t var64 = sb_var[ME_TIER_ZERO_PU_64x64];
 
-    uint32_t var32 = 0;
+    int32_t var32 = 0;
     for (int i = ME_TIER_ZERO_PU_32x32_0; i <= ME_TIER_ZERO_PU_32x32_3; ++i) {
         var32 += sb_var[i];
     }
 
-    uint32_t var16 = 0;
+    int32_t var16 = 0;
     for (int i = ME_TIER_ZERO_PU_16x16_0; i <= ME_TIER_ZERO_PU_16x16_15; ++i) {
         var16 += sb_var[i];
     }
@@ -2523,12 +2517,12 @@ static void lpd0_detector_allintra(PictureControlSet* pcs, ModeDecisionContext* 
     var16 >>= 4; // 16 x 16x16
 
     // Normalize per pixel
-    const uint32_t scale_32 = (64 * 64) / (32 * 32); // 4
-    const uint32_t scale_16 = (64 * 64) / (16 * 16); // 16
+    const int32_t scale_32 = (64 * 64) / (32 * 32); // 4
+    const int32_t scale_16 = (64 * 64) / (16 * 16); // 16
 
-    uint32_t norm_v64 = var64;
-    uint32_t norm_v32 = var32 * scale_32;
-    uint32_t norm_v16 = var16 * scale_16;
+    int32_t norm_v64 = var64;
+    int32_t norm_v32 = var32 * scale_32;
+    int32_t norm_v16 = var16 * scale_16;
 
     // QP-scaled thresholds
     uint32_t q_weight, q_weight_denom;
@@ -2538,12 +2532,11 @@ static void lpd0_detector_allintra(PictureControlSet* pcs, ModeDecisionContext* 
                                             pcs->scs->static_config.qp);
 
     // Threshold for detecting lack of a dominant depth
-    uint32_t delta_var_th = 7500;
+    int32_t delta_var_th = 7500;
 
     delta_var_th = DIVIDE_AND_ROUND(delta_var_th * q_weight, q_weight_denom);
 
-    if ((uint32_t)ABS((int32_t)norm_v32 - (int32_t)norm_v64) < delta_var_th &&
-        (uint32_t)ABS((int32_t)norm_v16 - (int32_t)norm_v32) < delta_var_th) {
+    if (ABS(norm_v32 - norm_v64) < delta_var_th && ABS(norm_v16 - norm_v32) < delta_var_th) {
         md_ctx->lpd0_ctrls.pd0_level--;
     }
 }

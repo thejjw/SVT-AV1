@@ -290,7 +290,7 @@ typedef struct SuperBlock {
 #if TUNE_STILL_IMAGE
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,
-                                             bool allintra, struct PictureControlSet* picture_control_set);
+                                             bool allintra, struct PictureControlSet* pcs);
 #else
 EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr, uint8_t sb_size, uint16_t sb_origin_x,
                                              uint16_t sb_origin_y, uint16_t sb_index, EncMode enc_mode, bool rtc,

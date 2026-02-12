@@ -3641,7 +3641,7 @@ void set_qp_based_th_scaling_ctrls(SequenceControlSet* scs) {
     const EncMode     enc_mode = scs->static_config.enc_mode;
     const bool        allintra = scs->allintra;
     if (allintra) {
-        if (enc_mode <= ENC_M3) {
+        if (enc_mode <= ENC_M2) {
             qp_ctrls->tf_me_qp_based_th_scaling              = 0;
             qp_ctrls->tf_ref_qp_based_th_scaling             = 0;
             qp_ctrls->depths_qp_based_th_scaling             = 0;
@@ -3666,7 +3666,7 @@ void set_qp_based_th_scaling_ctrls(SequenceControlSet* scs) {
             qp_ctrls->cap_max_size_qp_based_th_scaling       = 0;
             qp_ctrls->var_skip_sub_depth_qp_based_th_scaling = 0;
 #endif
-        } else if (enc_mode <= ENC_M6) {
+        } else if (enc_mode <= ENC_M5) {
             qp_ctrls->tf_me_qp_based_th_scaling              = 0;
             qp_ctrls->tf_ref_qp_based_th_scaling             = 0;
             qp_ctrls->depths_qp_based_th_scaling             = 0;

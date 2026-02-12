@@ -243,7 +243,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
         uint8_t nic_level  = svt_aom_get_nic_level_allintra(enc_mode);
         stage1_scaling_num = MD_STAGE_NICS_SCAL_NUM[svt_aom_set_nic_controls(NULL, nic_level)][MD_STAGE_1];
     } else if (rtc_tune) {
-        uint8_t nic_level  = svt_aom_get_nic_level_rtc(scs, enc_mode);
+        uint8_t nic_level  = svt_aom_get_nic_level_rtc(enc_mode, scs->use_flat_ipp);
         stage1_scaling_num = MD_STAGE_NICS_SCAL_NUM[svt_aom_set_nic_controls(NULL, nic_level)][MD_STAGE_1];
     } else {
         for (uint8_t sc_class1 = 0; sc_class1 < 2; sc_class1++) {

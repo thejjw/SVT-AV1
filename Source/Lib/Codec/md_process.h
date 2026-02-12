@@ -809,7 +809,7 @@ typedef struct IntraCtrls {
     uint8_t angular_pred_level;
     uint8_t prune_using_best_mode;
 #if OPT_PER_BLK_INTRA
-    uint8_t prune_using_edge_info;
+    bool prune_using_edge_info;
 #endif
     int8_t skip_angular_delta1_th;
     int8_t skip_angular_delta2_th;
