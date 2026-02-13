@@ -732,9 +732,8 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
                                      ModeDecisionCandidateBuffer* cand_bf) {
     (void)hbd_md;
     EbErrorType return_error = EB_ErrorNone;
-    TxSize tx_size = ctx->blk_geom->txsize[cand_bf->cand->block_mi.tx_depth]; // Nader - Intra 128x128 not supported
-    TxSize tx_size_chroma =
-        ctx->blk_geom->txsize_uv[cand_bf->cand->block_mi.tx_depth]; //Nader - Intra 128x128 not supported
+    const TxSize tx_size = tx_depth_to_tx_size[cand_bf->cand->block_mi.tx_depth][ctx->blk_geom->bsize];
+    const TxSize tx_size_chroma = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
     uint32_t sb_size_luma   = pcs->ppcs->scs->sb_size;
     uint32_t sb_size_chroma = pcs->ppcs->scs->sb_size / 2;
 
@@ -1125,7 +1124,7 @@ static EbErrorType intra_luma_prediction_for_interintra(ModeDecisionContext* ctx
                                                         EbPictureBufferDesc* prediction_ptr) {
     EbErrorType    return_error = EB_ErrorNone;
     uint8_t        is_inter     = 0; // set to 0 b/c this is an intra path
-    TxSize         tx_size      = ctx->blk_geom->txsize[0]; //CHKN  TOcheck
+    const TxSize tx_size = tx_depth_to_tx_size[0][ctx->blk_geom->bsize];
     PredictionMode mode         = interintra_to_intra_mode[interintra_mode];
     uint32_t       sb_size_luma = pcs->ppcs->scs->sb_size;
 

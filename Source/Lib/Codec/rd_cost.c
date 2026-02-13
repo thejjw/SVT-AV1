@@ -1811,6 +1811,7 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer* candidateBuffer, 
     TxMode       tx_mode = pcs->ppcs->frm_hdr.tx_mode;
     MacroBlockD* xd      = ctx->blk_ptr->av1xd;
     BlockSize    bsize   = ctx->blk_geom->bsize;
+    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][bsize];
     MbModeInfo*  mbmi    = xd->mi[0];
 
     svt_memcpy(ctx->above_txfm_context,
@@ -1832,7 +1833,7 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer* candidateBuffer, 
                                                ctx->md_rate_est_ctx,
                                                xd,
                                                mbmi,
-                                               ctx->blk_geom->txsize[tx_depth],
+                                               tx_size,
                                                tx_mode,
                                                bsize,
                                                !block_has_coeff,

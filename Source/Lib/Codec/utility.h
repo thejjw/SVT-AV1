@@ -57,12 +57,6 @@ typedef struct BlockGeom {
     BlockSize bsize; // bloc size
     BlockSize bsize_uv; // bloc size for Chroma 4:2:0
     uint8_t   txb_count[MAX_VARTX_DEPTH + 1]; //4-2-1
-    TxSize    txsize[MAX_VARTX_DEPTH + 1];
-    TxSize    txsize_uv[MAX_VARTX_DEPTH + 1];
-    uint8_t   tx_width[MAX_VARTX_DEPTH + 1]; //tx_size_wide
-    uint8_t   tx_height[MAX_VARTX_DEPTH + 1]; //tx_size_high
-    uint8_t   tx_width_uv[MAX_VARTX_DEPTH + 1]; //tx_size_wide
-    uint8_t   tx_height_uv[MAX_VARTX_DEPTH + 1]; //tx_size_high
 
     uint16_t blkidx_mds; // block index in md scan
     // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)
@@ -83,6 +77,30 @@ typedef struct BlockGeom {
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);
 
+static const TxSize blocksize_to_txsize[BLOCK_SIZES_ALL] = {
+    TX_4X4, // BLOCK_4X4
+    TX_4X8, // BLOCK_4X8
+    TX_8X4, // BLOCK_8X4
+    TX_8X8, // BLOCK_8X8
+    TX_8X16, // BLOCK_8X16
+    TX_16X8, // BLOCK_16X8
+    TX_16X16, // BLOCK_16X16
+    TX_16X32, // BLOCK_16X32
+    TX_32X16, // BLOCK_32X16
+    TX_32X32, // BLOCK_32X32
+    TX_32X64, // BLOCK_32X64
+    TX_64X32, // BLOCK_64X32
+    TX_64X64, // BLOCK_64X64
+    TX_64X64, // BLOCK_64X128
+    TX_64X64, // BLOCK_128X64
+    TX_64X64, // BLOCK_128X128
+    TX_4X16, // BLOCK_4X16
+    TX_16X4, // BLOCK_16X4
+    TX_8X32, // BLOCK_8X32
+    TX_32X8, // BLOCK_32X8
+    TX_16X64, // BLOCK_16X64
+    TX_64X16 // BLOCK_64X16
+};
 static const BlockSize ss_size_lookup[BLOCK_SIZES_ALL][2][2] = {
     //  ss_x == 0    ss_x == 0        ss_x == 1      ss_x == 1
     //  ss_y == 0    ss_y == 1        ss_y == 0      ss_y == 1
@@ -120,9 +138,22 @@ static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_
     const BlockSize plane_bsize = get_plane_block_size(bsize, subsampling_x, subsampling_y);
     TxSize          uv_tx       = TX_INVALID;
     if (plane_bsize < BLOCK_SIZES_ALL) {
-        uv_tx = eb_max_txsize_rect_lookup[plane_bsize];
+        uv_tx = blocksize_to_txsize[plane_bsize];
     }
     return av1_get_adjusted_tx_size(uv_tx);
+}
+// bsize is the luma bsize. tx_depth only used for luma.
+static INLINE TxSize av1_get_tx_size(BlockSize bsize, int tx_depth, int plane /*, const MacroBlockD *xd*/) {
+    //const MbModeInfo *mbmi = xd->mi[0];
+    // if (xd->lossless[mbmi->segment_id]) return TX_4X4;
+    if (plane == 0) {
+        return tx_depth_to_tx_size[tx_depth][bsize];
+    }
+    // const MacroblockdPlane *pd = &xd->plane[plane];
+
+    uint32_t ss_x = plane > 0 ? 1 : 0;
+    uint32_t ss_y = plane > 0 ? 1 : 0;
+    return av1_get_max_uv_txsize(bsize, ss_x, ss_y);
 }
 
 #define NOT_USED_VALUE 0

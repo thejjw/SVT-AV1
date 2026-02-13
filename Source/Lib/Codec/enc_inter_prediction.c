@@ -2414,8 +2414,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                         ->top_left_array[(recon_neigh_cr->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
             }
         }
-        TxSize tx_size        = blk_geom->txsize[0]; // Nader - Intra 128x128 not supported
-        TxSize tx_size_Chroma = blk_geom->txsize_uv[0]; //Nader - Intra 128x128 not supported
+        const TxSize tx_size = tx_depth_to_tx_size[0][blk_geom->bsize];
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
         if (is16bit) {
@@ -2426,7 +2426,7 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                                   blk_ptr->av1xd,
                                                   plane ? blk_geom->bwidth_uv : blk_geom->bwidth,
                                                   plane ? blk_geom->bheight_uv : blk_geom->bheight,
-                                                  plane ? tx_size_Chroma : tx_size,
+                                                  plane ? tx_size_uv : tx_size,
                                                   interintra_to_intra_mode[interintra_mode],
                                                   0,
                                                   0,
@@ -2472,7 +2472,7 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                             blk_ptr->av1xd,
                                             plane ? blk_geom->bwidth_uv : blk_geom->bwidth,
                                             plane ? blk_geom->bheight_uv : blk_geom->bheight,
-                                            plane ? tx_size_Chroma : tx_size,
+                                            plane ? tx_size_uv : tx_size,
                                             interintra_to_intra_mode[interintra_mode],
                                             0,
                                             0,

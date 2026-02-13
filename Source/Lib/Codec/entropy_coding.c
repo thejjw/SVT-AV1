@@ -560,11 +560,12 @@ static EbErrorType av1_encode_tx_coef_y(PictureControlSet* pcs, EntropyCodingCon
     const BlockGeom* blk_geom     = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     const uint8_t    tx_depth     = mbmi->block_mi.tx_depth;
     const uint16_t   txb_count    = blk_geom->txb_count[mbmi->block_mi.tx_depth];
+    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+    const int tx_width = tx_size_wide[tx_size];
+    const int tx_height = tx_size_high[tx_size];
 
     for (uint16_t tx_index = 0; tx_index < txb_count; tx_index++) {
         uint16_t txb_itr = tx_index;
-
-        const TxSize tx_size = blk_geom->txsize[tx_depth];
 
         const uint32_t coeff1d_offset = ec_ctx->coded_area_sb;
 
@@ -601,17 +602,16 @@ static EbErrorType av1_encode_tx_coef_y(PictureControlSet* pcs, EntropyCodingCon
 
         // Update the luma Dc Sign Level Coeff Neighbor Array
         uint8_t dc_sign_level_coeff = (uint8_t)cul_level_y;
-
         svt_aom_neighbor_array_unit_mode_write(
             luma_dc_sign_level_coeff_na,
             (uint8_t*)&dc_sign_level_coeff,
             blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x,
             blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y,
-            blk_geom->tx_width[tx_depth],
-            blk_geom->tx_height[tx_depth],
+            tx_width,
+            tx_height,
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
-        ec_ctx->coded_area_sb += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
+        ec_ctx->coded_area_sb += tx_width * tx_height;
     }
 
     return return_error;
@@ -630,10 +630,12 @@ static EbErrorType av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingCo
         return return_error;
     }
     const uint8_t tx_depth  = ec_ctx->mbmi->block_mi.tx_depth;
+    const TxSize chroma_tx_size = av1_get_max_uv_txsize(ec_ctx->mbmi->bsize, 1, 1);
+    const int tx_width_uv = tx_size_wide[chroma_tx_size];
+    const int tx_height_uv = tx_size_high[chroma_tx_size];
     unsigned      txb_count = 1;
 
     for (unsigned tx_index = 0; tx_index < txb_count; ++tx_index) {
-        const TxSize chroma_tx_size = blk_geom->txsize_uv[tx_depth];
 
         // cb
         int32_t* coeff_buffer = (int32_t*)coeff_ptr->buffer_cb + ec_ctx->coded_area_sb_uv;
@@ -705,8 +707,8 @@ static EbErrorType av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingCo
             &dc_sign_level_coeff,
             ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][tx_index].x) >> 1,
             ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][tx_index].y) >> 1,
-            blk_geom->tx_width_uv[tx_depth],
-            blk_geom->tx_height_uv[tx_depth],
+            tx_width_uv,
+            tx_height_uv,
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         // Update the cr DC Sign Level Coeff Neighbor Array
         dc_sign_level_coeff = (uint8_t)cul_level_cr;
@@ -715,11 +717,11 @@ static EbErrorType av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingCo
             &dc_sign_level_coeff,
             ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][tx_index].x) >> 1,
             ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][tx_index].y) >> 1,
-            blk_geom->tx_width_uv[tx_depth],
-            blk_geom->tx_height_uv[tx_depth],
+            tx_width_uv,
+            tx_height_uv,
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
-        ec_ctx->coded_area_sb_uv += blk_geom->tx_width_uv[tx_depth] * blk_geom->tx_height_uv[tx_depth];
+        ec_ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
     }
 
     return return_error;
@@ -769,11 +771,13 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
 
         const uint8_t tx_depth  = ec_ctx->mbmi->block_mi.tx_depth;
         uint16_t      txb_count = blk_geom->txb_count[tx_depth];
-        uint8_t       txb_itr   = 0;
-
-        for (txb_itr = 0; txb_itr < txb_count; txb_itr++) {
-            const TxSize tx_size        = blk_geom->txsize[tx_depth];
-            const TxSize chroma_tx_size = blk_geom->txsize_uv[tx_depth];
+        const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+        const int tx_width = tx_size_wide[tx_size];
+        const int tx_height = tx_size_high[tx_size];
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const int tx_width_uv = tx_size_wide[tx_size_uv];
+        const int tx_height_uv = tx_size_high[tx_size_uv];
+        for (uint8_t txb_itr = 0; txb_itr < txb_count; txb_itr++) {
             int32_t*     coeff_buffer;
 
             const uint32_t coeff1d_offset = ec_ctx->coded_area_sb;
@@ -825,7 +829,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                         ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
                         ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
                         blk_geom->bsize_uv,
-                        chroma_tx_size,
+                        tx_size_uv,
                         &txb_skip_ctx,
                         &dc_sign_ctx);
 
@@ -834,7 +838,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                                                            ec_ctx->mbmi,
                                                            ec_writer,
                                                            blk_ptr,
-                                                           chroma_tx_size,
+                                                           tx_size_uv,
                                                            0,
                                                            txb_itr,
                                                            intraLumaDir,
@@ -859,7 +863,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                         ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
                         ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
                         blk_geom->bsize_uv,
-                        chroma_tx_size,
+                        tx_size_uv,
                         &txb_skip_ctx,
                         &dc_sign_ctx);
 
@@ -868,7 +872,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                                                            ec_ctx->mbmi,
                                                            ec_writer,
                                                            blk_ptr,
-                                                           chroma_tx_size,
+                                                           tx_size_uv,
                                                            0,
                                                            txb_itr,
                                                            intraLumaDir,
@@ -882,22 +886,17 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
             }
 
             // Update the luma Dc Sign Level Coeff Neighbor Array
-            {
-                uint8_t dc_sign_level_coeff = (uint8_t)cul_level_y;
-                // if (!txb_ptr->lumaCbf)
-                //     dc_sign_level_coeff = 0;
-                svt_aom_neighbor_array_unit_mode_write(
-                    luma_dc_sign_level_coeff_na,
-                    (uint8_t*)&dc_sign_level_coeff,
-                    blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x,
-                    blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y,
-                    blk_geom->tx_width[tx_depth],
-                    blk_geom->tx_height[tx_depth],
-                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-            }
+            uint8_t dc_sign_level_coeff = (uint8_t)cul_level_y;
+            svt_aom_neighbor_array_unit_mode_write(
+                luma_dc_sign_level_coeff_na,
+                (uint8_t*)&dc_sign_level_coeff,
+                blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x,
+                blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y,
+                tx_width,
+                tx_height,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
             // Update the cb Dc Sign Level Coeff Neighbor Array
-
             if (blk_geom->has_uv) {
                 uint8_t dc_sign_level_coeff = (uint8_t)cul_level_cb;
                 svt_aom_neighbor_array_unit_mode_write(
@@ -905,8 +904,8 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                     &dc_sign_level_coeff,
                     ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
                     ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
-                    blk_geom->tx_width_uv[tx_depth],
-                    blk_geom->tx_height_uv[tx_depth],
+                    tx_width_uv,
+                    tx_height_uv,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
                 // Update the cr DC Sign Level Coeff Neighbor Array
                 dc_sign_level_coeff = (uint8_t)cul_level_cr;
@@ -915,12 +914,12 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                     &dc_sign_level_coeff,
                     ROUND_UV(blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
                     ROUND_UV(blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
-                    blk_geom->tx_width_uv[tx_depth],
-                    blk_geom->tx_height_uv[tx_depth],
+                    tx_width_uv,
+                    tx_height_uv,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-                ec_ctx->coded_area_sb_uv += blk_geom->tx_width_uv[tx_depth] * blk_geom->tx_height_uv[tx_depth];
+                ec_ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
             }
-            ec_ctx->coded_area_sb += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
+            ec_ctx->coded_area_sb += tx_width * tx_height;
         }
     }
     return return_error;
@@ -4780,7 +4779,7 @@ static void code_tx_size(PictureControlSet* pcs, uint32_t blk_org_x, uint32_t bl
     const MbModeInfo* const mbmi = xd->mi[0];
     xd->above_txfm_context       = &txfm_context_array->top_array[txfm_context_above_index];
     xd->left_txfm_context        = &txfm_context_array->left_array[txfm_context_left_index];
-    TxSize       tx_size = blk_geom->txsize[mbmi->block_mi.tx_depth]; // inherit tx_size from 1st transform block;
+    const TxSize tx_size = tx_depth_to_tx_size[mbmi->block_mi.tx_depth][mbmi->bsize];
     FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
     SegmentationNeighborMap* segmentation_map = pcs->segmentation_neighbor_map;
     av1_code_tx_size(pcs,
@@ -5106,8 +5105,7 @@ static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* e
                 for (int plane = 0; plane < 2; ++plane) {
                     const uint8_t palette_size_plane = blk_ptr->palette_size[plane];
                     if (palette_size_plane > 0) {
-                        TxSize tx_size =
-                            blk_geom->txsize[mbmi->block_mi.tx_depth]; // inherit tx_size from 1st transform block;
+                        const TxSize tx_size = tx_depth_to_tx_size[mbmi->block_mi.tx_depth][mbmi->bsize];
                         svt_av1_tokenize_color_map(
                             frame_context,
                             blk_ptr,
@@ -5395,8 +5393,7 @@ static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* e
                 for (int plane = 0; plane < 2; ++plane) {
                     const uint8_t palette_size_plane = blk_ptr->palette_size[plane];
                     if (palette_size_plane > 0) {
-                        TxSize tx_size =
-                            blk_geom->txsize[mbmi->block_mi.tx_depth]; // inherit tx_size from 1st transform block;
+                        const TxSize tx_size = tx_depth_to_tx_size[mbmi->block_mi.tx_depth][mbmi->bsize];
                         svt_av1_tokenize_color_map(
                             frame_context,
                             blk_ptr,

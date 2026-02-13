@@ -227,14 +227,17 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
             blk_geom->bheight_uv == blk_geom->bheight ? (blk_geom->bheight_uv << 1) : blk_geom->bheight);
     }
 
-    const uint8_t tx_depth     = blk_ptr->block_mi.tx_depth;
-    int32_t       round_offset = ((blk_geom->tx_width_uv[tx_depth]) * (blk_geom->tx_height_uv[tx_depth])) / 2;
+    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int tx_width_uv = tx_size_wide[tx_size_uv];
+    const int tx_height_uv = tx_size_high[tx_size_uv];
+
+    int32_t round_offset = (tx_width_uv * tx_height_uv) / 2;
 
     svt_subtract_average(ed_ctx->md_ctx->pred_buf_q3,
-                         blk_geom->tx_width_uv[tx_depth],
-                         blk_geom->tx_height_uv[tx_depth],
-                         round_offset,
-                         svt_log2f(blk_geom->tx_width_uv[tx_depth]) + svt_log2f(blk_geom->tx_height_uv[tx_depth]));
+        tx_width_uv,
+        tx_height_uv,
+        round_offset,
+        svt_log2f(tx_width_uv) + svt_log2f(tx_height_uv));
 
     int32_t alpha_q3_cb = cfl_idx_to_alpha(blk_ptr->block_mi.cfl_alpha_idx,
                                            blk_ptr->block_mi.cfl_alpha_signs,
@@ -251,8 +254,8 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
                             pred_samples->stride_cb,
                             alpha_q3_cb,
                             ed_ctx->bit_depth,
-                            blk_geom->tx_width_uv[tx_depth],
-                            blk_geom->tx_height_uv[tx_depth]);
+                            tx_width_uv,
+                            tx_height_uv);
 
         svt_cfl_predict_hbd(ed_ctx->md_ctx->pred_buf_q3,
                             ((uint16_t*)pred_samples->buffer_cr) + pred_cr_offset,
@@ -261,8 +264,8 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
                             pred_samples->stride_cr,
                             alpha_q3_cr,
                             ed_ctx->bit_depth,
-                            blk_geom->tx_width_uv[tx_depth],
-                            blk_geom->tx_height_uv[tx_depth]);
+                            tx_width_uv,
+                            tx_height_uv);
     } else {
         svt_cfl_predict_lbd(ed_ctx->md_ctx->pred_buf_q3,
                             pred_samples->buffer_cb + pred_cb_offset,
@@ -271,8 +274,8 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
                             pred_samples->stride_cb,
                             alpha_q3_cb,
                             8,
-                            blk_geom->tx_width_uv[tx_depth],
-                            blk_geom->tx_height_uv[tx_depth]);
+                            tx_width_uv,
+                            tx_height_uv);
 
         svt_cfl_predict_lbd(ed_ctx->md_ctx->pred_buf_q3,
                             pred_samples->buffer_cr + pred_cr_offset,
@@ -281,8 +284,8 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
                             pred_samples->stride_cr,
                             alpha_q3_cr,
                             8,
-                            blk_geom->tx_width_uv[tx_depth],
-                            blk_geom->tx_height_uv[tx_depth]);
+                            tx_width_uv,
+                            tx_height_uv);
     }
 }
 
@@ -391,6 +394,9 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
             eob[0]                               = 0;
             blk_ptr->quant_dc.y[ed_ctx->txb_itr] = 0;
         } else {
+            const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+            const int tx_width = tx_size_wide[tx_size];
+            const int tx_height = tx_size_high[tx_size];
             svt_aom_residual_kernel(input_samples->buffer_y,
                                     input_luma_offset,
                                     input_samples->stride_y,
@@ -401,15 +407,15 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                                     scratch_luma_offset,
                                     residual16bit->stride_y,
                                     is_16bit, // hbd
-                                    blk_geom->tx_width[tx_depth],
-                                    blk_geom->tx_height[tx_depth]);
+                                    tx_width,
+                                    tx_height);
             svt_aom_estimate_transform(pcs,
                                        ed_ctx->md_ctx,
                                        ((int16_t*)residual16bit->buffer_y) + scratch_luma_offset,
                                        residual16bit->stride_y,
                                        ((TranLow*)transform16bit->buffer_y) + ed_ctx->coded_area_sb,
                                        NOT_USED_VALUE,
-                                       blk_geom->txsize[tx_depth],
+                                       tx_size,
                                        &ed_ctx->three_quad_energy,
                                        bit_depth,
                                        blk_ptr->tx_type[ed_ctx->txb_itr],
@@ -424,7 +430,7 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                 ((int32_t*)inverse_quant_buffer->buffer_y) + ed_ctx->coded_area_sb,
                 qindex,
                 seg_qp,
-                blk_geom->txsize[tx_depth],
+                tx_size,
                 &eob[0],
                 COMPONENT_LUMA,
                 bit_depth,
@@ -466,6 +472,9 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
             eob[2]                               = 0;
             blk_ptr->quant_dc.v[ed_ctx->txb_itr] = 0;
         } else {
+            const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+            const int tx_width_uv = tx_size_wide[tx_size_uv];
+            const int tx_height_uv = tx_size_high[tx_size_uv];
             //**********************************
             // Cb
             //**********************************
@@ -479,15 +488,15 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                                     scratch_cb_offset,
                                     residual16bit->stride_cb,
                                     is_16bit, // hbd
-                                    blk_geom->tx_width_uv[tx_depth],
-                                    blk_geom->tx_height_uv[tx_depth]);
+                                    tx_width_uv,
+                                    tx_height_uv);
             svt_aom_estimate_transform(pcs,
                                        ed_ctx->md_ctx,
                                        ((int16_t*)residual16bit->buffer_cb) + scratch_cb_offset,
                                        residual16bit->stride_cb,
                                        ((TranLow*)transform16bit->buffer_cb) + ed_ctx->coded_area_sb_uv,
                                        NOT_USED_VALUE,
-                                       blk_geom->txsize_uv[tx_depth],
+                                       tx_size_uv,
                                        &ed_ctx->three_quad_energy,
                                        bit_depth,
                                        blk_ptr->tx_type_uv,
@@ -502,7 +511,7 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                 ((int32_t*)inverse_quant_buffer->buffer_cb) + ed_ctx->coded_area_sb_uv,
                 qindex,
                 seg_qp,
-                blk_geom->txsize_uv[tx_depth],
+                tx_size_uv,
                 &eob[1],
                 COMPONENT_CHROMA_CB,
                 bit_depth,
@@ -526,15 +535,15 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                                     scratch_cr_offset,
                                     residual16bit->stride_cr,
                                     is_16bit, // hbd
-                                    blk_geom->tx_width_uv[tx_depth],
-                                    blk_geom->tx_height_uv[tx_depth]);
+                                    tx_width_uv,
+                                    tx_height_uv);
             svt_aom_estimate_transform(pcs,
                                        ed_ctx->md_ctx,
                                        ((int16_t*)residual16bit->buffer_cr) + scratch_cb_offset,
                                        residual16bit->stride_cr,
                                        ((TranLow*)transform16bit->buffer_cr) + ed_ctx->coded_area_sb_uv,
                                        NOT_USED_VALUE,
-                                       blk_geom->txsize_uv[tx_depth],
+                                       tx_size_uv,
                                        &ed_ctx->three_quad_energy,
                                        bit_depth,
                                        blk_ptr->tx_type_uv,
@@ -549,7 +558,7 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
                 ((int32_t*)inverse_quant_buffer->buffer_cr) + ed_ctx->coded_area_sb_uv,
                 qindex,
                 seg_qp,
-                blk_geom->txsize_uv[tx_depth],
+                tx_size_uv,
                 &eob[2],
                 COMPONENT_CHROMA_CR,
                 bit_depth,
@@ -600,6 +609,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     //**********************************
     if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
         if ((blk_ptr->y_has_coeff & (1 << ed_ctx->txb_itr)) && blk_ptr->block_mi.skip_mode == false) {
+            const TxSize tx_size = tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][ed_ctx->blk_geom->bsize];
             const uint32_t pred_luma_offset = (pred_samples->org_y + org_y) * pred_samples->stride_y +
                 (pred_samples->org_x + org_x);
             svt_aom_inv_transform_recon_wrapper(pcs,
@@ -613,7 +623,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
                                                 ((int32_t*)residual16bit->buffer_y),
                                                 ed_ctx->coded_area_sb,
                                                 ed_ctx->bit_depth == EB_TEN_BIT ? 1 : 0, // hbd
-                                                ed_ctx->blk_geom->txsize[blk_ptr->block_mi.tx_depth],
+                                                tx_size,
                                                 blk_ptr->tx_type[ed_ctx->txb_itr],
                                                 PLANE_TYPE_Y,
                                                 eob[0]);
@@ -624,6 +634,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     // Chroma
     //**********************************
     if (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) {
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
         const uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
         const uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
 
@@ -644,7 +655,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
                                                 ((int32_t*)residual16bit->buffer_cb),
                                                 ed_ctx->coded_area_sb_uv,
                                                 ed_ctx->bit_depth == EB_TEN_BIT ? 1 : 0, // hbd
-                                                ed_ctx->blk_geom->txsize_uv[blk_ptr->block_mi.tx_depth],
+                                                tx_size_uv,
                                                 blk_ptr->tx_type_uv,
                                                 PLANE_TYPE_UV,
                                                 eob[1]);
@@ -667,7 +678,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
                                                 ((int32_t*)residual16bit->buffer_cr),
                                                 ed_ctx->coded_area_sb_uv,
                                                 ed_ctx->bit_depth == EB_TEN_BIT ? 1 : 0, // hbd
-                                                ed_ctx->blk_geom->txsize_uv[blk_ptr->block_mi.tx_depth],
+                                                tx_size_uv,
                                                 blk_ptr->tx_type_uv,
                                                 PLANE_TYPE_UV,
                                                 eob[2]);
@@ -744,6 +755,12 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
     uint16_t eobs[MAX_TXB_COUNT][3];
     svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
     const uint8_t tx_depth       = blk_ptr->block_mi.tx_depth;
+    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][ed_ctx->blk_geom->bsize];
+    const int tx_width = tx_size_wide[tx_size];
+    const int tx_height = tx_size_high[tx_size];
+    const TxSize tx_size_uv = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
+    const int tx_width_uv = tx_size_wide[tx_size_uv];
+    const int tx_height_uv = tx_size_high[tx_size_uv];
     uint32_t      tot_tu         = ed_ctx->blk_geom->txb_count[tx_depth];
     uint32_t      sb_size_luma   = pcs->ppcs->scs->sb_size;
     uint32_t      sb_size_chroma = pcs->ppcs->scs->sb_size >> 1;
@@ -760,7 +777,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             txb_origin_x,
                             txb_origin_y,
                             ed_ctx->blk_geom->bsize,
-                            ed_ctx->blk_geom->txsize[tx_depth],
+                            tx_size,
                             &ed_ctx->md_ctx->luma_txb_skip_context,
                             &ed_ctx->md_ctx->luma_dc_sign_context);
 
@@ -771,21 +788,17 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             uint16_t       left_neigh_array[64 * 2 + 1];
             PredictionMode mode;
 
-            TxSize tx_size = ed_ctx->blk_geom->txsize[tx_depth];
-
             if (txb_origin_y != 0) {
                 svt_memcpy(top_neigh_array + 1,
-                           (uint16_t*)(ep_luma_recon_na->top_array) + txb_origin_x,
-                           ed_ctx->blk_geom->tx_width[tx_depth] * 2 * sizeof(uint16_t));
+                    (uint16_t*)(ep_luma_recon_na->top_array) + txb_origin_x,
+                    tx_width * 2 * sizeof(uint16_t));
             }
             if (txb_origin_x != 0) {
-                uint16_t tx_height = ed_ctx->blk_geom->tx_height[tx_depth];
                 uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * 2) > sb_size_luma ? 1 : 2;
                 svt_memcpy(left_neigh_array + 1,
-                           (uint16_t*)(ep_luma_recon_na->left_array) + txb_origin_y,
-                           ed_ctx->blk_geom->tx_height[tx_depth] * multipler * sizeof(uint16_t));
+                    (uint16_t*)(ep_luma_recon_na->left_array) + txb_origin_y,
+                    tx_height * multipler * sizeof(uint16_t));
             }
-
             if (txb_origin_y != 0 && txb_origin_x != 0) {
                 top_neigh_array[0] = left_neigh_array[0] = ((uint16_t*)(ep_luma_recon_na->top_left_array) +
                                                             ep_luma_recon_na->max_pic_h + txb_origin_x -
@@ -828,16 +841,13 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             uint8_t        left_neigh_array[64 * 2 + 1];
             PredictionMode mode;
 
-            TxSize tx_size = ed_ctx->blk_geom->txsize[tx_depth];
-
             if (txb_origin_y != 0) {
                 svt_memcpy(top_neigh_array + 1,
-                           ep_luma_recon_na->top_array + txb_origin_x,
-                           ed_ctx->blk_geom->tx_width[tx_depth] * 2);
+                    ep_luma_recon_na->top_array + txb_origin_x,
+                    tx_width * 2);
             }
 
             if (txb_origin_x != 0) {
-                uint16_t tx_height = ed_ctx->blk_geom->tx_height[tx_depth];
                 uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * 2) > sb_size_luma ? 1 : 2;
                 svt_memcpy(left_neigh_array + 1, ep_luma_recon_na->left_array + txb_origin_y, tx_height * multipler);
             }
@@ -906,14 +916,14 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                          recon_buffer,
                                                          txb_origin_x,
                                                          txb_origin_y,
-                                                         ed_ctx->blk_geom->tx_width[tx_depth],
-                                                         ed_ctx->blk_geom->tx_height[tx_depth],
-                                                         ed_ctx->blk_geom->tx_width_uv[tx_depth],
-                                                         ed_ctx->blk_geom->tx_height_uv[tx_depth],
+                                                         tx_width,
+                                                         tx_height,
+                                                         tx_width_uv,
+                                                         tx_height_uv,
                                                          PICTURE_BUFFER_DESC_LUMA_MASK,
                                                          is_16bit);
 
-        ed_ctx->coded_area_sb += ed_ctx->blk_geom->tx_width[tx_depth] * ed_ctx->blk_geom->tx_height[tx_depth];
+        ed_ctx->coded_area_sb += tx_width * tx_height;
 
         // Update the luma Dc Sign Level Coeff Neighbor Array
         {
@@ -922,8 +932,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                    (uint8_t*)&dc_sign_level_coeff,
                                                    txb_origin_x,
                                                    txb_origin_y,
-                                                   ed_ctx->blk_geom->tx_width[tx_depth],
-                                                   ed_ctx->blk_geom->tx_height[tx_depth],
+                                                   tx_width,
+                                                   tx_height,
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         }
     } // Transform Loop
@@ -945,7 +955,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             blk_originx_uv,
                             blk_originy_uv,
                             ed_ctx->blk_geom->bsize_uv,
-                            ed_ctx->blk_geom->txsize_uv[tx_depth],
+                            tx_size_uv,
                             &ed_ctx->md_ctx->cb_txb_skip_context,
                             &ed_ctx->md_ctx->cb_dc_sign_context);
 
@@ -957,7 +967,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             blk_originx_uv,
                             blk_originy_uv,
                             ed_ctx->blk_geom->bsize_uv,
-                            ed_ctx->blk_geom->txsize_uv[tx_depth],
+                            tx_size_uv,
                             &ed_ctx->md_ctx->cr_txb_skip_context,
                             &ed_ctx->md_ctx->cr_dc_sign_context);
 
@@ -971,7 +981,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             int32_t plane_end = 2;
 
             for (int32_t plane = 1; plane <= plane_end; ++plane) {
-                TxSize tx_size = ed_ctx->blk_geom->txsize_uv[tx_depth];
 
                 if (plane == 1) {
                     if (blk_originy_uv != 0) {
@@ -1027,7 +1036,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                   ed_ctx->blk_ptr->av1xd,
                                                   ed_ctx->blk_geom->bwidth_uv,
                                                   ed_ctx->blk_geom->bheight_uv,
-                                                  tx_size,
+                                                  tx_size_uv,
                                                   mode,
                                                   blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV],
                                                   0, //chroma
@@ -1059,7 +1068,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             int32_t plane_end = 2;
 
             for (int32_t plane = 1; plane <= plane_end; ++plane) {
-                TxSize tx_size = ed_ctx->blk_geom->txsize_uv[tx_depth];
 
                 if (plane == 1) {
                     if (blk_originy_uv != 0) {
@@ -1115,7 +1123,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                             blk_ptr->av1xd,
                                             ed_ctx->blk_geom->bwidth_uv,
                                             ed_ctx->blk_geom->bheight_uv,
-                                            tx_size,
+                                            tx_size_uv,
                                             mode,
                                             blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV],
                                             0, //chroma
@@ -1166,14 +1174,14 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                          recon_buffer,
                                                          txb_origin_x,
                                                          txb_origin_y,
-                                                         ed_ctx->blk_geom->tx_width[tx_depth],
-                                                         ed_ctx->blk_geom->tx_height[tx_depth],
-                                                         ed_ctx->blk_geom->tx_width_uv[tx_depth],
-                                                         ed_ctx->blk_geom->tx_height_uv[tx_depth],
+                                                         tx_width,
+                                                         tx_height,
+                                                         tx_width_uv,
+                                                         tx_height_uv,
                                                          PICTURE_BUFFER_DESC_CHROMA_MASK,
                                                          is_16bit);
 
-        ed_ctx->coded_area_sb_uv += ed_ctx->blk_geom->tx_width_uv[tx_depth] * ed_ctx->blk_geom->tx_height_uv[tx_depth];
+        ed_ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
 
         // Update the cb Dc Sign Level Coeff Neighbor Array
         {
@@ -1182,8 +1190,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                    (uint8_t*)&dc_sign_level_coeff,
                                                    ROUND_UV(txb_origin_x) >> 1,
                                                    ROUND_UV(txb_origin_y) >> 1,
-                                                   ed_ctx->blk_geom->tx_width_uv[tx_depth],
-                                                   ed_ctx->blk_geom->tx_height_uv[tx_depth],
+                                                   tx_width_uv,
+                                                   tx_height_uv,
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         }
 
@@ -1194,8 +1202,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                    (uint8_t*)&dc_sign_level_coeff,
                                                    ROUND_UV(txb_origin_x) >> 1,
                                                    ROUND_UV(txb_origin_y) >> 1,
-                                                   ed_ctx->blk_geom->tx_width_uv[tx_depth],
-                                                   ed_ctx->blk_geom->tx_height_uv[tx_depth],
+                                                   tx_width_uv,
+                                                   tx_height_uv,
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         }
     } // Transform Loop
@@ -1375,6 +1383,12 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
     uint16_t      eobs[MAX_TXB_COUNT][3];
     const uint8_t tx_depth = blk_ptr->block_mi.tx_depth;
     uint16_t      tot_tu   = blk_geom->txb_count[tx_depth];
+    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+    const int tx_width = tx_size_wide[tx_size];
+    const int tx_height = tx_size_high[tx_size];
+    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int tx_width_uv = tx_size_wide[tx_size_uv];
+    const int tx_height_uv = tx_size_high[tx_size_uv];
 
     for (uint16_t tu_it = 0; tu_it < tot_tu; tu_it++) {
         uint8_t uv_pass       = tx_depth && tu_it ? 0 : 1; //NM: 128x128 exeption
@@ -1389,7 +1403,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                             txb_origin_x,
                             txb_origin_y,
                             blk_geom->bsize,
-                            blk_geom->txsize[tx_depth],
+                            tx_size,
                             &md_ctx->luma_txb_skip_context,
                             &md_ctx->luma_dc_sign_context);
 
@@ -1402,7 +1416,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                 ROUND_UV(txb_origin_x) >> 1,
                                 ROUND_UV(txb_origin_y) >> 1,
                                 blk_geom->bsize_uv,
-                                blk_geom->txsize_uv[tx_depth],
+                                tx_size_uv,
                                 &md_ctx->cb_txb_skip_context,
                                 &md_ctx->cb_dc_sign_context);
 
@@ -1414,7 +1428,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                 ROUND_UV(txb_origin_x) >> 1,
                                 ROUND_UV(txb_origin_y) >> 1,
                                 blk_geom->bsize_uv,
-                                blk_geom->txsize_uv[tx_depth],
+                                tx_size_uv,
                                 &md_ctx->cr_txb_skip_context,
                                 &md_ctx->cr_dc_sign_context);
         }
@@ -1452,10 +1466,10 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
             blk_geom->has_uv && uv_pass ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
             eobs[ctx->txb_itr]);
 
-        ctx->coded_area_sb += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
+        ctx->coded_area_sb += tx_width * tx_height;
 
         if (ctx->blk_geom->has_uv && uv_pass) {
-            ctx->coded_area_sb_uv += blk_geom->tx_width_uv[tx_depth] * blk_geom->tx_height_uv[tx_depth];
+            ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
         }
 
         // Update the luma Dc Sign Level Coeff Neighbor Array
@@ -1465,8 +1479,8 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                                (uint8_t*)&dc_sign_level_coeff,
                                                txb_origin_x,
                                                txb_origin_y,
-                                               blk_geom->tx_width[tx_depth],
-                                               blk_geom->tx_height[tx_depth],
+                                               tx_width,
+                                               tx_height,
                                                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
         // Update the cb Dc Sign Level Coeff Neighbor Array
@@ -1477,8 +1491,8 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                                    (uint8_t*)&dc_sign_level_coeff,
                                                    ROUND_UV(txb_origin_x) >> 1,
                                                    ROUND_UV(txb_origin_y) >> 1,
-                                                   blk_geom->tx_width_uv[tx_depth],
-                                                   blk_geom->tx_height_uv[tx_depth],
+                                                   tx_width_uv,
+                                                   tx_height_uv,
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
             // Update the cr DC Sign Level Coeff Neighbor Array
             dc_sign_level_coeff = (uint8_t)blk_ptr->quant_dc.v[ctx->txb_itr];
@@ -1487,8 +1501,8 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                                    (uint8_t*)&dc_sign_level_coeff,
                                                    ROUND_UV(txb_origin_x) >> 1,
                                                    ROUND_UV(txb_origin_y) >> 1,
-                                                   blk_geom->tx_width_uv[tx_depth],
-                                                   blk_geom->tx_height_uv[tx_depth],
+                                                   tx_width_uv,
+                                                   tx_height_uv,
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         }
 
@@ -1616,17 +1630,23 @@ static void copy_qcoeffs(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* 
     int32_t* md_coeff = ((int32_t*)blk_ptr->coeff_tmp->buffer_y) + blk_coded_area;
 
     if ((blk_ptr->y_has_coeff & (1 << txb_itr))) {
-        svt_memcpy(ep_coeff, md_coeff, sizeof(int32_t) * blk_geom->tx_height[tx_depth] * blk_geom->tx_width[tx_depth]);
+        const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+        const int tx_width = tx_size_wide[tx_size];
+        const int tx_height = tx_size_high[tx_size];
+        svt_memcpy(ep_coeff, md_coeff, sizeof(int32_t) * tx_height * tx_width);
     }
 
     if (blk_geom->has_uv && uv_pass) {
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const int tx_width_uv = tx_size_wide[tx_size_uv];
+        const int tx_height_uv = tx_size_high[tx_size_uv];
         int32_t* ep_coeff_cb = ((int32_t*)coeff_buffer_sb->buffer_cb) + ctx->coded_area_sb_uv_update;
         int32_t* md_coeff_cb = ((int32_t*)blk_ptr->coeff_tmp->buffer_cb) + blk_coded_area_uv;
 
         if ((blk_ptr->u_has_coeff & (1 << txb_itr))) {
             svt_memcpy(ep_coeff_cb,
-                       md_coeff_cb,
-                       sizeof(int32_t) * blk_geom->tx_height_uv[tx_depth] * blk_geom->tx_width_uv[tx_depth]);
+                md_coeff_cb,
+                sizeof(int32_t) * tx_height_uv * tx_width_uv);
         }
 
         int32_t* ep_coeff_cr = ((int32_t*)coeff_buffer_sb->buffer_cr) + ctx->coded_area_sb_uv_update;
@@ -1634,8 +1654,8 @@ static void copy_qcoeffs(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* 
 
         if ((blk_ptr->v_has_coeff & (1 << txb_itr))) {
             svt_memcpy(ep_coeff_cr,
-                       md_coeff_cr,
-                       sizeof(int32_t) * blk_geom->tx_height_uv[tx_depth] * blk_geom->tx_width_uv[tx_depth]);
+                md_coeff_cr,
+                sizeof(int32_t) * tx_height_uv * tx_width_uv);
         }
     }
 }
@@ -1650,6 +1670,12 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
     const uint8_t        uv_pass         = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
     const uint16_t       tile_idx        = ctx->tile_index;
     const int            is_inter        = is_inter_block(&blk_ptr->block_mi);
+    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+    const int tx_width = tx_size_wide[tx_size];
+    const int tx_height = tx_size_high[tx_size];
+    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int tx_width_uv = tx_size_wide[tx_size_uv];
+    const int tx_height_uv = tx_size_high[tx_size_uv];
     const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
     const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
 
@@ -1661,7 +1687,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                         txb_origin_x,
                         txb_origin_y,
                         blk_geom->bsize,
-                        blk_geom->txsize[tx_depth],
+                        tx_size,
                         &md_ctx->luma_txb_skip_context,
                         &md_ctx->luma_dc_sign_context);
 
@@ -1674,7 +1700,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                             ROUND_UV(txb_origin_x) >> 1,
                             ROUND_UV(txb_origin_y) >> 1,
                             blk_geom->bsize_uv,
-                            blk_geom->txsize_uv[tx_depth],
+                            tx_size_uv,
                             &md_ctx->cb_txb_skip_context,
                             &md_ctx->cb_dc_sign_context);
 
@@ -1686,7 +1712,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                             ROUND_UV(txb_origin_x) >> 1,
                             ROUND_UV(txb_origin_y) >> 1,
                             blk_geom->bsize_uv,
-                            blk_geom->txsize_uv[tx_depth],
+                            tx_size_uv,
                             &md_ctx->cr_txb_skip_context,
                             &md_ctx->cr_dc_sign_context);
     }
@@ -1718,8 +1744,8 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                         &y_txb_coeff_bits,
                                         &cb_txb_coeff_bits,
                                         &cr_txb_coeff_bits,
-                                        blk_geom->txsize[tx_depth],
-                                        blk_geom->txsize_uv[tx_depth],
+                                        tx_size,
+                                        tx_size_uv,
                                         blk_ptr->tx_type[txb_itr],
                                         blk_ptr->tx_type_uv,
                                         (blk_geom->has_uv && uv_pass) ? COMPONENT_ALL : COMPONENT_LUMA);
@@ -1732,8 +1758,8 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                            (uint8_t*)&dc_sign_level_coeff,
                                            txb_origin_x,
                                            txb_origin_y,
-                                           blk_geom->tx_width[tx_depth],
-                                           blk_geom->tx_height[tx_depth],
+                                           tx_width,
+                                           tx_height,
                                            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
     // Update the Cb DC Sign Level Coeff Neighbor Array
@@ -1744,8 +1770,8 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                                (uint8_t*)&dc_sign_level_coeff,
                                                ROUND_UV(txb_origin_x) >> 1,
                                                ROUND_UV(txb_origin_y) >> 1,
-                                               blk_geom->tx_width_uv[tx_depth],
-                                               blk_geom->tx_height_uv[tx_depth],
+                                               tx_width_uv,
+                                               tx_height_uv,
                                                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
         // Update the Cr DC Sign Level Coeff Neighbor Array
@@ -1755,8 +1781,8 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                                (uint8_t*)&dc_sign_level_coeff,
                                                ROUND_UV(txb_origin_x) >> 1,
                                                ROUND_UV(txb_origin_y) >> 1,
-                                               blk_geom->tx_width_uv[tx_depth],
-                                               blk_geom->tx_height_uv[tx_depth],
+                                               tx_width_uv,
+                                               tx_height_uv,
                                                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     }
 }
@@ -1824,6 +1850,12 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
         // Initialize the Transform Loop
         const uint8_t  tx_depth          = blk_ptr->block_mi.tx_depth;
         const uint16_t txb_count         = blk_geom->txb_count[tx_depth];
+        const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+        const int tx_width = tx_size_wide[tx_size];
+        const int tx_height = tx_size_high[tx_size];
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const int tx_width_uv = tx_size_wide[tx_size_uv];
+        const int tx_height_uv = tx_size_high[tx_size_uv];
         uint32_t       blk_coded_area    = 0;
         uint32_t       blk_coded_area_uv = 0;
         for (ctx->txb_itr = 0; ctx->txb_itr < txb_count; ctx->txb_itr++) {
@@ -1840,12 +1872,12 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
                 update_coeff_cdf(pcs, ctx, blk_ptr);
             }
 
-            blk_coded_area += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
-            ctx->coded_area_sb_update += blk_geom->tx_width[tx_depth] * blk_geom->tx_height[tx_depth];
+            blk_coded_area += tx_width * tx_height;
+            ctx->coded_area_sb_update += tx_width * tx_height;
 
             if (blk_geom->has_uv && uv_pass) {
-                blk_coded_area_uv += blk_geom->tx_width_uv[tx_depth] * blk_geom->tx_height_uv[tx_depth];
-                ctx->coded_area_sb_uv_update += blk_geom->tx_width_uv[tx_depth] * blk_geom->tx_height_uv[tx_depth];
+                blk_coded_area_uv += tx_width_uv * tx_height_uv;
+                ctx->coded_area_sb_uv_update += tx_width_uv * tx_height_uv;
             }
         }
     }
@@ -1882,7 +1914,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
                              md_ctx->md_rate_est_ctx,
                              blk_ptr->av1xd,
                              blk_ptr->av1xd->mi[0],
-                             blk_geom->txsize[blk_ptr->block_mi.tx_depth],
+                             tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][blk_geom->bsize],
                              pcs->ppcs->frm_hdr.tx_mode,
                              blk_geom->bsize,
                              !blk_ptr->block_has_coeff,
