@@ -1963,8 +1963,8 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
     const int tx_height_uv = tx_size_high[tx_size_uv];
     const bool    is_inter = (is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc) ? true
                                                                                                                   : false;
-    const int     tu_count = tx_depth ? 1
-                                      : ctx->blk_geom->txb_count[cand_bf->cand->block_mi.tx_depth]; //NM: 128x128 exeption
+    const int tu_count = tx_depth ? 1
+        : tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth]; //NM: 128x128 exeption
     uint32_t      txb_1d_offset = 0;
 
     int txb_itr = 0;

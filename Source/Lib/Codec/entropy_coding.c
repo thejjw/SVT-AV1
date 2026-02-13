@@ -559,7 +559,7 @@ static EbErrorType av1_encode_tx_coef_y(PictureControlSet* pcs, EntropyCodingCon
     bool             is_inter     = is_inter_mode(mbmi->block_mi.mode) || mbmi->block_mi.use_intrabc;
     const BlockGeom* blk_geom     = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     const uint8_t    tx_depth     = mbmi->block_mi.tx_depth;
-    const uint16_t   txb_count    = blk_geom->txb_count[mbmi->block_mi.tx_depth];
+    const uint16_t txb_count = tx_blocks_per_depth[mbmi->bsize][tx_depth];
     const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
     const int tx_width = tx_size_wide[tx_size];
     const int tx_height = tx_size_high[tx_size];
@@ -770,7 +770,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
         int32_t          cul_level_y, cul_level_cb = 0, cul_level_cr = 0;
 
         const uint8_t tx_depth  = ec_ctx->mbmi->block_mi.tx_depth;
-        uint16_t      txb_count = blk_geom->txb_count[tx_depth];
+        const uint16_t txb_count = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
         const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
         const int tx_width = tx_size_wide[tx_size];
         const int tx_height = tx_size_high[tx_size];

@@ -327,53 +327,6 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
             }
 
             blk_geom[*idx_mds].bsize_uv = get_plane_block_size(blk_geom[*idx_mds].bsize, 1, 1);
-            // tx_depth 1 geom settings
-            uint8_t tx_depth                       = 0;
-            blk_geom[*idx_mds].txb_count[tx_depth] = blk_geom[*idx_mds].bsize == BLOCK_128X128         ? 4
-                : blk_geom[*idx_mds].bsize == BLOCK_128X64 || blk_geom[*idx_mds].bsize == BLOCK_64X128 ? 2
-                                                                                                       : 1;
-            // tx_depth 1 geom settings
-            tx_depth                               = 1;
-            blk_geom[*idx_mds].txb_count[tx_depth] = blk_geom[*idx_mds].bsize == BLOCK_128X128         ? 4
-                : blk_geom[*idx_mds].bsize == BLOCK_128X64 || blk_geom[*idx_mds].bsize == BLOCK_64X128 ? 2
-                                                                                                       : 1;
-
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X64 || blk_geom[*idx_mds].bsize == BLOCK_32X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X16 || blk_geom[*idx_mds].bsize == BLOCK_8X8) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 4;
-            }
-
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X32 || blk_geom[*idx_mds].bsize == BLOCK_32X64 ||
-                blk_geom[*idx_mds].bsize == BLOCK_32X16 || blk_geom[*idx_mds].bsize == BLOCK_16X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X8 || blk_geom[*idx_mds].bsize == BLOCK_8X16) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 2;
-            }
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X16 || blk_geom[*idx_mds].bsize == BLOCK_16X64 ||
-                blk_geom[*idx_mds].bsize == BLOCK_32X8 || blk_geom[*idx_mds].bsize == BLOCK_8X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X4 || blk_geom[*idx_mds].bsize == BLOCK_4X16) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 2;
-            }
-            // tx_depth 2 geom settings
-            tx_depth = 2;
-
-            blk_geom[*idx_mds].txb_count[tx_depth] = blk_geom[*idx_mds].bsize == BLOCK_128X128         ? 4
-                : blk_geom[*idx_mds].bsize == BLOCK_128X64 || blk_geom[*idx_mds].bsize == BLOCK_64X128 ? 2
-                                                                                                       : 1;
-
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X64 || blk_geom[*idx_mds].bsize == BLOCK_32X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X16) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 16;
-            }
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X32 || blk_geom[*idx_mds].bsize == BLOCK_32X64 ||
-                blk_geom[*idx_mds].bsize == BLOCK_32X16 || blk_geom[*idx_mds].bsize == BLOCK_16X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X8 || blk_geom[*idx_mds].bsize == BLOCK_8X16) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 8;
-            }
-            if (blk_geom[*idx_mds].bsize == BLOCK_64X16 || blk_geom[*idx_mds].bsize == BLOCK_16X64 ||
-                blk_geom[*idx_mds].bsize == BLOCK_32X8 || blk_geom[*idx_mds].bsize == BLOCK_8X32 ||
-                blk_geom[*idx_mds].bsize == BLOCK_16X4 || blk_geom[*idx_mds].bsize == BLOCK_4X16) {
-                blk_geom[*idx_mds].txb_count[tx_depth] = 4;
-            }
 
             blk_geom[*idx_mds].blkidx_mds = (*idx_mds);
             (*idx_mds)                    = (*idx_mds) + 1;

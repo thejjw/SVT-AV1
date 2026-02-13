@@ -32,6 +32,32 @@ static const int8_t fwd_cos_bit_row[MAX_TXWH_IDX /*txw_idx*/][MAX_TXWH_IDX /*txh
 
 extern const int8_t* fwd_txfm_shift_ls[TX_SIZES_ALL];
 
+static const uint8_t tx_blocks_per_depth[BLOCK_SIZES_ALL][MAX_VARTX_DEPTH + 1] =
+{
+    {1, 1, 1},// BLOCK_4X4
+    {1, 1, 1},// BLOCK_4X8
+    {1, 1, 1},// BLOCK_8X4
+    {1, 4, 4},// BLOCK_8X8
+    {1, 2, 8},// BLOCK_8X16
+    {1, 2, 8},// BLOCK_16X8
+    {1, 4, 16},// BLOCK_16X16
+    {1, 2, 8},// BLOCK_16X32
+    {1, 2, 8},// BLOCK_32X16
+    {1, 4, 16},// BLOCK_32X32
+    {1, 2, 8},// BLOCK_32X64
+    {1, 2, 8},// BLOCK_64X32
+    {1, 4, 16},// BLOCK_64X64
+    {2, 2, 2},// BLOCK_64X128
+    {2, 2, 2},// BLOCK_128X64
+    {4, 4, 4},// BLOCK_128X128
+    {1, 2, 4},// BLOCK_4X16
+    {1, 2, 4},// BLOCK_16X4
+    {1, 2, 4},// BLOCK_8X32
+    {1, 2, 4},// BLOCK_32X8
+    {1, 2, 4},// BLOCK_16X64
+    {1, 2, 4}// BLOCK_64X16
+};
+
 typedef struct Position {
     int x;
     int y;

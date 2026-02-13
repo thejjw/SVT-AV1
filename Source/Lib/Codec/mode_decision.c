@@ -3988,7 +3988,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
 
     // If bypassing EncDec, save recon/coeff
     if (ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
-        const uint16_t tu_total_count = ctx->blk_geom->txb_count[blk_ptr->block_mi.tx_depth];
+        const uint16_t tu_total_count = tx_blocks_per_depth[ctx->blk_geom->bsize][blk_ptr->block_mi.tx_depth];
         int32_t        txb_1d_offset = 0, txb_1d_offset_uv = 0;
         const TxSize tx_size = tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][ctx->blk_geom->bsize];
         const int tx_width = tx_size_wide[tx_size];

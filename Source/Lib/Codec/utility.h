@@ -56,7 +56,6 @@ typedef struct BlockGeom {
     uint8_t   bheight_uv; // block height for Chroma 4:2:0
     BlockSize bsize; // bloc size
     BlockSize bsize_uv; // bloc size for Chroma 4:2:0
-    uint8_t   txb_count[MAX_VARTX_DEPTH + 1]; //4-2-1
 
     uint16_t blkidx_mds; // block index in md scan
     // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)

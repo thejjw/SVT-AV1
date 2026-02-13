@@ -761,14 +761,14 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
     const TxSize tx_size_uv = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
     const int tx_width_uv = tx_size_wide[tx_size_uv];
     const int tx_height_uv = tx_size_high[tx_size_uv];
-    uint32_t      tot_tu         = ed_ctx->blk_geom->txb_count[tx_depth];
-    uint32_t      sb_size_luma   = pcs->ppcs->scs->sb_size;
-    uint32_t      sb_size_chroma = pcs->ppcs->scs->sb_size >> 1;
+    const uint32_t tot_tu         = tx_blocks_per_depth[ed_ctx->blk_geom->bsize][tx_depth];
+    const uint32_t sb_size_luma   = pcs->ppcs->scs->sb_size;
+    const uint32_t sb_size_chroma = pcs->ppcs->scs->sb_size >> 1;
 
     // Luma path
     for (ed_ctx->txb_itr = 0; ed_ctx->txb_itr < tot_tu; ed_ctx->txb_itr++) {
-        uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
-        uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
+        const uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+        const uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
         ed_ctx->md_ctx->luma_txb_skip_context = 0;
         ed_ctx->md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -783,7 +783,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
         if (is_16bit) {
-            uint32_t       bit_depth = ed_ctx->bit_depth;
             uint16_t       top_neigh_array[64 * 2 + 1];
             uint16_t       left_neigh_array[64 * 2 + 1];
             PredictionMode mode;
@@ -808,7 +807,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             mode = blk_ptr->block_mi.mode;
 
             svt_av1_predict_intra_block_16bit(
-                bit_depth,
+                ed_ctx->bit_depth,
                 ED_STAGE,
                 ed_ctx->blk_geom,
                 ed_ctx->blk_ptr->av1xd,
@@ -1379,10 +1378,9 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
     blk_ptr->v_has_coeff = 0;
 
     // Initialize the Transform Loop
-    ctx->txb_itr = 0;
     uint16_t      eobs[MAX_TXB_COUNT][3];
     const uint8_t tx_depth = blk_ptr->block_mi.tx_depth;
-    uint16_t      tot_tu   = blk_geom->txb_count[tx_depth];
+    const uint16_t tot_tu = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
     const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
     const int tx_width = tx_size_wide[tx_size];
     const int tx_height = tx_size_high[tx_size];
@@ -1390,11 +1388,10 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
     const int tx_width_uv = tx_size_wide[tx_size_uv];
     const int tx_height_uv = tx_size_high[tx_size_uv];
 
-    for (uint16_t tu_it = 0; tu_it < tot_tu; tu_it++) {
-        uint8_t uv_pass       = tx_depth && tu_it ? 0 : 1; //NM: 128x128 exeption
-        ctx->txb_itr          = (uint8_t)tu_it;
-        uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].x;
-        uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].y;
+    for (ctx->txb_itr = 0; ctx->txb_itr < tot_tu; ctx->txb_itr++) {
+        const uint8_t uv_pass       = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
+        const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].x;
+        const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].y;
         md_ctx->luma_txb_skip_context = 0;
         md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -1849,7 +1846,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
 
         // Initialize the Transform Loop
         const uint8_t  tx_depth          = blk_ptr->block_mi.tx_depth;
-        const uint16_t txb_count         = blk_geom->txb_count[tx_depth];
+        const uint16_t txb_count         = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
         const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
         const int tx_width = tx_size_wide[tx_size];
         const int tx_height = tx_size_high[tx_size];

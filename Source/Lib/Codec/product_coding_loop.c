@@ -186,7 +186,7 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
                                            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     if (ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx) {
         const uint8_t  tx_depth  = ctx->blk_ptr->block_mi.tx_depth;
-        const uint16_t txb_count = ctx->blk_geom->txb_count[tx_depth];
+        const uint16_t txb_count = tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth];
         const TxSize tx_size = tx_depth_to_tx_size[tx_depth][ctx->blk_geom->bsize];
         const int tx_width = tx_size_wide[tx_size];
         const int tx_height = tx_size_high[tx_size];
@@ -705,15 +705,12 @@ static void md_update_all_neighbour_arrays_multiple(PictureControlSet* pcs, Mode
 ************************************************************************************************/
 void av1_perform_inverse_transform_recon_luma(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                               ModeDecisionCandidateBuffer* cand_bf) {
-    uint32_t tu_total_count;
-    uint32_t txb_itr;
-
-    uint8_t tx_depth         = cand_bf->cand->block_mi.tx_depth;
+    const uint8_t tx_depth         = cand_bf->cand->block_mi.tx_depth;
     const TxSize tx_size = tx_depth_to_tx_size[tx_depth][ctx->blk_geom->bsize];
     const int txb_width = tx_size_wide[tx_size];
     const int txb_height = tx_size_high[tx_size];
-    tu_total_count           = ctx->blk_geom->txb_count[tx_depth];
-    txb_itr                  = 0;
+    const uint16_t tu_total_count = tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth];
+    uint16_t txb_itr = 0;
     uint32_t   txb_1d_offset = 0;
     const bool is_inter = (is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc) ? true
                                                                                                                : false;
@@ -765,7 +762,7 @@ void av1_perform_inverse_transform_recon_luma(PictureControlSet* pcs, ModeDecisi
 static void av1_perform_inverse_transform_recon(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                                 ModeDecisionCandidateBuffer* cand_bf, const BlockGeom* blk_geom) {
     const uint8_t  tx_depth       = cand_bf->cand->block_mi.tx_depth;
-    const uint32_t tu_total_count = ctx->blk_geom->txb_count[tx_depth];
+    const uint32_t tu_total_count = tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth];
     uint32_t       txb_itr        = 0;
     uint32_t       txb_1d_offset = 0, txb_1d_offset_uv = 0;
     const bool     is_inter = is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc;
@@ -5176,7 +5173,7 @@ static void perform_tx_partitioning(ModeDecisionCandidateBuffer* cand_bf, ModeDe
         const TxSize tx_size = tx_depth_to_tx_size[ctx->tx_depth][ctx->blk_geom->bsize];
         const int tx_width = tx_size_wide[tx_size];
         const int tx_height = tx_size_high[tx_size];
-        uint16_t txb_count = ctx->blk_geom->txb_count[ctx->tx_depth];
+        const uint16_t txb_count = tx_blocks_per_depth[ctx->blk_geom->bsize][ctx->tx_depth];
 
         uint32_t block_has_coeff = false;
         for (ctx->txb_itr = 0; ctx->txb_itr < txb_count; ctx->txb_itr++) {
@@ -6594,7 +6591,7 @@ static void full_loop_core(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
     // Update coeff info based on luma TX so that chroma can take advantage of most accurate info
     cand_bf->block_has_coeff = (cand_bf->y_has_coeff) ? 1 : 0;
 
-    const uint16_t txb_count = ctx->blk_geom->txb_count[cand->block_mi.tx_depth];
+    const uint16_t txb_count = tx_blocks_per_depth[ctx->blk_geom->bsize][cand->block_mi.tx_depth];
     cand_bf->cnt_nz_coeff    = 0;
     for (uint8_t txb_itr = 0; txb_itr < txb_count; txb_itr++) {
         cand_bf->cnt_nz_coeff += cand_bf->eob.y[txb_itr];
