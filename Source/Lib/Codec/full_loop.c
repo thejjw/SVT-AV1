@@ -1963,8 +1963,8 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
 
     int txb_itr = 0;
     do {
-        const uint32_t txb_origin_x        = ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr];
-        const uint32_t txb_origin_y        = ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr];
+        const uint32_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+        const uint32_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
         int32_t        cropped_tx_width_uv = MIN(
             ctx->blk_geom->tx_width_uv[tx_depth],
             pcs->ppcs->aligned_width / 2 - ((ctx->sb_origin_x + ((txb_origin_x >> 3) << 3)) >> 1));

@@ -64,10 +64,6 @@ typedef struct BlockGeom {
     uint8_t   tx_width_uv[MAX_VARTX_DEPTH + 1]; //tx_size_wide
     uint8_t   tx_height_uv[MAX_VARTX_DEPTH + 1]; //tx_size_high
 
-    //origin is SB - separate tables for INTRA (idx 0) and INTER (idx 1)
-    uint8_t tx_org_x[2][MAX_VARTX_DEPTH + 1][MAX_TXB_COUNT];
-    uint8_t tx_org_y[2][MAX_VARTX_DEPTH + 1][MAX_TXB_COUNT];
-
     uint16_t blkidx_mds; // block index in md scan
     // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)
     uint8_t  d1i;

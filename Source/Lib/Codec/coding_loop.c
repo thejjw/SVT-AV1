@@ -324,8 +324,8 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
     const uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
     const uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
     const uint8_t  tx_depth       = blk_ptr->block_mi.tx_depth;
-    const uint8_t  tx_org_x       = blk_geom->tx_org_x[is_inter][tx_depth][ed_ctx->txb_itr];
-    const uint8_t  tx_org_y       = blk_geom->tx_org_y[is_inter][tx_depth][ed_ctx->txb_itr];
+    const uint8_t  tx_org_x       = blk_geom->org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+    const uint8_t  tx_org_y       = blk_geom->org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
     const int32_t  seg_qp         = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled
                  ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
                  : 0;
@@ -750,10 +750,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
     // Luma path
     for (ed_ctx->txb_itr = 0; ed_ctx->txb_itr < tot_tu; ed_ctx->txb_itr++) {
-        uint16_t txb_origin_x = ed_ctx->blk_org_x + ed_ctx->blk_geom->tx_org_x[is_inter][tx_depth][ed_ctx->txb_itr] -
-            ed_ctx->blk_geom->org_x;
-        uint16_t txb_origin_y = ed_ctx->blk_org_y + ed_ctx->blk_geom->tx_org_y[is_inter][tx_depth][ed_ctx->txb_itr] -
-            ed_ctx->blk_geom->org_y;
+        uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+        uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
         ed_ctx->md_ctx->luma_txb_skip_context = 0;
         ed_ctx->md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -812,8 +810,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                 top_neigh_array + 1,
                 left_neigh_array + 1,
                 recon_buffer,
-                (ed_ctx->blk_geom->tx_org_x[is_inter][tx_depth][ed_ctx->txb_itr] - ed_ctx->blk_geom->org_x) >> 2,
-                (ed_ctx->blk_geom->tx_org_y[is_inter][tx_depth][ed_ctx->txb_itr] - ed_ctx->blk_geom->org_y) >> 2,
+                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
+                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
                 0,
                 ed_ctx->blk_geom->bsize,
                 txb_origin_x,
@@ -868,8 +866,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                 top_neigh_array + 1,
                 left_neigh_array + 1,
                 recon_buffer,
-                (ed_ctx->blk_geom->tx_org_x[is_inter][tx_depth][ed_ctx->txb_itr] - ed_ctx->blk_geom->org_x) >> 2,
-                (ed_ctx->blk_geom->tx_org_y[is_inter][tx_depth][ed_ctx->txb_itr] - ed_ctx->blk_geom->org_y) >> 2,
+                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
+                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
                 0,
                 ed_ctx->blk_geom->bsize,
                 txb_origin_x,
@@ -934,10 +932,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
     if (ed_ctx->blk_geom->has_uv) {
         ed_ctx->txb_itr       = 0;
-        uint16_t txb_origin_x = ed_ctx->blk_org_x + ed_ctx->blk_geom->tx_org_x[is_inter][tx_depth][ed_ctx->txb_itr] -
-            ed_ctx->blk_geom->org_x;
-        uint16_t txb_origin_y = ed_ctx->blk_org_y + ed_ctx->blk_geom->tx_org_y[is_inter][tx_depth][ed_ctx->txb_itr] -
-            ed_ctx->blk_geom->org_y;
+        uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+        uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
         uint32_t blk_originx_uv = (ed_ctx->blk_org_x >> 3 << 3) >> 1;
         uint32_t blk_originy_uv = (ed_ctx->blk_org_y >> 3 << 3) >> 1;
 
@@ -1383,10 +1379,8 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
     for (uint16_t tu_it = 0; tu_it < tot_tu; tu_it++) {
         uint8_t uv_pass       = tx_depth && tu_it ? 0 : 1; //NM: 128x128 exeption
         ctx->txb_itr          = (uint8_t)tu_it;
-        uint16_t txb_origin_x = ctx->blk_org_x +
-            (blk_geom->tx_org_x[is_inter][tx_depth][ctx->txb_itr] - blk_geom->org_x);
-        uint16_t txb_origin_y = ctx->blk_org_y +
-            (blk_geom->tx_org_y[is_inter][tx_depth][ctx->txb_itr] - blk_geom->org_y);
+        uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].x;
+        uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].y;
         md_ctx->luma_txb_skip_context = 0;
         md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -1656,8 +1650,8 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
     const uint8_t        uv_pass         = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
     const uint16_t       tile_idx        = ctx->tile_index;
     const int            is_inter        = is_inter_block(&blk_ptr->block_mi);
-    const uint16_t txb_origin_x = ctx->blk_org_x + (blk_geom->tx_org_x[is_inter][tx_depth][txb_itr] - blk_geom->org_x);
-    const uint16_t txb_origin_y = ctx->blk_org_y + (blk_geom->tx_org_y[is_inter][tx_depth][txb_itr] - blk_geom->org_y);
+    const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+    const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
 
     md_ctx->luma_txb_skip_context = 0;
     md_ctx->luma_dc_sign_context  = 0;

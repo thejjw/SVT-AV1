@@ -30,10 +30,10 @@ void svt_av1_update_segmentation_map(PictureControlSet* pcs, BlockSize bsize, ui
 #define MVREF_ROWS 3
 #define MVREF_COLS 3
 
-typedef struct position {
+typedef struct Pos {
     int32_t row;
     int32_t col;
-} Position;
+} Pos;
 
 // clang-format on
 
@@ -41,7 +41,7 @@ static INLINE Mv get_block_mv(const MbModeInfo* candidate, int32_t which_mv) {
     return candidate->block_mi.mv[which_mv];
 }
 
-static INLINE int32_t is_inside(const TileInfo* const tile, int32_t mi_col, int32_t mi_row, const Position* mi_pos) {
+static INLINE int32_t is_inside(const TileInfo* const tile, int32_t mi_col, int32_t mi_row, const Pos* mi_pos) {
     return !(mi_row + mi_pos->row < tile->mi_row_start || mi_col + mi_pos->col < tile->mi_col_start ||
              mi_row + mi_pos->row >= tile->mi_row_end || mi_col + mi_pos->col >= tile->mi_col_end);
 }
@@ -244,7 +244,7 @@ static void scan_blk_mbmi(const MacroBlockD* xd, const int32_t mi_row, const int
                           uint8_t* newmv_count, Mv* gm_mv_candidates, const WarpedMotionParams* gm_params,
                           uint8_t* refmv_count) {
     const TileInfo* const tile   = &xd->tile;
-    Position              mi_pos = {row_offset, col_offset};
+    Pos                   mi_pos = {row_offset, col_offset};
 
     // Analyze a single 8x8 block motion information.
     if (is_inside(tile, mi_col, mi_row, &mi_pos)) {
@@ -355,7 +355,7 @@ static int add_tpl_ref_mv(const Av1Common* cm, PictureControlSet* pcs, const Mac
                           int cur_offset_1,
 
                           CandidateMv ref_mv_stack[MAX_REF_MV_STACK_SIZE], int16_t* mode_context) {
-    Position mi_pos;
+    Pos mi_pos;
     mi_pos.row = (mi_row & 0x01) ? blk_row : blk_row + 1;
     mi_pos.col = (mi_col & 0x01) ? blk_col : blk_col + 1;
 
@@ -1524,7 +1524,7 @@ static uint8_t av1_find_samples(const Av1Common* cm, const BlockSize sb_size, Ma
 
     // Top-right block
     if (do_tr && has_top_right(sb_size, xd, mi_row, mi_col, AOMMAX(xd->n4_w, xd->n4_h))) {
-        Position trb_pos = {-1, xd->n4_w};
+        Pos trb_pos = {-1, xd->n4_w};
 
         if (is_inside(tile, mi_col, mi_row, &trb_pos)) {
             int mi_row_offset = -1;

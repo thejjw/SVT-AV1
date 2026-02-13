@@ -192,8 +192,8 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
             svt_aom_neighbor_array_unit_mode_write(
                 ctx->luma_dc_sign_level_coeff_na,
                 (uint8_t*)&dc_sign_level_coeff,
-                ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr],
-                ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr],
+                ctx->sb_origin_x + ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x,
+                ctx->sb_origin_y + ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y,
                 ctx->blk_geom->tx_width[tx_depth],
                 ctx->blk_geom->tx_height[tx_depth],
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
@@ -201,8 +201,8 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
             svt_aom_neighbor_array_unit_mode_write(
                 pcs->md_tx_depth_1_luma_dc_sign_level_coeff_na[MD_NEIGHBOR_ARRAY_INDEX][tile_idx],
                 (uint8_t*)&dc_sign_level_coeff,
-                ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr],
-                ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr],
+                ctx->sb_origin_x + ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x,
+                ctx->sb_origin_y + ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y,
                 ctx->blk_geom->tx_width[tx_depth],
                 ctx->blk_geom->tx_height[tx_depth],
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
@@ -213,8 +213,8 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
                 svt_aom_neighbor_array_unit_mode_write(
                     ctx->cb_dc_sign_level_coeff_na,
                     (uint8_t*)&dc_sign_level_coeff_cb,
-                    ROUND_UV(ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr]) >> 1,
-                    ROUND_UV(ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr]) >> 1,
+                    ROUND_UV(ctx->sb_origin_x + ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
+                    ROUND_UV(ctx->sb_origin_y + ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
                     ctx->blk_geom->tx_width_uv[tx_depth],
                     ctx->blk_geom->tx_height_uv[tx_depth],
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
@@ -224,8 +224,8 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
                 svt_aom_neighbor_array_unit_mode_write(
                     ctx->cr_dc_sign_level_coeff_na,
                     (uint8_t*)&dc_sign_level_coeff_cr,
-                    ROUND_UV(ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr]) >> 1,
-                    ROUND_UV(ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr]) >> 1,
+                    ROUND_UV(ctx->sb_origin_x + ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x) >> 1,
+                    ROUND_UV(ctx->sb_origin_y + ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y) >> 1,
                     ctx->blk_geom->tx_width_uv[tx_depth],
                     ctx->blk_geom->tx_height_uv[tx_depth],
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
@@ -709,8 +709,8 @@ void av1_perform_inverse_transform_recon_luma(PictureControlSet* pcs, ModeDecisi
     const bool is_inter = (is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc) ? true
                                                                                                                : false;
     do {
-        uint32_t txb_origin_x     = ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr];
-        uint32_t txb_origin_y     = ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr];
+        uint32_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+        uint32_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
         uint32_t txb_width        = ctx->blk_geom->tx_width[tx_depth];
         uint32_t txb_height       = ctx->blk_geom->tx_height[tx_depth];
         uint32_t txb_origin_index = txb_origin_x + txb_origin_y * cand_bf->pred->stride_y;
@@ -763,8 +763,8 @@ static void av1_perform_inverse_transform_recon(PictureControlSet* pcs, ModeDeci
     uint32_t       txb_1d_offset = 0, txb_1d_offset_uv = 0;
     const bool     is_inter = is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc;
     do {
-        const uint32_t txb_origin_x = ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr];
-        const uint32_t txb_origin_y = ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr];
+        const uint32_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+        const uint32_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
         const uint32_t txb_width    = ctx->blk_geom->tx_width[tx_depth];
         TxSize         tx_size      = ctx->blk_geom->txsize[tx_depth];
         if (ctx->mds_subres_step == 2) {
@@ -805,9 +805,8 @@ static void av1_perform_inverse_transform_recon(PictureControlSet* pcs, ModeDeci
         if (ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
             if (ctx->fixed_partition) {
                 svt_aom_get_recon_pic(pcs, &recon_buffer, ctx->hbd_md);
-                uint16_t org_x = ctx->blk_org_x + (blk_geom->tx_org_x[is_inter][tx_depth][txb_itr] - blk_geom->org_x);
-                uint16_t org_y = ctx->blk_org_y + (blk_geom->tx_org_y[is_inter][tx_depth][txb_itr] - blk_geom->org_y);
-
+                uint16_t org_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+                uint16_t org_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
                 rec_luma_offset = (recon_buffer->org_y + org_y) * recon_buffer->stride_y +
                     (recon_buffer->org_x + org_x);
 
@@ -3879,10 +3878,8 @@ static EbErrorType av1_intra_luma_prediction(ModeDecisionContext* ctx, PictureCo
     EbErrorType return_error = EB_ErrorNone;
     uint8_t     is_inter     = 0; // set to 0 b/c this is an intra path
 
-    uint16_t txb_origin_x = ctx->blk_org_x + ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr] -
-        ctx->blk_geom->org_x;
-    uint16_t txb_origin_y = ctx->blk_org_y + ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr] -
-        ctx->blk_geom->org_y;
+    uint16_t txb_origin_x = ctx->blk_org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x;
+    uint16_t txb_origin_y = ctx->blk_org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y;
     uint8_t  tx_width     = ctx->blk_geom->tx_width[ctx->tx_depth];
     uint8_t  tx_height    = ctx->blk_geom->tx_height[ctx->tx_depth];
     TxSize   tx_size      = ctx->blk_geom->txsize[ctx->tx_depth];
@@ -3934,26 +3931,24 @@ static EbErrorType av1_intra_luma_prediction(ModeDecisionContext* ctx, PictureCo
             ctx->blk_geom->bwidth,
             ctx->blk_geom->bheight,
             tx_size,
-            mode, // PredictionMode mode,
+            mode,
             cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y],
             cand_bf->cand->palette_info ? (cand_bf->cand->palette_size[0] > 0) : 0,
-            cand_bf->cand->palette_info, // ATB MD
+            cand_bf->cand->palette_info,
             cand_bf->cand->block_mi.filter_intra_mode,
             top_neigh_array + 1,
             left_neigh_array + 1,
-            cand_bf->pred, // uint8_t *dst,
-            (ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr] - ctx->blk_geom->org_x) >> 2,
-            (ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr] - ctx->blk_geom->org_y) >> 2,
-            PLANE_TYPE_Y, // int32_t plane,
+            cand_bf->pred,
+            (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x) >> 2,
+            (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y) >> 2,
+            PLANE_TYPE_Y,
             ctx->blk_geom->bsize,
             ctx->blk_org_x,
             ctx->blk_org_y,
             ctx->blk_org_x,
             ctx->blk_org_y,
-            ctx->blk_geom
-                ->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr], // uint32_t cuOrgX used only for prediction Ptr
-            ctx->blk_geom
-                ->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr], // uint32_t cuOrgY used only for prediction Ptr
+            ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
+            ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
             &pcs->scs->seq_header);
     }
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
@@ -4011,23 +4006,21 @@ static EbErrorType av1_intra_luma_prediction(ModeDecisionContext* ctx, PictureCo
             mode,
             cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y],
             cand_bf->cand->palette_info ? (cand_bf->cand->palette_size[0] > 0) : 0,
-            cand_bf->cand->palette_info, // ATB MD
+            cand_bf->cand->palette_info,
             cand_bf->cand->block_mi.filter_intra_mode,
             top_neigh_array + 1,
             left_neigh_array + 1,
             cand_bf->pred,
-            (ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr] - ctx->blk_geom->org_x) >> 2,
-            (ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr] - ctx->blk_geom->org_y) >> 2,
+            (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x) >> 2,
+            (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y) >> 2,
             PLANE_TYPE_Y,
             ctx->blk_geom->bsize,
             ctx->blk_org_x,
             ctx->blk_org_y,
             ctx->blk_org_x,
             ctx->blk_org_y,
-            ctx->blk_geom
-                ->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr], // uint32_t cuOrgX used only for prediction Ptr
-            ctx->blk_geom
-                ->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr], // uint32_t cuOrgY used only for prediction Ptr
+            ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
+            ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
             &pcs->scs->seq_header);
     }
 #endif
@@ -4111,10 +4104,10 @@ void tx_update_neighbor_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx,
             tx_search_update_recon_sample_neighbor_array(
                 ctx->hbd_md ? ctx->tx_search_luma_recon_na_16bit : ctx->tx_search_luma_recon_na,
                 cand_bf->recon,
-                ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr],
-                ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr],
-                ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr],
-                ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr],
+                ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
+                ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
+                ctx->blk_org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
+                ctx->blk_org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
                 ctx->blk_geom->tx_width[ctx->tx_depth],
                 ctx->blk_geom->tx_height[ctx->tx_depth],
                 ctx->hbd_md);
@@ -4123,8 +4116,8 @@ void tx_update_neighbor_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx,
         svt_aom_neighbor_array_unit_mode_write(
             pcs->md_tx_depth_1_luma_dc_sign_level_coeff_na[MD_NEIGHBOR_ARRAY_INDEX][tile_idx],
             (uint8_t*)&dc_sign_level_coeff,
-            ctx->sb_origin_x + ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr],
-            ctx->sb_origin_y + ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr],
+            ctx->blk_org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
+            ctx->blk_org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
             ctx->blk_geom->tx_width[ctx->tx_depth],
             ctx->blk_geom->tx_height[ctx->tx_depth],
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
@@ -4509,8 +4502,8 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
         satd_early_exit_th = DIVIDE_AND_ROUND(satd_early_exit_th * q_weight, q_weight_denom);
     }
     int32_t  tx_type;
-    uint16_t txb_origin_x           = ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr];
-    uint16_t txb_origin_y           = ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr];
+    uint16_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x;
+    uint16_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y;
     uint32_t txb_origin_index       = txb_origin_x + (txb_origin_y * cand_bf->residual->stride_y);
     uint32_t input_txb_origin_index = (ctx->sb_origin_x + txb_origin_x + input_pic->org_x) +
         ((ctx->sb_origin_y + txb_origin_y + input_pic->org_y) * input_pic->stride_y);
@@ -5167,10 +5160,9 @@ static void perform_tx_partitioning(ModeDecisionCandidateBuffer* cand_bf, ModeDe
         uint32_t block_has_coeff = false;
         for (ctx->txb_itr = 0; ctx->txb_itr < txb_count; ctx->txb_itr++) {
             // Y Prediction
-
             if (!is_inter) {
-                const uint16_t tx_org_x               = ctx->blk_geom->tx_org_x[is_inter][ctx->tx_depth][ctx->txb_itr];
-                const uint16_t tx_org_y               = ctx->blk_geom->tx_org_y[is_inter][ctx->tx_depth][ctx->txb_itr];
+                const uint16_t tx_org_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x;
+                const uint16_t tx_org_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y;
                 const uint32_t txb_origin_index       = tx_org_x + (tx_org_y * tx_cand_bf->residual->stride_y);
                 const uint32_t input_txb_origin_index = (ctx->sb_origin_x + tx_org_x + input_pic->org_x) +
                     ((ctx->sb_origin_y + tx_org_y + input_pic->org_y) * input_pic->stride_y);
@@ -5442,8 +5434,8 @@ static void perform_dct_dct_tx(PictureControlSet* pcs, ModeDecisionContext* ctx,
     const int txb_1d_offset = 0;
     const int tx_type       = DCT_DCT;
 
-    const uint16_t tx_org_x               = ctx->blk_geom->tx_org_x[is_inter][tx_depth][txb_itr];
-    const uint16_t tx_org_y               = ctx->blk_geom->tx_org_y[is_inter][tx_depth][txb_itr];
+    const uint16_t tx_org_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+    const uint16_t tx_org_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
     const uint32_t txb_origin_index       = tx_org_x + (tx_org_y * cand_bf->residual->stride_y);
     const uint32_t input_txb_origin_index = (ctx->sb_origin_x + tx_org_x + input_pic->org_x) +
         ((ctx->sb_origin_y + tx_org_y + input_pic->org_y) * input_pic->stride_y);
@@ -8824,8 +8816,8 @@ static void non_normative_txs(PictureControlSet* pcs, ModeDecisionContext* ctx, 
 
             // Transform Loop
             for (int h_part = 0; h_part < 2; h_part++) {
-                uint16_t txb_origin_x = ctx->blk_geom->tx_org_x[is_inter][0][0];
-                uint16_t txb_origin_y = ctx->blk_geom->tx_org_y[is_inter][0][0] + txbheight * h_part;
+                uint16_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][0][0].x;
+                uint16_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][0][0].y + txbheight * h_part;
 
                 uint32_t txb_origin_index = txb_origin_x + (txb_origin_y * cand_bf->residual->stride_y);
 
@@ -8883,8 +8875,8 @@ static void non_normative_txs(PictureControlSet* pcs, ModeDecisionContext* ctx, 
 
             // Transform Loop
             for (int v_part = 0; v_part < 2; v_part++) {
-                uint16_t txb_origin_x = ctx->blk_geom->tx_org_x[is_inter][0][0] + txbwidth * v_part;
-                uint16_t txb_origin_y = ctx->blk_geom->tx_org_y[is_inter][0][0];
+                uint16_t txb_origin_x = ctx->blk_geom->org_x + tx_org[ctx->blk_geom->bsize][is_inter][0][0].x + txbwidth * v_part;
+                uint16_t txb_origin_y = ctx->blk_geom->org_y + tx_org[ctx->blk_geom->bsize][is_inter][0][0].y;
 
                 uint32_t txb_origin_index = txb_origin_x + (txb_origin_y * cand_bf->residual->stride_y);
 
