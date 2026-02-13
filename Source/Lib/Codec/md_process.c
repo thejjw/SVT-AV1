@@ -195,6 +195,7 @@ static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const in
 
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
             pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
+            pc_tree->split[i]->parent = pc_tree;
             setup_pc_tree(pc_tree->split[i], i, subsize, min_sq_size);
         }
     }

@@ -932,6 +932,7 @@ typedef struct PC_TREE {
     BlkStruct*      block_data[PART_S][4 /*max blocks per shape*/]; // doesn't include split
     struct PC_TREE* split[4];
     int             index; // should be written once when struct is initialized, then never overwritten
+    struct PC_TREE* parent; // this_pc_tree->parent->split[this_pc_tree->index] == this_pc_tree
 } PC_TREE;
 
 typedef struct ModeDecisionContext {

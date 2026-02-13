@@ -135,7 +135,7 @@ static void mode_decision_update_neighbor_arrays_light_pd0(SequenceControlSet* s
     ctx->blk_geom  = get_blk_geom_mds(scs->blk_geom_mds, blk_mds);
     ctx->blk_org_x = ctx->sb_origin_x + ctx->blk_geom->org_x;
     ctx->blk_org_y = ctx->sb_origin_y + ctx->blk_geom->org_y;
-    ctx->blk_ptr   = &ctx->md_blk_arr_nsq[blk_mds];
+    ctx->blk_ptr   = pc_tree->block_data[shape][0];
 
     uint32_t bwidth  = ctx->blk_geom->bwidth;
     uint32_t bheight = ctx->blk_geom->bheight;
@@ -157,7 +157,7 @@ static void mode_decision_update_neighbor_arrays_light_pd0(SequenceControlSet* s
 /***************************************************
 * Update Recon Samples Neighbor Arrays
 ***************************************************/
-static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t index_mds) {
+static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     uint32_t bwdith  = ctx->blk_geom->bwidth;
     uint32_t bheight = ctx->blk_geom->bheight;
 
@@ -167,7 +167,6 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
     uint32_t blk_origin_y_uv = ctx->round_origin_y >> 1;
     uint32_t bwdith_uv       = ctx->blk_geom->bwidth_uv;
     uint32_t bwheight_uv     = ctx->blk_geom->bheight_uv;
-    (void)index_mds;
 
     const int is_inter = is_inter_block(&ctx->blk_ptr->block_mi);
 
@@ -422,7 +421,6 @@ static void mode_decision_update_neighbor_arrays(PictureControlSet* pcs, ModeDec
             }
         }
     }
-    return;
 }
 
 void svt_aom_copy_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t src_idx, uint32_t dst_idx,
@@ -661,22 +659,22 @@ void svt_aom_copy_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* 
 }
 
 static void md_update_all_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx,
-                                           uint32_t last_blk_index_mds) {
-    ctx->blk_geom       = get_blk_geom_mds(pcs->scs->blk_geom_mds, last_blk_index_mds);
+                                           uint32_t blk_mds) {
+    if (!ctx->avail_blk_flag[blk_mds]) {
+        return;
+    }
+    ctx->blk_ptr        = &ctx->md_blk_arr_nsq[blk_mds];
+    ctx->blk_geom       = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_mds);
     ctx->blk_org_x      = ctx->sb_origin_x + ctx->blk_geom->org_x;
     ctx->blk_org_y      = ctx->sb_origin_y + ctx->blk_geom->org_y;
     ctx->round_origin_x = ((ctx->blk_org_x >> 3) << 3);
     ctx->round_origin_y = ((ctx->blk_org_y >> 3) << 3);
 
-    ctx->blk_ptr           = &ctx->md_blk_arr_nsq[last_blk_index_mds];
-    uint8_t avail_blk_flag = ctx->avail_blk_flag[last_blk_index_mds];
-    if (avail_blk_flag) {
-        mode_decision_update_neighbor_arrays(pcs, ctx, last_blk_index_mds);
-        if (ctx->pd_pass == PD_PASS_1 || !ctx->shut_fast_rate || ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx ||
-            ctx->rate_est_ctrls.update_skip_coeff_ctx ||
-            ctx->cand_reduction_ctrls.use_neighbouring_mode_ctrls.enabled) {
-            svt_aom_update_mi_map(ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y, ctx->blk_geom, pcs, ctx);
-        }
+    mode_decision_update_neighbor_arrays(pcs, ctx);
+    if (ctx->pd_pass == PD_PASS_1 || !ctx->shut_fast_rate || ctx->rate_est_ctrls.update_skip_ctx_dc_sign_ctx ||
+        ctx->rate_est_ctrls.update_skip_coeff_ctx ||
+        ctx->cand_reduction_ctrls.use_neighbouring_mode_ctrls.enabled) {
+        svt_aom_update_mi_map(ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y, ctx->blk_geom, pcs, ctx);
     }
 }
 
@@ -9411,6 +9409,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
     }
 
     const BlockGeom* sq_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_geom->sqi_mds);
+    const BlkStruct* sq_blk_ptr  = pc_tree->block_data[PART_N][0];
     // if hbd_md is 0, we may still use 10bit lambda to generate final costs if we are bypassing encdec for 10bit content.
     const bool     used_10bit_at_mds3 = (ctx->encoder_bit_depth > EB_EIGHT_BIT && ctx->bypass_encdec &&
                                      ctx->pd_pass == PD_PASS_1 && svt_aom_do_md_recon(pcs->ppcs, ctx));
@@ -9430,11 +9429,11 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
             ctx->md_rate_est_ctx,
             from_shape_to_part[blk_geom->shape],
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+            sq_blk_ptr->left_part_ctx,
+            sq_blk_ptr->above_part_ctx);
         const uint64_t part_cost = RDCOST(full_lambda, split_rate, 0);
 
-        if (part_cost * 1000 > ctx->md_blk_arr_nsq[blk_geom->sqi_mds].cost * nsq_split_cost_th) {
+        if (part_cost * 1000 > sq_blk_ptr->cost * nsq_split_cost_th) {
             return true;
         }
     }
@@ -9450,8 +9449,8 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
                                                             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
                                                             ctx->md_rate_est_ctx,
                                                             PARTITION_HORZ,
-                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+                                                            sq_blk_ptr->left_part_ctx,
+                                                            sq_blk_ptr->above_part_ctx);
         const uint64_t H_rate_cost = RDCOST(full_lambda, H_rate, 0);
 
         const uint64_t V_rate      = svt_aom_partition_rate_cost(pcs->ppcs,
@@ -9460,8 +9459,8 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
                                                             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
                                                             ctx->md_rate_est_ctx,
                                                             PARTITION_VERT,
-                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-                                                            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+                                                            sq_blk_ptr->left_part_ctx,
+                                                            sq_blk_ptr->above_part_ctx);
         const uint64_t V_rate_cost = RDCOST(full_lambda, V_rate, 0);
 
         if (blk_geom->shape == PART_H && H_rate_cost * H_vs_V_split_rate_th > V_rate_cost * 100) {
@@ -9485,8 +9484,8 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
             ctx->md_rate_est_ctx,
             from_shape_to_part[blk_geom->shape],
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+            sq_blk_ptr->left_part_ctx,
+            sq_blk_ptr->above_part_ctx);
         const uint64_t part_cost = RDCOST(full_lambda, part_rate, 0);
 
         const uint64_t best_part_rate = svt_aom_partition_rate_cost(
@@ -9496,8 +9495,8 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
             ctx->md_rate_est_ctx,
             pc_tree->partition,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+            sq_blk_ptr->left_part_ctx,
+            sq_blk_ptr->above_part_ctx);
         const uint64_t best_part_cost = RDCOST(full_lambda, best_part_rate, 0);
 
         if (part_cost * non_HV_split_rate_th > best_part_cost * 100) {
@@ -9517,18 +9516,18 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
             (ctx->sb_origin_x + sq_blk_geom->org_x) >> MI_SIZE_LOG2,
             ctx->md_rate_est_ctx,
             PARTITION_SPLIT,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].left_part_ctx,
-            ctx->md_blk_arr_nsq[sq_blk_geom->sqi_mds].above_part_ctx);
+            sq_blk_ptr->left_part_ctx,
+            sq_blk_ptr->above_part_ctx);
         const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
-        if (split_cost * 10000 < ctx->md_blk_arr_nsq[blk_geom->sqi_mds].cost * lower_depth_split_cost_th) {
+        if (split_cost * 10000 < sq_blk_ptr->cost * lower_depth_split_cost_th) {
             return true;
         }
     }
     const uint32_t component_multiple_th = ctx->nsq_search_ctrls.component_multiple_th;
     // Skip testing NSQ shapes at this depth if the rate cost of splitting is very low (assuming a lower depth is available for splitting)
     if (component_multiple_th) {
-        const uint64_t parent_rate_cost = RDCOST(full_lambda, ctx->md_blk_arr_nsq[blk_geom->sqi_mds].total_rate, 0);
-        const uint64_t parent_dist_cost = RDCOST(full_lambda, 0, ctx->md_blk_arr_nsq[blk_geom->sqi_mds].full_dist);
+        const uint64_t parent_rate_cost = RDCOST(full_lambda, sq_blk_ptr->total_rate, 0);
+        const uint64_t parent_dist_cost = RDCOST(full_lambda, 0, sq_blk_ptr->full_dist);
 
         const uint64_t max_comp = MAX(parent_rate_cost, parent_dist_cost);
         const uint64_t min_comp = MIN(parent_rate_cost, parent_dist_cost);
@@ -9540,7 +9539,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
     return skip_nsq;
 }
 
-static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx) {
+static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     uint32_t         max_part0_to_part1_dev = ctx->nsq_search_ctrls.max_part0_to_part1_dev;
     const BlockGeom* blk_geom               = ctx->blk_geom;
 
@@ -9549,8 +9548,7 @@ static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx) {
         return false;
     }
 
-    BlkStruct* sq_blk_ptr = &ctx->md_blk_arr_nsq[blk_geom->sqi_mds];
-    //MdBlkStruct *sq_md_blk_arr_nsq = &ctx->md_blk_arr_nsq[blk_geom->sqi_mds];
+    BlkStruct* sq_blk_ptr = pc_tree->block_data[PART_N][0];
 
     // Derive the distortion/cost ratio
     const uint32_t full_lambda     = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
@@ -9680,7 +9678,7 @@ static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx) {
  *
  * Returns true if the blocks should be skipped; false otherwise.
  */
-static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
+static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     const BlockGeom* blk_geom  = ctx->blk_geom;
     const uint16_t   sqi       = blk_geom->sqi_mds;
     const Part       shape     = blk_geom->shape;
@@ -9696,32 +9694,30 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
         sq_weight += CONSERVATIVE_OFFSET_0;
     }
 
-    BlkStruct* local_cu_unit = ctx->md_blk_arr_nsq;
-
     if (shape == PART_HA || shape == PART_HB || shape == PART_H4) {
         if (ctx->avail_blk_flag[sqi] && ctx->avail_blk_flag[sqi + 1] && ctx->avail_blk_flag[sqi + 2]) {
             // Use aggressive thresholds for blocks without coeffs
             if (shape == PART_HA) {
-                if (!ctx->md_blk_arr_nsq[sqi + 1].block_has_coeff) {
+                if (!pc_tree->block_data[PART_H][0]->block_has_coeff) {
                     sq_weight = (int32_t)sq_weight + AGGRESSIVE_OFFSET_1;
                 }
             }
             if (shape == PART_HB) {
-                if (!ctx->md_blk_arr_nsq[sqi + 2].block_has_coeff) {
+                if (!pc_tree->block_data[PART_H][1]->block_has_coeff) {
                     sq_weight = (int32_t)sq_weight + AGGRESSIVE_OFFSET_1;
                 }
             }
 
             // compute the cost of the SQ block and H block
-            const uint64_t sq_cost = local_cu_unit[sqi].cost;
-            const uint64_t h_cost  = local_cu_unit[sqi + 1].cost + local_cu_unit[sqi + 2].cost;
+            const uint64_t sq_cost = pc_tree->block_data[PART_N][0]->cost;
+            const uint64_t h_cost  = pc_tree->block_data[PART_H][0]->cost + pc_tree->block_data[PART_H][1]->cost;
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and H blocks
             skip_nsq = (h_cost > ((sq_cost * sq_weight) / 100));
             // If not skipping, perform a check on the relative H/V costs
             if (!skip_nsq && ctx->avail_blk_flag[sqi + 3] && ctx->avail_blk_flag[sqi + 4]) {
                 //compute the cost of V partition
-                const uint64_t v_cost   = local_cu_unit[sqi + 3].cost + local_cu_unit[sqi + 4].cost;
+                const uint64_t v_cost   = pc_tree->block_data[PART_V][0]->cost + pc_tree->block_data[PART_V][1]->cost;
                 const uint32_t v_weight = ctx->nsq_search_ctrls.hv_weight;
                 //if the cost of H partition is bigger than the V partition by a certain percentage
                 skip_nsq = (h_cost > ((v_cost * v_weight) / 100));
@@ -9733,26 +9729,26 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
         if (ctx->avail_blk_flag[sqi] && ctx->avail_blk_flag[sqi + 3] && ctx->avail_blk_flag[sqi + 4]) {
             // Use aggressive thresholds for blocks without coeffs
             if (shape == PART_VA) {
-                if (!ctx->md_blk_arr_nsq[sqi + 3].block_has_coeff) {
+                if (!pc_tree->block_data[PART_V][0]->block_has_coeff) {
                     sq_weight = (int32_t)sq_weight + AGGRESSIVE_OFFSET_1;
                 }
             }
             if (shape == PART_VB) {
-                if (!ctx->md_blk_arr_nsq[sqi + 4].block_has_coeff) {
+                if (!pc_tree->block_data[PART_V][1]->block_has_coeff) {
                     sq_weight = (int32_t)sq_weight + AGGRESSIVE_OFFSET_1;
                 }
             }
 
             // compute the cost of the SQ block and V block
-            const uint64_t sq_cost = local_cu_unit[sqi].cost;
-            const uint64_t v_cost  = local_cu_unit[sqi + 3].cost + local_cu_unit[sqi + 4].cost;
+            const uint64_t sq_cost = pc_tree->block_data[PART_N][0]->cost;
+            const uint64_t v_cost  = pc_tree->block_data[PART_V][0]->cost + pc_tree->block_data[PART_V][1]->cost;
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
             skip_nsq = (v_cost > ((sq_cost * sq_weight) / 100));
 
             // If not skipping, perform a check on the relative H/V costs
             if (!skip_nsq && ctx->avail_blk_flag[sqi + 1] && ctx->avail_blk_flag[sqi + 2]) {
-                const uint64_t h_cost   = local_cu_unit[sqi + 1].cost + local_cu_unit[sqi + 2].cost;
+                const uint64_t h_cost   = pc_tree->block_data[PART_H][0]->cost + pc_tree->block_data[PART_H][1]->cost;
                 const uint32_t h_weight = ctx->nsq_search_ctrls.hv_weight;
                 //if the cost of V partition is bigger than the H partition by a certain percentage
                 skip_nsq = (v_cost > ((h_cost * h_weight) / 100));
@@ -9763,7 +9759,7 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx) {
     return skip_nsq;
 }
 
-static bool update_skip_nsq_based_on_sq_txs(ModeDecisionContext* ctx) {
+static bool update_skip_nsq_based_on_sq_txs(ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     const BlockGeom* blk_geom = ctx->blk_geom;
 
     // return immediately if SQ, or NSQ but Parent not available, or sq_txs is off
@@ -9772,7 +9768,7 @@ static bool update_skip_nsq_based_on_sq_txs(ModeDecisionContext* ctx) {
         return false;
     }
 
-    BlkStruct* sq_md_blk_arr_nsq = &ctx->md_blk_arr_nsq[blk_geom->sqi_mds];
+    BlkStruct* sq_md_blk_arr_nsq = pc_tree->block_data[PART_N][0];
     if ((ctx->min_nz_h != (uint16_t)~0) && (ctx->min_nz_v != (uint16_t)~0)) {
         uint32_t hv_to_sq_th = ctx->nsq_psq_txs_ctrls.hv_to_sq_th;
         uint32_t h_to_v_th   = ctx->nsq_psq_txs_ctrls.h_to_v_th;
@@ -10097,19 +10093,19 @@ static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionCo
     if (update_skip_nsq_based_on_split_rate(pcs, ctx, pc_tree, mds)) {
         return true;
     }
-    if (update_skip_nsq_based_on_sq_txs(ctx)) {
+    if (update_skip_nsq_based_on_sq_txs(ctx, pc_tree)) {
         return true;
     }
-    if (update_skip_nsq_based_on_sq_recon_dist(ctx)) {
+    if (update_skip_nsq_based_on_sq_recon_dist(ctx, pc_tree)) {
         return true;
     }
-    if (update_skip_nsq_shapes(ctx)) {
+    if (update_skip_nsq_shapes(ctx, pc_tree)) {
         return true;
     }
     return skip_processing_block;
 }
 
-static bool eval_sub_depth_skip_cond1(ModeDecisionContext* ctx) {
+static bool eval_sub_depth_skip_cond1(ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     uint8_t n = 4;
     float   average, variance, std_deviation, sum = 0, sum1 = 0;
 
@@ -10126,7 +10122,7 @@ static bool eval_sub_depth_skip_cond1(ModeDecisionContext* ctx) {
     variance      = sum1 / n;
     std_deviation = sqrtf(variance);
 
-    uint32_t count_non_zero_coeffs = ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].cnt_nz_coeff;
+    uint32_t count_non_zero_coeffs = pc_tree->block_data[PART_N][0]->cnt_nz_coeff;
 
     uint32_t total_samples = (ctx->blk_geom->sq_size * ctx->blk_geom->sq_size);
     uint32_t coeff_perc    = (count_non_zero_coeffs * 100) / total_samples;
@@ -10140,12 +10136,13 @@ static bool eval_sub_depth_skip_cond1(ModeDecisionContext* ctx) {
 }
 
 // For certain configurations, update the feature settings for NSQ blocks in non-ISLICE frames
-static void faster_md_settings_nsq(PictureControlSet* pcs, ModeDecisionContext* ctx, const bool is_child) {
+static void faster_md_settings_nsq(PictureControlSet* pcs, ModeDecisionContext* ctx,
+    const PC_TREE* const pc_tree, const bool is_child) {
     // Update GM settings based on SQ block mode
     if (pcs->ppcs->gm_ctrls.enabled && pcs->ppcs->gm_ctrls.inj_psq_glb) {
         if (ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
-            if (ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].block_mi.mode != GLOBAL_GLOBALMV &&
-                ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds].block_mi.mode != GLOBALMV) {
+            PredictionMode sq_mode = pc_tree->block_data[PART_N][0]->block_mi.mode;
+            if (sq_mode != GLOBAL_GLOBALMV && sq_mode != GLOBALMV) {
                 ctx->params_status       = 1;
                 ctx->global_mv_injection = 0;
             }
@@ -10775,7 +10772,7 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
             if (shape != PART_N && nsi == 0) {
                 // Update settings for the NSQ(s) for certain speed features
                 if (pcs->slice_type != I_SLICE) {
-                    faster_md_settings_nsq(pcs, ctx, mds->is_child);
+                    faster_md_settings_nsq(pcs, ctx, pc_tree, mds->is_child);
                 }
 
                 // call nsq-reduction func if NSQ is on
@@ -10862,7 +10859,7 @@ bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, Mod
         if (ctx->skip_sub_depth_ctrls.enabled && ctx->blk_geom->sq_size <= ctx->skip_sub_depth_ctrls.max_size &&
             mds->split_flag && // could be further splitted
             ctx->avail_blk_flag[ctx->blk_geom->sqi_mds] && // valid block
-            eval_sub_depth_skip_cond1(ctx)) {
+            eval_sub_depth_skip_cond1(ctx, pc_tree)) {
             mds->split_flag = false;
         }
 
