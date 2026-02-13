@@ -135,9 +135,7 @@ typedef struct {
     * Active adjustment of qdelta rate ratio for enhanced rate control
     */
     double rate_ratio_qdelta_adjustment;
-    // Auto frame-scaling variables.
-    //   int rf_level_maxq[RATE_FACTOR_LEVELS];
-    float_t arf_boost_factor;
+    double arf_boost_factor;
     // Q index used for ALT frame
     int arf_q;
 
@@ -151,7 +149,6 @@ typedef struct {
     // Rate Control stat Queue
     coded_frames_stats_entry** coded_frames_stat_queue;
     uint32_t                   coded_frames_stat_queue_head_index;
-    uint32_t                   coded_frames_stat_queue_tail_index;
 
     uint64_t total_bit_actual_per_sw;
     uint64_t max_bit_actual_per_sw;
@@ -216,6 +213,7 @@ int32_t svt_av1_compute_qdelta_fp(int32_t qstart_fp8, int32_t qtarget_fp8, EbBit
 double  svt_av1_convert_qindex_to_q(int32_t qindex, EbBitDepth bit_depth);
 void    svt_av1_normalize_sb_delta_q(struct PictureControlSet* pcs);
 void    svt_variance_adjust_qp(struct PictureControlSet* pcs);
+int     svt_av1_calculate_boost_bits(int frame_count, int boost, int64_t total_group_bits);
 
 EbErrorType svt_aom_rate_control_context_ctor(EbThreadContext* thread_ctx, const EbEncHandle* enc_handle_ptr,
                                               int me_port_index);

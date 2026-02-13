@@ -34,7 +34,6 @@ void svt_av1_new_framerate(struct SequenceControlSet* scs, double framerate);
 void svt_aom_process_rc_stat(struct PictureParentControlSet* ppcs);
 void svt_av1_twopass_postencode_update(struct PictureParentControlSet* ppcs);
 void svt_av1_twopass_postencode_update_gop_const(struct PictureParentControlSet* ppcs);
-void svt_aom_crf_assign_max_rate(struct PictureParentControlSet* ppcs);
 void svt_aom_set_rc_param(struct SequenceControlSet* scs);
 int  svt_aom_frame_is_kf_gf_arf(struct PictureParentControlSet* ppcs);
 
