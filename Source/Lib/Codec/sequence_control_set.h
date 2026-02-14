@@ -298,8 +298,6 @@ typedef struct SequenceControlSet {
     bool stats_based_sb_lambda_modulation;
     // Desired dimensions for an externally triggered resize
     ResizePendingParams resize_pending_params;
-    // Enable low latency KF coding for RTC
-    bool low_latency_kf;
     // Specifies whether to use List1 for BASE frame(s) or not
     bool list0_only_base;
     // Control if feature levels are directly modulated using the sequence QP.

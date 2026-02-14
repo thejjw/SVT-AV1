@@ -91,27 +91,17 @@ EbErrorType svt_aom_rest_context_ctor(EbThreadContext* thread_ctx, const EbEncHa
 
     bool is_16bit = scs->is_16bit_pipeline;
 #if TUNE_STILL_IMAGE
-    uint8_t enable_restoration = 0;
-    uint8_t enable_sg          = 0;
+    uint8_t enable_restoration = allintra
+        ? svt_aom_get_enable_restoration_allintra(config->enc_mode, config->enable_restoration_filtering)
+        : rtc_tune
+        ? svt_aom_get_enable_restoration_rtc(
+              config->enc_mode, config->enable_restoration_filtering, scs->input_resolution, config->fast_decode)
+        : svt_aom_get_enable_restoration_default(
+              config->enc_mode, config->enable_restoration_filtering, scs->input_resolution, config->fast_decode);
 
-    if (allintra) {
-        enable_restoration = svt_aom_get_enable_restoration_allintra(config->enc_mode,
-                                                                     config->enable_restoration_filtering);
-
-        enable_sg = svt_aom_get_enable_sg_allintra();
-
-    } else if (rtc_tune) {
-        enable_restoration = svt_aom_get_enable_restoration_rtc(
-            config->enc_mode, config->enable_restoration_filtering, scs->input_resolution, config->fast_decode);
-
-        enable_sg = svt_aom_get_enable_sg_rtc(config->enc_mode, scs->input_resolution, config->fast_decode);
-
-    } else {
-        enable_restoration = svt_aom_get_enable_restoration_default(
-            config->enc_mode, config->enable_restoration_filtering, scs->input_resolution, config->fast_decode);
-
-        enable_sg = svt_aom_get_enable_sg_default(config->enc_mode, scs->input_resolution, config->fast_decode);
-    }
+    uint8_t enable_sg = allintra ? svt_aom_get_enable_sg_allintra()
+        : rtc_tune ? svt_aom_get_enable_sg_rtc(config->enc_mode, scs->input_resolution, config->fast_decode)
+                   : svt_aom_get_enable_sg_default(config->enc_mode, scs->input_resolution, config->fast_decode);
 
     if (enable_restoration) {
         EbPictureBufferDescInitData init_data;

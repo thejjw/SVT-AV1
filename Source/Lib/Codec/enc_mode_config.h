@@ -143,17 +143,16 @@ void    svt_aom_set_nsq_geom_ctrls(ModeDecisionContext* ctx, uint8_t nsq_geom_le
                                    uint8_t* allow_HV4, uint8_t* min_nsq_bsize);
 #if TUNE_STILL_IMAGE
 void svt_aom_get_intra_mode_levels_default(EncMode enc_mode, bool is_islice, bool is_base, int transition_present,
-                                           bool low_latency_kf, uint32_t* intra_level_ptr,
-                                           uint32_t* dist_based_ang_intra_level_ptr);
+                                           uint32_t* intra_level_ptr, uint32_t* dist_based_ang_intra_level_ptr);
 void svt_aom_get_intra_mode_levels_rtc(EncMode enc_mode, bool is_islice, bool sc_class1, int transition_present,
-                                       bool low_latency_kf, bool flat_rtc_tune, uint32_t* intra_level_ptr,
+                                       bool flat_rtc_tune, uint32_t* intra_level_ptr,
                                        uint32_t* dist_based_ang_intra_level_ptr);
 void svt_aom_get_intra_mode_levels_allintra(EncMode enc_mode, uint32_t* intra_level_ptr,
                                             uint32_t* dist_based_ang_intra_level_ptr);
 #else
 void svt_aom_get_intra_mode_levels(EncMode enc_mode, uint32_t input_resolution, bool allintra, bool rtc_tune,
                                    bool is_islice, bool is_base, bool sc_class1, int transition_present,
-                                   bool low_latency_kf, bool flat_rtc_tune, uint32_t* intra_level_ptr,
+                                   bool flat_rtc_tune, uint32_t* intra_level_ptr,
                                    uint32_t* dist_based_ang_intra_level_ptr);
 #endif
 uint8_t svt_aom_get_tpl_synthesizer_block_size(int8_t tpl_level, uint32_t picture_width, uint32_t picture_height);

@@ -4482,13 +4482,9 @@ static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* 
     const bool rtc_tune = scs->static_config.rtc;
     const bool allintra = scs->allintra;
 
-    if (allintra) {
-        svt_aom_sig_deriv_multi_processes_allintra(scs, pcs);
-    } else if (rtc_tune) {
-        svt_aom_sig_deriv_multi_processes_rtc(scs, pcs);
-    } else {
-        svt_aom_sig_deriv_multi_processes_default(scs, pcs);
-    }
+    allintra       ? svt_aom_sig_deriv_multi_processes_allintra(scs, pcs)
+        : rtc_tune ? svt_aom_sig_deriv_multi_processes_rtc(scs, pcs)
+                   : svt_aom_sig_deriv_multi_processes_default(scs, pcs);
 #else
     svt_aom_sig_deriv_multi_processes(scs, pcs);
 #endif

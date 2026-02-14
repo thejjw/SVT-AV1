@@ -525,18 +525,12 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
 
     // Alloc mds and pc_tree, which are used to track tested blocks in MD
 #if TUNE_STILL_IMAGE
-    bool disallow_4x4;
-    bool disallow_8x8;
-    if (allintra) {
-        disallow_4x4 = svt_aom_get_disallow_4x4_allintra(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_allintra();
-    } else if (rtc_tune) {
-        disallow_4x4 = svt_aom_get_disallow_4x4_rtc(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_rtc(enc_mode, scs->max_input_luma_width, scs->max_input_luma_height);
-    } else {
-        disallow_4x4 = svt_aom_get_disallow_4x4_default(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_default();
-    }
+    bool disallow_4x4 = allintra ? svt_aom_get_disallow_4x4_allintra(enc_mode)
+        : rtc_tune               ? svt_aom_get_disallow_4x4_rtc(enc_mode)
+                                 : svt_aom_get_disallow_4x4_default(enc_mode);
+    bool disallow_8x8 = allintra ? svt_aom_get_disallow_8x8_allintra()
+        : rtc_tune ? svt_aom_get_disallow_8x8_rtc(enc_mode, scs->max_input_luma_width, scs->max_input_luma_height)
+                   : svt_aom_get_disallow_8x8_default();
 #else
     bool disallow_4x4 = svt_aom_get_disallow_4x4(enc_mode);
     bool disallow_8x8 = svt_aom_get_disallow_8x8(
@@ -556,14 +550,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     setup_pc_tree(ctx->pc_tree, 0, scs->seq_header.sb_size, min_bsize);
 
 #if TUNE_STILL_IMAGE
-    bool bypass_encdec;
-    if (allintra) {
-        bypass_encdec = svt_aom_get_bypass_encdec_allintra(enc_mode);
-    } else if (rtc_tune) {
-        bypass_encdec = svt_aom_get_bypass_encdec_rtc(enc_mode, encoder_bit_depth);
-    } else {
-        bypass_encdec = svt_aom_get_bypass_encdec_default(enc_mode, encoder_bit_depth);
-    }
+    bool bypass_encdec = allintra ? svt_aom_get_bypass_encdec_allintra(enc_mode)
+        : rtc_tune                ? svt_aom_get_bypass_encdec_rtc(enc_mode, encoder_bit_depth)
+                                  : svt_aom_get_bypass_encdec_default(enc_mode, encoder_bit_depth);
 #endif
     for (coded_leaf_index = 0; coded_leaf_index < block_max_count_sb; ++coded_leaf_index) {
         ctx->md_blk_arr_nsq[coded_leaf_index].av1xd      = ctx->md_blk_arr_nsq[0].av1xd + coded_leaf_index;
