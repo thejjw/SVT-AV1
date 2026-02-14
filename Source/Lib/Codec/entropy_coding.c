@@ -3315,9 +3315,6 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
     Av1Common* const cm       = pcs->av1_cm;
     uint16_t         tile_cnt = cm->tiles_info.tile_rows * cm->tiles_info.tile_cols;
 
-    // NOTE: by default all coded frames to be used as a reference
-    pcs->is_reference_frame = 1;
-
     FrameHeader* frm_hdr = &pcs->frm_hdr;
     if (!scs->seq_header.reduced_still_picture_header) {
         if (show_existing) {
@@ -3352,11 +3349,8 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
         } else {
             svt_aom_wb_write_bit(wb, 0); // show_existing_frame
         }
-        //frm_hdr->frame_type = pcs->intra_only ? INTRA_ONLY_FRAME : frm_hdr->frame_type;
 
         svt_aom_wb_write_literal(wb, frm_hdr->frame_type, 2);
-
-        // if (frm_hdr->intra_only) frm_hdr->frame_type = INTRA_ONLY_FRAME;
 
         svt_aom_wb_write_bit(wb, frm_hdr->show_frame);
 
@@ -3467,11 +3461,6 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
             // large scale tile sometimes won't refresh any fbs
             if (updated_fb >= 0) {
                 pcs->fb_of_context_type[pcs->frame_context_idx] = updated_fb;
-            }
-            if (!pcs->av1_ref_signal.refresh_frame_mask) {
-                // NOTE: "cpi->refresh_frame_mask == 0" indicates that the coded frame
-                //       will not be used as a reference
-                pcs->is_reference_frame = 0;
             }
         }
     }

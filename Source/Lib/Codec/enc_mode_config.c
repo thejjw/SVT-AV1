@@ -12163,8 +12163,8 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
         : 0;
     // Set Warped Motion level and enabled flag
     pcs->wm_level = 0;
-    if (frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME || frm_hdr->error_resilient_mode ||
-        pcs->ppcs->frame_superres_enabled || pcs->ppcs->frame_resize_enabled) {
+    if (frame_is_intra_only(ppcs) || frm_hdr->error_resilient_mode || pcs->ppcs->frame_superres_enabled ||
+        pcs->ppcs->frame_resize_enabled) {
         pcs->wm_level = 0;
     } else {
         if (rtc_tune) {
@@ -12201,10 +12201,8 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
     bool enable_wm = pcs->wm_level ? 1 : 0;
     // Note: local warp should be disabled when super-res or resize is ON
     // according to the AV1 spec 5.11.27
-    frm_hdr->allow_warped_motion = enable_wm &&
-        !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
-        !frm_hdr->error_resilient_mode && !pcs->ppcs->frame_superres_enabled &&
-        scs->static_config.resize_mode == RESIZE_NONE;
+    frm_hdr->allow_warped_motion = enable_wm && !frame_is_intra_only(ppcs) && !frm_hdr->error_resilient_mode &&
+        !pcs->ppcs->frame_superres_enabled && scs->static_config.resize_mode == RESIZE_NONE;
 
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
     ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod);
