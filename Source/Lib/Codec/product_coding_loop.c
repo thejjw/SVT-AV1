@@ -10736,13 +10736,10 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
     // Only reset settings when features that change settings are used.
     if (ctx->params_status == 1) {
 #if TUNE_STILL_IMAGE
-        if (allintra) {
-            svt_aom_sig_deriv_enc_dec_allintra(pcs, ctx);
-        } else if (rtc_tune) {
-            svt_aom_sig_deriv_enc_dec_rtc(pcs, ctx);
-        } else {
-            svt_aom_sig_deriv_enc_dec_default(pcs, ctx);
-        }
+        allintra       ? svt_aom_sig_deriv_enc_dec_allintra(pcs, ctx)
+            : rtc_tune ? svt_aom_sig_deriv_enc_dec_rtc(pcs, ctx)
+                       : svt_aom_sig_deriv_enc_dec_default(pcs, ctx);
+
 #else
         svt_aom_sig_deriv_enc_dec(scs, pcs, ctx);
 #endif

@@ -3870,13 +3870,9 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     scs->seq_qp_mod = 2;
 
 #if TUNE_STILL_IMAGE
-    if (allintra) {
-        set_qp_based_th_scaling_ctrls_all_intra(scs);
-    } else if (rtc_tune) {
-        set_qp_based_th_scaling_ctrls_rtc(scs);
-    } else {
-        set_qp_based_th_scaling_ctrls_default(scs);
-    }
+    (allintra       ? set_qp_based_th_scaling_ctrls_all_intra
+         : rtc_tune ? set_qp_based_th_scaling_ctrls_rtc
+                    : set_qp_based_th_scaling_ctrls_default)(scs);
 #else
     set_qp_based_th_scaling_ctrls(scs);
 #endif
@@ -4234,8 +4230,6 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     scs->resize_pending_params.resize_denom = SCALE_NUMERATOR;
 
     scs->stats_based_sb_lambda_modulation = 1;
-
-    scs->low_latency_kf = (scs->static_config.rtc && scs->static_config.enc_mode <= ENC_M6) ? 1 : 0;
 
     scs->fast_aa_aware_screen_detection_mode = (scs->static_config.enc_mode >= ENC_M3) ? 1 : 0;
 }

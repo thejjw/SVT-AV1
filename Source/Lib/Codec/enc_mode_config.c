@@ -3107,7 +3107,6 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet* scs) {
     const bool   allintra = scs->allintra;
 #if !TUNE_STILL_IMAGE
     const EbInputResolution input_resolution = scs->input_resolution;
-    const bool              low_latency_kf   = scs->low_latency_kf;
 #endif
     // initialize sequence level enable_superres
     scs->seq_header.enable_superres = scs->static_config.superres_mode > SUPERRES_NONE ? 1 : 0;
@@ -3121,15 +3120,9 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet* scs) {
     scs->seq_header.enable_interintra_compound = ii_allowed ? 1 : 0;
 
 #if TUNE_STILL_IMAGE
-    uint8_t is_filter_intra_used;
-
-    if (allintra) {
-        is_filter_intra_used = get_filter_intra_level_allintra(enc_mode);
-    } else if (rtc_tune) {
-        is_filter_intra_used = get_filter_intra_level_rtc(enc_mode);
-    } else {
-        is_filter_intra_used = get_filter_intra_level_default(enc_mode);
-    }
+    uint8_t is_filter_intra_used = allintra ? get_filter_intra_level_allintra(enc_mode)
+        : rtc_tune                          ? get_filter_intra_level_rtc(enc_mode)
+                                            : get_filter_intra_level_default(enc_mode);
 
     scs->seq_header.filter_intra_level = is_filter_intra_used ? 1 : 0;
 
@@ -3180,7 +3173,6 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet* scs) {
                                                       is_base,
                                                       sc_class1,
                                                       transition_present,
-                                                      low_latency_kf,
                                                       scs->use_flat_ipp,
                                                       &intra_level,
                                                       &dist_based_ang_intra_level);
@@ -3211,22 +3203,17 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet* scs) {
         svt_aom_derive_input_resolution(&init_input_resolution,
                                         scs->max_initial_input_luma_width * scs->max_initial_input_luma_height);
 #if TUNE_STILL_IMAGE
-        if (allintra) {
-            scs->seq_header.enable_restoration = svt_aom_get_enable_restoration_allintra(
-                scs->static_config.enc_mode, scs->static_config.enable_restoration_filtering);
-        } else if (rtc_tune) {
-            scs->seq_header.enable_restoration = svt_aom_get_enable_restoration_rtc(
-                scs->static_config.enc_mode,
-                scs->static_config.enable_restoration_filtering,
-                init_input_resolution,
-                scs->static_config.fast_decode);
-        } else {
-            scs->seq_header.enable_restoration = svt_aom_get_enable_restoration_default(
-                scs->static_config.enc_mode,
-                scs->static_config.enable_restoration_filtering,
-                init_input_resolution,
-                scs->static_config.fast_decode);
-        }
+        scs->seq_header.enable_restoration = allintra
+            ? svt_aom_get_enable_restoration_allintra(scs->static_config.enc_mode,
+                                                      scs->static_config.enable_restoration_filtering)
+            : rtc_tune ? svt_aom_get_enable_restoration_rtc(scs->static_config.enc_mode,
+                                                            scs->static_config.enable_restoration_filtering,
+                                                            init_input_resolution,
+                                                            scs->static_config.fast_decode)
+                       : svt_aom_get_enable_restoration_default(scs->static_config.enc_mode,
+                                                                scs->static_config.enable_restoration_filtering,
+                                                                init_input_resolution,
+                                                                scs->static_config.fast_decode);
 #else
         scs->seq_header.enable_restoration = svt_aom_get_enable_restoration(
             scs->static_config.enc_mode,
@@ -6210,8 +6197,7 @@ static void set_nsq_search_ctrls(PictureControlSet* pcs, ModeDecisionContext* ct
 }
 #if TUNE_STILL_IMAGE
 void svt_aom_get_intra_mode_levels_default(EncMode enc_mode, bool is_islice, bool is_base, int transition_present,
-                                           bool low_latency_kf, uint32_t* intra_level_ptr,
-                                           uint32_t* dist_based_ang_intra_level_ptr) {
+                                           uint32_t* intra_level_ptr, uint32_t* dist_based_ang_intra_level_ptr) {
     uint32_t intra_level;
     uint32_t dist_based_ang_intra_level;
 
@@ -6239,16 +6225,12 @@ void svt_aom_get_intra_mode_levels_default(EncMode enc_mode, bool is_islice, boo
         dist_based_ang_intra_level = 0;
     }
 
-    if (low_latency_kf && is_islice) {
-        intra_level = 6;
-    }
-
     *intra_level_ptr                = intra_level;
     *dist_based_ang_intra_level_ptr = dist_based_ang_intra_level;
 }
 
 void svt_aom_get_intra_mode_levels_rtc(EncMode enc_mode, bool is_islice, bool sc_class1, int transition_present,
-                                       bool low_latency_kf, bool flat_rtc_tune, uint32_t* intra_level_ptr,
+                                       bool flat_rtc_tune, uint32_t* intra_level_ptr,
                                        uint32_t* dist_based_ang_intra_level_ptr) {
     uint32_t intra_level;
     uint32_t dist_based_ang_intra_level;
@@ -6269,10 +6251,6 @@ void svt_aom_get_intra_mode_levels_rtc(EncMode enc_mode, bool is_islice, bool sc
         intra_level = 8;
 #endif
         dist_based_ang_intra_level = 0;
-    }
-
-    if (low_latency_kf && is_islice) {
-        intra_level = 6;
     }
 
     *intra_level_ptr                = intra_level;
@@ -6304,7 +6282,7 @@ void svt_aom_get_intra_mode_levels_allintra(EncMode enc_mode, uint32_t* intra_le
 #else
 void svt_aom_get_intra_mode_levels(EncMode enc_mode, uint32_t input_resolution, bool allintra, bool rtc_tune,
                                    bool is_islice, bool is_base, bool sc_class1, int transition_present,
-                                   bool low_latency_kf, bool flat_rtc_tune, uint32_t* intra_level_ptr,
+                                   bool flat_rtc_tune, uint32_t* intra_level_ptr,
                                    uint32_t* dist_based_ang_intra_level_ptr) {
     uint32_t intra_level;
     uint32_t dist_based_ang_intra_level;
@@ -6374,10 +6352,6 @@ void svt_aom_get_intra_mode_levels(EncMode enc_mode, uint32_t input_resolution, 
     } else {
         intra_level                = 8;
         dist_based_ang_intra_level = 0;
-    }
-
-    if (low_latency_kf && is_islice) {
-        intra_level = 6;
     }
 
     *intra_level_ptr                = intra_level;
@@ -8079,26 +8053,18 @@ void svt_aom_sig_deriv_enc_dec_common(SequenceControlSet* scs, PictureControlSet
     // for those dimensions). Use the SB width/height so that 8x8 can still be skipped for all complete
     // SBs and used only for the incomplete blocks that require 8x8 for conformance.
 #if TUNE_STILL_IMAGE
-    if (allintra) {
-        ctx->disallow_8x8 = svt_aom_get_disallow_8x8_allintra();
-    } else if (rtc_tune) {
-        ctx->disallow_8x8 = svt_aom_get_disallow_8x8_rtc(enc_mode, b64_geom->width, b64_geom->height);
-    } else {
-        ctx->disallow_8x8 = svt_aom_get_disallow_8x8_default();
-    }
+    ctx->disallow_8x8 = allintra ? svt_aom_get_disallow_8x8_allintra()
+        : rtc_tune               ? svt_aom_get_disallow_8x8_rtc(enc_mode, b64_geom->width, b64_geom->height)
+                                 : svt_aom_get_disallow_8x8_default();
 #else
     ctx->disallow_8x8 = svt_aom_get_disallow_8x8(enc_mode, allintra, rtc_tune, b64_geom->width, b64_geom->height);
 #endif
     ctx->disallow_4x4 = pcs->pic_disallow_4x4;
     // Set max block-size
 #if TUNE_STILL_IMAGE
-    if (allintra) {
-        get_max_block_size_allintra(pcs, ctx);
-    } else if (rtc_tune) {
-        get_max_block_size_rtc(pcs, ctx);
-    } else {
-        get_max_block_size_default(pcs, ctx);
-    }
+    allintra       ? get_max_block_size_allintra(pcs, ctx)
+        : rtc_tune ? get_max_block_size_rtc(pcs, ctx)
+                   : get_max_block_size_default(pcs, ctx);
 #else
     get_max_block_size(pcs, ctx, allintra);
 #endif
@@ -9110,6 +9076,15 @@ void svt_aom_sig_deriv_enc_dec_allintra(PictureControlSet* pcs, ModeDecisionCont
         ctx->md_disallow_nsq_search = !ctx->nsq_geom_ctrls.enabled || !ctx->nsq_search_ctrls.enabled;
     }
 
+    ctx->global_mv_injection             = 0;
+    ctx->new_nearest_injection           = 0;
+    ctx->new_nearest_near_comb_injection = 0;
+    svt_aom_set_wm_controls(ctx, 0);
+    ctx->unipred3x3_injection = 0;
+    svt_aom_set_bipred3x3_controls(ctx, 0);
+    set_inter_comp_controls(ctx, 0);
+    svt_aom_set_dist_based_ref_pruning_controls(ctx, 0);
+
     set_spatial_sse_full_loop_level(ctx, pd_pass == PD_PASS_0 ? 0 : pcs->spatial_sse_full_loop_level);
     if (ctx->uv_ctrls.uv_mode <= CHROMA_MODE_1) {
         ctx->blk_skip_decision = true;
@@ -9147,6 +9122,8 @@ void svt_aom_sig_deriv_enc_dec_allintra(PictureControlSet* pcs, ModeDecisionCont
     }
 
     set_depth_early_exit_ctrls(ctx, depth_early_exit_lvl);
+    set_obmc_controls(ctx, 0);
+    set_inter_intra_ctrls(ctx, 0);
     set_txs_controls(pcs, ctx, pd_pass == PD_PASS_0 ? 0 : pcs->txs_level);
     set_filter_intra_ctrls(ctx, pd_pass == PD_PASS_0 ? 0 : pcs->pic_filter_intra_level);
     // Set md_allow_intrabc @ MD
@@ -9165,6 +9142,12 @@ void svt_aom_sig_deriv_enc_dec_allintra(PictureControlSet* pcs, ModeDecisionCont
 
     uint8_t pf_level = 1;
     set_pf_controls(ctx, pf_level);
+
+    md_sq_motion_search_controls(ctx, 0);
+    md_nsq_motion_search_controls(ctx, 0);
+    svt_aom_md_pme_search_controls(ctx, 0);
+    md_subpel_me_controls(ctx, 0);
+    md_subpel_pme_controls(ctx, 0);
 
 #if OPT_RATE_ESTIMATION
     uint8_t rate_est_level;
@@ -10912,13 +10895,8 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
     uint32_t intra_level                = 0;
     uint32_t dist_based_ang_intra_level = 0;
 
-    svt_aom_get_intra_mode_levels_default(enc_mode,
-                                          is_islice,
-                                          is_base,
-                                          transition_present,
-                                          pcs->scs->low_latency_kf,
-                                          &intra_level,
-                                          &dist_based_ang_intra_level);
+    svt_aom_get_intra_mode_levels_default(
+        enc_mode, is_islice, is_base, transition_present, &intra_level, &dist_based_ang_intra_level);
 
     pcs->intra_level                = intra_level;
     pcs->dist_based_ang_intra_level = dist_based_ang_intra_level;
@@ -10974,10 +10952,6 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
         pcs->rdoq_level = 2;
     }
 
-    if (scs->low_latency_kf && is_islice) {
-        pcs->rdoq_level = 0;
-    }
-
     pcs->rate_est_level = 1;
 
     // Set the level the interpolation search
@@ -11020,9 +10994,6 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
         }
     }
 
-    if (scs->low_latency_kf && is_islice) {
-        pcs->cfl_level = 0;
-    }
     // Set the level for new/nearest/near injection
     if (enc_mode <= ENC_MR) {
         pcs->new_nearest_near_comb_injection = 1;
@@ -11097,9 +11068,6 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
         pcs->txs_level = is_islice ? 4 : 0;
     } else {
         pcs->txs_level = 0;
-    }
-    if (pcs->scs->low_latency_kf && pcs->slice_type == I_SLICE) {
-        pcs->txs_level = 4;
     }
 
     // QP-banding
@@ -11492,14 +11460,8 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
     uint32_t intra_level                = 0;
     uint32_t dist_based_ang_intra_level = 0;
 
-    svt_aom_get_intra_mode_levels_rtc(enc_mode,
-                                      is_islice,
-                                      sc_class1,
-                                      transition_present,
-                                      pcs->scs->low_latency_kf,
-                                      flat_rtc,
-                                      &intra_level,
-                                      &dist_based_ang_intra_level);
+    svt_aom_get_intra_mode_levels_rtc(
+        enc_mode, is_islice, sc_class1, transition_present, flat_rtc, &intra_level, &dist_based_ang_intra_level);
 
     pcs->intra_level                = intra_level;
     pcs->dist_based_ang_intra_level = dist_based_ang_intra_level;
@@ -11553,10 +11515,6 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
         pcs->rdoq_level = is_islice ? 1 : 0;
     }
 
-    if (scs->low_latency_kf && is_islice) {
-        pcs->rdoq_level = 0;
-    }
-
     pcs->rate_est_level = 1;
 
     // Set the level the interpolation search
@@ -11595,9 +11553,6 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
         pcs->cfl_level = is_islice ? 2 : 0;
     }
 
-    if (scs->low_latency_kf && is_islice) {
-        pcs->cfl_level = 0;
-    }
     // Set the level for new/nearest/near injection
     if (enc_mode <= ENC_MR) {
         pcs->new_nearest_near_comb_injection = 1;
@@ -11674,9 +11629,6 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
         }
     } else {
         pcs->txs_level = is_islice ? 4 : 0;
-    }
-    if (pcs->scs->low_latency_kf && pcs->slice_type == I_SLICE) {
-        pcs->txs_level = 4;
     }
 
     // QP-banding
@@ -11886,6 +11838,9 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
     const uint32_t           sq_qp            = scs->static_config.qp;
     FrameHeader*             frm_hdr          = &ppcs->frm_hdr;
 
+    //MFMV
+    mfmv_controls(pcs, 0);
+
     uint8_t update_cdf_level = svt_aom_get_update_cdf_level_allintra(enc_mode);
     set_cdf_controls(pcs, update_cdf_level);
     if (pcs->cdf_ctrl.enabled) {
@@ -11902,6 +11857,12 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
     } else {
         pcs->ppcs->use_accurate_part_ctx = false;
     }
+
+    pcs->wm_level = 0;
+
+    pcs->approx_inter_rate = 0;
+
+    pcs->skip_intra = 0;
 
     // Set the intra level
     uint32_t intra_level                = 0;
@@ -11968,6 +11929,21 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
         pcs->cfl_level = 0;
     }
 
+    // Set the level for new/nearest/near injection
+    pcs->new_nearest_near_comb_injection = 0;
+
+    // Set the level for unipred3x3 injection
+    pcs->unipred3x3_injection = 0;
+
+    // Set the level for bipred3x3 injection
+    pcs->bipred3x3_injection = 0;
+
+    // Set the level for inter-inter compound
+    pcs->inter_compound_mode = 0;
+
+    // Set the level for the distance-based red pruning
+    pcs->dist_based_ref_pruning = 0;
+
     // Set the level the spatial sse @ full-loop
     pcs->spatial_sse_full_loop_level = 3;
 
@@ -11995,6 +11971,18 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
 
     // Set the level for nic
     pcs->nic_level = svt_aom_get_nic_level_allintra(enc_mode);
+
+    // Set the level for SQ me-search
+    pcs->md_sq_mv_search_level = 0;
+
+    // Set the level for NSQ me-search
+    pcs->md_nsq_mv_search_level = 0;
+
+    // Set the level for PME search
+    pcs->md_pme_level = 0;
+
+    // Set the level for mds0
+    pcs->mds0_level = 0;
 
     /*
     disallow_4x4
@@ -12025,6 +12013,8 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
     // for the low delay enhance base layer frames, lower the enc_mode to improve the quality
     set_pic_lpd0_lvl_allintra(pcs, enc_mode);
 
+    pcs->pic_depth_removal_level = 0;
+
     // Set the depth refinement level
     if (enc_mode <= ENC_M2) {
         pcs->pic_block_based_depth_refinement_level = 5;
@@ -12035,6 +12025,8 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
     } else {
         pcs->pic_block_based_depth_refinement_level = 9;
     }
+
+    pcs->pic_lpd1_lvl = 0;
 
     pcs->lambda_weight = 0;
     if (pcs->scs->static_config.tune == TUNE_IQ) {
@@ -12230,7 +12222,6 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
                                   is_base,
                                   sc_class1,
                                   transition_present,
-                                  pcs->scs->low_latency_kf,
                                   scs->use_flat_ipp,
                                   &intra_level,
                                   &dist_based_ang_intra_level);
@@ -12359,9 +12350,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
             pcs->rdoq_level = 2;
         }
     }
-    if (scs->low_latency_kf && is_islice) {
-        pcs->rdoq_level = 0;
-    }
+
     // Set the level the interpolation search
     pcs->interpolation_search_level = 0;
     if (enc_mode <= ENC_MR) {
@@ -12420,9 +12409,6 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
         pcs->cfl_level = is_islice ? 2 : 0;
     }
 
-    if (scs->low_latency_kf && is_islice) {
-        pcs->cfl_level = 0;
-    }
     // Set the level for new/nearest/near injection
     if (enc_mode <= ENC_MR) {
         pcs->new_nearest_near_comb_injection = 1;
@@ -12542,9 +12528,6 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
         pcs->txs_level = is_islice ? 4 : 0;
     } else {
         pcs->txs_level = 0;
-    }
-    if (pcs->scs->low_latency_kf && pcs->slice_type == I_SLICE) {
-        pcs->txs_level = 4;
     }
 
     // QP-banding

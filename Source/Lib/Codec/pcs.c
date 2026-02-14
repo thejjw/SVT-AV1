@@ -408,25 +408,17 @@ EbErrorType pcs_update_param(PictureControlSet* pcs) {
         svt_picture_buffer_desc_update(pcs->input_frame16bit, (EbPtr)&coeff_buffer_desc_init_data);
     }
 #if TUNE_STILL_IMAGE
-    if (allintra) {
-        if (svt_aom_get_enable_restoration_allintra(scs->static_config.enc_mode,
-                                                    scs->static_config.enable_restoration_filtering)) {
-            set_restoration_unit_size(scs->max_input_luma_width, scs->max_input_luma_height, 1, 1, pcs->rst_info);
-        }
-    } else if (rtc_tune) {
-        if (svt_aom_get_enable_restoration_rtc(scs->static_config.enc_mode,
-                                               scs->static_config.enable_restoration_filtering,
-                                               scs->input_resolution,
-                                               scs->static_config.fast_decode)) {
-            set_restoration_unit_size(scs->max_input_luma_width, scs->max_input_luma_height, 1, 1, pcs->rst_info);
-        }
-    } else {
-        if (svt_aom_get_enable_restoration_default(scs->static_config.enc_mode,
-                                                   scs->static_config.enable_restoration_filtering,
-                                                   scs->input_resolution,
-                                                   scs->static_config.fast_decode)) {
-            set_restoration_unit_size(scs->max_input_luma_width, scs->max_input_luma_height, 1, 1, pcs->rst_info);
-        }
+    if (allintra       ? svt_aom_get_enable_restoration_allintra(scs->static_config.enc_mode,
+                                                           scs->static_config.enable_restoration_filtering)
+            : rtc_tune ? svt_aom_get_enable_restoration_rtc(scs->static_config.enc_mode,
+                                                            scs->static_config.enable_restoration_filtering,
+                                                            scs->input_resolution,
+                                                            scs->static_config.fast_decode)
+                       : svt_aom_get_enable_restoration_default(scs->static_config.enc_mode,
+                                                                scs->static_config.enable_restoration_filtering,
+                                                                scs->input_resolution,
+                                                                scs->static_config.fast_decode)) {
+        set_restoration_unit_size(scs->max_input_luma_width, scs->max_input_luma_height, 1, 1, pcs->rst_info);
     }
 #else
     if (svt_aom_get_enable_restoration(scs->static_config.enc_mode,
@@ -528,25 +520,17 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     object_ptr->temp_lf_recon_pic                 = NULL;
     object_ptr->scaled_input_pic                  = NULL;
 #if TUNE_STILL_IMAGE
-    bool enable_restoration = false;
-
-    if (allintra) {
-        enable_restoration = svt_aom_get_enable_restoration_allintra(
-            init_data_ptr->enc_mode, init_data_ptr->static_config.enable_restoration_filtering);
-    } else if (rtc_tune) {
-        enable_restoration = svt_aom_get_enable_restoration_rtc(
-            init_data_ptr->enc_mode,
-            init_data_ptr->static_config.enable_restoration_filtering,
-            init_data_ptr->input_resolution,
-            init_data_ptr->static_config.fast_decode);
-    } else {
-        enable_restoration = svt_aom_get_enable_restoration_default(
-            init_data_ptr->enc_mode,
-            init_data_ptr->static_config.enable_restoration_filtering,
-            init_data_ptr->input_resolution,
-            init_data_ptr->static_config.fast_decode);
-    }
-
+    bool enable_restoration = allintra
+        ? svt_aom_get_enable_restoration_allintra(init_data_ptr->enc_mode,
+                                                  init_data_ptr->static_config.enable_restoration_filtering)
+        : rtc_tune ? svt_aom_get_enable_restoration_rtc(init_data_ptr->enc_mode,
+                                                        init_data_ptr->static_config.enable_restoration_filtering,
+                                                        init_data_ptr->input_resolution,
+                                                        init_data_ptr->static_config.fast_decode)
+                   : svt_aom_get_enable_restoration_default(init_data_ptr->enc_mode,
+                                                            init_data_ptr->static_config.enable_restoration_filtering,
+                                                            init_data_ptr->input_resolution,
+                                                            init_data_ptr->static_config.fast_decode);
     if (enable_restoration) {
         set_restoration_unit_size(
             init_data_ptr->picture_width, init_data_ptr->picture_height, 1, 1, object_ptr->rst_info);

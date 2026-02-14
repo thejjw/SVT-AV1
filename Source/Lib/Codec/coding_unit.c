@@ -85,14 +85,9 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr,
     bool disallow_sub_16x16_nsq   = true;
     for (uint8_t coeff_lvl = 0; coeff_lvl <= HIGH_LVL + 1; coeff_lvl++) {
 #if TUNE_STILL_IMAGE
-        uint8_t nsq_geom_lvl;
-        if (allintra) {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_allintra(enc_mode);
-        } else if (rtc) {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_rtc(enc_mode);
-        } else {
-            nsq_geom_lvl = svt_aom_get_nsq_geom_level_default(enc_mode, coeff_lvl);
-        }
+        uint8_t nsq_geom_lvl = allintra ? svt_aom_get_nsq_geom_level_allintra(enc_mode)
+            : rtc                       ? svt_aom_get_nsq_geom_level_rtc(enc_mode)
+                                        : svt_aom_get_nsq_geom_level_default(enc_mode, coeff_lvl);
 #else
         const uint8_t nsq_geom_lvl = svt_aom_get_nsq_geom_level(allintra, input_resolution, enc_mode, coeff_lvl, rtc);
 #endif
@@ -109,18 +104,12 @@ EbErrorType svt_aom_largest_coding_unit_ctor(SuperBlock* larget_coding_unit_ptr,
         }
     }
 #if TUNE_STILL_IMAGE
-    bool disallow_4x4;
-    bool disallow_8x8;
-    if (allintra) {
-        disallow_4x4 = svt_aom_get_disallow_4x4_allintra(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_allintra();
-    } else if (rtc) {
-        disallow_4x4 = svt_aom_get_disallow_4x4_rtc(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_rtc(enc_mode, pcs->frame_width, pcs->frame_height);
-    } else {
-        disallow_4x4 = svt_aom_get_disallow_4x4_default(enc_mode);
-        disallow_8x8 = svt_aom_get_disallow_8x8_default();
-    }
+    bool disallow_4x4 = allintra ? svt_aom_get_disallow_4x4_allintra(enc_mode)
+        : rtc                    ? svt_aom_get_disallow_4x4_rtc(enc_mode)
+                                 : svt_aom_get_disallow_4x4_default(enc_mode);
+    bool disallow_8x8 = allintra ? svt_aom_get_disallow_8x8_allintra()
+        : rtc                    ? svt_aom_get_disallow_8x8_rtc(enc_mode, pcs->frame_width, pcs->frame_height)
+                                 : svt_aom_get_disallow_8x8_default();
 #else
     bool disallow_4x4 = svt_aom_get_disallow_4x4(enc_mode);
     bool disallow_8x8 = svt_aom_get_disallow_8x8(
