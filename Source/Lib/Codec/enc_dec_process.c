@@ -1595,7 +1595,6 @@ static void init_md_scan(PictureControlSet* pcs, ModeDecisionContext* ctx, MdSca
 
 static void set_blocks_to_be_tested(SequenceControlSet* scs, PictureControlSet* pcs, ModeDecisionContext* ctx,
                                     MdScan* mds, const bool use_predetermined_depths) {
-    memset(ctx->avail_blk_flag, false, sizeof(uint8_t) * scs->max_block_cnt);
     memset(ctx->tested_blk, false, sizeof(*(ctx->tested_blk)) * ctx->blocks_to_alloc);
     int min_sq_size = (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_64x64) ? 64
         : (ctx->depth_removal_ctrls.enabled && ctx->depth_removal_ctrls.disallow_below_32x32)             ? 32
@@ -1809,8 +1808,7 @@ static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDec
 }
 
 static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree,
-                                                const BlockGeom* blk_geom, uint32_t blk_index, int64_t th_offset,
-                                                int* e_depth) {
+                                                const BlockGeom* blk_geom, int64_t th_offset, int* e_depth) {
     uint64_t child_cost = 0;
     uint8_t  child_cnt  = 0;
     if (pc_tree->split[0]->tested_blk[PART_N][0]) {
@@ -1981,7 +1979,7 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, mds->mds_idx);
         update_pred_th_offset(pcs, ctx, pc_tree, blk_geom, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
         if (s_depth &&
-            // Check avail_blk_flag b/c use block's cost inside
+            // Check tested_blk b/c use block's cost inside
             pc_tree->tested_blk[PART_N][0] &&
             sq_size < ((pcs->scs->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
             is_parent_to_current_deviation_small(pcs, ctx, pc_tree, blk_geom, s_th_offset, &s_depth);
@@ -1991,9 +1989,9 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         }
 
         if (e_depth &&
-            // Check avail_blk_flag b/c use block's cost inside
+            // Check tested_blk b/c use block's cost inside
             pc_tree->tested_blk[PART_N][0] && sq_size > 4) {
-            is_child_to_current_deviation_small(pcs, ctx, pc_tree, blk_geom, mds->mds_idx, e_th_offset, &e_depth);
+            is_child_to_current_deviation_small(pcs, ctx, pc_tree, blk_geom, e_th_offset, &e_depth);
             if (e_depth) {
                 add_sub_depth = 1;
             }

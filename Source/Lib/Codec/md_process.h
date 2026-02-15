@@ -948,7 +948,6 @@ typedef struct ModeDecisionContext {
     MdRateEstimationContext*      md_rate_est_ctx;
     MdRateEstimationContext*      rate_est_table;
     BlkStruct*                    md_blk_arr_nsq;
-    uint8_t*                      avail_blk_flag;
     // used to set the array in PC_TREE by the same name. Implemented as a separate allocation
     // to easily zero out the whole array (for all blocks) without looping over entire pc_tree.
     bool (*tested_blk)[PART_S][4];

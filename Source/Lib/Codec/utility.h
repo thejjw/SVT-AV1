@@ -70,8 +70,6 @@ typedef struct BlockGeom {
     uint16_t    d1_depth_offset; // offset to the next d1 sq block
     uint16_t    ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
     uint8_t     is_last_quadrant; // only for square bloks, is this the fourth quadrant block?
-    uint8_t     redund; // 1: means that this block is redundant to another
-    BlockList_t redund_list; // the list where the block is redundant
 } BlockGeom;
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);

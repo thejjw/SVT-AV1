@@ -379,29 +379,6 @@ static uint32_t count_total_num_of_active_blks(uint8_t min_nsq_bsize) {
     return depth_scan_idx;
 }
 
-static void log_redundancy_similarity(BlockGeom* blk_geom, uint32_t max_block_count) {
-    uint32_t blk_it, s_it;
-
-    for (blk_it = 0; blk_it < max_block_count; blk_it++) {
-        BlockGeom* cur_geom             = &blk_geom[blk_it];
-        cur_geom->redund                = 0;
-        cur_geom->redund_list.list_size = 0;
-
-        for (s_it = 0; s_it < max_block_count; s_it++) {
-            BlockGeom* search_geom = &blk_geom[s_it];
-
-            if (cur_geom->bsize == search_geom->bsize && cur_geom->org_x == search_geom->org_x &&
-                cur_geom->org_y == search_geom->org_y && s_it != blk_it) {
-                if (cur_geom->nsi == 0 && search_geom->nsi == 0 && cur_geom->redund_list.list_size < 3) {
-                    cur_geom->redund                                                     = 1;
-                    cur_geom->redund_list.blk_mds_table[cur_geom->redund_list.list_size] = search_geom->blkidx_mds;
-                    cur_geom->redund_list.list_size++;
-                }
-            }
-        }
-    }
-}
-
 /*
   Build Block Geometry
 */
@@ -483,7 +460,6 @@ void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom) {
     //(2) Construct md scan blk_geom_mds:  use info from dps
     uint32_t idx_mds = 0;
     md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, 0, min_nsq_bsize);
-    log_redundancy_similarity(blk_geom, max_block_count);
 }
 
 uint32_t svt_aom_get_mds_idx(const BlockGeom* blk_geom_table, uint32_t max_block_count, uint32_t orgx, uint32_t orgy,

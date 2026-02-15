@@ -97,7 +97,6 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->pc_tree);
     EB_FREE_ARRAY(obj->tested_blk);
     obj->blocks_to_alloc = 0;
-    EB_FREE_ARRAY(obj->avail_blk_flag);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     if (obj->rate_est_table) {
         EB_FREE_ARRAY(obj->rate_est_table);
@@ -523,7 +522,6 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     }
     ctx->md_blk_arr_nsq[0].av1xd = NULL;
     EB_MALLOC_ARRAY(ctx->md_blk_arr_nsq[0].av1xd, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->avail_blk_flag, block_max_count_sb);
 
     // Alloc mds and pc_tree, which are used to track tested blocks in MD
 #if TUNE_STILL_IMAGE

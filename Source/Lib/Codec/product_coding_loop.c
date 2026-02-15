@@ -6969,19 +6969,6 @@ static void move_blk_data_redund(PictureControlSet* pcs, ModeDecisionContext* ct
     dst->wm_params_l1 = src->wm_params_l1;
 }
 
-static void check_redundant_block(const BlockGeom* blk_geom, ModeDecisionContext* ctx, uint8_t* redundant_blk_avail,
-                                  uint16_t* redundant_blk_mds) {
-    if (blk_geom->redund) {
-        for (int it = 0; it < blk_geom->redund_list.list_size; it++) {
-            if (ctx->avail_blk_flag[blk_geom->redund_list.blk_mds_table[it]]) {
-                *redundant_blk_mds   = blk_geom->redund_list.blk_mds_table[it];
-                *redundant_blk_avail = 1;
-                break;
-            }
-        }
-    }
-}
-
 /*
 Perform search for the best chroma mode (intra modes only). The search is performed only on the intra luma
 modes that will be tested in MDS3 (plus DC is always tested). The search involves the following main parts:
@@ -7893,7 +7880,6 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
     BlkStruct* blk_ptr = ctx->blk_ptr;
     if (pcs->scs->allintra && ctx->lpd0_ctrls.pd0_level == VERY_LIGHT_PD0) {
         blk_ptr->cost = compute_vlpd0_cost_allintra(pcs, ctx);
-        ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
         return;
     }
 #endif
@@ -8004,8 +7990,6 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
                 recon_ptr->buffer_y[rec_luma_offset + ctx->blk_geom->bwidth - 1 + j * recon_ptr->stride_y];
         }
     }
-
-    ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
 }
 
 int svt_aom_get_comp_group_idx_context_enc(const MacroBlockD* xd);
@@ -8793,8 +8777,6 @@ static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContex
     if (!ctx->skip_intra) {
         copy_recon_light_pd1(pcs, ctx, cand_bf);
     }
-
-    ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
 }
 
 static void tx_shortcut_detector(ModeDecisionContext* ctx, ModeDecisionCandidateBuffer** cand_bf_ptr_array) {
@@ -9395,7 +9377,6 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         ctx->blk_geom->bsize >= BLOCK_8X8 && ctx->blk_geom->sq_size > ctx->nsq_geom_ctrls.min_nsq_block_size) {
         non_normative_txs(pcs, ctx, blk_ptr, cand_bf);
     }
-    ctx->avail_blk_flag[blk_ptr->mds_idx] = true;
 }
 
 static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDecisionContext* ctx,
@@ -9680,7 +9661,6 @@ static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx, con
  */
 static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     const BlockGeom* blk_geom  = ctx->blk_geom;
-    const uint16_t   sqi       = blk_geom->sqi_mds;
     const Part       shape     = blk_geom->shape;
     uint8_t          skip_nsq  = 0;
     uint32_t         sq_weight = ctx->nsq_search_ctrls.sq_weight;
@@ -10001,90 +9981,91 @@ static void get_blk_var_map(int block_size, int org_x, int org_y, int* blk_idx, 
  * Check if a block is redundant, and if so, copy the data from the original block
  * return 1 if block is redundant and updated, 0 otherwise
  */
-static bool update_redundant(PictureControlSet* pcs, ModeDecisionContext* ctx) {
-    uint8_t          redundant_blk_avail = 0;
-    uint16_t         redundant_blk_mds;
+static bool update_redundant(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, const int nsi) {
     const BlockGeom* blk_geom   = ctx->blk_geom;
     BlkStruct*       blk_ptr    = ctx->blk_ptr;
-    uint8_t          bwidth     = blk_geom->bwidth;
-    uint8_t          bheight    = blk_geom->bheight;
-    uint8_t          bwidth_uv  = blk_geom->bwidth_uv;
-    uint8_t          bheight_uv = blk_geom->bheight_uv;
 
     // For SQ blocks, certain calculations are performed on the predicted/recon samples that
     // cannot be copied from the higher depth's redundant blocks (e.g. rec_dist_per_quadrant).
     // To avoid basing decisions on this uncomputed data (or copying erroneous data) do not
     // skip processing SQ blocks.
-    if (blk_geom->shape == PART_N) {
+    if (blk_geom->shape == PART_N || !ctx->redundant_blk) {
         return 0;
     }
 
-    check_redundant_block(blk_geom, ctx, &redundant_blk_avail, &redundant_blk_mds);
-
-    if (redundant_blk_avail && ctx->redundant_blk) {
-        if (ctx->copied_neigh_arrays && ctx->blk_geom->nsi == 0) {
-            svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
-                pcs,
-                ctx,
-                NSQ_NEIGHBOR_ARRAY_INDEX,
-                MD_NEIGHBOR_ARRAY_INDEX,
-                ctx->blk_geom->sqi_mds);
-        }
-
-        // Copy results
-        BlkStruct* redund_blk_ptr = &ctx->md_blk_arr_nsq[redundant_blk_mds];
-        move_blk_data_redund(pcs, ctx, redund_blk_ptr, blk_ptr);
-        ctx->avail_blk_flag[blk_ptr->mds_idx] = ctx->avail_blk_flag[redundant_blk_mds];
-
-        if (ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
-            // If a redundant block is being tested, there must be a search over NSQ shapes and/or depth.
-            // Therefore, we save the recon and coeffs under the blk_ptr, instead of writing directly to
-            // a final buffer.  Once the final partition is selected, the recon/coeff will be copied to
-            // the final buffer in svt_aom_encdec_update.
-
-            // Copy recon
-            uint16_t sz = ctx->encoder_bit_depth > EB_EIGHT_BIT ? sizeof(uint16_t) : sizeof(uint8_t);
-
-            uint32_t dst_stride = blk_ptr->recon_tmp->stride_y;
-            uint32_t src_stride = redund_blk_ptr->recon_tmp->stride_y;
-            for (uint32_t i = 0; i < bheight; i++) {
-                svt_memcpy(blk_ptr->recon_tmp->buffer_y + (i * dst_stride) * sz,
-                           redund_blk_ptr->recon_tmp->buffer_y + (i * src_stride) * sz,
-                           bwidth * sz);
-            }
-
-            dst_stride = blk_ptr->recon_tmp->stride_cb;
-            src_stride = redund_blk_ptr->recon_tmp->stride_cb;
-            for (uint32_t i = 0; i < bheight_uv; i++) {
-                svt_memcpy(blk_ptr->recon_tmp->buffer_cb + (i * dst_stride) * sz,
-                           redund_blk_ptr->recon_tmp->buffer_cb + (i * src_stride) * sz,
-                           bwidth_uv * sz);
-            }
-
-            dst_stride = blk_ptr->recon_tmp->stride_cr;
-            src_stride = redund_blk_ptr->recon_tmp->stride_cr;
-            for (uint32_t i = 0; i < bheight_uv; i++) {
-                svt_memcpy(blk_ptr->recon_tmp->buffer_cr + (i * dst_stride) * sz,
-                           redund_blk_ptr->recon_tmp->buffer_cr + (i * src_stride) * sz,
-                           bwidth_uv * sz);
-            }
-
-            // Copy coeffs
-            int32_t* dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_y)[0]);
-            int32_t* src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_y)[0]);
-            svt_memcpy(dst_ptr, src_ptr, bheight * bwidth * sizeof(int32_t));
-
-            dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_cb)[0]);
-            src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_cb)[0]);
-            svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
-
-            dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_cr)[0]);
-            src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_cr)[0]);
-            svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
-        }
-        return 1;
+    // if PART_HB and nsi==0 --> if tested[PART_H][0] -> match
+    // if PART_VB and nsi==0 --> if tested[PART_V][0] -> match
+    // if PART_VA and nsi==0 --> if tested[PART_HA][0] -> match
+    BlkStruct* redund_blk_ptr = NULL;
+    if (blk_geom->shape == PART_HB && nsi == 0 && pc_tree->tested_blk[PART_H][0]) {
+        redund_blk_ptr = pc_tree->block_data[PART_H][0];
     }
-    return 0;
+    else if (blk_geom->shape == PART_VB && nsi == 0 && pc_tree->tested_blk[PART_V][0]) {
+        redund_blk_ptr = pc_tree->block_data[PART_V][0];
+    }
+    else if (blk_geom->shape == PART_VA && nsi == 0 && pc_tree->tested_blk[PART_HA][0]) {
+        redund_blk_ptr = pc_tree->block_data[PART_HA][0];
+    }
+
+    // if no redundant block identified, exit
+    if (!redund_blk_ptr) {
+        return 0;
+    }
+
+    // Copy results
+    move_blk_data_redund(pcs, ctx, redund_blk_ptr, blk_ptr);
+
+    if (ctx->bypass_encdec && ctx->pd_pass == PD_PASS_1) {
+        // If a redundant block is being tested, there must be a search over NSQ shapes and/or depth.
+        // Therefore, we save the recon and coeffs under the blk_ptr, instead of writing directly to
+        // a final buffer.  Once the final partition is selected, the recon/coeff will be copied to
+        // the final buffer in svt_aom_encdec_update.
+
+        // Copy recon
+        const uint8_t bwidth = blk_geom->bwidth;
+        const uint8_t bheight = blk_geom->bheight;
+        const uint8_t bwidth_uv = blk_geom->bwidth_uv;
+        const uint8_t bheight_uv = blk_geom->bheight_uv;
+        uint16_t sz = ctx->encoder_bit_depth > EB_EIGHT_BIT ? sizeof(uint16_t) : sizeof(uint8_t);
+
+        uint32_t dst_stride = blk_ptr->recon_tmp->stride_y;
+        uint32_t src_stride = redund_blk_ptr->recon_tmp->stride_y;
+        for (uint32_t i = 0; i < bheight; i++) {
+            svt_memcpy(blk_ptr->recon_tmp->buffer_y + (i * dst_stride) * sz,
+                        redund_blk_ptr->recon_tmp->buffer_y + (i * src_stride) * sz,
+                        bwidth * sz);
+        }
+
+        dst_stride = blk_ptr->recon_tmp->stride_cb;
+        src_stride = redund_blk_ptr->recon_tmp->stride_cb;
+        for (uint32_t i = 0; i < bheight_uv; i++) {
+            svt_memcpy(blk_ptr->recon_tmp->buffer_cb + (i * dst_stride) * sz,
+                        redund_blk_ptr->recon_tmp->buffer_cb + (i * src_stride) * sz,
+                        bwidth_uv * sz);
+        }
+
+        dst_stride = blk_ptr->recon_tmp->stride_cr;
+        src_stride = redund_blk_ptr->recon_tmp->stride_cr;
+        for (uint32_t i = 0; i < bheight_uv; i++) {
+            svt_memcpy(blk_ptr->recon_tmp->buffer_cr + (i * dst_stride) * sz,
+                        redund_blk_ptr->recon_tmp->buffer_cr + (i * src_stride) * sz,
+                        bwidth_uv * sz);
+        }
+
+        // Copy coeffs
+        int32_t* dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_y)[0]);
+        int32_t* src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_y)[0]);
+        svt_memcpy(dst_ptr, src_ptr, bheight * bwidth * sizeof(int32_t));
+
+        dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_cb)[0]);
+        src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_cb)[0]);
+        svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
+
+        dst_ptr = &(((int32_t*)blk_ptr->coeff_tmp->buffer_cr)[0]);
+        src_ptr = &(((int32_t*)redund_blk_ptr->coeff_tmp->buffer_cr)[0]);
+        svt_memcpy(dst_ptr, src_ptr, bheight_uv * bwidth_uv * sizeof(int32_t));
+    }
+    return 1;
 }
 
 static bool get_skip_processing_nsq_block(PictureControlSet* pcs, ModeDecisionContext* ctx,
@@ -10783,18 +10764,17 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 }
             }
 
-            // encode the current block only if it's not redundant
-            if (!ctx->redundant_blk || !update_redundant(pcs, ctx)) {
-                if (ctx->copied_neigh_arrays && nsi == 0) {
-                    svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
-                        pcs,
-                        ctx,
-                        NSQ_NEIGHBOR_ARRAY_INDEX,
-                        MD_NEIGHBOR_ARRAY_INDEX,
-                        ctx->blk_geom->sqi_mds);
-                }
+            if (ctx->copied_neigh_arrays && nsi == 0) {
+                svt_aom_copy_neighbour_arrays( //restore [1] in [0] after done last ns block
+                    pcs,
+                    ctx,
+                    NSQ_NEIGHBOR_ARRAY_INDEX,
+                    MD_NEIGHBOR_ARRAY_INDEX,
+                    ctx->blk_geom->sqi_mds);
+            }
 
-                // Encode the block
+            // encode the current block (unless it's redundant, then copy the data from redundant blk)
+            if (!ctx->redundant_blk || !update_redundant(pcs, ctx, pc_tree, nsi)) {
                 md_encode_block(pcs, ctx, pc_tree, mds, input_pic);
             }
             pc_tree->tested_blk[shape][nsi] = true;
