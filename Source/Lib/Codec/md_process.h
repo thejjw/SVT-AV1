@@ -933,6 +933,7 @@ typedef struct PC_TREE {
     struct PC_TREE* split[4];
     int             index; // should be written once when struct is initialized, then never overwritten
     struct PC_TREE* parent; // this_pc_tree->parent->split[this_pc_tree->index] == this_pc_tree
+    bool            (*tested_blk)[4]; // tested_blk[PART_S][4]
 } PC_TREE;
 
 typedef struct ModeDecisionContext {
@@ -948,6 +949,11 @@ typedef struct ModeDecisionContext {
     MdRateEstimationContext*      rate_est_table;
     BlkStruct*                    md_blk_arr_nsq;
     uint8_t*                      avail_blk_flag;
+    // used to set the array in PC_TREE by the same name. Implemented as a separate allocation
+    // to easily zero out the whole array (for all blocks) without looping over entire pc_tree.
+    bool (*tested_blk)[PART_S][4];
+    // Number of allocated tested_blk, pc_tree, and mds entries
+    int blocks_to_alloc;
     // Used to track which blocks should be tested in MD in each PD stage
     MdScan* mds;
     // Used to store results of MD

@@ -658,13 +658,12 @@ void svt_aom_copy_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* 
                            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 }
 
+// Update the neighbour arrays with the data from the passed block. Assumes the passed block is valid
+// and the data is accurate (i.e. the block was tested in MD).
 static void md_update_all_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx,
-                                           uint32_t blk_mds) {
-    if (!ctx->avail_blk_flag[blk_mds]) {
-        return;
-    }
-    ctx->blk_ptr        = &ctx->md_blk_arr_nsq[blk_mds];
-    ctx->blk_geom       = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_mds);
+                                           BlkStruct* blk_ptr) {
+    ctx->blk_ptr        = blk_ptr;
+    ctx->blk_geom       = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     ctx->blk_org_x      = ctx->sb_origin_x + ctx->blk_geom->org_x;
     ctx->blk_org_y      = ctx->sb_origin_y + ctx->blk_geom->org_y;
     ctx->round_origin_x = ((ctx->blk_org_x >> 3) << 3);
@@ -690,10 +689,13 @@ static void md_update_all_neighbour_arrays_multiple(PictureControlSet* pcs, Mode
                                                     PC_TREE* pc_tree) {
     const Part     shape           = from_part_to_shape[pc_tree->partition];
     const uint8_t  shape_block_cnt = num_ns_per_shape[shape];
-    const uint32_t blk_mds         = pc_tree->block_data[shape][0]->mds_idx;
 
     for (uint32_t blk_it = 0; blk_it < shape_block_cnt; blk_it++) {
-        md_update_all_neighbour_arrays(pcs, ctx, blk_mds + blk_it);
+        // Only update neighbour arrays if the current block was tested. This should always be true
+        // if we're calling this function, except for blocks that are outside the picture boundary,
+        // but that are part of a valid shape (e.g. second block in PART_H at bottom pic boundary).
+        if (pc_tree->tested_blk[shape][blk_it])
+            md_update_all_neighbour_arrays(pcs, ctx, pc_tree->block_data[shape][blk_it]);
     }
 }
 
@@ -2698,7 +2700,7 @@ static void read_refine_me_mvs_light_pd1(PictureControlSet* pcs, EbPictureBuffer
 
 // Copy ME_MVs (generated @ PA) from input buffer (pcs-> .. ->me_results) to local
 // MD buffers (ctx->sb_me_mv)
-static void read_refine_me_mvs(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+static void read_refine_me_mvs(PictureControlSet* pcs, ModeDecisionContext* ctx, const PC_TREE* const pc_tree) {
     const SequenceControlSet* scs = pcs->scs;
     derive_me_offsets(scs, pcs, ctx);
     const uint8_t        hbd_md    = EB_8_BIT_MD;
@@ -2708,12 +2710,10 @@ static void read_refine_me_mvs(PictureControlSet* pcs, ModeDecisionContext* ctx)
     // Update input origin
     const uint32_t input_origin_index = (ctx->blk_org_y + input_pic->org_y) * input_pic->stride_y +
         (ctx->blk_org_x + input_pic->org_x);
-    const uint16_t     parent_depth_mds = blk_geom->parent_depth_idx_mds;
     const MeSbResults* me_results       = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
-    const uint16_t     sqi_mds          = blk_geom->sqi_mds;
     const uint8_t      max_l0           = pcs->ppcs->pa_me_data->max_l0;
 
-    const bool          blk_avail_sqi      = ctx->avail_blk_flag[sqi_mds];
+    const bool          blk_avail_sqi      = pc_tree->tested_blk[PART_N][0];
     const bool          b_w_ne_h           = blk_geom->bwidth != blk_geom->bheight;
     const bool          md_nsq_me_enabled  = ctx->md_nsq_me_ctrls.enabled;
     const bool          md_sq_me_enabled   = ctx->md_sq_me_ctrls.enabled;
@@ -2746,7 +2746,7 @@ static void read_refine_me_mvs(PictureControlSet* pcs, ModeDecisionContext* ctx)
                     blk_geom->bsize != BLOCK_64X128 && blk_geom->bsize != BLOCK_128X64) {
                     me_mv.x = (ctx->sq_sb_me_mv[list][ref].x + 4) & ~0x07;
                     me_mv.y = (ctx->sq_sb_me_mv[list][ref].y + 4) & ~0x07;
-                } else if (blk_geom->bsize == BLOCK_4X4 && ctx->avail_blk_flag[parent_depth_mds]) {
+                } else if (blk_geom->bsize == BLOCK_4X4 && pc_tree->parent->tested_blk[PART_N][0]) {
                     me_mv.x = (ctx->sq_sb_me_mv[list][ref].x + 4) & ~0x07;
                     me_mv.y = (ctx->sq_sb_me_mv[list][ref].y + 4) & ~0x07;
                 } else {
@@ -8976,8 +8976,8 @@ static bool get_enable_use_best_me(PictureControlSet* pcs, ModeDecisionContext* 
     return enable_best_me;
 }
 
-static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, const MdScan* const mds,
-                            EbPictureBufferDesc* input_pic) {
+static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, const PC_TREE* const pc_tree,
+    const MdScan* const mds, EbPictureBufferDesc* input_pic) {
     ModeDecisionCandidateBuffer** cand_bf_ptr_array_base = ctx->cand_bf_ptr_array;
     ModeDecisionCandidateBuffer** cand_bf_ptr_array;
     const BlockGeom*              blk_geom = ctx->blk_geom;
@@ -9071,7 +9071,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
             build_single_ref_mvp_array(pcs, ctx);
         }
         // Read and (if needed) perform 1/8 Pel ME MVs refinement
-        read_refine_me_mvs(pcs, ctx);
+        read_refine_me_mvs(pcs, ctx, pc_tree);
 
         ctx->md_pme_dist = (uint32_t)~0;
         for (uint8_t list_idx = 0; list_idx < MAX_NUM_OF_REF_PIC_LIST; list_idx++) {
@@ -9106,7 +9106,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     }
     if (pcs->slice_type != I_SLICE) {
         // Read and (if needed) perform 1/8 Pel ME MVs refinement
-        read_refine_me_mvs(pcs, ctx);
+        read_refine_me_mvs(pcs, ctx, pc_tree);
     }
     ctx->md_pme_dist = (uint32_t)~0;
     for (uint8_t list_idx = 0; list_idx < MAX_NUM_OF_REF_PIC_LIST; list_idx++) {
@@ -9404,7 +9404,7 @@ static bool update_skip_nsq_based_on_split_rate(PictureControlSet* pcs, ModeDeci
     const BlockGeom* blk_geom = ctx->blk_geom;
 
     // return immediately if SQ, or NSQ but Parent not available
-    if (blk_geom->shape == PART_N || ctx->avail_blk_flag[blk_geom->sqi_mds] == false) {
+    if (blk_geom->shape == PART_N || !pc_tree->tested_blk[PART_N][0]) {
         return skip_nsq;
     }
 
@@ -9544,7 +9544,7 @@ static bool update_skip_nsq_based_on_sq_recon_dist(ModeDecisionContext* ctx, con
     const BlockGeom* blk_geom               = ctx->blk_geom;
 
     // return immediately if SQ, or NSQ but Parent not available, or max_part0_to_part1_dev is off
-    if (blk_geom->shape == PART_N || ctx->avail_blk_flag[blk_geom->sqi_mds] == false || max_part0_to_part1_dev == 0) {
+    if (blk_geom->shape == PART_N || !pc_tree->tested_blk[PART_N][0] || max_part0_to_part1_dev == 0) {
         return false;
     }
 
@@ -9695,7 +9695,7 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* c
     }
 
     if (shape == PART_HA || shape == PART_HB || shape == PART_H4) {
-        if (ctx->avail_blk_flag[sqi] && ctx->avail_blk_flag[sqi + 1] && ctx->avail_blk_flag[sqi + 2]) {
+        if (pc_tree->tested_blk[PART_N][0] && pc_tree->tested_blk[PART_H][0] && pc_tree->tested_blk[PART_H][1]) {
             // Use aggressive thresholds for blocks without coeffs
             if (shape == PART_HA) {
                 if (!pc_tree->block_data[PART_H][0]->block_has_coeff) {
@@ -9715,7 +9715,7 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* c
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and H blocks
             skip_nsq = (h_cost > ((sq_cost * sq_weight) / 100));
             // If not skipping, perform a check on the relative H/V costs
-            if (!skip_nsq && ctx->avail_blk_flag[sqi + 3] && ctx->avail_blk_flag[sqi + 4]) {
+            if (!skip_nsq && pc_tree->tested_blk[PART_V][0] && pc_tree->tested_blk[PART_V][1]) {
                 //compute the cost of V partition
                 const uint64_t v_cost   = pc_tree->block_data[PART_V][0]->cost + pc_tree->block_data[PART_V][1]->cost;
                 const uint32_t v_weight = ctx->nsq_search_ctrls.hv_weight;
@@ -9726,7 +9726,7 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* c
     }
 
     if (shape == PART_VA || shape == PART_VB || shape == PART_V4) {
-        if (ctx->avail_blk_flag[sqi] && ctx->avail_blk_flag[sqi + 3] && ctx->avail_blk_flag[sqi + 4]) {
+        if (pc_tree->tested_blk[PART_N][0] && pc_tree->tested_blk[PART_V][0] && pc_tree->tested_blk[PART_V][1]) {
             // Use aggressive thresholds for blocks without coeffs
             if (shape == PART_VA) {
                 if (!pc_tree->block_data[PART_V][0]->block_has_coeff) {
@@ -9747,7 +9747,7 @@ static uint8_t update_skip_nsq_shapes(ModeDecisionContext* ctx, const PC_TREE* c
             skip_nsq = (v_cost > ((sq_cost * sq_weight) / 100));
 
             // If not skipping, perform a check on the relative H/V costs
-            if (!skip_nsq && ctx->avail_blk_flag[sqi + 1] && ctx->avail_blk_flag[sqi + 2]) {
+            if (!skip_nsq && pc_tree->tested_blk[PART_H][0] && pc_tree->tested_blk[PART_H][1]) {
                 const uint64_t h_cost   = pc_tree->block_data[PART_H][0]->cost + pc_tree->block_data[PART_H][1]->cost;
                 const uint32_t h_weight = ctx->nsq_search_ctrls.hv_weight;
                 //if the cost of V partition is bigger than the H partition by a certain percentage
@@ -9763,7 +9763,7 @@ static bool update_skip_nsq_based_on_sq_txs(ModeDecisionContext* ctx, const PC_T
     const BlockGeom* blk_geom = ctx->blk_geom;
 
     // return immediately if SQ, or NSQ but Parent not available, or sq_txs is off
-    if (blk_geom->shape == PART_N || ctx->avail_blk_flag[blk_geom->sqi_mds] == false ||
+    if (blk_geom->shape == PART_N || !pc_tree->tested_blk[PART_N][0] ||
         !ctx->nsq_psq_txs_ctrls.enabled) {
         return false;
     }
@@ -10140,7 +10140,7 @@ static void faster_md_settings_nsq(PictureControlSet* pcs, ModeDecisionContext* 
     const PC_TREE* const pc_tree, const bool is_child) {
     // Update GM settings based on SQ block mode
     if (pcs->ppcs->gm_ctrls.enabled && pcs->ppcs->gm_ctrls.inj_psq_glb) {
-        if (ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
+        if (pc_tree->tested_blk[PART_N][0]) {
             PredictionMode sq_mode = pc_tree->block_data[PART_N][0]->block_mi.mode;
             if (sq_mode != GLOBAL_GLOBALMV && sq_mode != GLOBALMV) {
                 ctx->params_status       = 1;
@@ -10369,6 +10369,7 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
         pc_tree->block_data[PART_N][0]->above_part_ctx = 0;
         init_block_data(pcs, ctx, blk_idx_mds);
         md_encode_block_light_pd0(pcs, ctx, input_pic);
+        pc_tree->tested_blk[shape][0] = true;
 
         pc_tree->rdc.rd_cost = pc_tree->block_data[shape][0]->cost;
         pc_tree->rdc.valid   = 1;
@@ -10378,8 +10379,7 @@ bool svt_aom_pick_partition_lpd0(SequenceControlSet* scs, PictureControlSet* pcs
             pc_tree->block_data[PART_N][0]->mds_idx = ctx->blk_geom->sqi_mds;
         }
 #if !CLN_REMOVE_VAR_SUB_DEPTH
-        if (ctx->var_skip_sub_depth_ctrls.enabled && mds->split_flag &&
-            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds]) {
+        if (ctx->var_skip_sub_depth_ctrls.enabled && mds->split_flag && pc_tree->tested_blk[PART_N][0]) {
             if (ctx->blk_geom->sq_size <= ctx->var_skip_sub_depth_ctrls.max_size &&
                 ctx->blk_geom->sq_size >= ctx->var_skip_sub_depth_ctrls.min_size && var_skip_sub_depth(pcs, ctx)) {
                 mds->split_flag = false;
@@ -10457,7 +10457,8 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs
         // LPD1 does not support NSQ shapes, except for H/V at the picture boundaries. In all cases,
         // only a single block would be tested (either SQ, or the first block in the H/V shape
         // which is allowed in the picture).
-        uint32_t blk_idx_mds = mds->mds_idx + ns_blk_offset_md[mds->shapes[0]];
+        const Part shape = mds->shapes[0];
+        const uint32_t blk_idx_mds = mds->mds_idx + ns_blk_offset_md[shape];
 
         // Get the blk_geom and blk_ptr for the current block within the shape being tested
         ctx->blk_geom                          = get_blk_geom_mds(scs->blk_geom_mds, blk_idx_mds);
@@ -10470,52 +10471,52 @@ void svt_aom_pick_partition_lpd1(SequenceControlSet* scs, PictureControlSet* pcs
 
         // Encode the block
         md_encode_block_light_pd1(pcs, ctx, input_pic);
+        pc_tree->tested_blk[shape][0] = true;
 
         // LPD1 uses a fixed partition structure, so no need to update cost
-        pc_tree->partition = from_shape_to_part[ctx->blk_geom->shape];
+        pc_tree->partition = from_shape_to_part[shape];
         if (blk_idx_mds != ctx->blk_geom->sqi_mds) {
             pc_tree->block_data[PART_N][0]->qindex  = ctx->qp_index;
             pc_tree->block_data[PART_N][0]->mds_idx = ctx->blk_geom->sqi_mds;
         }
-        // The current block is the last at a given d1 level; if so update d2 info
-        if (ctx->avail_blk_flag[blk_idx_mds]) {
-            // Always update the partition context array because may be needed for other SBs which
-            // have NSQ or multiple depths enabled
-            struct PartitionContext partition;
-            partition.above = partition_context_lookup[ctx->blk_geom->bsize].above;
-            partition.left  = partition_context_lookup[ctx->blk_geom->bsize].left;
+        // The current block is the last at a given d1 level (b/c fixed partition); update d2 info
+        assert(pc_tree->tested_blk[shape][0]);
+        // Always update the partition context array because may be needed for other SBs which
+        // have NSQ or multiple depths enabled
+        struct PartitionContext partition;
+        partition.above = partition_context_lookup[ctx->blk_geom->bsize].above;
+        partition.left  = partition_context_lookup[ctx->blk_geom->bsize].left;
 
-            svt_aom_neighbor_array_unit_mode_write(ctx->leaf_partition_na,
-                                                   (uint8_t*)(&partition),
-                                                   ctx->blk_org_x,
-                                                   ctx->blk_org_y,
-                                                   ctx->blk_geom->bwidth,
-                                                   ctx->blk_geom->bheight,
-                                                   NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-            // If TXS enabled at picture level, there are necessary context updates
-            if (pcs->ppcs->frm_hdr.tx_mode == TX_MODE_SELECT) {
-                uint8_t tx_size = tx_depth_to_tx_size[ctx->blk_ptr->block_mi.tx_depth][ctx->blk_geom->bsize];
-                uint8_t bw      = tx_size_wide[tx_size];
-                uint8_t bh      = tx_size_high[tx_size];
+        svt_aom_neighbor_array_unit_mode_write(ctx->leaf_partition_na,
+                                                (uint8_t*)(&partition),
+                                                ctx->blk_org_x,
+                                                ctx->blk_org_y,
+                                                ctx->blk_geom->bwidth,
+                                                ctx->blk_geom->bheight,
+                                                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
+        // If TXS enabled at picture level, there are necessary context updates
+        if (pcs->ppcs->frm_hdr.tx_mode == TX_MODE_SELECT) {
+            uint8_t tx_size = tx_depth_to_tx_size[ctx->blk_ptr->block_mi.tx_depth][ctx->blk_geom->bsize];
+            uint8_t bw      = tx_size_wide[tx_size];
+            uint8_t bh      = tx_size_high[tx_size];
 
-                svt_aom_neighbor_array_unit_mode_write(ctx->txfm_context_array,
-                                                       &bw,
-                                                       ctx->blk_org_x,
-                                                       ctx->blk_org_y,
-                                                       ctx->blk_geom->bwidth,
-                                                       ctx->blk_geom->bheight,
-                                                       NEIGHBOR_ARRAY_UNIT_TOP_MASK);
+            svt_aom_neighbor_array_unit_mode_write(ctx->txfm_context_array,
+                                                    &bw,
+                                                    ctx->blk_org_x,
+                                                    ctx->blk_org_y,
+                                                    ctx->blk_geom->bwidth,
+                                                    ctx->blk_geom->bheight,
+                                                    NEIGHBOR_ARRAY_UNIT_TOP_MASK);
 
-                svt_aom_neighbor_array_unit_mode_write(ctx->txfm_context_array,
-                                                       &bh,
-                                                       ctx->blk_org_x,
-                                                       ctx->blk_org_y,
-                                                       ctx->blk_geom->bwidth,
-                                                       ctx->blk_geom->bheight,
-                                                       NEIGHBOR_ARRAY_UNIT_LEFT_MASK);
-            }
-            svt_aom_update_mi_map(ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y, ctx->blk_geom, pcs, ctx);
+            svt_aom_neighbor_array_unit_mode_write(ctx->txfm_context_array,
+                                                    &bh,
+                                                    ctx->blk_org_x,
+                                                    ctx->blk_org_y,
+                                                    ctx->blk_geom->bwidth,
+                                                    ctx->blk_geom->bheight,
+                                                    NEIGHBOR_ARRAY_UNIT_LEFT_MASK);
         }
+        svt_aom_update_mi_map(ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y, ctx->blk_geom, pcs, ctx);
     }
 
     // ready for next depth
@@ -10794,8 +10795,9 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                 }
 
                 // Encode the block
-                md_encode_block(pcs, ctx, mds, input_pic);
+                md_encode_block(pcs, ctx, pc_tree, mds, input_pic);
             }
+            pc_tree->tested_blk[shape][nsi] = true;
 
             part_cost += pc_tree->block_data[shape][nsi]->cost;
 
@@ -10816,7 +10818,8 @@ static bool test_depth(SequenceControlSet* scs, PictureControlSet* pcs, ModeDeci
                         ctx->blk_geom->sqi_mds);
                     ctx->copied_neigh_arrays = 1;
                 }
-                md_update_all_neighbour_arrays(pcs, ctx, blk_idx_mds);
+                assert(pc_tree->tested_blk[shape][nsi]);
+                md_update_all_neighbour_arrays(pcs, ctx, pc_tree->block_data[shape][nsi]);
             }
         }
 
@@ -10858,7 +10861,7 @@ bool svt_aom_pick_partition(SequenceControlSet* scs, PictureControlSet* pcs, Mod
 
         if (ctx->skip_sub_depth_ctrls.enabled && ctx->blk_geom->sq_size <= ctx->skip_sub_depth_ctrls.max_size &&
             mds->split_flag && // could be further splitted
-            ctx->avail_blk_flag[ctx->blk_geom->sqi_mds] && // valid block
+            pc_tree->tested_blk[PART_N][0] && // valid block
             eval_sub_depth_skip_cond1(ctx, pc_tree)) {
             mds->split_flag = false;
         }
