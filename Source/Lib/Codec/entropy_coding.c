@@ -4956,7 +4956,7 @@ int svt_aom_is_interintra_wedge_used(BlockSize bsize);
 
 static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* ec_ctx, EntropyCoder* ec,
                                  SuperBlock* tb_ptr, EcBlkStruct* blk_ptr, uint16_t tile_idx,
-                                 EbPictureBufferDesc* coeff_ptr) {
+                                 EbPictureBufferDesc* coeff_ptr, const int mi_row, const int mi_col) {
     UNUSED(tb_ptr);
     EbErrorType         return_error  = EB_ErrorNone;
     FRAME_CONTEXT*      frame_context = ec->fc;
@@ -4969,8 +4969,8 @@ static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* e
     NeighborArrayUnit* cb_dc_sign_level_coeff_na   = pcs->cb_dc_sign_level_coeff_na[tile_idx];
     NeighborArrayUnit* txfm_context_array          = pcs->txfm_context_array[tile_idx];
     const BlockGeom*   blk_geom                    = get_blk_geom_mds(scs->blk_geom_mds, blk_ptr->mds_idx);
-    uint32_t           blk_org_x                   = ec_ctx->sb_origin_x + blk_geom->org_x;
-    uint32_t           blk_org_y                   = ec_ctx->sb_origin_y + blk_geom->org_y;
+    uint32_t           blk_org_x                   = mi_col << MI_SIZE_LOG2;
+    uint32_t           blk_org_y                   = mi_row << MI_SIZE_LOG2;
     BlockSize          bsize                       = blk_geom->bsize;
     MbModeInfo*        mbmi                        = get_mbmi(pcs, blk_org_x, blk_org_y);
     bool               skip_coeff                  = mbmi->block_mi.skip;
@@ -4979,8 +4979,6 @@ static EbErrorType write_modes_b(PictureControlSet* pcs, EntropyCodingContext* e
     const uint8_t skip_mode = mbmi->block_mi.skip_mode;
 
     assert(bsize < BLOCK_SIZES_ALL);
-    int32_t       mi_row              = blk_org_y >> MI_SIZE_LOG2;
-    int32_t       mi_col              = blk_org_x >> MI_SIZE_LOG2;
     int           mi_stride           = pcs->ppcs->av1_cm->mi_stride;
     const int32_t offset              = mi_row * mi_stride + mi_col;
     blk_ptr->av1xd->mi                = pcs->mi_grid_base + offset;
@@ -5526,18 +5524,18 @@ void svt_aom_write_modes_sb(EntropyCodingContext* ec_ctx, SuperBlock* sb_ptr, Pi
     assert(IMPLIES(partition != PARTITION_SPLIT, (mi_row + hbs < cm->mi_rows) || (mi_col + hbs < cm->mi_cols)));
     switch (partition) {
     case PARTITION_NONE:
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
         break;
     case PARTITION_HORZ:
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
         if (mi_row + hbs < cm->mi_rows) {
-            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
+            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row + hbs, mi_col);
         }
         break;
     case PARTITION_VERT:
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
         if (mi_col + hbs < cm->mi_cols) {
-            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
+            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row, mi_col + hbs);
         }
         break;
     case PARTITION_SPLIT:
@@ -5552,12 +5550,24 @@ void svt_aom_write_modes_sb(EntropyCodingContext* ec_ctx, SuperBlock* sb_ptr, Pi
         }
         break;
     case PARTITION_HORZ_A:
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row, mi_col + hbs);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr, mi_row + hbs, mi_col);
+        break;
     case PARTITION_HORZ_B:
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row + hbs, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr, mi_row + hbs, mi_col + hbs);
+        break;
     case PARTITION_VERT_A:
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row + hbs, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr, mi_row, mi_col + hbs);
+        break;
     case PARTITION_VERT_B:
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr);
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr);
-        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[0], tile_idx, coeff_ptr, mi_row, mi_col);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[1], tile_idx, coeff_ptr, mi_row, mi_col + hbs);
+        write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[2], tile_idx, coeff_ptr, mi_row + hbs, mi_col + hbs);
         break;
     case PARTITION_HORZ_4:
         for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
@@ -5568,7 +5578,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext* ec_ctx, SuperBlock* sb_ptr, Pi
                 assert(i == 3);
                 break;
             }
-            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[i], tile_idx, coeff_ptr);
+            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[i], tile_idx, coeff_ptr, this_mi_row, mi_col);
         }
         break;
     case PARTITION_VERT_4:
@@ -5580,7 +5590,7 @@ void svt_aom_write_modes_sb(EntropyCodingContext* ec_ctx, SuperBlock* sb_ptr, Pi
                 assert(i == 3);
                 break;
             }
-            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[i], tile_idx, coeff_ptr);
+            write_modes_b(pcs, ec_ctx, ec, sb_ptr, ptree->blk_data[i], tile_idx, coeff_ptr, mi_row, this_mi_col);
         }
         break;
     default:

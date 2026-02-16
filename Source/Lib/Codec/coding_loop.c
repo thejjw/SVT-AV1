@@ -324,11 +324,12 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
     EbPictureBufferDesc* input_samples = is_16bit ? ed_ctx->input_sample16bit_buffer : ed_ctx->input_samples;
 
     const bool     is_inter       = is_inter_block(&blk_ptr->block_mi);
-    const uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
-    const uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
+    const uint32_t round_origin_x = ROUND_UV(org_x); // for Chroma blocks with size of 4
+    const uint32_t round_origin_y = ROUND_UV(org_y); // for Chroma blocks with size of 4
     const uint8_t  tx_depth       = blk_ptr->block_mi.tx_depth;
-    const uint8_t  tx_org_x       = blk_geom->org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
-    const uint8_t  tx_org_y       = blk_geom->org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
+    // Get the tx origin coordinates within the SB (not frame)
+    const uint16_t  tx_org_x      = org_x - md_ctx->sb_origin_x;
+    const uint16_t  tx_org_y      = org_y - md_ctx->sb_origin_y;
     const int32_t  seg_qp         = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled
                  ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
                  : 0;
@@ -359,10 +360,12 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
     }
 
     if (bit_depth != EB_EIGHT_BIT) {
-        scratch_luma_offset = blk_geom->org_x + blk_geom->org_y * residual16bit->stride_y;
-        scratch_cb_offset   = ROUND_UV(blk_geom->org_x) / 2 + ROUND_UV(blk_geom->org_y) / 2 * residual16bit->stride_cb;
-        scratch_cr_offset   = ROUND_UV(ed_ctx->blk_geom->org_x) / 2 +
-            ROUND_UV(blk_geom->org_y) / 2 * residual16bit->stride_cr;
+        // Get the block origin coordinates within the SB (not frame)
+        const uint16_t blk_org_x_in_sb = md_ctx->blk_org_x - md_ctx->sb_origin_x;
+        const uint16_t blk_org_y_in_sb = md_ctx->blk_org_y - md_ctx->sb_origin_y;
+        scratch_luma_offset = blk_org_x_in_sb + blk_org_y_in_sb * residual16bit->stride_y;
+        scratch_cb_offset   = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cb;
+        scratch_cr_offset   = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cr;
     } else {
         scratch_luma_offset = tx_org_x + tx_org_y * residual16bit->stride_y;
         scratch_cb_offset   = ROUND_UV(tx_org_x) / 2 + ROUND_UV(tx_org_y) / 2 * residual16bit->stride_cb;
@@ -1969,14 +1972,13 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
 *   Coefficient Samples
 *
 *******************************************/
-static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree) {
+static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree,
+    const int mi_row, const int mi_col) {
     ModeDecisionContext* md_ctx   = ctx->md_ctx;
-    const BlockGeom*     blk_geom = ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds,
-                                                                                    blk_ptr->mds_idx);
+    ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
-
-    ctx->blk_org_x = md_ctx->blk_org_x = (uint16_t)(md_ctx->sb_origin_x + blk_geom->org_x);
-    ctx->blk_org_y = md_ctx->blk_org_y = (uint16_t)(md_ctx->sb_origin_y + blk_geom->org_y);
+    ctx->blk_org_x = md_ctx->blk_org_x = mi_col << MI_SIZE_LOG2;
+    ctx->blk_org_y = md_ctx->blk_org_y = mi_row << MI_SIZE_LOG2;
     if (ctx->md_ctx->bypass_encdec) {
         update_b(pcs, ctx, blk_ptr, ptree);
         return;
@@ -2035,18 +2037,18 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
 
     switch (partition) {
     case PARTITION_NONE:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], ptree);
-        break;
-    case PARTITION_VERT:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_V][0], ptree);
-        if (mi_col + hbs < pcs->ppcs->av1_cm->mi_cols) {
-            encode_b(pcs, ctx, pc_tree->block_data[PART_V][1], ptree);
-        }
+        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], ptree, mi_row, mi_col);
         break;
     case PARTITION_HORZ:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_H][0], ptree);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_H][0], ptree, mi_row, mi_col);
         if (mi_row + hbs < pcs->ppcs->av1_cm->mi_rows) {
-            encode_b(pcs, ctx, pc_tree->block_data[PART_H][1], ptree);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H][1], ptree, mi_row + hbs, mi_col);
+        }
+        break;
+    case PARTITION_VERT:
+        encode_b(pcs, ctx, pc_tree->block_data[PART_V][0], ptree, mi_row, mi_col);
+        if (mi_col + hbs < pcs->ppcs->av1_cm->mi_cols) {
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V][1], ptree, mi_row, mi_col + hbs);
         }
         break;
     case PARTITION_SPLIT:
@@ -2061,24 +2063,24 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
         }
         break;
     case PARTITION_HORZ_A:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][0], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][1], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][2], ptree);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][1], ptree, mi_row, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][2], ptree, mi_row + hbs, mi_col);
         break;
     case PARTITION_HORZ_B:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][0], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][1], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][2], ptree);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][1], ptree, mi_row + hbs, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][2], ptree, mi_row + hbs, mi_col + hbs);
         break;
     case PARTITION_VERT_A:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][0], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][1], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][2], ptree);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][1], ptree, mi_row + hbs, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][2], ptree, mi_row, mi_col + hbs);
         break;
     case PARTITION_VERT_B:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][0], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][1], ptree);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2], ptree);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][1], ptree, mi_row, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2], ptree, mi_row + hbs, mi_col + hbs);
         break;
     case PARTITION_HORZ_4:
         for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
@@ -2089,7 +2091,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
                 assert(i == 3);
                 break;
             }
-            encode_b(pcs, ctx, pc_tree->block_data[PART_H4][i], ptree);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H4][i], ptree, this_mi_row, mi_col);
         }
         break;
     case PARTITION_VERT_4:
@@ -2101,7 +2103,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
                 assert(i == 3);
                 break;
             }
-            encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i], ptree);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i], ptree, mi_row, this_mi_col);
         }
         break;
     default:
