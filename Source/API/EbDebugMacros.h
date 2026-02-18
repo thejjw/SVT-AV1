@@ -47,7 +47,7 @@ extern "C" {
 #define CLN_INTRABC_LEVEL_DEF       1 // Fix intra-BC level definitions
 #define OPT_SC_ALLINTRA_DETECTION   1 // Update IQ-tune SC detection to support SC classes 4 and 5.
 
-#define FTR_NIC_DREFI_NEW_LVL_DEFS  1 // New NIC/Depth-refinement levels (onion ring constraint not enforced yet)
+#define FTR_NIC_DREFI_NEW_LVL_DEFS  1 // New NIC/Depth-refinement levels
 
 #define TUNE_STILL_IMAGE            1 // Tune still-image coding and reduce presets to nine: from M0 to M9
 
