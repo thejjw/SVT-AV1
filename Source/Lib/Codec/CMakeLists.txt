@@ -236,6 +236,8 @@ set(all_files
         random.h
         ransac.c
         ransac.h
+        rc_aq.c
+        rc_crf_cqp.c
         rc_process.c
         rc_process.h
         rc_results.c
@@ -243,6 +245,7 @@ set(all_files
         rc_tables.h
         rc_tasks.c
         rc_tasks.h
+        rc_vbr_cbr.c
         rd_cost.c
         rd_cost.h
         reference_object.c

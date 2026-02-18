@@ -83,17 +83,15 @@ typedef struct {
     /*!\endcond */
 } RateControlCfg;
 
-typedef int aom_bit_depth_t;
-
 typedef struct {
-    int             frame_width;
-    int             frame_height;
-    int             mb_rows;
-    int             mb_cols;
-    int             num_mbs;
-    aom_bit_depth_t bit_depth;
-    int             subsampling_x;
-    int             subsampling_y;
+    int        frame_width;
+    int        frame_height;
+    int        mb_rows;
+    int        mb_cols;
+    int        num_mbs;
+    EbBitDepth bit_depth;
+    int        subsampling_x;
+    int        subsampling_y;
 } FrameInfo;
 
 typedef struct {

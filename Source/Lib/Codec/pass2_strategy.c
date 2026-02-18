@@ -75,7 +75,7 @@ static int qbpm_enumerator(int rate_err_tol) {
 
 // Similar to find_qindex_by_rate() function in ratectrl.c, but includes
 // calculation of a correction_factor.
-static int find_qindex_by_rate_with_correction(int desired_bits_per_mb, aom_bit_depth_t bit_depth, double error_per_mb,
+static int find_qindex_by_rate_with_correction(int desired_bits_per_mb, EbBitDepth bit_depth, double error_per_mb,
                                                double group_weight_factor, int rate_err_tol, int best_qindex,
                                                int worst_qindex) {
     assert(best_qindex <= worst_qindex);
@@ -618,7 +618,7 @@ static void set_kf_interval_variables(PictureParentControlSet* pcs, FIRSTPASS_ST
         }
     }
     if (scs->lap_rc && pcs->end_of_sequence_region) {
-        ((RateControlIntervalParamContext*)(pcs->rate_control_param_ptr))->end_of_seq_seen = 1;
+        pcs->rate_control_param_ptr->end_of_seq_seen = 1;
     }
     if (scs->lap_rc && !pcs->end_of_sequence_region) {
         rc->frames_to_key = scs->static_config.intra_period_length + 1;
@@ -1057,11 +1057,6 @@ void svt_av1_init_second_pass(SequenceControlSet* scs) {
 
     // Static sequence monitor variables.
     twopass->kf_zeromotion_pct = 100;
-}
-
-int svt_aom_frame_is_kf_gf_arf(PictureParentControlSet* ppcs) {
-    return frame_is_intra_only(ppcs) || ppcs->update_type == SVT_AV1_ARF_UPDATE ||
-        ppcs->update_type == SVT_AV1_GF_UPDATE;
 }
 
 /*********************************************************************************************
