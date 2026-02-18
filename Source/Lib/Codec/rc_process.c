@@ -17,8 +17,6 @@
 #include "sequence_control_set.h"
 #include "pcs.h"
 #include "utility.h"
-#include "EbSvtAv1ErrorCodes.h"
-#include "entropy_coding.h"
 
 #include "rc_results.h"
 #include "rc_tasks.h"
@@ -28,13 +26,7 @@
 #include "lambda_rate_tables.h"
 #include "pass2_strategy.h"
 
-#include "transforms.h"
-#include "aom_dsp_rtcd.h"
-#include "intra_prediction.h"
-#include "motion_estimation.h"
-
 #include "pd_results.h"
-#include "resize.h"
 #include "src_ops_process.h"
 #include "enc_mode_config.h"
 
@@ -391,16 +383,12 @@ static const int rd_frame_type_factor[2][SVT_AV1_FRAME_UPDATE_TYPES] = {{150, 18
                                                                         {128, 144, 128, 128, 144, 144, 128}};
 #define RTC_KF_LAMBDA_BOOST 100
 
-/*
- * Set the sse lambda based on the bit_depth, then update based on frame position.
- */
-uint32_t svt_aom_compute_rd_mult(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth) {
+static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth,
+                              int64_t rdmult) {
     FrameType frame_type = pcs->ppcs->frm_hdr.frame_type;
     // To set gf_update_type based on current TL vs. the max TL (e.g. for 5L, max TL is 4)
     uint8_t temporal_layer_index = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->temporal_layer_index;
     uint8_t max_temporal_layer   = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->hierarchical_levels;
-    // Always use q_index for the derivation of the initial rdmult (i.e. don't use me_q_index)
-    int64_t rdmult = svt_aom_compute_rd_mult_based_on_qindex(bit_depth, pcs->ppcs->update_type, q_index);
 
     // Update rdmult based on the frame's position in the miniGOP
     uint8_t gf_update_type = frame_type == KEY_FRAME ? SVT_AV1_KF_UPDATE
@@ -439,50 +427,22 @@ uint32_t svt_aom_compute_rd_mult(PictureControlSet* pcs, uint8_t q_index, uint8_
     return (uint32_t)rdmult;
 }
 
+/*
+ * Set the sse lambda based on the bit_depth, then update based on frame position.
+ */
+uint32_t svt_aom_compute_rd_mult(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth) {
+    // Always use q_index for the derivation of the initial rdmult (i.e. don't use me_q_index)
+    int64_t rdmult = svt_aom_compute_rd_mult_based_on_qindex(bit_depth, pcs->ppcs->update_type, q_index);
+
+    return update_lambda(pcs, q_index, me_q_index, bit_depth, rdmult);
+}
+
 uint32_t svt_aom_compute_fast_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth) {
-    FrameType frame_type = pcs->ppcs->frm_hdr.frame_type;
-    // To set gf_update_type based on current TL vs. the max TL (e.g. for 5L, max TL is 4)
-    uint8_t temporal_layer_index = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->temporal_layer_index;
-    uint8_t max_temporal_layer   = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->hierarchical_levels;
     // Always use q_index for the derivation of the initial rdmult (i.e. don't use me_q_index)
     int64_t rdmult = bit_depth == 8 ? av1_lambda_mode_decision8_bit_sad[q_index]
                                     : av1lambda_mode_decision10_bit_sad[q_index];
 
-    // Update rdmult based on the frame's position in the miniGOP
-    uint8_t gf_update_type = frame_type == KEY_FRAME ? SVT_AV1_KF_UPDATE
-        : temporal_layer_index == 0                  ? SVT_AV1_ARF_UPDATE
-        : temporal_layer_index < max_temporal_layer  ? SVT_AV1_INTNL_ARF_UPDATE
-                                                     : SVT_AV1_LF_UPDATE;
-    rdmult                 = (rdmult * rd_frame_type_factor[bit_depth != 8][gf_update_type]) >> 7;
-    if (pcs->scs->static_config.rtc && frame_type == KEY_FRAME) {
-        rdmult = (rdmult * RTC_KF_LAMBDA_BOOST) >> 7;
-    }
-    if (pcs->scs->stats_based_sb_lambda_modulation) {
-        int factor = 128;
-        if (pcs->scs->static_config.rtc) {
-            int qdiff = me_q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
-            if (qdiff < 0) {
-                factor = (qdiff <= -4) ? 100 : 115;
-            }
-        } else if (pcs->ppcs->frm_hdr.delta_q_params.delta_q_present || pcs->ppcs->r0_delta_qp_md) {
-            int qdiff = q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
-            if (qdiff < 0) {
-                factor = (qdiff <= -8) ? 90 : 115;
-            } else if (qdiff > 0) {
-                factor = (qdiff <= 8) ? 135 : 150;
-            }
-        } else {
-            int qdiff = me_q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
-            if (qdiff < 0) {
-                factor = (qdiff <= -4) ? 100 : 115;
-            } else if (qdiff > 0) {
-                factor = (qdiff <= 4) ? 135 : 150;
-            }
-        }
-
-        rdmult = (rdmult * factor) >> 7;
-    }
-    return (uint32_t)rdmult;
+    return update_lambda(pcs, q_index, me_q_index, bit_depth, rdmult);
 }
 
 void svt_aom_lambda_assign(PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda, uint8_t bit_depth,
