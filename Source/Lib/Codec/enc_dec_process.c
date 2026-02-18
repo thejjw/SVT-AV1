@@ -1500,7 +1500,7 @@ static void copy_neighbour_arrays_light_pd0(PictureControlSet* pcs, ModeDecision
 }
 
 void svt_aom_copy_neighbour_arrays(PictureControlSet* pcs, ModeDecisionContext* ctx, uint32_t src_idx, uint32_t dst_idx,
-                                   uint32_t blk_mds);
+                                   const BlockSize bsize, const int mi_row, const int mi_col);
 
 /* Update shapes and tot_shapes with the shapes to be tested at the current d1 depth, based on block
 characteristics and settings.
@@ -1626,7 +1626,6 @@ static void set_blocks_to_be_tested(SequenceControlSet* scs, PictureControlSet* 
 
 static void set_child_to_be_tested(PictureControlSet* pcs, ModeDecisionContext* ctx, MdScan* mds, int e_depth,
                                    const int mi_row, const int mi_col) {
-    //const BlockGeom* blk_geom = get_blk_geom_mds(*mds_idx);
     const int sq_size = block_size_wide[mds->bsize];
     if (sq_size <= 4 || // 4x4 blocks have no children
         (sq_size == 8 && ctx->disallow_4x4) || (sq_size == 16 && ctx->disallow_8x8)) {
@@ -1648,14 +1647,19 @@ static void set_child_to_be_tested(PictureControlSet* pcs, ModeDecisionContext* 
     }
 }
 
-void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, const BlockGeom* blk_geom, int* s_depth,
+static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, int* s_depth,
                            int* e_depth, int64_t* s_th_offset, int64_t* e_th_offset) {
+    const int bwidth  = block_size_wide[pc_tree->bsize];
+    const int bheight = block_size_high[pc_tree->bsize];
+    assert(bwidth == bheight);
+    const int sq_size = bwidth;
+
     if (ctx->depth_refinement_ctrls.cost_band_based_modulation) {
         uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
         // cost-band-based modulation
         uint64_t max_cost = RDCOST(
-            full_lambda, 16, ctx->depth_refinement_ctrls.max_cost_multiplier * blk_geom->bwidth * blk_geom->bheight);
+            full_lambda, 16, ctx->depth_refinement_ctrls.max_cost_multiplier * bwidth * bheight);
 
         // For incomplete blocks, H/V partitions may be allowed, while square is not. In those cases, the selected depth
         // may not have a valid SQ cost, so we need to check that the SQ block is available before using the cost
@@ -1674,17 +1678,15 @@ void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_
 
     if (*s_depth) {
         const uint32_t lower_depth_split_cost_th = ctx->depth_refinement_ctrls.lower_depth_split_cost_th;
-        uint32_t       parent_depth_idx_mds      = blk_geom->parent_depth_idx_mds;
         // Skip testing NSQ shapes at parent depth if the rate cost of splitting is very low
         if (lower_depth_split_cost_th && pc_tree->parent->tested_blk[PART_N][0]) {
             const uint32_t   full_lambda     = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                            : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-            const BlockGeom* parent_blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, parent_depth_idx_mds);
             const uint64_t   split_rate      = svt_aom_partition_rate_cost(
                 pcs->ppcs,
-                parent_blk_geom->bsize,
-                (ctx->sb_origin_y + parent_blk_geom->org_y) >> MI_SIZE_LOG2,
-                (ctx->sb_origin_x + parent_blk_geom->org_x) >> MI_SIZE_LOG2,
+                pc_tree->parent->bsize,
+                pc_tree->parent->mi_row,
+                pc_tree->parent->mi_col,
                 ctx->md_rate_est_ctx,
                 PARTITION_SPLIT,
                 0,
@@ -1706,9 +1708,9 @@ void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
         const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                blk_geom->bsize,
-                                                                (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
-                                                                (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
+                                                                pc_tree->bsize,
+                                                                pc_tree->mi_row,
+                                                                pc_tree->mi_col,
                                                                 ctx->md_rate_est_ctx,
                                                                 PARTITION_SPLIT,
                                                                 0, // partition ctxs not updated in PD0
@@ -1737,9 +1739,9 @@ void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_
                 sb_max_sq_size                = MAX(sb_max_sq_size, ref_obj_l1->sb_max_sq_size[ctx->sb_index]);
             }
 
-            if ((blk_geom->sq_size == 128 && pcs->scs->super_block_size == 128) ||
-                (blk_geom->sq_size == 64 && pcs->scs->super_block_size == 64)) {
-                if (blk_geom->sq_size == sb_min_sq_size && blk_geom->sq_size == sb_max_sq_size) {
+            if ((sq_size == 128 && pcs->scs->super_block_size == 128) ||
+                (sq_size == 64 && pcs->scs->super_block_size == 64)) {
+                if (sq_size == sb_min_sq_size && sq_size == sb_max_sq_size) {
                     *s_depth = 0;
                     *e_depth = 0;
                 }
@@ -1749,7 +1751,7 @@ void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_
 }
 
 static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree,
-                                                 const BlockGeom* blk_geom, int64_t th_offset, int* s_depth) {
+                                                 int64_t th_offset, int* s_depth) {
     if (pc_tree->parent->tested_blk[PART_N][0]) {
         int64_t s1_parent_to_current_th = (int64_t)ctx->depth_refinement_ctrls.s1_parent_to_current_th;
         int64_t s2_parent_to_current_th = (int64_t)ctx->depth_refinement_ctrls.s2_parent_to_current_th;
@@ -1775,13 +1777,15 @@ static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDec
             ? MIN_SIGNED_VALUE
             : ctx->depth_refinement_ctrls.s2_parent_to_current_th + th_offset;
 
+        const int bwidth  = block_size_wide[pc_tree->bsize];
+        const int bheight = block_size_high[pc_tree->bsize];
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
         uint64_t max_cost = ctx->depth_refinement_ctrls.parent_max_cost_th_mult
             ? RDCOST(
                   full_lambda,
                   18000 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult,
-                  60 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult * blk_geom->bwidth * blk_geom->bheight * 4)
+                  60 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult * bwidth * bheight * 4)
             : 0;
 
         int64_t parent_to_current_deviation =
@@ -1808,7 +1812,7 @@ static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDec
 }
 
 static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree,
-                                                const BlockGeom* blk_geom, int64_t th_offset, int* e_depth) {
+                                                int64_t th_offset, int* e_depth) {
     uint64_t child_cost = 0;
     uint8_t  child_cnt  = 0;
     if (pc_tree->split[0]->tested_blk[PART_N][0]) {
@@ -1858,9 +1862,9 @@ static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDeci
                                                       : ctx->full_sb_lambda_md[EB_8_BIT_MD];
         const uint64_t child_split_rate = svt_aom_partition_rate_cost(
             pcs->ppcs,
-            blk_geom->bsize,
-            (ctx->sb_origin_y + blk_geom->org_y) >> MI_SIZE_LOG2,
-            (ctx->sb_origin_x + blk_geom->org_x) >> MI_SIZE_LOG2,
+            pc_tree->bsize,
+            pc_tree->mi_row,
+            pc_tree->mi_col,
             ctx->md_rate_est_ctx,
             PARTITION_SPLIT,
             0, // partition ctxs not updated in pd0
@@ -1887,9 +1891,9 @@ static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDeci
     }
 }
 
-static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, MdScan* mds,
+static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree,
                                 const int max_pd0_size, const int min_pd0_size, int* s_depth_ret, int* e_depth_ret) {
-    const int sq_size = block_size_wide[mds->bsize];
+    const int sq_size = block_size_wide[pc_tree->bsize];
     ctx->blk_ptr      = pc_tree->block_data[PART_N][0];
 
     int s_depth = ctx->depth_refinement_ctrls.mode == PD0_DEPTH_PRED_PART_ONLY ? 0 : -2;
@@ -1976,13 +1980,12 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         int64_t s_th_offset = 0;
         int64_t e_th_offset = 0;
 
-        const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, mds->mds_idx);
-        update_pred_th_offset(pcs, ctx, pc_tree, blk_geom, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
+        update_pred_th_offset(pcs, ctx, pc_tree, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
         if (s_depth &&
             // Check tested_blk b/c use block's cost inside
             pc_tree->tested_blk[PART_N][0] &&
             sq_size < ((pcs->scs->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
-            is_parent_to_current_deviation_small(pcs, ctx, pc_tree, blk_geom, s_th_offset, &s_depth);
+            is_parent_to_current_deviation_small(pcs, ctx, pc_tree, s_th_offset, &s_depth);
             if (s_depth) {
                 add_parent_depth = 1;
             }
@@ -1991,7 +1994,7 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         if (e_depth &&
             // Check tested_blk b/c use block's cost inside
             pc_tree->tested_blk[PART_N][0] && sq_size > 4) {
-            is_child_to_current_deviation_small(pcs, ctx, pc_tree, blk_geom, e_th_offset, &e_depth);
+            is_child_to_current_deviation_small(pcs, ctx, pc_tree, e_th_offset, &e_depth);
             if (e_depth) {
                 add_sub_depth = 1;
             }
@@ -2024,7 +2027,7 @@ static int refine_depth(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TRE
         mds->tot_shapes = 1;
 
         int e_depth = 0;
-        set_start_end_depth(pcs, ctx, pc_tree, mds, max_pd0_size, min_pd0_size, &s_depth, &e_depth);
+        set_start_end_depth(pcs, ctx, pc_tree, max_pd0_size, min_pd0_size, &s_depth, &e_depth);
 
         if (e_depth || s_depth) {
             ctx->pred_depth_only = false;
@@ -3130,7 +3133,9 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                                                               ed_ctx->md_ctx,
                                                               MD_NEIGHBOR_ARRAY_INDEX,
                                                               MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX,
-                                                              0);
+                                                              scs->seq_header.sb_size,
+                                                              sb_origin_y >> MI_SIZE_LOG2,
+                                                              sb_origin_x >> MI_SIZE_LOG2);
 
                                 set_blocks_to_be_tested(scs, pcs, md_ctx, md_ctx->mds, 0);
                                 // PD0 MD Tool(s) : ME_MV(s) as INTER candidate(s), DC as INTRA candidate, luma only, Frequency domain SSE,
@@ -3149,7 +3154,9 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                                                               ed_ctx->md_ctx,
                                                               MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX,
                                                               MD_NEIGHBOR_ARRAY_INDEX,
-                                                              0);
+                                                              scs->seq_header.sb_size,
+                                                              sb_origin_y >> MI_SIZE_LOG2,
+                                                              sb_origin_x >> MI_SIZE_LOG2);
                             }
                             // This classifier is used for only pd0_level 0 and pd0_level 1
                             // where the cnt_nz_coeff is derived @ PD0

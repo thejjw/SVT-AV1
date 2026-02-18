@@ -860,6 +860,13 @@ static const PartitionType from_shape_to_part[EXT_PARTITION_TYPES] = {PARTITION_
 static const Part          from_part_to_shape[PART_S + 1]          = {
     PART_N, PART_H, PART_V, PART_S, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4};
 
+// Width/height lookup tables in units of various block sizes
+static const uint8_t block_size_wide[BLOCK_SIZES_ALL] = {4,  4,  8,  8,   8,   16, 16, 16, 32, 32, 32,
+                                                 64, 64, 64, 128, 128, 4,  16, 8,  32, 16, 64};
+
+static const uint8_t block_size_high[BLOCK_SIZES_ALL] = {4,  8,  4,   8,  16,  8,  16, 32, 16, 32, 64,
+                                                 32, 64, 128, 64, 128, 16, 4,  32, 8,  64, 16};
+
 static const uint8_t mi_size_wide[BLOCK_SIZES_ALL] = {1,  1,  2,  2,  2,  4, 4, 4, 8, 8, 8,
                                                      16, 16, 16, 32, 32, 1, 4, 2, 8, 4, 16};
 static const uint8_t mi_size_high[BLOCK_SIZES_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
@@ -935,7 +942,7 @@ static inline int get_sqr_bsize_idx(BlockSize bsize) {
 // Conversion tables).
 // Note: the input block size should be square.
 // Otherwise it's considered invalid.
-static inline BlockSize get_partition_subsize(BlockSize bsize,
+static INLINE BlockSize get_partition_subsize(BlockSize bsize,
     PartitionType partition) {
     if (partition == PARTITION_INVALID) {
         return BLOCK_INVALID;
@@ -946,6 +953,98 @@ static inline BlockSize get_partition_subsize(BlockSize bsize,
             ? BLOCK_INVALID
             : subsize_lookup[partition][sqr_bsize_idx];
     }
+}
+
+static const uint8_t num_ns_per_shape[PART_S] = { 1, 2, 2, 4, 4, 3, 3, 3, 3 };
+
+// gives the index offset (relative to SQ block) of the given nsq shape
+// Different tables for 128x128 because H4/V4 are not allowed
+static const uint32_t ns_blk_offset_md[PART_S] = { 0, 1, 3, 5, 9, 13, 16, 19, 22 };
+static const uint32_t ns_blk_offset_128_md[PART_S] = {
+    0, 1, 3, 0 /*H4 not allowed*/, 0 /*V4 not allowed*/, 5, 8, 11, 14 };
+
+/*
+ * Update mi_row/mi_col to be the origin of the current block.
+ * input: bsize is the block size of the square (PART_N) shape.
+ * input: shape is the current partition type
+ * input: nsi is the index of the block in the current partition
+ * input: mi_row/col inputs are the block origin of the square (PART_N) shape and will be updated to output
+ * the origin of the nsi block.
+ */
+static INLINE BlockSize partition_mi_offset(const BlockSize bsize, const Part shape, const unsigned int nsi, int* mi_row, int* mi_col) {
+    const int hbs = mi_size_wide[bsize] >> 1;
+    const int quarter_step = mi_size_wide[bsize] >> 2;
+    PartitionType sub_bsize_part = PARTITION_INVALID;
+    switch (shape) {
+    case PART_N:
+        assert(nsi == 0);
+        return bsize;
+    case PART_H:
+        assert(nsi < SUB_PARTITIONS_RECT);
+        if (nsi) {
+            *mi_row += hbs;
+        }
+        sub_bsize_part = PARTITION_HORZ;
+        break;
+    case PART_V:
+        assert(nsi < SUB_PARTITIONS_RECT);
+        if (nsi) {
+            *mi_col += hbs;
+        }
+        sub_bsize_part = PARTITION_VERT;
+        break;
+    case PART_HA:
+        assert(nsi < SUB_PARTITIONS_AB);
+        if (nsi) {
+            *mi_col += nsi == 1 ? hbs : 0;
+            *mi_row += nsi == 1 ? 0 : hbs;
+        }
+        sub_bsize_part = nsi < 2 ? PARTITION_SPLIT : PARTITION_HORZ_A;
+        break;
+    case PART_HB:
+        assert(nsi < SUB_PARTITIONS_AB);
+        if (nsi) {
+            *mi_col += nsi == 1 ? 0 : hbs;
+            *mi_row += hbs;
+        }
+        sub_bsize_part = nsi == 0 ? PARTITION_HORZ_B : PARTITION_SPLIT;
+        break;
+    case PART_VA:
+        assert(nsi < SUB_PARTITIONS_AB);
+        if (nsi) {
+            *mi_col += nsi == 1 ? 0 : hbs;
+            *mi_row += nsi == 1 ? hbs : 0;
+        }
+        sub_bsize_part = nsi < 2 ? PARTITION_SPLIT : PARTITION_VERT_A;
+        break;
+    case PART_VB:
+        assert(nsi < SUB_PARTITIONS_AB);
+        if (nsi) {
+            *mi_col += hbs;
+            *mi_row += nsi == 1 ? 0 : hbs;
+        }
+        sub_bsize_part = nsi == 0 ? PARTITION_VERT_B : PARTITION_SPLIT;
+        break;
+    case PART_H4:
+        assert(nsi < SUB_PARTITIONS_PART4);
+        *mi_row += nsi * quarter_step;
+        sub_bsize_part = PARTITION_HORZ_4;
+        break;
+    case PART_V4:
+        assert(nsi < SUB_PARTITIONS_PART4);
+        *mi_col += nsi * quarter_step;
+        sub_bsize_part = PARTITION_VERT_4;
+        break;
+    case PART_S:
+        assert(nsi < SUB_PARTITIONS_SPLIT);
+        *mi_col += (nsi & 1) * hbs;
+        *mi_row += (nsi >> 1) * hbs;
+        sub_bsize_part = PARTITION_SPLIT;
+        break;
+    default:
+        assert(0 && "invalid shape");
+    }
+    return get_partition_subsize(bsize, sub_bsize_part);
 }
 
 typedef char PartitionContextType;
@@ -1709,11 +1808,6 @@ static const struct
 
 /* clang-format on */
 
-// Width/height lookup tables in units of various block sizes
-extern const uint8_t block_size_wide[BLOCK_SIZES_ALL];
-extern const uint8_t block_size_high[BLOCK_SIZES_ALL];
-
-// AOMMIN(3, AOMMIN(b_width_log2(bsize), b_height_log2(bsize)))
 extern const uint8_t eb_size_group_lookup[BLOCK_SIZES_ALL];
 
 extern const uint8_t eb_num_pels_log2_lookup[BLOCK_SIZES_ALL];

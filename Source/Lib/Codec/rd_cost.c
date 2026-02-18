@@ -1846,26 +1846,20 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer* candidateBuffer, 
  * av1_partition_rate_cost function is used to generate the rate of signaling the
  * partition type for a given block.
  */
-int64_t svt_aom_partition_rate_cost(PictureParentControlSet* pcs, const BlockSize bsize, const int mi_row,
+int64_t svt_aom_partition_rate_cost(PictureParentControlSet* ppcs, const BlockSize bsize, const int mi_row,
                                     const int mi_col, MdRateEstimationContext* md_rate_est_ctx, PartitionType p,
                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
     assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
     assert(bsize < BLOCK_SIZES_ALL);
-    const bool is_partition_point = (bsize >= BLOCK_8X8);
 
-    if (!is_partition_point) {
+    if (bsize < BLOCK_8X8) {
         return 0;
     }
 
-    const int blk_org_x = mi_col << 2; // ctx->sb_origin_x + blk_geom->org_x;
-    const int blk_org_y = mi_row << 2; // ctx->sb_origin_y + blk_geom->org_y;
-    const int hbs       = (mi_size_wide[bsize] << 2) >> 1;
-    const int has_rows  = (blk_org_y + hbs) < pcs->aligned_height;
-    const int has_cols  = (blk_org_x + hbs) < pcs->aligned_width;
-    // Don't consider blocks outside the picture
-    if (blk_org_y >= pcs->aligned_height || blk_org_x >= pcs->aligned_width) {
-        return 0;
-    }
+    const int hbs       = mi_size_wide[bsize] >> 1;
+    const int has_rows  = (mi_row + hbs) < ppcs->av1_cm->mi_rows;
+    const int has_cols  = (mi_col + hbs) < ppcs->av1_cm->mi_cols;
+    // Don't consider invalid partitions or blocks outside the picture
     if (!has_rows && !has_cols) {
         return 0;
     }

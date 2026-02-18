@@ -918,8 +918,8 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
                 ctx->blk_org_y,
                 ctx->blk_org_x,
                 ctx->blk_org_y,
-                plane ? ((ctx->blk_geom->org_x >> 3) << 3) / 2 : ctx->blk_geom->org_x,
-                plane ? ((ctx->blk_geom->org_y >> 3) << 3) / 2 : ctx->blk_geom->org_y,
+                0,
+                0,
                 &pcs->scs->seq_header);
         }
     }
@@ -1109,8 +1109,8 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
                 ctx->blk_org_y,
                 ctx->blk_org_x,
                 ctx->blk_org_y,
-                plane ? ((ctx->blk_geom->org_x >> 3) << 3) / 2 : ctx->blk_geom->org_x,
-                plane ? ((ctx->blk_geom->org_y >> 3) << 3) / 2 : ctx->blk_geom->org_y,
+                0,
+                0,
                 &pcs->scs->seq_header);
         }
     }

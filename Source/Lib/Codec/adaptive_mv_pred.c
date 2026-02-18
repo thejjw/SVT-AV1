@@ -1334,11 +1334,14 @@ MbModeInfo* get_mbmi(PictureControlSet* pcs, uint32_t blk_org_x, uint32_t blk_or
     return mbmi;
 }
 
-void svt_aom_update_mi_map(BlkStruct* blk_ptr, uint32_t blk_org_x, uint32_t blk_org_y, const BlockGeom* blk_geom,
-                           PictureControlSet* pcs, ModeDecisionContext* ctx) {
-    uint32_t mi_stride = pcs->mi_stride;
-    int32_t  mi_row    = blk_org_y >> MI_SIZE_LOG2;
-    int32_t  mi_col    = blk_org_x >> MI_SIZE_LOG2;
+void svt_aom_update_mi_map(PictureControlSet* pcs, ModeDecisionContext* ctx, const PartitionType part,
+    const BlockSize bsize, const int mi_row, const int mi_col) {
+    BlkStruct* blk_ptr = ctx->blk_ptr;
+    const uint32_t mi_stride = pcs->mi_stride;
+    const int blk_org_y = mi_row << MI_SIZE_LOG2;
+    const int blk_org_x = mi_col << MI_SIZE_LOG2;
+    const int bwidth    = block_size_wide[bsize];
+    const int bheight   = block_size_high[bsize];
 
     const int32_t offset = mi_row * mi_stride + mi_col;
 
@@ -1355,7 +1358,7 @@ void svt_aom_update_mi_map(BlkStruct* blk_ptr, uint32_t blk_org_x, uint32_t blk_
     // copy mbmi data
     svt_memcpy(block_mi, &blk_ptr->block_mi, sizeof(BlockModeInfo));
 
-    if (svt_av1_allow_palette(pcs->ppcs->palette_level, blk_geom->bsize)) {
+    if (svt_av1_allow_palette(pcs->ppcs->palette_level, bsize)) {
         mbmi->palette_mode_info.palette_size = blk_ptr->palette_size[0];
         svt_memcpy(mbmi->palette_mode_info.palette_colors,
                    blk_ptr->palette_info->pmi.palette_colors,
@@ -1364,8 +1367,8 @@ void svt_aom_update_mi_map(BlkStruct* blk_ptr, uint32_t blk_org_x, uint32_t blk_
         mbmi->palette_mode_info.palette_size = 0;
     }
 
-    mbmi->bsize     = blk_geom->bsize;
-    mbmi->partition = from_shape_to_part[blk_geom->shape];
+    mbmi->bsize     = bsize;
+    mbmi->partition = part;
     assert(IMPLIES(blk_ptr->block_mi.is_interintra_used, block_mi->ref_frame[1] == INTRA_FRAME));
     if (ctx->bypass_encdec && pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled) {
         if (!blk_ptr->block_has_coeff) {
@@ -1375,7 +1378,7 @@ void svt_aom_update_mi_map(BlkStruct* blk_ptr, uint32_t blk_org_x, uint32_t blk_
                 pcs, blk_ptr->av1xd, blk_org_x, blk_org_y, &cdf_num);
         }
         // update segment id map so svt_av1_get_spatial_seg_prediction() can use the map to predict segment id.
-        svt_av1_update_segmentation_map(pcs, blk_geom->bsize, blk_org_x, blk_org_y, blk_ptr->segment_id);
+        svt_av1_update_segmentation_map(pcs, bsize, blk_org_x, blk_org_y, blk_ptr->segment_id);
         mbmi->segment_id = blk_ptr->segment_id;
     }
     // The data copied into each mi block is the same; therefore, copy the data from the blk_ptr only for the first block_mi
@@ -1383,8 +1386,8 @@ void svt_aom_update_mi_map(BlkStruct* blk_ptr, uint32_t blk_org_x, uint32_t blk_
     // is used from block_mi should be updated above.
     svt_copy_mi_map_grid((pcs->mi_grid_base + offset),
                          mi_stride,
-                         (blk_geom->bheight >> MI_SIZE_LOG2),
-                         (blk_geom->bwidth >> MI_SIZE_LOG2));
+                         (bheight >> MI_SIZE_LOG2),
+                         (bwidth >> MI_SIZE_LOG2));
 }
 
 static INLINE void record_samples(MbModeInfo* mbmi, int* pts, int* pts_inref, int row_offset, int sign_r,

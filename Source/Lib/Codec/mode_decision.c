@@ -95,13 +95,16 @@ static MD_COMP_TYPE get_tot_comp_types_bsize(MD_COMP_TYPE tot_comp_types, BlockS
 }
 
 /*
-Get the ME offset for a given block(the offset used to locate the PA MVs from the parent PCS).
+Get the ME offset for a given block (the offset used to locate the PA MVs from the parent PCS).
 */
-uint32_t svt_aom_get_me_block_offset(const BlockGeom* const blk_geom, uint8_t enable_me_8x8, uint8_t enable_me_16x16) {
-    uint32_t first_quad_org_x = blk_geom->org_x % 32;
-    uint32_t first_quad_org_y = blk_geom->org_y % 32;
+uint32_t svt_aom_get_me_block_offset(const uint32_t org_x, const uint32_t org_y, const BlockSize bsize,
+    const uint8_t enable_me_8x8, const uint8_t enable_me_16x16) {
+    const uint32_t first_quad_org_x = org_x % 32;
+    const uint32_t first_quad_org_y = org_y % 32;
 
-    uint32_t max_length = MAX(blk_geom->bwidth, blk_geom->bheight);
+    const int bwidth  = block_size_wide[bsize];
+    const int bheight = block_size_high[bsize];
+    const uint32_t max_length = MAX(bwidth, bheight);
 
     uint32_t me_idx = 0;
     switch (max_length) {
@@ -112,10 +115,10 @@ uint32_t svt_aom_get_me_block_offset(const BlockGeom* const blk_geom, uint8_t en
     case 32:
         me_idx = 1;
 
-        if ((blk_geom->org_x % 64) / 32) {
+        if ((org_x % 64) / 32) {
             me_idx += 21;
         }
-        if ((blk_geom->org_y % 64) / 32) {
+        if ((org_y % 64) / 32) {
             me_idx += 42;
         }
         break;
@@ -128,10 +131,10 @@ uint32_t svt_aom_get_me_block_offset(const BlockGeom* const blk_geom, uint8_t en
             me_idx += 10;
         }
 
-        if ((blk_geom->org_x % 64) / 32) {
+        if ((org_x % 64) / 32) {
             me_idx += 21;
         }
-        if ((blk_geom->org_y % 64) / 32) {
+        if ((org_y % 64) / 32) {
             me_idx += 42;
         }
         break;
@@ -152,10 +155,10 @@ uint32_t svt_aom_get_me_block_offset(const BlockGeom* const blk_geom, uint8_t en
             me_idx += 10;
         }
 
-        if ((blk_geom->org_x % 64) / 32) {
+        if ((org_x % 64) / 32) {
             me_idx += 21;
         }
-        if ((blk_geom->org_y % 64) / 32) {
+        if ((org_y % 64) / 32) {
             me_idx += 42;
         }
         break;
@@ -1933,7 +1936,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
     uint32_t    full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
     int         error_per_bit = full_lambda >> RD_EPB_SHIFT;
     error_per_bit += (error_per_bit == 0);
-    uint32_t             blk_origin_index   = ctx->blk_geom->org_x + ctx->blk_geom->org_y * ctx->sb_size;
+    uint32_t             blk_origin_index   = 0;
     EbPictureBufferDesc* input_pic          = ppcs->enhanced_pic; // 10BIT not supported
     uint32_t             input_origin_index = (ctx->blk_org_y + input_pic->org_y) * input_pic->stride_y +
         (ctx->blk_org_x + input_pic->org_x);
@@ -2013,8 +2016,8 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
                                      ctx->blk_org_x,
                                      ctx->blk_org_y,
                                      ctx->scratch_prediction_ptr,
-                                     ctx->blk_geom->org_x,
-                                     ctx->blk_geom->org_y,
+                                     0,
+                                     0,
                                      PICTURE_BUFFER_DESC_LUMA_MASK,
                                      EB_EIGHT_BIT,
                                      0); // is_16bit_pipeline

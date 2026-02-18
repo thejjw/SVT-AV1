@@ -1687,14 +1687,6 @@ const uint8_t me_idx_16x16_to_parent_32x32_conversion[16] = {
     3,3,      4,4
 };
 
-
-// Width/height lookup tables in units of various block sizes
-const uint8_t block_size_wide[BLOCK_SIZES_ALL] = {4,  4,  8,  8,   8,   16, 16, 16, 32, 32, 32,
-                                                 64, 64, 64, 128, 128, 4,  16, 8,  32, 16, 64};
-
-const uint8_t block_size_high[BLOCK_SIZES_ALL] = {4,  8,  4,   8,  16,  8,  16, 32, 16, 32, 64,
-                                                 32, 64, 128, 64, 128, 16, 4,  32, 8,  64, 16};
-
 // AOMMIN(3, AOMMIN(b_width_log2(bsize), b_height_log2(bsize)))
 const uint8_t eb_size_group_lookup[BLOCK_SIZES_ALL] = {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3,
                                                       3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};

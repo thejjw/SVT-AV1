@@ -2020,12 +2020,10 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
     const uint32_t input_chroma_offset = ((ctx->blk_org_y + input_pic->org_y) * input_pic->stride_cb +
                                           (ctx->blk_org_x + input_pic->org_x)) /
         2;
-    const int32_t prediction_offset = prediction_ptr->org_x + ctx->blk_geom->org_x +
-        (prediction_ptr->org_y + ctx->blk_geom->org_y) * prediction_ptr->stride_y;
-    const int32_t prediction_chroma_offset = (prediction_ptr->org_x + ctx->blk_geom->org_x +
-                                              (prediction_ptr->org_y + ctx->blk_geom->org_y) *
-                                                  prediction_ptr->stride_cb) /
-        2;
+    const int32_t prediction_offset = prediction_ptr->org_x +
+        (prediction_ptr->org_y) * prediction_ptr->stride_y;
+    const int32_t prediction_chroma_offset = (prediction_ptr->org_x +
+        (prediction_ptr->org_y) * prediction_ptr->stride_cb) / 2;
     const uint8_t         hbd                        = (bit_depth > 8) ? 1 : 0;
     EbSpatialFullDistType spatial_full_dist_type_fun = hbd ? svt_full_distortion_kernel16_bits
                                                            : svt_spatial_full_distortion_kernel;
@@ -2236,8 +2234,8 @@ static void interpolation_filter_search(PictureControlSet* pcs, ModeDecisionCont
                     ctx->blk_org_x,
                     ctx->blk_org_y,
                     ctx->scratch_prediction_ptr,
-                    ctx->blk_geom->org_x,
-                    ctx->blk_geom->org_y,
+                    0,
+                    0,
                     PICTURE_BUFFER_DESC_LUMA_MASK,
                     hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT,
                     0); // is_16bit_pipeline
@@ -2845,8 +2843,8 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet* scs, ModeDecision
     const BlockGeom* blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
-    const uint16_t   dst_origin_x = blk_geom->org_x;
-    const uint16_t   dst_origin_y = blk_geom->org_y;
+    const uint16_t   dst_origin_x = 0;
+    const uint16_t   dst_origin_y = 0;
     const uint8_t    bwidth       = blk_geom->bwidth;
     const uint8_t    bheight      = blk_geom->bheight;
     const uint8_t    is_compound  = has_second_ref(block_mi);
@@ -2904,8 +2902,8 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
     const BlockGeom* blk_geom     = ctx->blk_geom;
     const uint16_t   ref_origin_x = ctx->blk_org_x;
     const uint16_t   ref_origin_y = ctx->blk_org_y;
-    const uint16_t   dst_origin_x = blk_geom->org_x;
-    const uint16_t   dst_origin_y = blk_geom->org_y;
+    const uint16_t   dst_origin_x = 0;
+    const uint16_t   dst_origin_y = 0;
     const uint8_t    bwidth       = blk_geom->bwidth;
     const uint8_t    bheight      = blk_geom->bheight;
     const int32_t    bit_depth    = hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
@@ -4000,8 +3998,8 @@ EbErrorType svt_aom_inter_pu_prediction_av1(uint8_t hbd_md, ModeDecisionContext*
                              ctx->blk_org_x,
                              ctx->blk_org_y,
                              cand_bf->pred,
-                             ctx->blk_geom->org_x,
-                             ctx->blk_geom->org_y,
+                             0,
+                             0,
                              component_mask,
                              hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT,
                              0); // is_16bit_pipeline
@@ -4024,8 +4022,8 @@ EbErrorType svt_aom_inter_pu_prediction_av1_obmc(uint8_t hbd_md, ModeDecisionCon
         ctx->blk_org_x,
         ctx->blk_org_y,
         cand_bf->pred,
-        ctx->blk_geom->org_x,
-        ctx->blk_geom->org_y,
+        0,
+        0,
         component_mask,
         hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT,
         0); // is_16bit_pipeline
