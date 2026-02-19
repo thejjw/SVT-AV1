@@ -1280,7 +1280,7 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
     pcs->picture_qp                         = clamp_qp(scs, (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
 
     // Limiting the QP based on the QP of the Reference frame
-    if (pcs->temporal_layer_index != 0) {
+    if (pcs->temporal_layer_index != 0 && !scs->use_flat_ipp) {
         int list0_ref_qp = find_min_ref_qp(pcs, REF_LIST_0);
         int list1_ref_qp = find_min_ref_qp(pcs, REF_LIST_1);
         int ref_qp       = MAX(list0_ref_qp, list1_ref_qp);
