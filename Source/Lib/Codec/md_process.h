@@ -937,6 +937,9 @@ typedef struct PC_TREE {
     // Origin of the current depth (square shape)
     int mi_row;
     int mi_col;
+    // Partition contexts for the current block, derived from the neighbouring blocks' partitions
+    PartitionContextType left_part_ctx;
+    PartitionContextType above_part_ctx;
 } PC_TREE;
 
 typedef struct ModeDecisionContext {

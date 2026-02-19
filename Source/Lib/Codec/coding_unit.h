@@ -207,10 +207,6 @@ typedef struct BlkStruct {
 
     uint8_t segment_id;
 
-    // Partition contexts for the current block, derived from the neighbouring blocks' partitions
-    PartitionContextType left_part_ctx;
-    PartitionContextType above_part_ctx;
-
     // wm
     WarpedMotionParams wm_params_l0;
     WarpedMotionParams wm_params_l1;
