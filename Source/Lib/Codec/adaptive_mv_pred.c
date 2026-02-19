@@ -1119,7 +1119,7 @@ void svt_aom_init_xd(PictureControlSet* pcs, ModeDecisionContext* ctx) {
             ? xd->mi[base_mbmi_offset + ss_y * xd->mi_stride - 1]
             : NULL;
     }
-    xd->mi[0]->partition = from_shape_to_part[ctx->blk_geom->shape];
+    xd->mi[0]->partition = from_shape_to_part[ctx->shape];
 }
 
 void svt_aom_generate_av1_mvp_table(ModeDecisionContext* ctx, BlkStruct* blk_ptr, const BlockGeom* blk_geom,

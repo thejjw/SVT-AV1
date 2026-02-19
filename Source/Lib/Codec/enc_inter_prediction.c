@@ -679,19 +679,19 @@ void model_rd_for_sb_with_curvfit(PictureControlSet* pcs, ModeDecisionContext* c
     *out_dist_sum = dist_sum;
 }
 
-void svt_av1_predict_intra_block(STAGE stage, const BlockGeom* blk_geom, MacroBlockD* xd, int32_t wpx, int32_t hpx,
+void svt_av1_predict_intra_block(STAGE stage, MacroBlockD* xd, int32_t wpx, int32_t hpx,
                                  TxSize tx_size, PredictionMode mode, int32_t angle_delta, int32_t use_palette,
                                  PaletteInfo* palette_info, FilterIntraMode filter_intra_mode, uint8_t* topNeighArray,
                                  uint8_t* leftNeighArray, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                 int32_t row_off, int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
+                                 int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t tu_org_x_pict,
                                  uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
                                  uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr);
-void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const BlockGeom* blk_geom, MacroBlockD* xd,
+void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, MacroBlockD* xd,
                                        int32_t wpx, int32_t hpx, TxSize tx_size, PredictionMode mode,
                                        int32_t angle_delta, int32_t use_palette, PaletteInfo* palette_info,
                                        FilterIntraMode filter_intra_mode, uint16_t* topNeighArray,
                                        uint16_t* leftNeighArray, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                       int32_t row_off, int32_t plane, BlockSize bsize, uint32_t tu_org_x_pict,
+                                       int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t tu_org_x_pict,
                                        uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
                                        uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr);
 
@@ -2220,7 +2220,8 @@ static void interpolation_filter_search(PictureControlSet* pcs, ModeDecisionCont
                     &cand_bf->cand->wm_params_l0,
                     &cand_bf->cand->wm_params_l1,
                     ctx->blk_ptr,
-                    ctx->blk_geom,
+                    ctx->blk_geom->bsize,
+                    ctx->shape,
                     true, //use_precomputed_obmc
                     ctx->need_hbd_comp_mds3
                         ? 0
@@ -2295,11 +2296,12 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                    EbPictureBufferDesc* pred_pic, InterIntraMode interintra_mode,
                                    uint8_t use_wedge_interintra, int32_t interintra_wedge_index,
                                    NeighborArrayUnit* recon_neigh_y, NeighborArrayUnit* recon_neigh_cb,
-                                   NeighborArrayUnit* recon_neigh_cr, BlkStruct* blk_ptr, const BlockGeom* blk_geom,
+                                   NeighborArrayUnit* recon_neigh_cr, BlkStruct* blk_ptr, BlockSize bsize, Part shape,
                                    int16_t pu_origin_x, uint16_t pu_origin_y, uint16_t dst_origin_x,
                                    uint16_t dst_origin_y, uint32_t component_mask, uint8_t bit_depth, bool is16bit) {
     int32_t start_plane = (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) ? 0 : 1;
-    int32_t end_plane   = (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) && blk_geom->has_uv ? MAX_MB_PLANE : 1;
+    int32_t end_plane   = (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) ? MAX_MB_PLANE : 1;
+    assert(IMPLIES(ctx && end_plane == MAX_MB_PLANE, ctx->has_uv));
 
     // temp buffer for intra pred (luma/chroma computed separately, so can re-use buffer)
     DECLARE_ALIGNED(16, uint8_t, intra_pred[MAX_SB_SQUARE]);
@@ -2308,12 +2310,14 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
     int32_t  dst_stride, intra_stride;
     uint32_t sb_size_luma   = pcs->scs->sb_size;
     uint32_t sb_size_chroma = pcs->scs->sb_size >> 1;
+    const int bwidth = block_size_wide[bsize];
+    const int bheight = block_size_high[bsize];
 
     EbPictureBufferDesc intra_pred_desc;
     intra_pred_desc.org_x = intra_pred_desc.org_y = 0;
-    intra_pred_desc.stride_y                      = blk_geom->bwidth;
-    intra_pred_desc.stride_cb                     = blk_geom->bwidth / 2;
-    intra_pred_desc.stride_cr                     = blk_geom->bwidth / 2;
+    intra_pred_desc.stride_y                      = bwidth;
+    intra_pred_desc.stride_cb                     = bwidth >> 1;
+    intra_pred_desc.stride_cr                     = bwidth >> 1;
     intra_pred_desc.buffer_y                      = intra_pred;
     intra_pred_desc.buffer_cb                     = intra_pred;
     intra_pred_desc.buffer_cr                     = intra_pred;
@@ -2321,7 +2325,9 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
     for (int32_t plane = start_plane; plane < end_plane; ++plane) {
         const int       ssx         = plane ? 1 : 0;
         const int       ssy         = plane ? 1 : 0;
-        const BlockSize plane_bsize = get_plane_block_size(blk_geom->bsize, ssx, ssy);
+        const BlockSize plane_bsize = get_plane_block_size(bsize, ssx, ssy);
+        const int bwidth_uv = block_size_wide[plane_bsize];
+        const int bheight_uv = block_size_high[plane_bsize];
         //av1_build_interintra_predictors_sbp
         uint8_t topNeighArray[(64 * 2 + 1) << 1];
         uint8_t leftNeighArray[(64 * 2 + 1) << 1];
@@ -2339,14 +2345,14 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                 if (pu_origin_y != 0) {
                     svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                                recon_neigh_y->top_array + ((uint64_t)pu_origin_x << is16bit),
-                               blk_geom->bwidth * 2 << is16bit);
+                               bwidth * 2 << is16bit);
                 }
 
                 if (pu_origin_x != 0) {
-                    uint16_t multipler = (pu_origin_y % sb_size_luma + blk_geom->bheight * 2) > sb_size_luma ? 1 : 2;
+                    uint16_t multipler = (pu_origin_y % sb_size_luma + bheight * 2) > sb_size_luma ? 1 : 2;
                     svt_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                                recon_neigh_y->left_array + ((uint64_t)pu_origin_y << is16bit),
-                               blk_geom->bheight * multipler << is16bit);
+                               bheight * multipler << is16bit);
                 }
 
                 if (pu_origin_y != 0 && pu_origin_x != 0) {
@@ -2368,15 +2374,15 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
             if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cb->top_array + ((uint64_t)blk_originx_uv << is16bit),
-                           blk_geom->bwidth_uv * 2 << is16bit);
+                           bwidth_uv * 2 << is16bit);
             }
 
             if (blk_originx_uv != 0) {
-                uint16_t multipler = (blk_originy_uv % sb_size_chroma + blk_geom->bheight_uv * 2) > sb_size_chroma ? 1
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1
                                                                                                                    : 2;
                 svt_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cb->left_array + ((uint64_t)blk_originy_uv << is16bit),
-                           blk_geom->bheight_uv * multipler << is16bit);
+                           bheight_uv * multipler << is16bit);
             }
 
             if (blk_originy_uv != 0 && blk_originx_uv != 0) {
@@ -2395,15 +2401,15 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
             if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cr->top_array + ((uint64_t)blk_originx_uv << is16bit),
-                           blk_geom->bwidth_uv * 2 << is16bit);
+                           bwidth_uv * 2 << is16bit);
             }
 
             if (blk_originx_uv != 0) {
-                uint16_t multipler = (blk_originy_uv % sb_size_chroma + blk_geom->bheight_uv * 2) > sb_size_chroma ? 1
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1
                                                                                                                    : 2;
                 svt_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cr->left_array + ((uint64_t)blk_originy_uv << is16bit),
-                           blk_geom->bheight_uv * multipler << is16bit);
+                           bheight_uv * multipler << is16bit);
             }
 
             if (blk_originy_uv != 0 && blk_originx_uv != 0) {
@@ -2412,18 +2418,17 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                         ->top_left_array[(recon_neigh_cr->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
             }
         }
-        const TxSize tx_size = tx_depth_to_tx_size[0][blk_geom->bsize];
-        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const TxSize tx_size = tx_depth_to_tx_size[0][bsize];
+        const TxSize tx_size_uv = av1_get_max_uv_txsize(bsize, 1, 1);
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
         if (is16bit) {
             if (!use_precomputed_intra || plane) {
                 svt_av1_predict_intra_block_16bit(bit_depth,
                                                   !ED_STAGE,
-                                                  blk_geom,
                                                   blk_ptr->av1xd,
-                                                  plane ? blk_geom->bwidth_uv : blk_geom->bwidth,
-                                                  plane ? blk_geom->bheight_uv : blk_geom->bheight,
+                                                  plane ? bwidth_uv : bwidth,
+                                                  plane ? bheight_uv : bheight,
                                                   plane ? tx_size_uv : tx_size,
                                                   interintra_to_intra_mode[interintra_mode],
                                                   0,
@@ -2436,7 +2441,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                                   0,
                                                   0,
                                                   plane,
-                                                  blk_geom->bsize,
+                                                  bsize,
+                                                  shape,
                                                   dst_origin_x,
                                                   dst_origin_y,
                                                   pu_origin_x,
@@ -2450,14 +2456,14 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                 use_wedge_interintra,
                 interintra_wedge_index,
                 INTERINTRA_WEDGE_SIGN,
-                blk_geom->bsize,
+                bsize,
                 plane_bsize,
                 dst,
                 dst_stride,
                 dst, // Inter pred buff
                 dst_stride, // Inter pred stride
                 use_precomputed_intra && !plane ? ctx->intrapred_buf[interintra_mode] : intra_pred, // Intra pred buff
-                use_precomputed_intra && !plane ? blk_geom->bwidth : intra_stride, // Intra pred stride
+                use_precomputed_intra && !plane ? bwidth : intra_stride, // Intra pred stride
                 bit_depth);
         } else
 #else
@@ -2466,10 +2472,9 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
         {
             if (!use_precomputed_intra || plane) {
                 svt_av1_predict_intra_block(!ED_STAGE,
-                                            blk_geom,
                                             blk_ptr->av1xd,
-                                            plane ? blk_geom->bwidth_uv : blk_geom->bwidth,
-                                            plane ? blk_geom->bheight_uv : blk_geom->bheight,
+                                            plane ? bwidth_uv : bwidth,
+                                            plane ? bheight_uv : bheight,
                                             plane ? tx_size_uv : tx_size,
                                             interintra_to_intra_mode[interintra_mode],
                                             0,
@@ -2482,7 +2487,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                             0,
                                             0,
                                             plane,
-                                            blk_geom->bsize,
+                                            bsize,
+                                            shape,
                                             dst_origin_x,
                                             dst_origin_y,
                                             pu_origin_x,
@@ -2497,14 +2503,14 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                 use_wedge_interintra,
                 interintra_wedge_index,
                 INTERINTRA_WEDGE_SIGN,
-                blk_geom->bsize,
+                bsize,
                 plane_bsize,
                 dst,
                 dst_stride,
                 dst, // Inter pred buff
                 dst_stride, // Inter pred stride
                 use_precomputed_intra && !plane ? ctx->intrapred_buf[interintra_mode] : intra_pred, // Intra pred buff
-                use_precomputed_intra && !plane ? blk_geom->bwidth : intra_stride); // Intra pred stride
+                use_precomputed_intra && !plane ? bwidth : intra_stride); // Intra pred stride
         }
     }
 }
@@ -3047,21 +3053,21 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
 }
 
 #if CONFIG_ENABLE_OBMC
-static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr, uint8_t use_precomputed_obmc,
+static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr, BlockSize bsize, uint8_t use_precomputed_obmc,
                                       ModeDecisionContext* ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
                                       EbPictureBufferDesc* pred_pic, uint16_t dst_origin_x, uint16_t dst_origin_y,
                                       uint32_t component_mask, uint8_t bit_depth, uint8_t is_16bit_pipeline) {
     uint8_t is16bit = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
-
-    const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
+    const int bwidth = block_size_wide[bsize];
+    const int bheight = block_size_high[bsize];
 
     // cppcheck-suppress unassignedVariable
     DECLARE_ALIGNED(16, uint8_t, obmc_buff_0[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
     // cppcheck-suppress unassignedVariable
     DECLARE_ALIGNED(16, uint8_t, obmc_buff_1[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
     uint8_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
-    int      dst_stride1[MAX_MB_PLANE] = {blk_geom->bwidth, blk_geom->bwidth, blk_geom->bwidth};
-    int      dst_stride2[MAX_MB_PLANE] = {blk_geom->bwidth, blk_geom->bwidth, blk_geom->bwidth};
+    int      dst_stride1[MAX_MB_PLANE] = {bwidth, bwidth, bwidth};
+    int      dst_stride2[MAX_MB_PLANE] = {bwidth, bwidth, bwidth};
 
     int mi_row = pu_origin_y >> 2;
     int mi_col = pu_origin_x >> 2;
@@ -3078,20 +3084,20 @@ static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr
             svt_aom_precompute_obmc_data(pcs, ctx, PICTURE_BUFFER_DESC_CHROMA_MASK);
         }
         dst_buf1[0] = ctx->obmc_buff_0;
-        dst_buf1[1] = ctx->obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight) << is16bit);
-        dst_buf1[2] = ctx->obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight * 2) << is16bit);
+        dst_buf1[1] = ctx->obmc_buff_0 + ((bwidth * bheight) << is16bit);
+        dst_buf1[2] = ctx->obmc_buff_0 + ((bwidth * bheight * 2) << is16bit);
         dst_buf2[0] = ctx->obmc_buff_1;
-        dst_buf2[1] = ctx->obmc_buff_1 + ((blk_geom->bwidth * blk_geom->bheight) << is16bit);
-        dst_buf2[2] = ctx->obmc_buff_1 + ((blk_geom->bwidth * blk_geom->bheight * 2) << is16bit);
+        dst_buf2[1] = ctx->obmc_buff_1 + ((bwidth * bheight) << is16bit);
+        dst_buf2[2] = ctx->obmc_buff_1 + ((bwidth * bheight * 2) << is16bit);
     } else {
         dst_buf1[0] = obmc_buff_0;
-        dst_buf1[1] = obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight) << is16bit);
-        dst_buf1[2] = obmc_buff_0 + ((blk_geom->bwidth * blk_geom->bheight * 2) << is16bit);
+        dst_buf1[1] = obmc_buff_0 + ((bwidth * bheight) << is16bit);
+        dst_buf1[2] = obmc_buff_0 + ((bwidth * bheight * 2) << is16bit);
         dst_buf2[0] = obmc_buff_1;
-        dst_buf2[1] = obmc_buff_1 + ((blk_geom->bwidth * blk_geom->bheight) << is16bit);
-        dst_buf2[2] = obmc_buff_1 + ((blk_geom->bwidth * blk_geom->bheight * 2) << is16bit);
+        dst_buf2[1] = obmc_buff_1 + ((bwidth * bheight) << is16bit);
+        dst_buf2[2] = obmc_buff_1 + ((bwidth * bheight * 2) << is16bit);
         build_prediction_by_above_preds((component_mask & PICTURE_BUFFER_DESC_FULL_MASK),
-                                        blk_geom->bsize,
+                                        bsize,
                                         pcs,
                                         blk_ptr->av1xd,
                                         mi_row,
@@ -3100,7 +3106,7 @@ static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr
                                         dst_stride1,
                                         is16bit);
         build_prediction_by_left_preds((component_mask & PICTURE_BUFFER_DESC_FULL_MASK),
-                                       blk_geom->bsize,
+                                       bsize,
                                        pcs,
                                        blk_ptr->av1xd,
                                        mi_row,
@@ -3133,7 +3139,7 @@ static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr
                                     final_dst_ptr_v,
                                     final_dst_stride_v,
                                     component_mask,
-                                    blk_geom->bsize,
+                                    bsize,
                                     pcs,
                                     blk_ptr->av1xd,
                                     mi_row,
@@ -3341,7 +3347,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
 // The offset for the ref pic block is (ref_origin_x, ref_origin_y)
 EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet* pcs, BlockModeInfo* block_mi,
                                      WarpedMotionParams* wm_params_0, WarpedMotionParams* wm_params_1,
-                                     BlkStruct* blk_ptr, const BlockGeom* blk_geom, bool use_precomputed_obmc,
+                                     BlkStruct* blk_ptr, const BlockSize bsize, const Part shape, bool use_precomputed_obmc,
                                      bool use_precomputed_ii, ModeDecisionContext* ctx,
                                      NeighborArrayUnit* recon_neigh_y, NeighborArrayUnit* recon_neigh_cb,
                                      NeighborArrayUnit* recon_neigh_cr, EbPictureBufferDesc* ref_pic_0,
@@ -3349,7 +3355,7 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                                      EbPictureBufferDesc* pred_pic, uint16_t dst_origin_x, uint16_t dst_origin_y,
                                      uint32_t component_mask, uint8_t bit_depth, uint8_t is_16bit_pipeline) {
     const uint8_t is16bit     = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
-    const uint8_t is_compound = has_second_ref(block_mi); // (mv_unit->pred_direction == BI_PRED) ? 1 : 0;
+    const uint8_t is_compound = has_second_ref(block_mi);
 
     // Move these to context if stack does not hold.
     // Process chroma after luma to re-use buffer.
@@ -3365,8 +3371,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
 
     int32_t fwd_offset = 0, bck_offset = 0, use_dist_wtd_comp_avg = 0;
 
-    const uint8_t bwidth      = blk_geom->bwidth;
-    const uint8_t bheight     = blk_geom->bheight;
+    const uint8_t bwidth      = block_size_wide[bsize];
+    const uint8_t bheight     = block_size_high[bsize];
     ScaleFactors  sf_identity = scs->sf_identity;
 
     ScaleFactors ref0_scale_factors;
@@ -3413,9 +3419,9 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
             EbPictureBufferDesc* ref_pic   = ref_itr ? ref_pic_1 : ref_pic_0;
             WarpedMotionParams*  wm_params = ref_itr ? wm_params_1 : wm_params_0;
             bool                 is_wm     = block_mi->motion_mode == WARPED_CAUSAL ||
-                is_global_mv_block(block_mi->mode, blk_geom->bsize, wm_params ? wm_params->wmtype : TRANSLATION);
+                is_global_mv_block(block_mi->mode, bsize, wm_params ? wm_params->wmtype : TRANSLATION);
             // for 4xN blocks, useWarp will be set to 0 (see section 7.11.3.1 of the AV1 spec)
-            assert(IMPLIES(is_wm, blk_geom->bwidth >= 8 && blk_geom->bheight >= 8));
+            assert(IMPLIES(is_wm, bwidth >= 8 && bheight >= 8));
             if (ref_itr /*&& is_compound*/) {
                 conv_params_y.do_average            = 1;
                 conv_params_y.fwd_offset            = fwd_offset;
@@ -3455,7 +3461,7 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                 ref_pic->height,
                 bwidth,
                 bheight,
-                blk_geom->bsize,
+                bsize,
                 blk_ptr->av1xd,
                 ref_pic->stride_y,
                 pred_pic->stride_y,
@@ -3472,7 +3478,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
     }
 
     // Perform chroma prediction
-    if (blk_geom->has_uv && (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK)) {
+    if ((component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK)) {
+        assert(IMPLIES(ctx, ctx->has_uv));
         uint8_t* dst_ptr_cb = pred_pic->buffer_cb +
             (((pred_pic->org_x + ((dst_origin_x >> 3) << 3)) / 2 +
               (pred_pic->org_y + ((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cb)
@@ -3485,6 +3492,9 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
         ConvolveParams conv_params_cr     = get_conv_params_no_round(0, 0, 0, tmp_dst_cr, 64, is_compound, bit_depth);
         const uint8_t  ss_x               = 1; // pd->subsampling_x;
         const uint8_t  ss_y               = 1; //pd->subsampling_y;
+        const BlockSize bsize_uv = get_plane_block_size(bsize, ss_x, ss_y);
+        const int bwidth_uv = block_size_wide[bsize_uv];
+        const int bheight_uv = block_size_high[bsize_uv];
         const int16_t  pu_origin_y_chroma = ((ref_origin_y >> 3) << 3) / 2;
         const int16_t  pu_origin_x_chroma = ((ref_origin_x >> 3) << 3) / 2;
         uint8_t        sub8x8_inter       = 0;
@@ -3492,7 +3502,7 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
         // special treatment for chroma in 4XN/NX4 blocks if one of the neighbour blocks of the parent square is
         // intra the chroma prediction will follow the normal path using the luma MV of the current nsq block which
         // is the latest sub8x8. for this case: only uniPred is allowed.
-        if ((blk_geom->bwidth == 4 || blk_geom->bheight == 4) && pcs) {
+        if ((bwidth == 4 || bheight == 4) && pcs) {
             assert(!is_compound);
             sub8x8_inter = inter_chroma_4xn_pred(pcs,
                                                  blk_ptr->av1xd,
@@ -3504,7 +3514,7 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                                                  pu_origin_y_chroma,
                                                  ss_x,
                                                  ss_y,
-                                                 blk_geom->bsize,
+                                                 bsize,
                                                  &conv_params_cb,
                                                  &conv_params_cr,
                                                  &sf_identity,
@@ -3521,8 +3531,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                 // so use translation prediction for chroma
                 bool is_wm = (block_mi->motion_mode == WARPED_CAUSAL ||
                               is_global_mv_block(
-                                  block_mi->mode, blk_geom->bsize_uv, wm_params ? wm_params->wmtype : TRANSLATION)) &&
-                    blk_geom->bwidth_uv >= 8 && blk_geom->bheight_uv >= 8;
+                                  block_mi->mode, bsize_uv, wm_params ? wm_params->wmtype : TRANSLATION)) &&
+                    bwidth_uv >= 8 && bheight_uv >= 8;
                 if (ref_itr /*&& is_compound*/) {
                     conv_params_cb.do_average            = 1;
                     conv_params_cb.fwd_offset            = fwd_offset;
@@ -3568,9 +3578,9 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                     seg_mask,
                     ref_pic->width,
                     ref_pic->height,
-                    (uint8_t)blk_geom->bwidth_uv,
-                    (uint8_t)blk_geom->bheight_uv,
-                    blk_geom->bsize,
+                    (uint8_t)bwidth_uv,
+                    (uint8_t)bheight_uv,
+                    bsize,
                     blk_ptr->av1xd,
                     ref_pic->stride_cb,
                     pred_pic->stride_cb,
@@ -3609,9 +3619,9 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                     seg_mask,
                     ref_pic->width,
                     ref_pic->height,
-                    blk_geom->bwidth_uv,
-                    blk_geom->bheight_uv,
-                    blk_geom->bsize,
+                    bwidth_uv,
+                    bheight_uv,
+                    bsize,
                     blk_ptr->av1xd,
                     ref_pic->stride_cr,
                     pred_pic->stride_cr,
@@ -3640,7 +3650,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                                recon_neigh_cb,
                                recon_neigh_cr,
                                blk_ptr,
-                               blk_geom,
+                               bsize,
+                               shape,
                                ref_origin_x,
                                ref_origin_y,
                                dst_origin_x,
@@ -3653,9 +3664,10 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
 #if CONFIG_ENABLE_OBMC
     if (block_mi->motion_mode == OBMC_CAUSAL) {
         assert(is_compound == 0);
-        assert(blk_geom->bwidth > 4 && blk_geom->bheight > 4);
+        assert(bwidth > 4 && bheight > 4);
         av1_inter_prediction_obmc(pcs,
                                   blk_ptr,
+                                  bsize,
                                   use_precomputed_obmc,
                                   ctx,
                                   ref_origin_x,
@@ -3721,7 +3733,8 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
                                  &cand->wm_params_l0,
                                  NULL,
                                  ctx->blk_ptr,
-                                 ctx->blk_geom,
+                                 ctx->blk_geom->bsize,
+                                 ctx->shape,
                                  false, //use_precomputed_obmc
                                  false, //use_precomputed_ii
                                  ctx,
@@ -3776,7 +3789,8 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
                                  &cand->wm_params_l1,
                                  NULL,
                                  ctx->blk_ptr,
-                                 ctx->blk_geom,
+                                 ctx->blk_geom->bsize,
+                                 ctx->shape,
                                  false, //use_precomputed_obmc
                                  false, //use_precomputed_ii
                                  ctx,
@@ -3984,7 +3998,8 @@ EbErrorType svt_aom_inter_pu_prediction_av1(uint8_t hbd_md, ModeDecisionContext*
                              &cand->wm_params_l0,
                              &cand->wm_params_l1,
                              ctx->blk_ptr,
-                             ctx->blk_geom,
+                             ctx->blk_geom->bsize,
+                             ctx->shape,
                              // If using 8bit MD for HBD content, can't use pre-computed OBMC/II to
                              // generate conformant recon
                              ctx->need_hbd_comp_mds3 ? false : true, //use_precomputed_obmc
@@ -4016,6 +4031,7 @@ EbErrorType svt_aom_inter_pu_prediction_av1_obmc(uint8_t hbd_md, ModeDecisionCon
     av1_inter_prediction_obmc(
         pcs,
         ctx->blk_ptr,
+        ctx->blk_geom->bsize,
         // If using 8bit MD for HBD content, can't use pre-computed OBMC to generate conformant recon
         ctx->need_hbd_comp_mds3 ? 0 : 1,
         ctx,

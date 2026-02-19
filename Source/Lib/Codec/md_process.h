@@ -1015,6 +1015,8 @@ typedef struct ModeDecisionContext {
     uint32_t         sb_origin_y;
     uint32_t         round_origin_x;
     uint32_t         round_origin_y;
+    bool             has_uv;
+    Part             shape;
     uint8_t          hbd_md;
     uint8_t          encoder_bit_depth;
     uint8_t          qp_index;

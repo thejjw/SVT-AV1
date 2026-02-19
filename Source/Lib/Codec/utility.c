@@ -188,23 +188,6 @@ const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index) {
     return &mini_gop_stats_array[mini_gop_index];
 }
 
-static uint32_t ns_quarter_off_mult[9 /*Up to 9 part*/][2 /*x+y*/][4 /*Up to 4 ns blocks per part*/] = {
-    //9 means not used.
-
-    //          |   x   |     |   y   |
-
-    /*P=0*/ {{0, 9, 9, 9}, {0, 9, 9, 9}},
-    /*P=1*/ {{0, 0, 9, 9}, {0, 2, 9, 9}},
-    /*P=2*/ {{0, 2, 9, 9}, {0, 0, 9, 9}},
-
-    /*P=7*/ {{0, 0, 0, 0}, {0, 1, 2, 3}},
-    /*P=8*/ {{0, 1, 2, 3}, {0, 0, 0, 0}},
-
-    /*P=3*/ {{0, 2, 0, 9}, {0, 0, 2, 9}},
-    /*P=4*/ {{0, 0, 2, 9}, {0, 2, 2, 9}},
-    /*P=5*/ {{0, 0, 2, 9}, {0, 2, 0, 9}},
-    /*P=6*/ {{0, 2, 2, 9}, {0, 0, 2, 9}}};
-
 static uint32_t ns_quarter_size_mult[9 /*Up to 9 part*/][2 /*h+v*/][4 /*Up to 4 ns blocks per part*/] = {
     //9 means not used.
 
@@ -243,11 +226,11 @@ static uint32_t get_num_ns_per_part(uint32_t part_it, uint32_t sq_size) {
 }
 
 static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_mds, uint32_t sq_size, uint32_t x,
-                             uint32_t y, int32_t is_last_quadrant, uint8_t quad_it, uint8_t min_nsq_bsize) {
+                             uint32_t y, uint8_t quad_it, uint8_t min_nsq_bsize) {
     //the input block is the parent square block of size sq_size located at pos (x,y)
 
     assert(quad_it <= 3);
-    uint32_t part_it, nsq_it, d1_it, sqi_mds;
+    uint32_t part_it, nsq_it;
 
     uint32_t halfsize  = sq_size / 2;
     uint32_t quartsize = sq_size / 4;
@@ -261,14 +244,12 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
     if (sq_size <= min_nsq_bsize) {
         max_part_updated = 1;
     }
-    d1_it   = 0;
-    sqi_mds = *idx_mds;
 
     for (part_it = 0; part_it < max_part_updated; part_it++) {
         uint32_t tot_num_ns_per_part = get_num_ns_per_part(part_it, sq_size);
 
         for (nsq_it = 0; nsq_it < tot_num_ns_per_part; nsq_it++) {
-            blk_geom[*idx_mds].depth = sq_size == max_sb / 1 ? 0
+            uint8_t depth = sq_size == max_sb / 1 ? 0
                 : sq_size == max_sb / 2                      ? 1
                 : sq_size == max_sb / 4                      ? 2
                 : sq_size == max_sb / 8                      ? 3
@@ -276,69 +257,30 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
                                                              : 5;
 
             blk_geom[*idx_mds].sq_size          = sq_size;
-            blk_geom[*idx_mds].is_last_quadrant = is_last_quadrant;
-            blk_geom[*idx_mds].quadi            = quad_it;
 
             // part_it >= 3 for 128x128 blocks corresponds to HA/HB/VA/VB shapes since H4/V4 are not allowed
             // for 128x128 blocks.  Therefore, need to offset part_it by 2 to not index H4/V4 shapes.
             uint32_t part_it_idx     = part_it >= 3 && sq_size == 128 ? part_it + 2 : part_it;
-            blk_geom[*idx_mds].shape = (Part)part_it_idx;
-            blk_geom[*idx_mds].org_x = x + quartsize * ns_quarter_off_mult[part_it_idx][0][nsq_it];
-            blk_geom[*idx_mds].org_y = y + quartsize * ns_quarter_off_mult[part_it_idx][1][nsq_it];
-
-            blk_geom[*idx_mds].d1i     = d1_it++;
-            blk_geom[*idx_mds].sqi_mds = sqi_mds;
-
-            blk_geom[*idx_mds].parent_depth_idx_mds = sqi_mds == 0
-                ? 0
-                : (sqi_mds + (3 - quad_it) * ns_depth_offset[geom][blk_geom[*idx_mds].depth]) -
-                    parent_depth_offset[geom][blk_geom[*idx_mds].depth];
-            blk_geom[*idx_mds].d1_depth_offset      = d1_depth_offset[geom][blk_geom[*idx_mds].depth];
-            blk_geom[*idx_mds].ns_depth_offset      = ns_depth_offset[geom][blk_geom[*idx_mds].depth];
-            blk_geom[*idx_mds].totns                = tot_num_ns_per_part;
-            blk_geom[*idx_mds].nsi                  = nsq_it;
+            blk_geom[*idx_mds].d1_depth_offset      = d1_depth_offset[geom][depth];
+            blk_geom[*idx_mds].ns_depth_offset      = ns_depth_offset[geom][depth];
             blk_geom[*idx_mds].bwidth               = quartsize * ns_quarter_size_mult[part_it_idx][0][nsq_it];
             blk_geom[*idx_mds].bheight              = quartsize * ns_quarter_size_mult[part_it_idx][1][nsq_it];
             blk_geom[*idx_mds].bsize =
                 hvsize_to_bsize[svt_log2f(blk_geom[*idx_mds].bwidth) - 2][svt_log2f(blk_geom[*idx_mds].bheight) - 2];
             blk_geom[*idx_mds].bwidth_uv  = MAX(4, blk_geom[*idx_mds].bwidth >> 1);
             blk_geom[*idx_mds].bheight_uv = MAX(4, blk_geom[*idx_mds].bheight >> 1);
-            blk_geom[*idx_mds].has_uv     = 1;
-
-            if (blk_geom[*idx_mds].bwidth == 4 && blk_geom[*idx_mds].bheight == 4) {
-                blk_geom[*idx_mds].has_uv = is_last_quadrant ? 1 : 0;
-            }
-
-            else if ((blk_geom[*idx_mds].bwidth >> 1) < blk_geom[*idx_mds].bwidth_uv ||
-                     (blk_geom[*idx_mds].bheight >> 1) < blk_geom[*idx_mds].bheight_uv) {
-                int32_t num_blk_same_uv = 1;
-                if (blk_geom[*idx_mds].bwidth >> 1 < 4) {
-                    num_blk_same_uv *= 2;
-                }
-                if (blk_geom[*idx_mds].bheight >> 1 < 4) {
-                    num_blk_same_uv *= 2;
-                }
-                //if (blk_geom[*idx_mds].nsi % 2 == 0)
-                //if (blk_geom[*idx_mds].nsi != (blk_geom[*idx_mds].totns-1) )
-                if (blk_geom[*idx_mds].nsi != (num_blk_same_uv - 1) &&
-                    blk_geom[*idx_mds].nsi != (2 * num_blk_same_uv - 1)) {
-                    blk_geom[*idx_mds].has_uv = 0;
-                }
-            }
 
             blk_geom[*idx_mds].bsize_uv = get_plane_block_size(blk_geom[*idx_mds].bsize, 1, 1);
-
-            blk_geom[*idx_mds].blkidx_mds = (*idx_mds);
             (*idx_mds)                    = (*idx_mds) + 1;
         }
     }
 
     uint32_t min_size = max_sb >> (max_depth - 1);
     if (halfsize >= min_size) {
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y, 0, 0, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y, 0, 1, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y + halfsize, 0, 2, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y + halfsize, 1, 3, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y, 0, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y, 1, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y + halfsize, 2, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y + halfsize, 3, min_nsq_bsize);
     }
 }
 
@@ -459,23 +401,7 @@ void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom) {
     }
     //(2) Construct md scan blk_geom_mds:  use info from dps
     uint32_t idx_mds = 0;
-    md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, 0, min_nsq_bsize);
-}
-
-uint32_t svt_aom_get_mds_idx(const BlockGeom* blk_geom_table, uint32_t max_block_count, uint32_t orgx, uint32_t orgy,
-                             uint32_t size) {
-    uint32_t mds = 0;
-
-    for (uint32_t blk_it = 0; blk_it < max_block_count; blk_it++) {
-        const BlockGeom* cur_geom = &blk_geom_table[blk_it];
-
-        if ((uint32_t)cur_geom->sq_size == size && cur_geom->org_x == orgx && cur_geom->org_y == orgy &&
-            cur_geom->shape == PART_N) {
-            mds = cur_geom->blkidx_mds;
-            break;
-        }
-    }
-    return mds;
+    md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, min_nsq_bsize);
 }
 
 #if FIXED_POINT_ASSERT_TEST

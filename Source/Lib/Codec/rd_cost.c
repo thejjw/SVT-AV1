@@ -500,7 +500,7 @@ uint64_t svt_aom_get_intra_uv_fast_rate(PictureControlSet* pcs, ModeDecisionCont
                                         ModeDecisionCandidateBuffer* cand_bf, bool use_accurate_cfl) {
     const BlockGeom* const blk_geom = ctx->blk_geom;
     ModeDecisionCandidate* cand     = cand_bf->cand;
-    assert(blk_geom->has_uv);
+    assert(ctx->has_uv);
     assert(!(svt_aom_allow_intrabc(&pcs->ppcs->frm_hdr, pcs->ppcs->slice_type) && cand->block_mi.use_intrabc));
     MdRateEstimationContext* md_rate_est_ctx = ctx->md_rate_est_ctx;
     const uint8_t            is_cfl_allowed  = (blk_geom->bwidth <= 32 && blk_geom->bheight <= 32) ? 1 : 0;
@@ -641,7 +641,7 @@ uint64_t svt_aom_intra_fast_cost(PictureControlSet* pcs, ModeDecisionContext* ct
                     ctx->md_rate_est_ctx->filter_intra_mode_fac_bits[cand->block_mi.filter_intra_mode];
             }
         }
-        if (blk_geom->has_uv) {
+        if (ctx->has_uv) {
             // CFL info not known in fasta loop, so assume DC mode when CFL is allowed
             chroma_rate = (uint32_t)svt_aom_get_intra_uv_fast_rate(pcs, ctx, cand_bf, 0);
         }

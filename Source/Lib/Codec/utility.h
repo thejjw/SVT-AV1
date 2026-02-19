@@ -43,11 +43,6 @@ typedef enum GeomIndex {
 } GeomIndex;
 
 typedef struct BlockGeom {
-    Part    shape; // P_N..P_V4 . P_S is not used.
-    uint8_t org_x; // orgin x from topleft of sb
-    uint8_t org_y; // orgin x from topleft of sb
-
-    uint8_t has_uv;
     uint8_t sq_size; // size of parent square
 
     uint8_t   bwidth; // block width
@@ -57,19 +52,8 @@ typedef struct BlockGeom {
     BlockSize bsize; // bloc size
     BlockSize bsize_uv; // bloc size for Chroma 4:2:0
 
-    uint16_t blkidx_mds; // block index in md scan
-    // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)
-    uint8_t  d1i;
-    uint16_t sqi_mds; // index of the parent square in md  scan.
-    uint16_t parent_depth_idx_mds; // index of the parent block of a given depth
-    // max number of ns blocks within one partition 1..4 (N:1,H:2,V:2,HA:3,HB:3,VA:3,VB:3,H4:4,V4:4)
-    uint8_t     totns;
-    uint8_t     nsi; // non square index within a partition  0..totns-1
-    uint8_t     quadi; // parent square is in which quadrant 0..3
-    uint8_t     depth; // depth of the block
     uint16_t    d1_depth_offset; // offset to the next d1 sq block
     uint16_t    ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
-    uint8_t     is_last_quadrant; // only for square bloks, is this the fourth quadrant block?
 } BlockGeom;
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);
@@ -212,9 +196,6 @@ static const uint32_t blk32_idx_tab[GEOM_TOT - 1][4] = {{1, 22, 43, 64},
 static INLINE const BlockGeom* get_blk_geom_mds(const BlockGeom* blk_geom_table, uint32_t bidx_mds) {
     return &blk_geom_table[bidx_mds];
 }
-
-uint32_t svt_aom_get_mds_idx(const BlockGeom* blk_geom_table, uint32_t max_block_count, uint32_t orgx, uint32_t orgy,
-                             uint32_t size);
 
 // CU Stats Helper Functions
 typedef struct CodedBlockStats {

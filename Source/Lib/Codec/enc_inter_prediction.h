@@ -39,7 +39,7 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet* scs, ScaleFactors sf
                                         uint16_t dst_origin_y, uint8_t bit_depth, uint8_t subsampling_shift);
 EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet* pcs, BlockModeInfo* block_mi,
                                      WarpedMotionParams* wm_params_0, WarpedMotionParams* wm_params_1,
-                                     BlkStruct* blk_ptr, const BlockGeom* blk_geom, bool use_precomputed_obmc,
+                                     BlkStruct* blk_ptr, const BlockSize bsize, const Part shape, bool use_precomputed_obmc,
                                      bool use_precomputed_ii, struct ModeDecisionContext* ctx,
                                      NeighborArrayUnit* recon_neigh_y, NeighborArrayUnit* recon_neigh_cb,
                                      NeighborArrayUnit* recon_neigh_cr, EbPictureBufferDesc* ref_pic_0,

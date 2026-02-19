@@ -452,11 +452,11 @@ static void build_intra_predictors_high(const MacroBlockD* xd,
 }
 #endif
 
-void svt_av1_predict_intra_block(STAGE stage, const BlockGeom* blk_geom, MacroBlockD* xd, int32_t wpx, int32_t hpx,
+void svt_av1_predict_intra_block(STAGE stage, MacroBlockD* xd, int32_t wpx, int32_t hpx,
                                  TxSize tx_size, PredictionMode mode, int32_t angle_delta, int32_t use_palette,
                                  PaletteInfo* palette_info, FilterIntraMode filter_intra_mode, uint8_t* top_neigh_array,
                                  uint8_t* left_neigh_array, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                 int32_t row_off, int32_t plane, BlockSize bsize, uint32_t txb_org_x_pict,
+                                 int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t txb_org_x_pict,
                                  uint32_t txb_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
                                  uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr) {
     uint32_t pred_buf_x_offest;
@@ -534,9 +534,7 @@ void svt_av1_predict_intra_block(STAGE stage, const BlockGeom* blk_geom, MacroBl
     const int32_t bottom_available = (yd > 0) &&
         (mi_row + ((row_off + txh) << pd->subsampling_y) < xd->tile.mi_row_end);
 
-    const PartitionType partition = from_shape_to_part
-        [blk_geom
-             ->shape]; //blk_ptr->part;// PARTITION_NONE;//CHKN this is good enough as the avail functions need to know if VERT part is used or not mbmi->partition;
+    const PartitionType partition = from_shape_to_part[shape];
 
     // force 4x4 chroma component block size.
     bsize = svt_aom_scale_chroma_bsize(bsize, pd->subsampling_x, pd->subsampling_y);
@@ -587,12 +585,12 @@ void svt_av1_predict_intra_block(STAGE stage, const BlockGeom* blk_geom, MacroBl
 }
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const BlockGeom* blk_geom, MacroBlockD* xd,
+void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, MacroBlockD* xd,
                                        int32_t wpx, int32_t hpx, TxSize tx_size, PredictionMode mode,
                                        int32_t angle_delta, int32_t use_palette, PaletteInfo* palette_info,
                                        FilterIntraMode filter_intra_mode, uint16_t* top_neigh_array,
                                        uint16_t* left_neigh_array, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                       int32_t row_off, int32_t plane, BlockSize bsize, uint32_t txb_org_x_pict,
+                                       int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t txb_org_x_pict,
                                        uint32_t txb_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
                                        uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr) {
     uint32_t pred_buf_x_offest;
@@ -624,7 +622,6 @@ void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const 
              (pred_buf_y_offest + recon_buffer->org_y / 2) * recon_buffer->stride_cr);
         dst_stride = recon_buffer->stride_cr;
     }
-    //CHKN  const MbModeInfo *const mbmi = xd->mi[0];
     const int32_t txwpx = tx_size_wide[tx_size];
     const int32_t txhpx = tx_size_high[tx_size];
     const int32_t x     = col_off << tx_size_wide_log2[0];
@@ -642,8 +639,6 @@ void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const 
         }
         return;
     }
-
-    //CHKN BlockSize bsize = mbmi->bsize;
 
     MacroblockdPlane  pd_s;
     MacroblockdPlane* pd = &pd_s;
@@ -671,9 +666,7 @@ void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, const 
     const int32_t bottom_available = (yd > 0) &&
         (mi_row + ((row_off + txh) << pd->subsampling_y) < xd->tile.mi_row_end);
 
-    const PartitionType partition = from_shape_to_part
-        [blk_geom
-             ->shape]; //blk_ptr->part;// PARTITION_NONE;//CHKN this is good enough as the avail functions need to know if VERT part is used or not mbmi->partition;
+    const PartitionType partition = from_shape_to_part[shape];
 
     // force 4x4 chroma component block size.
     bsize = svt_aom_scale_chroma_bsize(bsize, pd->subsampling_x, pd->subsampling_y);
@@ -896,7 +889,6 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
 
             svt_av1_predict_intra_block(
                 !ED_STAGE,
-                ctx->blk_geom,
                 ctx->blk_ptr->av1xd,
                 plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
                 plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight,
@@ -914,6 +906,7 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
                 0,
                 plane,
                 ctx->blk_geom->bsize,
+                ctx->shape,
                 ctx->blk_org_x,
                 ctx->blk_org_y,
                 ctx->blk_org_x,
@@ -1087,7 +1080,6 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
             svt_av1_predict_intra_block_16bit(
                 EB_TEN_BIT,
                 !ED_STAGE,
-                ctx->blk_geom,
                 ctx->blk_ptr->av1xd,
                 plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
                 plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight,
@@ -1105,6 +1097,7 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
                 0,
                 plane,
                 ctx->blk_geom->bsize,
+                ctx->shape,
                 ctx->blk_org_x,
                 ctx->blk_org_y,
                 ctx->blk_org_x,
@@ -1147,7 +1140,6 @@ static EbErrorType intra_luma_prediction_for_interintra(ModeDecisionContext* ctx
                 ctx->recon_neigh_y->top_left_array[ctx->recon_neigh_y->max_pic_h + ctx->blk_org_x - ctx->blk_org_y];
         }
         svt_av1_predict_intra_block(!ED_STAGE,
-                                    ctx->blk_geom,
                                     ctx->blk_ptr->av1xd,
                                     ctx->blk_geom->bwidth,
                                     ctx->blk_geom->bheight,
@@ -1164,6 +1156,7 @@ static EbErrorType intra_luma_prediction_for_interintra(ModeDecisionContext* ctx
                                     (tx_org[ctx->blk_geom->bsize][is_inter][0][0].y) >> 2,
                                     PLANE_TYPE_Y,
                                     ctx->blk_geom->bsize,
+                                    ctx->shape,
                                     ctx->blk_org_x,
                                     ctx->blk_org_y,
                                     ctx->blk_org_x,
@@ -1197,7 +1190,6 @@ static EbErrorType intra_luma_prediction_for_interintra(ModeDecisionContext* ctx
 
         svt_av1_predict_intra_block_16bit(EB_TEN_BIT,
                                           !ED_STAGE,
-                                          ctx->blk_geom,
                                           ctx->blk_ptr->av1xd,
                                           ctx->blk_geom->bwidth,
                                           ctx->blk_geom->bheight,
@@ -1214,6 +1206,7 @@ static EbErrorType intra_luma_prediction_for_interintra(ModeDecisionContext* ctx
                                           (tx_org[ctx->blk_geom->bsize][is_inter][0][0].y) >> 2,
                                           PLANE_TYPE_Y,
                                           ctx->blk_geom->bsize,
+                                          ctx->shape,
                                           ctx->blk_org_x,
                                           ctx->blk_org_y,
                                           ctx->blk_org_x,

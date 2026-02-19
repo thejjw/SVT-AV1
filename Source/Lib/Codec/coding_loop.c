@@ -812,7 +812,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             svt_av1_predict_intra_block_16bit(
                 ed_ctx->bit_depth,
                 ED_STAGE,
-                ed_ctx->blk_geom,
                 ed_ctx->blk_ptr->av1xd,
                 ed_ctx->blk_geom->bwidth,
                 ed_ctx->blk_geom->bheight,
@@ -829,6 +828,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                 (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
                 0,
                 ed_ctx->blk_geom->bsize,
+                ed_ctx->md_ctx->shape,
                 txb_origin_x,
                 txb_origin_y,
                 ed_ctx->blk_org_x,
@@ -865,7 +865,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             // If that's the case then you should ensure than the 1st chroma prediction uses UV_DC_PRED (that's the default configuration for CHROMA_MODE_2 if CFL applicable (set @ fast loop candidates injection) then MD assumes chroma mode always UV_DC_PRED)
             svt_av1_predict_intra_block(
                 ED_STAGE,
-                ed_ctx->blk_geom,
                 blk_ptr->av1xd,
                 ed_ctx->blk_geom->bwidth,
                 ed_ctx->blk_geom->bheight,
@@ -882,6 +881,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                 (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
                 0,
                 ed_ctx->blk_geom->bsize,
+                ed_ctx->md_ctx->shape,
                 txb_origin_x,
                 txb_origin_y,
                 ed_ctx->blk_org_x,
@@ -942,7 +942,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
     // Chroma path
 
-    if (ed_ctx->blk_geom->has_uv) {
+    if (ed_ctx->md_ctx->has_uv) {
         ed_ctx->txb_itr       = 0;
         uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
         uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
@@ -1034,7 +1034,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
                 svt_av1_predict_intra_block_16bit(bit_depth,
                                                   ED_STAGE,
-                                                  ed_ctx->blk_geom,
                                                   ed_ctx->blk_ptr->av1xd,
                                                   ed_ctx->blk_geom->bwidth_uv,
                                                   ed_ctx->blk_geom->bheight_uv,
@@ -1051,6 +1050,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                   0,
                                                   plane,
                                                   ed_ctx->blk_geom->bsize,
+                                                  ed_ctx->md_ctx->shape,
                                                   txb_origin_x,
                                                   txb_origin_y,
                                                   ed_ctx->blk_org_x,
@@ -1121,7 +1121,6 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                 // Hsan: if CHROMA_MODE_2, then CFL will be evaluated @ EP as no CHROMA @ MD
                 // If that's the case then you should ensure than the 1st chroma prediction uses UV_DC_PRED (that's the default configuration for CHROMA_MODE_2 if CFL applicable (set @ fast loop candidates injection) then MD assumes chroma mode always UV_DC_PRED)
                 svt_av1_predict_intra_block(ED_STAGE,
-                                            ed_ctx->blk_geom,
                                             blk_ptr->av1xd,
                                             ed_ctx->blk_geom->bwidth_uv,
                                             ed_ctx->blk_geom->bheight_uv,
@@ -1138,6 +1137,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                             0,
                                             plane,
                                             ed_ctx->blk_geom->bsize,
+                                            ed_ctx->md_ctx->shape,
                                             txb_origin_x,
                                             txb_origin_y,
                                             ed_ctx->blk_org_x,
@@ -1209,7 +1209,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         }
     } // Transform Loop
-    assert(IMPLIES(!ed_ctx->blk_geom->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
+    assert(IMPLIES(!ed_ctx->md_ctx->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
     blk_ptr->block_has_coeff = (blk_ptr->y_has_coeff || blk_ptr->u_has_coeff || blk_ptr->v_has_coeff);
 }
 
@@ -1357,10 +1357,11 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                              &md_ctx->blk_ptr->wm_params_l0,
                              &md_ctx->blk_ptr->wm_params_l1,
                              blk_ptr,
-                             blk_geom,
+                             blk_geom->bsize,
+                             ctx->md_ctx->shape,
                              false, //use_precomputed_obmc,
                              false, //use_precomputed_ii
-                             NULL, // md_ctx - needed only for precomputed obmc/ii
+                             NULL, // md_ctx - only needed for precompute obmc/ii
                              ep_luma_recon_na,
                              ep_cb_recon_na,
                              ep_cr_recon_na,
@@ -1371,7 +1372,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                              recon_buffer,
                              ctx->blk_org_x,
                              ctx->blk_org_y,
-                             PICTURE_BUFFER_DESC_FULL_MASK,
+                             md_ctx->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
                              (uint8_t)scs->static_config.encoder_bit_depth,
                              is_16bit);
 
@@ -1407,7 +1408,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                             &md_ctx->luma_txb_skip_context,
                             &md_ctx->luma_dc_sign_context);
 
-        if (ctx->blk_geom->has_uv && uv_pass) {
+        if (md_ctx->has_uv && uv_pass) {
             md_ctx->cb_txb_skip_context = 0;
             md_ctx->cb_dc_sign_context  = 0;
             svt_aom_get_txb_ctx(pcs,
@@ -1451,7 +1452,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                             residual_buffer,
                             transform_buffer,
                             inverse_quant_buffer,
-                            blk_geom->has_uv && uv_pass ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
+                            md_ctx->has_uv && uv_pass ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
                             eobs[ctx->txb_itr]);
         }
 
@@ -1463,12 +1464,12 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
             txb_origin_y,
             recon_buffer,
             inverse_quant_buffer,
-            blk_geom->has_uv && uv_pass ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
+            md_ctx->has_uv && uv_pass ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
             eobs[ctx->txb_itr]);
 
         ctx->coded_area_sb += tx_width * tx_height;
 
-        if (ctx->blk_geom->has_uv && uv_pass) {
+        if (md_ctx->has_uv && uv_pass) {
             ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
         }
 
@@ -1484,7 +1485,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
                                                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
         // Update the cb Dc Sign Level Coeff Neighbor Array
-        if (ctx->blk_geom->has_uv && uv_pass) {
+        if (md_ctx->has_uv && uv_pass) {
             dc_sign_level_coeff = (uint8_t)blk_ptr->quant_dc.u[ctx->txb_itr];
 
             svt_aom_neighbor_array_unit_mode_write(pcs->ep_cb_dc_sign_level_coeff_na[tile_idx],
@@ -1508,7 +1509,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
 
     } // Transform Loop
 
-    assert(IMPLIES(!blk_geom->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
+    assert(IMPLIES(!md_ctx->has_uv, blk_ptr->u_has_coeff == 0 && blk_ptr->v_has_coeff == 0));
     blk_ptr->block_has_coeff = (blk_ptr->y_has_coeff || blk_ptr->u_has_coeff || blk_ptr->v_has_coeff);
 
     // Update Recon Samples Neighbor Arrays -INTER-
@@ -1523,7 +1524,7 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
         ctx->blk_geom->bheight,
         ctx->blk_geom->bwidth_uv,
         ctx->blk_geom->bheight_uv,
-        ctx->blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
+        md_ctx->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
         is_16bit);
 }
 
@@ -1545,7 +1546,7 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
                        ctx->blk_geom->bwidth * sizeof(uint16_t));
         }
 
-        if (ctx->blk_geom->has_uv) {
+        if (ctx->has_uv) {
             uint32_t round_origin_x = (ctx->blk_org_x >> 3) << 3; // for Chroma blocks with size of 4
             uint32_t round_origin_y = (ctx->blk_org_y >> 3) << 3; // for Chroma blocks with size of 4
 
@@ -1585,7 +1586,7 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
                        ctx->blk_geom->bwidth * sizeof(uint8_t));
         }
 
-        if (ctx->blk_geom->has_uv) {
+        if (ctx->has_uv) {
             uint32_t round_origin_x = (ctx->blk_org_x >> 3) << 3; // for Chroma blocks with size of 4
             uint32_t round_origin_y = (ctx->blk_org_y >> 3) << 3; // for Chroma blocks with size of 4
 
@@ -1636,7 +1637,7 @@ static void copy_qcoeffs(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* 
         svt_memcpy(ep_coeff, md_coeff, sizeof(int32_t) * tx_height * tx_width);
     }
 
-    if (blk_geom->has_uv && uv_pass) {
+    if (ctx->md_ctx->has_uv && uv_pass) {
         const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
         const int tx_width_uv = tx_size_wide[tx_size_uv];
         const int tx_height_uv = tx_size_high[tx_size_uv];
@@ -1691,7 +1692,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                         &md_ctx->luma_txb_skip_context,
                         &md_ctx->luma_dc_sign_context);
 
-    if (blk_geom->has_uv && uv_pass) {
+    if (md_ctx->has_uv && uv_pass) {
         md_ctx->cb_txb_skip_context = 0;
         md_ctx->cb_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -1748,7 +1749,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                         tx_size_uv,
                                         blk_ptr->tx_type[txb_itr],
                                         blk_ptr->tx_type_uv,
-                                        (blk_geom->has_uv && uv_pass) ? COMPONENT_ALL : COMPONENT_LUMA);
+                                        (md_ctx->has_uv && uv_pass) ? COMPONENT_ALL : COMPONENT_LUMA);
     }
 
     // Update the luma DC Sign Level Coeff Neighbor Array
@@ -1763,7 +1764,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
                                            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
     // Update the Cb DC Sign Level Coeff Neighbor Array
-    if (blk_geom->has_uv && uv_pass) {
+    if (md_ctx->has_uv && uv_pass) {
         dc_sign_level_coeff = (uint8_t)blk_ptr->quant_dc.u[txb_itr];
 
         svt_aom_neighbor_array_unit_mode_write(pcs->ep_cb_dc_sign_level_coeff_na_update[tile_idx],
@@ -1789,7 +1790,7 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
 
 // Update encode-related data for the passed block
 // expects ctx->blk_geom, ctx->blk_ptr, ctx->blk_org_x, ctx->blk_org_y to be set
-static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree) {
+static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, EcBlkStruct** output_blk_ptr) {
     ModeDecisionContext* md_ctx   = ctx->md_ctx;
     const BlockGeom*     blk_geom = ctx->blk_geom;
     SuperBlock*          sb_ptr   = md_ctx->sb_ptr;
@@ -1822,7 +1823,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
             if (is_zero_mv) {
                 ctx->tot_cnt_zero_mv += blk_geom->bwidth * blk_geom->bheight;
             }
-            if (blk_geom->sqi_mds == 0 && blk_ptr->block_mi.mode != NEWMV && blk_ptr->block_mi.mode != NEW_NEWMV) {
+            if (blk_geom->sq_size == pcs->scs->sb_size && blk_ptr->block_mi.mode != NEWMV && blk_ptr->block_mi.mode != NEW_NEWMV) {
                 pcs->sb_64x64_mvp[sb_index] = 1;
             }
         }
@@ -1875,7 +1876,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
             blk_coded_area += tx_width * tx_height;
             ctx->coded_area_sb_update += tx_width * tx_height;
 
-            if (blk_geom->has_uv && uv_pass) {
+            if (md_ctx->has_uv && uv_pass) {
                 blk_coded_area_uv += tx_width_uv * tx_height_uv;
                 ctx->coded_area_sb_uv_update += tx_width_uv * tx_height_uv;
             }
@@ -1936,7 +1937,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
     }
     BlkStruct*   src_cu            = blk_ptr;
     EcBlkStruct* dst_cu            = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
-    ptree->blk_data[blk_geom->nsi] = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
+    *output_blk_ptr                = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
     svt_aom_move_blk_data(pcs, ctx, src_cu, dst_cu);
     sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt++].av1xd = sb_ptr->av1xd;
     // MFMV Update
@@ -1972,15 +1973,16 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
 *   Coefficient Samples
 *
 *******************************************/
-static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, PARTITION_TREE* ptree,
+static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, EcBlkStruct** output_blk_ptr,
     const int mi_row, const int mi_col) {
     ModeDecisionContext* md_ctx   = ctx->md_ctx;
     ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
     ctx->blk_org_x = md_ctx->blk_org_x = mi_col << MI_SIZE_LOG2;
     ctx->blk_org_y = md_ctx->blk_org_y = mi_row << MI_SIZE_LOG2;
+    md_ctx->has_uv = is_chroma_reference(mi_row, mi_col, md_ctx->blk_geom->bsize, 1, 1);
     if (ctx->md_ctx->bypass_encdec) {
-        update_b(pcs, ctx, blk_ptr, ptree);
+        update_b(pcs, ctx, blk_ptr, output_blk_ptr);
         return;
     }
 
@@ -2013,7 +2015,7 @@ static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
     }
 
     // Update block info and neighbour arrays needed for future blocks/pictures
-    update_b(pcs, ctx, blk_ptr, ptree);
+    update_b(pcs, ctx, blk_ptr, output_blk_ptr);
 }
 
 void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecContext* ctx, SuperBlock* sb_ptr,
@@ -2030,6 +2032,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
 
     ptree->partition = partition;
     ptree->bsize     = bsize;
+    ctx->md_ctx->shape       = from_part_to_shape[partition];
     if (pcs->cdf_ctrl.update_se) {
         // Update the partition stats
         svt_aom_update_part_stats(pcs, partition, bsize, ctx->tile_index, ctx->sb_index, mi_row, mi_col);
@@ -2037,18 +2040,18 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
 
     switch (partition) {
     case PARTITION_NONE:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_N][0], &ptree->blk_data[0], mi_row, mi_col);
         break;
     case PARTITION_HORZ:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_H][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_H][0], &ptree->blk_data[0], mi_row, mi_col);
         if (mi_row + hbs < pcs->ppcs->av1_cm->mi_rows) {
-            encode_b(pcs, ctx, pc_tree->block_data[PART_H][1], ptree, mi_row + hbs, mi_col);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H][1], &ptree->blk_data[1], mi_row + hbs, mi_col);
         }
         break;
     case PARTITION_VERT:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_V][0], ptree, mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_V][0], &ptree->blk_data[0], mi_row, mi_col);
         if (mi_col + hbs < pcs->ppcs->av1_cm->mi_cols) {
-            encode_b(pcs, ctx, pc_tree->block_data[PART_V][1], ptree, mi_row, mi_col + hbs);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V][1], &ptree->blk_data[1], mi_row, mi_col + hbs);
         }
         break;
     case PARTITION_SPLIT:
@@ -2063,24 +2066,24 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
         }
         break;
     case PARTITION_HORZ_A:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][0], ptree, mi_row, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][1], ptree, mi_row, mi_col + hbs);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][2], ptree, mi_row + hbs, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][0], &ptree->blk_data[0], mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][1], &ptree->blk_data[1], mi_row, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HA][2], &ptree->blk_data[2], mi_row + hbs, mi_col);
         break;
     case PARTITION_HORZ_B:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][0], ptree, mi_row, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][1], ptree, mi_row + hbs, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][2], ptree, mi_row + hbs, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][0], &ptree->blk_data[0], mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][1], &ptree->blk_data[1], mi_row + hbs, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_HB][2], &ptree->blk_data[2], mi_row + hbs, mi_col + hbs);
         break;
     case PARTITION_VERT_A:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][0], ptree, mi_row, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][1], ptree, mi_row + hbs, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][2], ptree, mi_row, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][0], &ptree->blk_data[0], mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][1], &ptree->blk_data[1], mi_row + hbs, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VA][2], &ptree->blk_data[2], mi_row, mi_col + hbs);
         break;
     case PARTITION_VERT_B:
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][0], ptree, mi_row, mi_col);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][1], ptree, mi_row, mi_col + hbs);
-        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2], ptree, mi_row + hbs, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][0], &ptree->blk_data[0], mi_row, mi_col);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][1], &ptree->blk_data[1], mi_row, mi_col + hbs);
+        encode_b(pcs, ctx, pc_tree->block_data[PART_VB][2], &ptree->blk_data[2], mi_row + hbs, mi_col + hbs);
         break;
     case PARTITION_HORZ_4:
         for (int i = 0; i < SUB_PARTITIONS_PART4; ++i) {
@@ -2091,7 +2094,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
                 assert(i == 3);
                 break;
             }
-            encode_b(pcs, ctx, pc_tree->block_data[PART_H4][i], ptree, this_mi_row, mi_col);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_H4][i], &ptree->blk_data[i], this_mi_row, mi_col);
         }
         break;
     case PARTITION_VERT_4:
@@ -2103,7 +2106,7 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
                 assert(i == 3);
                 break;
             }
-            encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i], ptree, mi_row, this_mi_col);
+            encode_b(pcs, ctx, pc_tree->block_data[PART_V4][i], &ptree->blk_data[i], mi_row, this_mi_col);
         }
         break;
     default:

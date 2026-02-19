@@ -377,7 +377,8 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
                              &cand->wm_params_l0,
                              &cand->wm_params_l1,
                              ctx->blk_ptr,
-                             ctx->blk_geom,
+                             ctx->blk_geom->bsize,
+                             ctx->shape,
                              false, // use_precomputed_obmc
                              false, // use_precomputed_ii - ii not performed here
                              ctx,
@@ -478,7 +479,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     // To test: Enable wedge search if source variance and edge strength are above the thresholds.
     //CHKN need to re-do intra pred using the winner, or have a separate intra serch for wedge
     int64_t       best_interintra_rd_wedge = INT64_MAX;
-    const uint8_t ii_wedge_mode            = ctx->blk_geom->shape == PART_N ? ctx->inter_intra_comp_ctrls.wedge_mode_sq
+    const uint8_t ii_wedge_mode            = ctx->shape == PART_N ? ctx->inter_intra_comp_ctrls.wedge_mode_sq
                                                                             : ctx->inter_intra_comp_ctrls.wedge_mode_nsq;
     if (ii_wedge_mode) {
         best_interintra_rd_wedge = pick_interintra_wedge(pcs,
@@ -870,14 +871,17 @@ static int8_t bipred_3x3_y_pos[BIPRED_3x3_REFINMENT_POSITIONS]      = {0, 1, 1, 
 static INLINE uint8_t is_dc_only_safe(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     // Early exit if pruning not enabled, SB-128, NSQ
     if (!ctx->intra_ctrls.prune_using_edge_info || pcs->scs->super_block_size == 128 ||
-        ctx->blk_geom->shape != PART_N) {
+        ctx->shape != PART_N) {
         return 0;
     }
 
     // Block variance lookup
     int blk_idx;
     int sub_idx[4];
-    svt_aom_get_blk_var_map(ctx->blk_geom->sq_size, ctx->blk_geom->org_x, ctx->blk_geom->org_y, &blk_idx, sub_idx);
+    // Get origin of the block relative to SB origin
+    const Position blk_org = { .x = ctx->blk_org_x - ctx->sb_origin_x,
+                               .y = ctx->blk_org_y - ctx->sb_origin_y };
+    svt_aom_get_blk_var_map(ctx->blk_geom->sq_size, blk_org.x, blk_org.y, &blk_idx, sub_idx);
 
     uint16_t* sb_var  = pcs->ppcs->variance[ctx->sb_index];
     uint32_t  blk_var = sb_var[blk_idx];
@@ -937,7 +941,7 @@ static void inj_non_simple_modes(PictureControlSet* pcs, ModeDecisionContext* ct
         INC_MD_CAND_CNT(cand_count, pcs->ppcs->max_can_count);
 
         // if ii_wedge_mode is 1, then inject wedge/non-wedge as separate candidates; OW, only inject the best (above)
-        const uint8_t ii_wedge_mode = ctx->blk_geom->shape == PART_N ? ctx->inter_intra_comp_ctrls.wedge_mode_sq
+        const uint8_t ii_wedge_mode = ctx->shape == PART_N ? ctx->inter_intra_comp_ctrls.wedge_mode_sq
                                                                      : ctx->inter_intra_comp_ctrls.wedge_mode_nsq;
         if (ii_wedge_mode == 1) {
             cand = &ctx->fast_cand_array[cand_count];
@@ -2002,7 +2006,8 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
                                      &cand->wm_params_l0,
                                      &cand->wm_params_l1,
                                      ctx->blk_ptr,
-                                     ctx->blk_geom,
+                                     ctx->blk_geom->bsize,
+                                     ctx->shape,
                                      // If using 8bit MD for HBD content, can't use pre-computed OBMC/II to
                                      // generate conformant recon
                                      true, //use_precomputed_obmc - not used here
@@ -4017,7 +4022,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
 
             txb_1d_offset += tx_width * tx_height;
 
-            if (ctx->blk_geom->has_uv && uv_pass) {
+            if (ctx->has_uv && uv_pass) {
                 // Cb
                 src_ptr             = &(((int32_t*)cand_bf->quant->buffer_cb)[txb_1d_offset_uv]);
                 dst_ptr             = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_cb)[txb_1d_offset_uv]);
