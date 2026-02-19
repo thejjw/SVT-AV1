@@ -273,15 +273,16 @@ int svt_av1_compute_qdelta_by_rate(struct RATE_CONTROL* rc, FrameType frame_type
 int svt_av1_get_cqp_kf_boost_from_r0(double r0, int frames_to_key, EbInputResolution input_resolution);
 int svt_av1_get_gfu_boost_from_r0_lap(double min_factor, double max_factor, double r0, int frames_to_key);
 
-uint32_t svt_aom_compute_rd_mult(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth);
+uint32_t svt_aom_compute_rd_mult(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index,
+                                 EbBitDepth bit_depth);
 uint32_t svt_aom_compute_fast_lambda(struct PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index,
-                                     uint8_t bit_depth);
+                                     EbBitDepth bit_depth);
 
 void capped_crf_reencode(struct PictureParentControlSet* ppcs, int* const q);
 
 int  svt_aom_compute_rd_mult_based_on_qindex(EbBitDepth bit_depth, SvtAv1FrameUpdateType update_type, int qindex);
 void svt_aom_lambda_assign(struct PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda,
-                           uint8_t bit_depth, uint16_t qp_index, bool multiply_lambda);
+                           EbBitDepth bit_depth, uint8_t qp_index, bool multiply_lambda);
 void recode_loop_update_q(struct PictureParentControlSet* ppcs, bool* const loop, int* const q, int* const q_low,
                           int* const q_high, const int top_index, const int bottom_index, int* const undershoot_seen,
                           int* const overshoot_seen, int* const low_cr_seen, const int loop_count);

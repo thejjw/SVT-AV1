@@ -878,14 +878,14 @@ void svt_aom_process_rc_stat(PictureParentControlSet* pcs) {
 #define MAX_MB_RATE 250
 #define MAXRATE_1080P 2025000
 
-static void av1_rc_update_framerate(SequenceControlSet* scs /*, int width, int height*/) {
+static void av1_rc_update_framerate(SequenceControlSet* scs) {
     EncodeContext* enc_ctx    = scs->enc_ctx;
     RATE_CONTROL*  rc         = &enc_ctx->rc;
     FrameInfo*     frame_info = &enc_ctx->frame_info;
     int            vbr_max_bits;
-    int            MBs = frame_info->num_mbs; // av1_get_MBs(width, height);
+    int            MBs = frame_info->num_mbs;
 
-    rc->avg_frame_bandwidth = (int)(scs->static_config.target_bit_rate /*oxcf->target_bandwidth*/ / scs->new_framerate);
+    rc->avg_frame_bandwidth = (int)(scs->static_config.target_bit_rate / scs->new_framerate);
     // A maximum bitrate for a frame is defined.
     // The baseline for this aligns with HW implementations that
     // can support decode of 1080P content up to a bitrate of MAX_MB_RATE bits

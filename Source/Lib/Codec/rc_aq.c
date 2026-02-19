@@ -305,7 +305,7 @@ static void cyclic_sb_qp_derivation(PictureControlSet* pcs) {
             cr->actual_num_seg2_sbs++;
         } else if (b64_idx >= cr->sb_start && b64_idx < cr->sb_end) {
             cr->actual_num_seg1_sbs++;
-        };
+        }
     }
     if (!ppcs->sc_class1 && cr->actual_num_seg2_sbs) {
         seg2_dist    = seg2_dist / cr->actual_num_seg2_sbs;
@@ -450,12 +450,12 @@ static void sb_setup_lambda(PictureControlSet* pcs, SuperBlock* sb_ptr) {
     }
     assert(base_block_count > 0);
 
-    uint8_t  bit_depth   = pcs->hbd_md ? 10 : 8;
-    uint32_t orig_rdmult = svt_aom_compute_rd_mult(
+    EbBitDepth bit_depth   = pcs->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
+    double     orig_rdmult = svt_aom_compute_rd_mult(
         pcs, ppcs->frm_hdr.quantization_params.base_q_idx, ppcs->frm_hdr.quantization_params.base_q_idx, bit_depth);
-    uint32_t new_rdmult = svt_aom_compute_rd_mult(
+    double new_rdmult = svt_aom_compute_rd_mult(
         pcs, sb_ptr->qindex, svt_aom_get_me_qindex(pcs, sb_ptr, scs->seq_header.sb_size == BLOCK_128X128), bit_depth);
-    double scaling_factor = (double)new_rdmult / (double)orig_rdmult;
+    double scaling_factor = new_rdmult / orig_rdmult;
     //double scale_adj = exp(log(scaling_factor) - log_sum / base_block_count);
     double scale_adj = scaling_factor / exp(log_sum / base_block_count);
 

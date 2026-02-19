@@ -173,14 +173,14 @@ static void reset_enc_dec(EncDecContext* ed_ctx, PictureControlSet* pcs, Sequenc
     svt_aom_lambda_assign(pcs,
                           &ed_ctx->pic_fast_lambda[EB_8_BIT_MD],
                           &ed_ctx->pic_full_lambda[EB_8_BIT_MD],
-                          8,
+                          EB_EIGHT_BIT,
                           pcs->ppcs->frm_hdr.quantization_params.base_q_idx,
                           true);
 
     svt_aom_lambda_assign(pcs,
                           &ed_ctx->pic_fast_lambda[EB_10_BIT_MD],
                           &ed_ctx->pic_full_lambda[EB_10_BIT_MD],
-                          10,
+                          EB_TEN_BIT,
                           pcs->ppcs->frm_hdr.quantization_params.base_q_idx,
                           true);
     if (segment_index == 0) {

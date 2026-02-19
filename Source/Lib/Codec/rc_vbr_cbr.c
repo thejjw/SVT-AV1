@@ -1009,8 +1009,7 @@ static int rc_pick_q_and_bounds_no_stats_cbr(PictureControlSet* pcs) {
 
     // Limit Q range for the adaptive loop.
     if (pcs->ppcs->frm_hdr.frame_type == KEY_FRAME && !rc->this_key_frame_forced && pcs->ppcs->frame_offset != 0) {
-        int qdelta = 0;
-        qdelta     = svt_av1_compute_qdelta_by_rate(
+        int qdelta = svt_av1_compute_qdelta_by_rate(
             rc, pcs->ppcs->frm_hdr.frame_type, active_worst_quality, 2.0, bit_depth, pcs->ppcs->sc_class1);
         pcs->ppcs->top_index = active_worst_quality + qdelta;
         pcs->ppcs->top_index = AOMMAX(pcs->ppcs->top_index, pcs->ppcs->bottom_index);

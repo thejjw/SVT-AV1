@@ -1341,7 +1341,7 @@ static void tpl_mc_flow_dispenser(EncodeContext* enc_ctx, SequenceControlSet* sc
     qIndex = AOMMIN(MAXQ, qIndex);
 
     if (pcs->tpl_ctrls.enable_tpl_qps) {
-        const double delta_rate_new[7][6] = {
+        static const double delta_rate_new[7][6] = {
             {1.0, 1.0, 1.0, 1.0, 1.0, 1.0}, // 1L
             {0.6, 1.0, 1.0, 1.0, 1.0, 1.0}, // 2L
             {0.6, 0.8, 1.0, 1.0, 1.0, 1.0}, // 3L

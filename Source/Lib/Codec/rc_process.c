@@ -383,7 +383,7 @@ static const int rd_frame_type_factor[2][SVT_AV1_FRAME_UPDATE_TYPES] = {{150, 18
                                                                         {128, 144, 128, 128, 144, 144, 128}};
 #define RTC_KF_LAMBDA_BOOST 100
 
-static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth,
+static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, EbBitDepth bit_depth,
                               int64_t rdmult) {
     FrameType frame_type = pcs->ppcs->frm_hdr.frame_type;
     // To set gf_update_type based on current TL vs. the max TL (e.g. for 5L, max TL is 4)
@@ -395,7 +395,7 @@ static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t m
         : temporal_layer_index == 0                  ? SVT_AV1_ARF_UPDATE
         : temporal_layer_index < max_temporal_layer  ? SVT_AV1_INTNL_ARF_UPDATE
                                                      : SVT_AV1_LF_UPDATE;
-    rdmult                 = (rdmult * rd_frame_type_factor[bit_depth != 8][gf_update_type]) >> 7;
+    rdmult                 = (rdmult * rd_frame_type_factor[bit_depth != EB_EIGHT_BIT][gf_update_type]) >> 7;
     if (pcs->scs->static_config.rtc && frame_type == KEY_FRAME) {
         rdmult = (rdmult * RTC_KF_LAMBDA_BOOST) >> 7;
     }
@@ -430,39 +430,39 @@ static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t m
 /*
  * Set the sse lambda based on the bit_depth, then update based on frame position.
  */
-uint32_t svt_aom_compute_rd_mult(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth) {
+uint32_t svt_aom_compute_rd_mult(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, EbBitDepth bit_depth) {
     // Always use q_index for the derivation of the initial rdmult (i.e. don't use me_q_index)
     int64_t rdmult = svt_aom_compute_rd_mult_based_on_qindex(bit_depth, pcs->ppcs->update_type, q_index);
 
     return update_lambda(pcs, q_index, me_q_index, bit_depth, rdmult);
 }
 
-uint32_t svt_aom_compute_fast_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, uint8_t bit_depth) {
+uint32_t svt_aom_compute_fast_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index,
+                                     EbBitDepth bit_depth) {
     // Always use q_index for the derivation of the initial rdmult (i.e. don't use me_q_index)
-    int64_t rdmult = bit_depth == 8 ? av1_lambda_mode_decision8_bit_sad[q_index]
-                                    : av1lambda_mode_decision10_bit_sad[q_index];
+    int64_t rdmult = bit_depth == EB_EIGHT_BIT ? av1_lambda_mode_decision8_bit_sad[q_index]
+                                               : av1lambda_mode_decision10_bit_sad[q_index];
 
     return update_lambda(pcs, q_index, me_q_index, bit_depth, rdmult);
 }
 
-void svt_aom_lambda_assign(PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda, uint8_t bit_depth,
-                           uint16_t qp_index, bool multiply_lambda) {
-    if (bit_depth == 8) {
-        *full_lambda = svt_aom_compute_rd_mult(pcs, (uint8_t)qp_index, (uint8_t)qp_index, bit_depth);
+void svt_aom_lambda_assign(PictureControlSet* pcs, uint32_t* fast_lambda, uint32_t* full_lambda, EbBitDepth bit_depth,
+                           uint8_t qp_index, bool multiply_lambda) {
+    if (bit_depth == EB_EIGHT_BIT) {
+        *full_lambda = svt_aom_compute_rd_mult(pcs, qp_index, qp_index, bit_depth);
         *fast_lambda = av1_lambda_mode_decision8_bit_sad[qp_index];
-    } else if (bit_depth == 10) {
-        *full_lambda = svt_aom_compute_rd_mult(pcs, (uint8_t)qp_index, (uint8_t)qp_index, bit_depth);
+    } else if (bit_depth == EB_TEN_BIT) {
+        *full_lambda = svt_aom_compute_rd_mult(pcs, qp_index, qp_index, bit_depth);
         *fast_lambda = av1lambda_mode_decision10_bit_sad[qp_index];
         if (multiply_lambda) {
             *full_lambda *= 16;
             *fast_lambda *= 4;
         }
-    } else if (bit_depth == 12) {
-        *full_lambda = svt_aom_compute_rd_mult(pcs, (uint8_t)qp_index, (uint8_t)qp_index, bit_depth);
+    } else if (bit_depth == EB_TWELVE_BIT) {
+        *full_lambda = svt_aom_compute_rd_mult(pcs, qp_index, qp_index, bit_depth);
         *fast_lambda = av1lambda_mode_decision12_bit_sad[qp_index];
     } else {
-        assert(bit_depth >= 8);
-        assert(bit_depth <= 12);
+        assert(0);
     }
 
     // NM: To be done: tune lambda based on the picture type and layer.
@@ -746,7 +746,12 @@ static void rc_process_packetization_feedback(PictureParentControlSet* ppcs,
         svt_release_mutex(scs->enc_ctx->rc_param_queue_mutex);
     }
 
-    if (scs->enc_ctx->rc_cfg.mode != AOM_Q) {
+    if (scs->enc_ctx->rc_cfg.mode == AOM_Q) {
+        // Queue variables
+        if (scs->static_config.max_bit_rate) {
+            svt_av1_coded_frames_stat_calc(ppcs);
+        }
+    } else {
         if (scs->static_config.gop_constraint_rc) {
             svt_av1_rc_postencode_update_gop_const(ppcs);
             // Qindex calculating
@@ -761,11 +766,6 @@ static void rc_process_packetization_feedback(PictureParentControlSet* ppcs,
             }
         }
         svt_aom_update_rc_counts(ppcs);
-    }
-
-    // Queue variables
-    if (scs->static_config.max_bit_rate) {
-        svt_av1_coded_frames_stat_calc(ppcs);
     }
 
     // Release the ParentPictureControlSet
