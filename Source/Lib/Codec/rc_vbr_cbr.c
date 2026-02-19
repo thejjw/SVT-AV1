@@ -479,7 +479,7 @@ static int set_gf_interval_update_onepass_rt(PictureParentControlSet* pcs) {
     RATE_CONTROL*       rc        = &enc_ctx->rc;
     int                 gf_update = 0;
     // GF update based on frames_till_gf_update_due, also
-    // force upddate on resize pending frame or for scene change.
+    // force update on resize pending frame or for scene change.
     if (pcs->frame_offset % MAX_GF_INTERVAL == 0) {
         rc->baseline_gf_interval = MAX_GF_INTERVAL;
         if (rc->baseline_gf_interval > rc->frames_to_key) {
@@ -660,13 +660,12 @@ static void svt_aom_one_pass_rt_rate_alloc(PictureParentControlSet* pcs) {
 
     // Set the GF interval and update flag.
     set_gf_interval_update_onepass_rt(pcs);
+
     // Set target size.
-    if (enc_ctx->rc_cfg.mode == AOM_CBR) {
-        if (pcs->frm_hdr.frame_type == KEY_FRAME) {
-            target = av1_calc_iframe_target_size_one_pass_cbr(pcs);
-        } else {
-            target = av1_calc_pframe_target_size_one_pass_cbr(pcs);
-        }
+    if (pcs->frm_hdr.frame_type == KEY_FRAME) {
+        target = av1_calc_iframe_target_size_one_pass_cbr(pcs);
+    } else {
+        target = av1_calc_pframe_target_size_one_pass_cbr(pcs);
     }
     pcs->this_frame_target = target;
     pcs->base_frame_target = target;
@@ -760,14 +759,10 @@ static void vbr_rate_correction(PictureControlSet* pcs, int* this_frame_target) 
 }
 
 static void av1_set_target_rate(PictureControlSet* pcs) {
-    SequenceControlSet* scs         = pcs->ppcs->scs;
-    EncodeContext*      enc_ctx     = scs->enc_ctx;
-    int                 target_rate = pcs->ppcs->base_frame_target;
-    RateControlCfg*     rc_cfg      = &enc_ctx->rc_cfg;
+    int target_rate = pcs->ppcs->base_frame_target;
+
     // Correction to rate target based on prior over or under shoot.
-    if (rc_cfg->mode == AOM_VBR) {
-        vbr_rate_correction(pcs, &target_rate);
-    }
+    vbr_rate_correction(pcs, &target_rate);
     pcs->ppcs->this_frame_target = target_rate;
 }
 
@@ -876,18 +871,18 @@ void svt_av1_rc_process_rate_allocation(PictureControlSet* pcs, SequenceControlS
         process_tpl_stats_frame_kf_gfu_boost(pcs);
     }
 
-    svt_block_on_mutex(scs->enc_ctx->stat_file_mutex);
-
     if (scs->enc_ctx->rc_cfg.mode == AOM_CBR) {
         svt_aom_one_pass_rt_rate_alloc(pcs->ppcs);
     } else {
+        svt_block_on_mutex(scs->enc_ctx->stat_file_mutex);
+
         restore_param(pcs->ppcs, pcs->ppcs->rate_control_param_ptr);
         svt_aom_process_rc_stat(pcs->ppcs);
-    }
+        av1_set_target_rate(pcs);
+        store_param(pcs->ppcs, pcs->ppcs->rate_control_param_ptr);
 
-    av1_set_target_rate(pcs);
-    store_param(pcs->ppcs, pcs->ppcs->rate_control_param_ptr);
-    svt_release_mutex(scs->enc_ctx->stat_file_mutex);
+        svt_release_mutex(scs->enc_ctx->stat_file_mutex);
+    }
 }
 
 // Calculate the active_best_quality level.
@@ -1043,8 +1038,7 @@ static int rc_pick_q_and_bounds_no_stats_cbr(PictureControlSet* pcs) {
             int q1 = pcs->picture_number == 0 ? q + 20 : rc->q_1_frame;
             q      = (q + q1) / 2;
         } else if (pcs->ppcs->temporal_layer_index == 0) {
-            int qdelta = 0;
-            qdelta     = svt_av1_compute_qdelta_by_rate(
+            int qdelta = svt_av1_compute_qdelta_by_rate(
                 rc, pcs->ppcs->frm_hdr.frame_type, active_worst_quality, QFACTOR, bit_depth, pcs->ppcs->sc_class1);
             q = q + qdelta;
         }
@@ -1071,7 +1065,6 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     SequenceControlSet* scs                = pcs->ppcs->scs;
     EncodeContext*      enc_ctx            = scs->enc_ctx;
     RATE_CONTROL*       rc                 = &enc_ctx->rc;
-    enum aom_rc_mode    rc_mode            = enc_ctx->rc_cfg.mode;
     int                 bit_depth          = scs->static_config.encoder_bit_depth;
     int                 is_intrl_arf_boost = pcs->ppcs->update_type == SVT_AV1_INTNL_ARF_UPDATE;
     const int*          inter_minq;
@@ -1089,8 +1082,7 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     // Use the lower of active_worst_quality and recent
     // average Q as basis for GF/ARF best Q limit unless last frame was
     // a key frame.
-    if ((rc_mode == AOM_VBR || rc_mode == AOM_CBR) && rc->frames_since_key > 1 &&
-        rc->avg_frame_qindex[INTER_FRAME] < active_worst_quality) {
+    if (rc->frames_since_key > 1 && rc->avg_frame_qindex[INTER_FRAME] < active_worst_quality) {
         q = rc->avg_frame_qindex[INTER_FRAME];
     }
     active_best_quality = get_gf_active_quality_tpl_la(rc, q, bit_depth);
@@ -1182,9 +1174,11 @@ static int rc_pick_q_and_bounds(PictureControlSet* pcs) {
     int                 active_worst_quality = rc->active_worst_quality;
     int                 q;
     int                 is_intrl_arf_boost = pcs->ppcs->update_type == SVT_AV1_INTNL_ARF_UPDATE;
+    assert(enc_ctx->rc_cfg.mode == AOM_VBR);
+
     // Calculated qindex based on r0 using qstep calculation
     if (pcs->ppcs->temporal_layer_index == 0) {
-        unsigned int r0_weight_idx = !frame_is_intra_only(pcs->ppcs) + !!pcs->ppcs->temporal_layer_index;
+        unsigned int r0_weight_idx = !frame_is_intra_only(pcs->ppcs);
         assert(r0_weight_idx <= 2);
         double weight      = svt_av1_r0_weight[r0_weight_idx];
         double qstep_ratio = sqrt(pcs->ppcs->r0) * weight *
@@ -1195,8 +1189,7 @@ static int rc_pick_q_and_bounds(PictureControlSet* pcs) {
         }
         int qindex_from_qstep_ratio = svt_av1_get_q_index_from_qstep_ratio(
             rc->active_worst_quality, qstep_ratio, scs->static_config.encoder_bit_depth);
-        if (pcs->ppcs->sc_class1 && scs->passes == 1 && enc_ctx->rc_cfg.mode == AOM_VBR &&
-            frame_is_intra_only(pcs->ppcs)) {
+        if (pcs->ppcs->sc_class1 && scs->passes == 1 && frame_is_intra_only(pcs->ppcs)) {
             qindex_from_qstep_ratio /= 2;
         }
         if (!frame_is_intra_only(pcs->ppcs)) {
@@ -1220,7 +1213,7 @@ static int rc_pick_q_and_bounds(PictureControlSet* pcs) {
         // sections we don't clamp the Q at the same value for arf frames and
         // leaf (non arf) frames. This is important to the TPL model which assumes
         // Q drops with each arf level.
-        if (!(pcs->ppcs->is_overlay) &&
+        if (!pcs->ppcs->is_overlay &&
             (pcs->ppcs->update_type == SVT_AV1_GF_UPDATE || pcs->ppcs->update_type == SVT_AV1_ARF_UPDATE ||
              is_intrl_arf_boost)) {
             active_worst_quality = (active_best_quality + (3 * active_worst_quality) + 2) / 4;
@@ -1899,8 +1892,7 @@ void recode_loop_update_q(PictureParentControlSet* ppcs, bool* const loop, int* 
     // cppcheck claims that `*loop == 0` is always true here, but that's a false positive based on the assumption that
     // the recode_loop_test is true branch is not taken.
     // cppcheck-suppress knownConditionTrueFalse
-    if (rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate && *loop == 0 && ppcs->temporal_layer_index == 0 &&
-        ppcs->loop_count > 0) {
+    if (rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate && *loop == 0 && ppcs->loop_count > 0) {
         if (ppcs->slice_type == I_SLICE) {
             rc->active_worst_quality = get_kf_q_tpl(rc, *q, scs->static_config.encoder_bit_depth);
         } else {

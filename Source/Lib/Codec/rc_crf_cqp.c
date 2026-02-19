@@ -575,7 +575,7 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
 
     if (scs->enable_qp_scaling_flag && !pcs->ppcs->qp_on_the_fly) {
         // max bit rate is only active for 1 pass CRF
-        if (scs->enc_ctx->rc_cfg.mode == AOM_Q && scs->static_config.max_bit_rate) {
+        if (scs->static_config.max_bit_rate) {
             svt_aom_crf_assign_max_rate(pcs->ppcs);
         }
     }
