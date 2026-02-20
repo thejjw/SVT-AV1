@@ -381,7 +381,6 @@ static void calculate_gf_stats(PictureParentControlSet* ppcs, GF_GROUP_STATS* gf
     rc->constrained_gf_group = (i >= rc->frames_to_key) ? 1 : 0;
     *use_alt_ref             = (i > 2);
     set_baseline_gf_interval(ppcs, i);
-    rc->arf_boost_factor = 1.0;
     // Reset the file position.
     reset_fpf_position(twopass, start_pos);
 }

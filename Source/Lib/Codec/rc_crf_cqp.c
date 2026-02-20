@@ -224,16 +224,16 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
     // Since many frames can be processed at the same time, storing/using arf_q in rc param is not sufficient and will create a run to run.
     // So, for each frame, arf_q is updated based on the qp of its references.
     if (scs->static_config.qp_scale_compress_strength == 0) {
-        rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[0][0] << 2) + 2));
+        rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2));
         if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
-            rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[1][0] << 2) + 2));
+            rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[REF_LIST_1][0] << 2) + 2));
         }
     } else {
         // new code that accurately converts back arf qindex values
         // prevents the case of unintentional qindex drifting due to repeatedly adding 2 to each calculated temporal layer's qindex
-        rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[0][0]]);
+        rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[REF_LIST_0][0]]);
         if (pcs->slice_type == B_SLICE) {
-            rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[1][0]]);
+            rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[REF_LIST_1][0]]);
         }
     }
 #if DEBUG_QP_SCALING
@@ -243,8 +243,8 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
               active_worst_quality,
               use_qstep_based_q_calc);
     SVT_DEBUG("  ref1 q %i, ref2 q %i, arf q %i\n",
-              (pcs->ref_pic_qp_array[0][0] << 2) + 2,
-              (pcs->slice_type == B_SLICE) ? (pcs->ref_pic_qp_array[1][0] << 2) + 2 : 0,
+              (pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2,
+              (pcs->slice_type == B_SLICE) ? (pcs->ref_pic_qp_array[REF_LIST_1][0] << 2) + 2 : 0,
               rc->arf_q);
 #endif
     // r0 scaling
@@ -679,7 +679,6 @@ void capped_crf_reencode(PictureParentControlSet* ppcs, int* const q) {
 *************************************************************************************************/
 void svt_av1_coded_frames_stat_calc(PictureParentControlSet* ppcs) {
     bool                move_slide_window_flag = true;
-    bool                end_of_sequence_flag   = true;
     SequenceControlSet* scs                    = ppcs->scs;
     EncodeContext*      enc_ctx                = scs->enc_ctx;
     RATE_CONTROL*       rc                     = &enc_ctx->rc;
@@ -699,39 +698,42 @@ void svt_av1_coded_frames_stat_calc(PictureParentControlSet* ppcs) {
 
     move_slide_window_flag = true;
     while (move_slide_window_flag) {
-        // Check if the sliding window condition is valid
-        uint32_t queue_entry_index_temp = rc->coded_frames_stat_queue_head_index;
-        if (rc->coded_frames_stat_queue[queue_entry_index_temp]->frame_total_bit_actual != -1) {
-            end_of_sequence_flag = rc->coded_frames_stat_queue[queue_entry_index_temp]->end_of_sequence_flag;
-        } else {
-            end_of_sequence_flag = false;
-        }
-        while (move_slide_window_flag && !end_of_sequence_flag &&
-               queue_entry_index_temp < rc->coded_frames_stat_queue_head_index + rc->rate_average_periodin_frames) {
-            uint32_t queue_entry_index_temp2 = (queue_entry_index_temp > CODED_FRAMES_STAT_QUEUE_MAX_DEPTH - 1)
-                ? queue_entry_index_temp - CODED_FRAMES_STAT_QUEUE_MAX_DEPTH
-                : queue_entry_index_temp;
-
-            move_slide_window_flag = move_slide_window_flag &&
-                (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1);
-
-            if (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1) {
-                // check if it is the last frame. If we have reached the last frame, we would output the buffered frames in the Queue.
-                end_of_sequence_flag = rc->coded_frames_stat_queue[queue_entry_index_temp2]->end_of_sequence_flag;
+        {
+            bool end_of_sequence_flag = true;
+            // Check if the sliding window condition is valid
+            uint32_t queue_entry_index_temp = rc->coded_frames_stat_queue_head_index;
+            if (rc->coded_frames_stat_queue[queue_entry_index_temp]->frame_total_bit_actual != -1) {
+                end_of_sequence_flag = rc->coded_frames_stat_queue[queue_entry_index_temp]->end_of_sequence_flag;
             } else {
                 end_of_sequence_flag = false;
             }
-            queue_entry_index_temp++;
-        }
+            while (move_slide_window_flag && !end_of_sequence_flag &&
+                   queue_entry_index_temp < rc->coded_frames_stat_queue_head_index + rc->rate_average_periodin_frames) {
+                uint32_t queue_entry_index_temp2 = (queue_entry_index_temp > CODED_FRAMES_STAT_QUEUE_MAX_DEPTH - 1)
+                    ? queue_entry_index_temp - CODED_FRAMES_STAT_QUEUE_MAX_DEPTH
+                    : queue_entry_index_temp;
 
+                move_slide_window_flag = move_slide_window_flag &&
+                    (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1);
+
+                if (rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual != -1) {
+                    // check if it is the last frame. If we have reached the last frame, we would output the buffered frames in the Queue.
+                    end_of_sequence_flag = rc->coded_frames_stat_queue[queue_entry_index_temp2]->end_of_sequence_flag;
+                } else {
+                    end_of_sequence_flag = false;
+                }
+                queue_entry_index_temp++;
+            }
+        }
         if (move_slide_window_flag) {
             //get a new entry spot
-            queue_entry_ptr        = (rc->coded_frames_stat_queue[rc->coded_frames_stat_queue_head_index]);
-            queue_entry_index_temp = rc->coded_frames_stat_queue_head_index;
+            queue_entry_ptr = rc->coded_frames_stat_queue[rc->coded_frames_stat_queue_head_index];
+#if DEBUG_RC_CAP_LOG
+            uint32_t queue_entry_index_temp = rc->coded_frames_stat_queue_head_index;
             // This is set to false, so the last frame would go inside the loop
-            end_of_sequence_flag        = false;
-            uint32_t frames_in_sw       = 0;
-            rc->total_bit_actual_per_sw = 0;
+            bool     end_of_sequence_flag    = false;
+            uint32_t frames_in_sw            = 0;
+            uint64_t total_bit_actual_per_sw = 0;
 
             while (!end_of_sequence_flag &&
                    queue_entry_index_temp < rc->coded_frames_stat_queue_head_index + rc->rate_average_periodin_frames) {
@@ -741,36 +743,29 @@ void svt_av1_coded_frames_stat_calc(PictureParentControlSet* ppcs) {
                     ? queue_entry_index_temp - CODED_FRAMES_STAT_QUEUE_MAX_DEPTH
                     : queue_entry_index_temp;
 
-                rc->total_bit_actual_per_sw +=
-                    rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual;
+                total_bit_actual_per_sw += rc->coded_frames_stat_queue[queue_entry_index_temp2]->frame_total_bit_actual;
                 end_of_sequence_flag = rc->coded_frames_stat_queue[queue_entry_index_temp2]->end_of_sequence_flag;
 
                 queue_entry_index_temp++;
             }
             assert(frames_in_sw > 0);
             if (frames_in_sw == (uint32_t)rc->rate_average_periodin_frames) {
-                uint64_t avg_bit_rate_kbps = (uint64_t)(((double)rc->total_bit_actual_per_sw * scs->frame_rate) /
-                                                        ((double)frames_in_sw * 1000.0));
-                rc->max_bit_actual_per_sw  = MAX(rc->max_bit_actual_per_sw, avg_bit_rate_kbps);
                 if (queue_entry_ptr->picture_number % rc->rate_average_periodin_frames == 0) {
+                    uint64_t avg_bit_rate_kbps = (uint64_t)(((double)total_bit_actual_per_sw * scs->frame_rate) /
+                                                            ((double)frames_in_sw * 1000.0));
                     rc->max_bit_actual_per_gop = MAX(rc->max_bit_actual_per_gop, avg_bit_rate_kbps);
                     rc->min_bit_actual_per_gop = MIN(rc->min_bit_actual_per_gop, avg_bit_rate_kbps);
-#if DEBUG_RC_CAP_LOG
                     SVT_LOG("POC:%d\t%.0f\t%.2f%% \n",
                             (int)queue_entry_ptr->picture_number,
                             (double)avg_bit_rate_kbps,
                             100.0 *
-                                    ((double)rc->total_bit_actual_per_sw * frame_rate /
+                                    ((double)total_bit_actual_per_sw * scs->frame_rate /
                                      ((double)frames_in_sw * MAX((double)scs->static_config.max_bit_rate, 1.0))) -
                                 100.0);
 
-#endif
+                    SVT_LOG("\n%d GopMax\t", (int32_t)rc->max_bit_actual_per_gop);
+                    SVT_LOG("%d GopMin\n", (int32_t)rc->min_bit_actual_per_gop);
                 }
-            }
-#if DEBUG_RC_CAP_LOG
-            if (frames_in_sw == rc->rate_average_periodin_frames - 1) {
-                SVT_LOG("\n%d GopMax\t", (int32_t)rc->max_bit_actual_per_gop);
-                SVT_LOG("%d GopMin\n", (int32_t)rc->min_bit_actual_per_gop);
             }
 #endif
             // Reset the Queue Entry

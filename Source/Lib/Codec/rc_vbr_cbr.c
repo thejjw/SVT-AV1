@@ -913,7 +913,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
     } else {
         if (scs->use_flat_ipp) {
             // Use the lower of active_worst_quality and recent/average Q.
-            rc->arf_q = MAX(0, ((int)(pcs->ref_pic_qp_array[0][0] << 2) + 2) - 30);
+            rc->arf_q = MAX(0, ((int)(pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2) - 30);
 
             if (rc->arf_q < active_worst_quality) {
                 active_best_quality = rtc_minq[rc->arf_q];
@@ -1087,10 +1087,11 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     int min_boost       = get_gf_high_motion_quality(q, bit_depth);
     int boost           = min_boost - active_best_quality;
 
-    rc->arf_boost_factor = (pcs->ref_slice_type_array[0][0] == I_SLICE && pcs->ref_pic_r0[0][0] - pcs->ppcs->r0 >= 0.08)
+    double arf_boost_factor = (pcs->ref_slice_type_array[REF_LIST_0][0] == I_SLICE &&
+                               pcs->ref_pic_r0[REF_LIST_0][0] - pcs->ppcs->r0 >= 0.08)
         ? 1.3
         : 1.0;
-    active_best_quality  = min_boost - (int)(boost * rc->arf_boost_factor);
+    active_best_quality     = min_boost - (int)(boost * arf_boost_factor);
     if (!is_intrl_arf_boost) {
         return active_best_quality;
     }
@@ -1267,8 +1268,8 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
     } else {
         new_qindex = rc_pick_q_and_bounds(pcs);
     }
-    frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, new_qindex);
-    pcs->picture_qp                         = clamp_qp(scs, (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
+    new_qindex      = clamp_qindex(scs, new_qindex);
+    pcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
 
     // Limiting the QP based on the QP of the Reference frame
     if (pcs->temporal_layer_index != 0 && !scs->use_flat_ipp) {
@@ -1304,12 +1305,12 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
             if (cur_dist > 3 * ref_dist || (pcs->ppcs->r0 - ref_obj_l0->r0 > 0)) {
                 limit = 6;
             }
-            if (pcs->ref_slice_type_array[0][0] != I_SLICE) {
-                ref_qp = pcs->ref_pic_qp_array[0][0];
+            if (pcs->ref_slice_type_array[REF_LIST_0][0] != I_SLICE) {
+                ref_qp = pcs->ref_pic_qp_array[REF_LIST_0][0];
             }
             if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try &&
-                pcs->ref_slice_type_array[1][0] != I_SLICE) {
-                ref_qp = MAX(ref_qp, pcs->ref_pic_qp_array[1][0]);
+                pcs->ref_slice_type_array[REF_LIST_1][0] != I_SLICE) {
+                ref_qp = MAX(ref_qp, pcs->ref_pic_qp_array[REF_LIST_1][0]);
             }
             if (pcs->picture_qp < ref_qp - limit) {
                 pcs->picture_qp = clamp_qp(scs, ref_qp - limit);

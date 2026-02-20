@@ -12,6 +12,7 @@
 #ifndef EbRateControl_h
 #define EbRateControl_h
 
+#include "EbDebugMacros.h"
 #include "definitions.h"
 #include "sys_resource_manager.h"
 #include "EbSvtAv1Enc.h"
@@ -160,7 +161,6 @@ typedef struct RATE_CONTROL {
     * Active adjustment of qdelta rate ratio for enhanced rate control
     */
     double rate_ratio_qdelta_adjustment;
-    double arf_boost_factor;
     // Q index used for ALT frame
     int arf_q;
 
@@ -175,11 +175,10 @@ typedef struct RATE_CONTROL {
     coded_frames_stats_entry** coded_frames_stat_queue;
     uint32_t                   coded_frames_stat_queue_head_index;
 
-    uint64_t total_bit_actual_per_sw;
-    uint64_t max_bit_actual_per_sw;
+#if DEBUG_RC_CAP_LOG
     uint64_t max_bit_actual_per_gop;
     uint64_t min_bit_actual_per_gop;
-    uint64_t avg_bit_actual_per_gop;
+#endif
     uint64_t rate_average_periodin_frames;
 
     EbHandle rc_mutex;
