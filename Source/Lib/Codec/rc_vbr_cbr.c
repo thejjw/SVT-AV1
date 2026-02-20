@@ -411,11 +411,11 @@ static void set_rate_correction_factor(PictureParentControlSet* ppcs, double fac
     svt_release_mutex(rc->rc_mutex);
 }
 
-static int av1_rc_regulate_q(PictureParentControlSet* ppcs, int target_bits_per_frame, int active_best_quality,
-                             int active_worst_quality, int width, int height) {
+static int av1_rc_regulate_q(PictureParentControlSet* ppcs, int active_best_quality, int active_worst_quality,
+                             int width, int height) {
     int    MBs                = ((width + 15) / 16) * ((height + 15) / 16);
     double correction_factor  = get_rate_correction_factor(ppcs, width, height);
-    int    target_bits_per_mb = (int)(((uint64_t)target_bits_per_frame << BPER_MB_NORMBITS) / MBs);
+    int    target_bits_per_mb = (int)(((uint64_t)ppcs->this_frame_target << BPER_MB_NORMBITS) / MBs);
 
     int q = find_closest_qindex_by_rate(
         target_bits_per_mb, ppcs, correction_factor, active_best_quality, active_worst_quality);
@@ -440,15 +440,13 @@ void svt_av1_resize_reset_rc(PictureParentControlSet* ppcs, int32_t resize_width
     double              tot_scale_change = (double)(resize_width * resize_height) / (double)(prev_width * prev_height);
     // Reset buffer level to optimal, update target size.
     svt_aom_reset_update_frame_target(ppcs);
-    int32_t target_bits_per_frame = ppcs->this_frame_target;
     if (tot_scale_change > 4.0) {
         rc->avg_frame_qindex[INTER_FRAME] = rc->worst_quality;
     } else if (tot_scale_change > 1.0) {
         rc->avg_frame_qindex[INTER_FRAME] = (rc->avg_frame_qindex[INTER_FRAME] + rc->worst_quality) >> 1;
     }
     int32_t active_worst_quality = calc_active_worst_quality_no_stats_cbr(ppcs);
-    int32_t qindex               = av1_rc_regulate_q(
-        ppcs, target_bits_per_frame, rc->best_quality, active_worst_quality, resize_width, resize_height);
+    int32_t qindex = av1_rc_regulate_q(ppcs, rc->best_quality, active_worst_quality, resize_width, resize_height);
     // If resize is down, check if projected q index is close to worst_quality,
     // and if so, reduce the rate correction factor (since likely can afford
     // lower q for resized frame).
@@ -987,13 +985,14 @@ static int rc_pick_q_and_bounds_no_stats_cbr(PictureControlSet* pcs) {
     SequenceControlSet* scs     = pcs->ppcs->scs;
     EncodeContext*      enc_ctx = scs->enc_ctx;
     RATE_CONTROL*       rc      = &enc_ctx->rc;
-    int                 q;
-    int                 bit_depth            = scs->static_config.encoder_bit_depth;
-    int                 width                = pcs->ppcs->av1_cm->frm_size.frame_width;
-    int                 height               = pcs->ppcs->av1_cm->frm_size.frame_height;
-    int                 active_worst_quality = calc_active_worst_quality_no_stats_cbr(pcs->ppcs);
-    int active_best_quality = calc_active_best_quality_no_stats_cbr(pcs, active_worst_quality, width, height);
     assert(enc_ctx->rc_cfg.mode == AOM_CBR);
+
+    int q;
+    int bit_depth            = scs->static_config.encoder_bit_depth;
+    int width                = pcs->ppcs->av1_cm->frm_size.frame_width;
+    int height               = pcs->ppcs->av1_cm->frm_size.frame_height;
+    int active_worst_quality = calc_active_worst_quality_no_stats_cbr(pcs->ppcs);
+    int active_best_quality  = calc_active_best_quality_no_stats_cbr(pcs, active_worst_quality, width, height);
 
     // Clip the active best and worst quality values to limits
     active_best_quality  = clamp(active_best_quality, rc->best_quality, rc->worst_quality);
@@ -1014,8 +1013,7 @@ static int rc_pick_q_and_bounds_no_stats_cbr(PictureControlSet* pcs) {
     if (pcs->ppcs->frm_hdr.frame_type == KEY_FRAME && rc->this_key_frame_forced) {
         q = rc->last_boosted_qindex;
     } else {
-        q = av1_rc_regulate_q(
-            pcs->ppcs, pcs->ppcs->this_frame_target, active_best_quality, active_worst_quality, width, height);
+        q = av1_rc_regulate_q(pcs->ppcs, active_best_quality, active_worst_quality, width, height);
         if (q > pcs->ppcs->top_index) {
             // Special case when we are targeting the max allowed rate
             if (pcs->ppcs->this_frame_target >= rc->max_frame_bandwidth) {
@@ -1147,8 +1145,7 @@ static int get_q(PictureControlSet* pcs, int active_worst_quality, int active_be
         rc->frames_to_key > 1) {
         q = active_best_quality;
     } else {
-        q = av1_rc_regulate_q(
-            pcs->ppcs, pcs->ppcs->this_frame_target, active_best_quality, active_worst_quality, width, height);
+        q = av1_rc_regulate_q(pcs->ppcs, active_best_quality, active_worst_quality, width, height);
         if (q > active_worst_quality) {
             // Special case when we are targeting the max allowed rate.
             if (pcs->ppcs->this_frame_target < rc->max_frame_bandwidth) {
@@ -1166,15 +1163,16 @@ static int get_q(PictureControlSet* pcs, int active_worst_quality, int active_be
  * used in the second pass of two pass encoding
  ******************************************************/
 static int rc_pick_q_and_bounds(PictureControlSet* pcs) {
-    SequenceControlSet* scs                  = pcs->ppcs->scs;
-    EncodeContext*      enc_ctx              = scs->enc_ctx;
-    uint8_t             hierarchical_levels  = pcs->ppcs->hierarchical_levels;
-    RATE_CONTROL*       rc                   = &enc_ctx->rc;
-    int                 active_best_quality  = 0;
-    int                 active_worst_quality = rc->active_worst_quality;
-    int                 q;
-    int                 is_intrl_arf_boost = pcs->ppcs->update_type == SVT_AV1_INTNL_ARF_UPDATE;
+    SequenceControlSet* scs     = pcs->ppcs->scs;
+    EncodeContext*      enc_ctx = scs->enc_ctx;
+    RATE_CONTROL*       rc      = &enc_ctx->rc;
     assert(enc_ctx->rc_cfg.mode == AOM_VBR);
+
+    int     q;
+    int     active_best_quality  = 0;
+    int     active_worst_quality = rc->active_worst_quality;
+    int     is_intrl_arf_boost   = pcs->ppcs->update_type == SVT_AV1_INTNL_ARF_UPDATE;
+    uint8_t hierarchical_levels  = pcs->ppcs->hierarchical_levels;
 
     // Calculated qindex based on r0 using qstep calculation
     if (pcs->ppcs->temporal_layer_index == 0) {
@@ -1698,13 +1696,11 @@ static int get_regulated_q_overshoot(PictureParentControlSet* ppcs, int q_low, i
 
     av1_rc_update_rate_correction_factors(ppcs, width, height);
 
-    int q_regulated = av1_rc_regulate_q(
-        ppcs, ppcs->this_frame_target, bottom_index, AOMMAX(q_high, top_index), width, height);
-    int retries = 0;
+    int q_regulated = av1_rc_regulate_q(ppcs, bottom_index, AOMMAX(q_high, top_index), width, height);
+    int retries     = 0;
     while (q_regulated < q_low && retries < 10) {
         av1_rc_update_rate_correction_factors(ppcs, width, height);
-        q_regulated = av1_rc_regulate_q(
-            ppcs, ppcs->this_frame_target, bottom_index, AOMMAX(q_high, top_index), width, height);
+        q_regulated = av1_rc_regulate_q(ppcs, bottom_index, AOMMAX(q_high, top_index), width, height);
         retries++;
     }
     return q_regulated;
@@ -1716,12 +1712,12 @@ static int get_regulated_q_undershoot(PictureParentControlSet* ppcs, int q_high,
     int height = ppcs->av1_cm->frm_size.frame_height;
 
     av1_rc_update_rate_correction_factors(ppcs, width, height);
-    int q_regulated = av1_rc_regulate_q(ppcs, ppcs->this_frame_target, bottom_index, top_index, width, height);
+    int q_regulated = av1_rc_regulate_q(ppcs, bottom_index, top_index, width, height);
 
     int retries = 0;
     while (q_regulated > q_high && retries < 10) {
         av1_rc_update_rate_correction_factors(ppcs, width, height);
-        q_regulated = av1_rc_regulate_q(ppcs, ppcs->this_frame_target, bottom_index, top_index, width, height);
+        q_regulated = av1_rc_regulate_q(ppcs, bottom_index, top_index, width, height);
         retries++;
     }
     return q_regulated;
