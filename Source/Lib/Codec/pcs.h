@@ -567,6 +567,10 @@ typedef struct CdefSearchControls {
     uint8_t use_skip_detector;
     // If true, skip UV filter search and force UV filters to take the chosen luma values
     bool uv_from_y;
+#if OPT_Q_CDEF
+    // Enable QP-based CDEF strength prediction (bypass strength search)
+    bool use_qp_strength;
+#endif
 } CdefSearchControls;
 
 typedef struct CdefReconControls {

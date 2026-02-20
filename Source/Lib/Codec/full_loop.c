@@ -2461,6 +2461,9 @@ uint8_t svt_aom_do_md_recon(PictureParentControlSet* pcs, ModeDecisionContext* c
         encdec_bypass; // for inter prediction of future frame or if recon is being output
     const uint8_t need_md_rec_for_dlf_search  = pcs->dlf_ctrls.enabled; // for DLF levels
     const uint8_t need_md_rec_for_cdef_search = pcs->cdef_search_ctrls.enabled &&
+#if OPT_Q_CDEF
+        !pcs->cdef_search_ctrls.use_qp_strength &&
+#endif
         !pcs->cdef_search_ctrls.use_reference_cdef_fs; // CDEF search levels needing the recon samples
     const uint8_t need_md_rec_for_restoration_search = pcs->enable_restoration; // any resoration search level
     const uint8_t need_md_rec_for_quality            = (pcs->compute_psnr || pcs->compute_ssim) &&
