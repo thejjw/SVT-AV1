@@ -51,6 +51,11 @@ extern "C" {
 
 #define TUNE_STILL_IMAGE            1 // Tune still-image coding and reduce presets to nine: from M0 to M9
 
+#define OPT_Q_CDEF                  1 // Derive CDEF strengh(s) from QP
+
+#define OPT_FD2_ALLINTRA            1 // Tune fd2
+#define TUNE_M7_ALLINTRA            1 // Fix M7
+
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
 #define DEBUG_TPL               0 // Prints to debug TPL
