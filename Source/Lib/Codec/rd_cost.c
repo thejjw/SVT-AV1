@@ -1856,9 +1856,9 @@ int64_t svt_aom_partition_rate_cost(PictureParentControlSet* ppcs, const BlockSi
         return 0;
     }
 
-    const int hbs       = mi_size_wide[bsize] >> 1;
-    const int has_rows  = (mi_row + hbs) < ppcs->av1_cm->mi_rows;
-    const int has_cols  = (mi_col + hbs) < ppcs->av1_cm->mi_cols;
+    const int hbs      = mi_size_wide[bsize] >> 1;
+    const int has_rows = (mi_row + hbs) < ppcs->av1_cm->mi_rows;
+    const int has_cols = (mi_col + hbs) < ppcs->av1_cm->mi_cols;
     // Don't consider invalid partitions or blocks outside the picture
     if (!has_rows && !has_cols) {
         return 0;

@@ -933,7 +933,7 @@ typedef struct PC_TREE {
     struct PC_TREE* split[4];
     int             index; // should be written once when struct is initialized, then never overwritten
     struct PC_TREE* parent; // this_pc_tree->parent->split[this_pc_tree->index] == this_pc_tree
-    bool            (*tested_blk)[4]; // tested_blk[PART_S][4]
+    bool (*tested_blk)[4]; // tested_blk[PART_S][4]
     // Origin of the current depth (square shape)
     int mi_row;
     int mi_col;

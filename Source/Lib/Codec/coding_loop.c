@@ -227,17 +227,17 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
             blk_geom->bheight_uv == blk_geom->bheight ? (blk_geom->bheight_uv << 1) : blk_geom->bheight);
     }
 
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
+    const TxSize tx_size_uv   = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int    tx_width_uv  = tx_size_wide[tx_size_uv];
+    const int    tx_height_uv = tx_size_high[tx_size_uv];
 
     int32_t round_offset = (tx_width_uv * tx_height_uv) / 2;
 
     svt_subtract_average(ed_ctx->md_ctx->pred_buf_q3,
-        tx_width_uv,
-        tx_height_uv,
-        round_offset,
-        svt_log2f(tx_width_uv) + svt_log2f(tx_height_uv));
+                         tx_width_uv,
+                         tx_height_uv,
+                         round_offset,
+                         svt_log2f(tx_width_uv) + svt_log2f(tx_height_uv));
 
     int32_t alpha_q3_cb = cfl_idx_to_alpha(blk_ptr->block_mi.cfl_alpha_idx,
                                            blk_ptr->block_mi.cfl_alpha_signs,
@@ -328,11 +328,11 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
     const uint32_t round_origin_y = ROUND_UV(org_y); // for Chroma blocks with size of 4
     const uint8_t  tx_depth       = blk_ptr->block_mi.tx_depth;
     // Get the tx origin coordinates within the SB (not frame)
-    const uint16_t  tx_org_x      = org_x - md_ctx->sb_origin_x;
-    const uint16_t  tx_org_y      = org_y - md_ctx->sb_origin_y;
-    const int32_t  seg_qp         = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled
-                 ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
-                 : 0;
+    const uint16_t tx_org_x = org_x - md_ctx->sb_origin_x;
+    const uint16_t tx_org_y = org_y - md_ctx->sb_origin_y;
+    const int32_t  seg_qp   = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled
+           ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
+           : 0;
 
     uint32_t input_luma_offset, input_cb_offset, input_cr_offset;
     uint32_t pred_luma_offset, pred_cb_offset, pred_cr_offset;
@@ -363,9 +363,9 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
         // Get the block origin coordinates within the SB (not frame)
         const uint16_t blk_org_x_in_sb = md_ctx->blk_org_x - md_ctx->sb_origin_x;
         const uint16_t blk_org_y_in_sb = md_ctx->blk_org_y - md_ctx->sb_origin_y;
-        scratch_luma_offset = blk_org_x_in_sb + blk_org_y_in_sb * residual16bit->stride_y;
-        scratch_cb_offset   = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cb;
-        scratch_cr_offset   = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cr;
+        scratch_luma_offset            = blk_org_x_in_sb + blk_org_y_in_sb * residual16bit->stride_y;
+        scratch_cb_offset = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cb;
+        scratch_cr_offset = ROUND_UV(blk_org_x_in_sb) / 2 + ROUND_UV(blk_org_y_in_sb) / 2 * residual16bit->stride_cr;
     } else {
         scratch_luma_offset = tx_org_x + tx_org_y * residual16bit->stride_y;
         scratch_cb_offset   = ROUND_UV(tx_org_x) / 2 + ROUND_UV(tx_org_y) / 2 * residual16bit->stride_cb;
@@ -397,9 +397,9 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
             eob[0]                               = 0;
             blk_ptr->quant_dc.y[ed_ctx->txb_itr] = 0;
         } else {
-            const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
-            const int tx_width = tx_size_wide[tx_size];
-            const int tx_height = tx_size_high[tx_size];
+            const TxSize tx_size   = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+            const int    tx_width  = tx_size_wide[tx_size];
+            const int    tx_height = tx_size_high[tx_size];
             svt_aom_residual_kernel(input_samples->buffer_y,
                                     input_luma_offset,
                                     input_samples->stride_y,
@@ -475,9 +475,9 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
             eob[2]                               = 0;
             blk_ptr->quant_dc.v[ed_ctx->txb_itr] = 0;
         } else {
-            const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-            const int tx_width_uv = tx_size_wide[tx_size_uv];
-            const int tx_height_uv = tx_size_high[tx_size_uv];
+            const TxSize tx_size_uv   = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+            const int    tx_width_uv  = tx_size_wide[tx_size_uv];
+            const int    tx_height_uv = tx_size_high[tx_size_uv];
             //**********************************
             // Cb
             //**********************************
@@ -612,7 +612,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     //**********************************
     if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
         if ((blk_ptr->y_has_coeff & (1 << ed_ctx->txb_itr)) && blk_ptr->block_mi.skip_mode == false) {
-            const TxSize tx_size = tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][ed_ctx->blk_geom->bsize];
+            const TxSize   tx_size          = tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][ed_ctx->blk_geom->bsize];
             const uint32_t pred_luma_offset = (pred_samples->org_y + org_y) * pred_samples->stride_y +
                 (pred_samples->org_x + org_x);
             svt_aom_inv_transform_recon_wrapper(pcs,
@@ -637,7 +637,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     // Chroma
     //**********************************
     if (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) {
-        const TxSize tx_size_uv = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
+        const TxSize   tx_size_uv     = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
         const uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
         const uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
 
@@ -757,21 +757,23 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
     blk_ptr->v_has_coeff = 0;
     uint16_t eobs[MAX_TXB_COUNT][3];
     svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
-    const uint8_t tx_depth       = blk_ptr->block_mi.tx_depth;
-    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][ed_ctx->blk_geom->bsize];
-    const int tx_width = tx_size_wide[tx_size];
-    const int tx_height = tx_size_high[tx_size];
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
+    const uint8_t  tx_depth       = blk_ptr->block_mi.tx_depth;
+    const TxSize   tx_size        = tx_depth_to_tx_size[tx_depth][ed_ctx->blk_geom->bsize];
+    const int      tx_width       = tx_size_wide[tx_size];
+    const int      tx_height      = tx_size_high[tx_size];
+    const TxSize   tx_size_uv     = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
+    const int      tx_width_uv    = tx_size_wide[tx_size_uv];
+    const int      tx_height_uv   = tx_size_high[tx_size_uv];
     const uint32_t tot_tu         = tx_blocks_per_depth[ed_ctx->blk_geom->bsize][tx_depth];
     const uint32_t sb_size_luma   = pcs->ppcs->scs->sb_size;
     const uint32_t sb_size_chroma = pcs->ppcs->scs->sb_size >> 1;
 
     // Luma path
     for (ed_ctx->txb_itr = 0; ed_ctx->txb_itr < tot_tu; ed_ctx->txb_itr++) {
-        const uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
-        const uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
+        const uint16_t txb_origin_x = ed_ctx->blk_org_x +
+            tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+        const uint16_t txb_origin_y = ed_ctx->blk_org_y +
+            tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
         ed_ctx->md_ctx->luma_txb_skip_context = 0;
         ed_ctx->md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -784,112 +786,54 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             &ed_ctx->md_ctx->luma_txb_skip_context,
                             &ed_ctx->md_ctx->luma_dc_sign_context);
 
-#if CONFIG_ENABLE_HIGH_BIT_DEPTH
-        if (is_16bit) {
-            uint16_t       top_neigh_array[64 * 2 + 1];
-            uint16_t       left_neigh_array[64 * 2 + 1];
-            PredictionMode mode;
+        // Copy neighbour arrays for intra prediction
+        const PredictionMode mode = blk_ptr->block_mi.mode;
+        const int ang = blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y];
+        const IntraSize intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
+        uint8_t top_neigh_array[(64 * 2 + 1) << 1];
+        uint8_t left_neigh_array[(64 * 2 + 1) << 1];
+        if (txb_origin_y != 0) {
+            svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit), ep_luma_recon_na->top_array + (txb_origin_x << is_16bit), (tx_width * intra_size.top) << is_16bit);
+        }
 
-            if (txb_origin_y != 0) {
-                svt_memcpy(top_neigh_array + 1,
-                    (uint16_t*)(ep_luma_recon_na->top_array) + txb_origin_x,
-                    tx_width * 2 * sizeof(uint16_t));
+        if (txb_origin_x != 0) {
+            uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * intra_size.left) > sb_size_luma ? 1 : intra_size.left;
+            svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit), ep_luma_recon_na->left_array + (txb_origin_y << is_16bit), (tx_height * multipler) << is_16bit);
+        }
+
+        if (txb_origin_y != 0 && txb_origin_x != 0) {
+            if (is_16bit) {
+                uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+                uint16_t* left_hbd = (uint16_t*)left_neigh_array;
+                top_hbd[0] = left_hbd[0] = ((uint16_t*)(ep_luma_recon_na->top_left_array) + ep_luma_recon_na->max_pic_h + txb_origin_x - txb_origin_y)[0];
+
             }
-            if (txb_origin_x != 0) {
-                uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * 2) > sb_size_luma ? 1 : 2;
-                svt_memcpy(left_neigh_array + 1,
-                    (uint16_t*)(ep_luma_recon_na->left_array) + txb_origin_y,
-                    tx_height * multipler * sizeof(uint16_t));
-            }
-            if (txb_origin_y != 0 && txb_origin_x != 0) {
-                top_neigh_array[0] = left_neigh_array[0] = ((uint16_t*)(ep_luma_recon_na->top_left_array) +
-                                                            ep_luma_recon_na->max_pic_h + txb_origin_x -
-                                                            txb_origin_y)[0];
-            }
-
-            mode = blk_ptr->block_mi.mode;
-
-            svt_av1_predict_intra_block_16bit(
-                ed_ctx->bit_depth,
-                ED_STAGE,
-                ed_ctx->blk_ptr->av1xd,
-                ed_ctx->blk_geom->bwidth,
-                ed_ctx->blk_geom->bheight,
-                tx_size,
-                mode,
-                blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y],
-                blk_ptr->palette_size[0] > 0,
-                blk_ptr->palette_info,
-                blk_ptr->block_mi.filter_intra_mode,
-                top_neigh_array + 1,
-                left_neigh_array + 1,
-                recon_buffer,
-                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
-                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
-                0,
-                ed_ctx->blk_geom->bsize,
-                ed_ctx->md_ctx->shape,
-                txb_origin_x,
-                txb_origin_y,
-                ed_ctx->blk_org_x,
-                ed_ctx->blk_org_y,
-                0,
-                0,
-                &pcs->scs->seq_header);
-        } else
-#endif
-        {
-            uint8_t        top_neigh_array[64 * 2 + 1];
-            uint8_t        left_neigh_array[64 * 2 + 1];
-            PredictionMode mode;
-
-            if (txb_origin_y != 0) {
-                svt_memcpy(top_neigh_array + 1,
-                    ep_luma_recon_na->top_array + txb_origin_x,
-                    tx_width * 2);
-            }
-
-            if (txb_origin_x != 0) {
-                uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * 2) > sb_size_luma ? 1 : 2;
-                svt_memcpy(left_neigh_array + 1, ep_luma_recon_na->left_array + txb_origin_y, tx_height * multipler);
-            }
-
-            if (txb_origin_y != 0 && txb_origin_x != 0) {
+            else {
                 top_neigh_array[0] = left_neigh_array[0] =
                     ep_luma_recon_na->top_left_array[ep_luma_recon_na->max_pic_h + txb_origin_x - txb_origin_y];
             }
-
-            mode = blk_ptr->block_mi.mode;
-
-            // Hsan: if CHROMA_MODE_2, then CFL will be evaluated @ EP as no CHROMA @ MD
-            // If that's the case then you should ensure than the 1st chroma prediction uses UV_DC_PRED (that's the default configuration for CHROMA_MODE_2 if CFL applicable (set @ fast loop candidates injection) then MD assumes chroma mode always UV_DC_PRED)
-            svt_av1_predict_intra_block(
-                ED_STAGE,
-                blk_ptr->av1xd,
-                ed_ctx->blk_geom->bwidth,
-                ed_ctx->blk_geom->bheight,
-                tx_size,
-                mode,
-                blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y],
-                blk_ptr->palette_size[0] > 0,
-                blk_ptr->palette_info,
-                blk_ptr->block_mi.filter_intra_mode,
-                top_neigh_array + 1,
-                left_neigh_array + 1,
-                recon_buffer,
-                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
-                (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
-                0,
-                ed_ctx->blk_geom->bsize,
-                ed_ctx->md_ctx->shape,
-                txb_origin_x,
-                txb_origin_y,
-                ed_ctx->blk_org_x,
-                ed_ctx->blk_org_y,
-                0,
-                0,
-                &pcs->scs->seq_header);
         }
+
+        svt_av1_predict_intra_block(blk_ptr->av1xd,
+                                    ed_ctx->blk_geom->bsize,
+                                    tx_size,
+                                    mode,
+                                    blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y],
+                                    blk_ptr->palette_size[0] > 0,
+                                    blk_ptr->palette_info,
+                                    blk_ptr->block_mi.filter_intra_mode,
+                                    top_neigh_array + ((uint64_t)1 << is_16bit),
+                                    left_neigh_array + ((uint64_t)1 << is_16bit),
+                                    recon_buffer,
+                                    (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
+                                    (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
+                                    AOM_PLANE_Y,
+                                    ed_ctx->md_ctx->shape,
+                                    txb_origin_x,
+                                    txb_origin_y,
+                                    &pcs->scs->seq_header,
+                                    ed_ctx->bit_depth);
+
         // Encode Transform Unit -INTRA-
         av1_encode_loop(pcs,
                         ed_ctx,
@@ -944,8 +888,10 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
     if (ed_ctx->md_ctx->has_uv) {
         ed_ctx->txb_itr       = 0;
-        uint16_t txb_origin_x = ed_ctx->blk_org_x + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
-        uint16_t txb_origin_y = ed_ctx->blk_org_y + tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
+        uint16_t txb_origin_x = ed_ctx->blk_org_x +
+            tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x;
+        uint16_t txb_origin_y = ed_ctx->blk_org_y +
+            tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y;
         uint32_t blk_originx_uv = (ed_ctx->blk_org_x >> 3 << 3) >> 1;
         uint32_t blk_originy_uv = (ed_ctx->blk_org_y >> 3 << 3) >> 1;
 
@@ -973,179 +919,65 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             &ed_ctx->md_ctx->cr_txb_skip_context,
                             &ed_ctx->md_ctx->cr_dc_sign_context);
 
-#if CONFIG_ENABLE_HIGH_BIT_DEPTH
-        if (is_16bit) {
-            uint32_t       bit_depth = ed_ctx->bit_depth;
-            uint16_t       top_neigh_array[64 * 2 + 1];
-            uint16_t       left_neigh_array[64 * 2 + 1];
-            PredictionMode mode;
+        // Generate prediction for both chroma planes
+        for (Plane plane = AOM_PLANE_U; plane <= AOM_PLANE_V; ++plane) {
+            uint8_t top_neigh_array[(64 * 2 + 1) << 1];
+            uint8_t left_neigh_array[(64 * 2 + 1) << 1];
 
-            int32_t plane_end = 2;
-
-            for (int32_t plane = 1; plane <= plane_end; ++plane) {
-
-                if (plane == 1) {
-                    if (blk_originy_uv != 0) {
-                        svt_memcpy(top_neigh_array + 1,
-                                   (uint16_t*)(ep_cb_recon_na->top_array) + blk_originx_uv,
-                                   ed_ctx->blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
-                    }
-                    if (blk_originx_uv != 0) {
-                        uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * 2) >
-                                sb_size_chroma
-                            ? 1
-                            : 2;
-                        svt_memcpy(left_neigh_array + 1,
-                                   (uint16_t*)(ep_cb_recon_na->left_array) + blk_originy_uv,
-                                   ed_ctx->blk_geom->bheight_uv * multipler * sizeof(uint16_t));
-                    }
-
-                    if (blk_originy_uv != 0 && blk_originx_uv != 0) {
-                        top_neigh_array[0] = left_neigh_array[0] = ((uint16_t*)(ep_cb_recon_na->top_left_array) +
-                                                                    ep_cb_recon_na->max_pic_h + blk_originx_uv -
-                                                                    blk_originy_uv)[0];
-                    }
-
-                } else if (plane == 2) {
-                    if (blk_originy_uv != 0) {
-                        svt_memcpy(top_neigh_array + 1,
-                                   (uint16_t*)(ep_cr_recon_na->top_array) + blk_originx_uv,
-                                   ed_ctx->blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
-                    }
-                    if (blk_originx_uv != 0) {
-                        uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * 2) >
-                                sb_size_chroma
-                            ? 1
-                            : 2;
-                        svt_memcpy(left_neigh_array + 1,
-                                   (uint16_t*)(ep_cr_recon_na->left_array) + blk_originy_uv,
-                                   ed_ctx->blk_geom->bheight_uv * multipler * sizeof(uint16_t));
-                    }
-
-                    if (blk_originy_uv != 0 && blk_originx_uv != 0) {
-                        top_neigh_array[0] = left_neigh_array[0] = ((uint16_t*)(ep_cr_recon_na->top_left_array) +
-                                                                    ep_cr_recon_na->max_pic_h + blk_originx_uv -
-                                                                    blk_originy_uv)[0];
-                    }
-                }
-
-                mode = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
-                                                                  : (PredictionMode)blk_ptr->block_mi.uv_mode;
-
-                svt_av1_predict_intra_block_16bit(bit_depth,
-                                                  ED_STAGE,
-                                                  ed_ctx->blk_ptr->av1xd,
-                                                  ed_ctx->blk_geom->bwidth_uv,
-                                                  ed_ctx->blk_geom->bheight_uv,
-                                                  tx_size_uv,
-                                                  mode,
-                                                  blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV],
-                                                  0, //chroma
-                                                  blk_ptr->palette_info,
-                                                  FILTER_INTRA_MODES,
-                                                  top_neigh_array + 1,
-                                                  left_neigh_array + 1,
-                                                  recon_buffer,
-                                                  0,
-                                                  0,
-                                                  plane,
-                                                  ed_ctx->blk_geom->bsize,
-                                                  ed_ctx->md_ctx->shape,
-                                                  txb_origin_x,
-                                                  txb_origin_y,
-                                                  ed_ctx->blk_org_x,
-                                                  ed_ctx->blk_org_y,
-                                                  0,
-                                                  0,
-                                                  &pcs->scs->seq_header);
+            // Copy neighbour arrays for intra prediction
+            const PredictionMode mode = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
+                                                                : (PredictionMode)blk_ptr->block_mi.uv_mode;
+            const int ang = blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV];
+            const IntraSize intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize) { 2, 2 };
+            NeighborArrayUnit* eb_uv_neigh_array = plane == 1 ? ep_cb_recon_na : ep_cr_recon_na;
+            if (blk_originy_uv != 0) {
+                svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
+                    eb_uv_neigh_array->top_array + (blk_originx_uv << is_16bit),
+                    (ed_ctx->blk_geom->bwidth_uv * intra_size.top) << is_16bit);
             }
-        } else
-#endif
-        {
-            uint8_t        top_neigh_array[64 * 2 + 1];
-            uint8_t        left_neigh_array[64 * 2 + 1];
-            PredictionMode mode;
 
-            // Partition Loop
-            int32_t plane_end = 2;
-
-            for (int32_t plane = 1; plane <= plane_end; ++plane) {
-
-                if (plane == 1) {
-                    if (blk_originy_uv != 0) {
-                        svt_memcpy(top_neigh_array + 1,
-                                   ep_cb_recon_na->top_array + blk_originx_uv,
-                                   ed_ctx->blk_geom->bwidth_uv * 2);
-                    }
-
-                    if (blk_originx_uv != 0) {
-                        uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * 2) >
-                                sb_size_chroma
-                            ? 1
-                            : 2;
-                        svt_memcpy(left_neigh_array + 1,
-                                   ep_cb_recon_na->left_array + blk_originy_uv,
-                                   ed_ctx->blk_geom->bheight_uv * multipler);
-                    }
-
-                    if (blk_originy_uv != 0 && blk_originx_uv != 0) {
-                        top_neigh_array[0] = left_neigh_array[0] =
-                            ep_cb_recon_na->top_left_array[ep_cb_recon_na->max_pic_h + blk_originx_uv - blk_originy_uv];
-                    }
-                } else {
-                    if (blk_originy_uv != 0) {
-                        svt_memcpy(top_neigh_array + 1,
-                                   ep_cr_recon_na->top_array + blk_originx_uv,
-                                   ed_ctx->blk_geom->bwidth_uv * 2);
-                    }
-
-                    if (blk_originx_uv != 0) {
-                        uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * 2) >
-                                sb_size_chroma
-                            ? 1
-                            : 2;
-                        svt_memcpy(left_neigh_array + 1,
-                                   ep_cr_recon_na->left_array + blk_originy_uv,
-                                   ed_ctx->blk_geom->bheight_uv * multipler);
-                    }
-
-                    if (blk_originy_uv != 0 && blk_originx_uv != 0) {
-                        top_neigh_array[0] = left_neigh_array[0] =
-                            ep_cr_recon_na->top_left_array[ep_cr_recon_na->max_pic_h + blk_originx_uv - blk_originy_uv];
-                    }
-                }
-
-                mode = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
-                                                                  : (PredictionMode)blk_ptr->block_mi.uv_mode;
-
-                // Hsan: if CHROMA_MODE_2, then CFL will be evaluated @ EP as no CHROMA @ MD
-                // If that's the case then you should ensure than the 1st chroma prediction uses UV_DC_PRED (that's the default configuration for CHROMA_MODE_2 if CFL applicable (set @ fast loop candidates injection) then MD assumes chroma mode always UV_DC_PRED)
-                svt_av1_predict_intra_block(ED_STAGE,
-                                            blk_ptr->av1xd,
-                                            ed_ctx->blk_geom->bwidth_uv,
-                                            ed_ctx->blk_geom->bheight_uv,
-                                            tx_size_uv,
-                                            mode,
-                                            blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV],
-                                            0, //chroma
-                                            blk_ptr->palette_info,
-                                            FILTER_INTRA_MODES,
-                                            top_neigh_array + 1,
-                                            left_neigh_array + 1,
-                                            recon_buffer,
-                                            0,
-                                            0,
-                                            plane,
-                                            ed_ctx->blk_geom->bsize,
-                                            ed_ctx->md_ctx->shape,
-                                            txb_origin_x,
-                                            txb_origin_y,
-                                            ed_ctx->blk_org_x,
-                                            ed_ctx->blk_org_y,
-                                            0,
-                                            0,
-                                            &pcs->scs->seq_header);
+            if (blk_originx_uv != 0) {
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * intra_size.left) >
+                    sb_size_chroma
+                    ? 1
+                    : intra_size.left;
+                svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
+                    eb_uv_neigh_array->left_array + (blk_originy_uv << is_16bit),
+                    (ed_ctx->blk_geom->bheight_uv * multipler) << is_16bit);
             }
+
+            if (blk_originy_uv != 0 && blk_originx_uv != 0) {
+                if (is_16bit) {
+                    uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+                    uint16_t* left_hbd = (uint16_t*)left_neigh_array;
+                    top_hbd[0] = left_hbd[0] =
+                        ((uint16_t*)(eb_uv_neigh_array->top_left_array) + eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv)[0];
+                }
+                else {
+                    top_neigh_array[0] = left_neigh_array[0] =
+                        eb_uv_neigh_array->top_left_array[eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv];
+                }
+            }
+
+            svt_av1_predict_intra_block(blk_ptr->av1xd,
+                                        ed_ctx->blk_geom->bsize,
+                                        tx_size_uv,
+                                        mode,
+                                        blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV],
+                                        0, //chroma
+                                        blk_ptr->palette_info,
+                                        FILTER_INTRA_MODES,
+                                        top_neigh_array + ((uint64_t)1 << is_16bit),
+                                        left_neigh_array + ((uint64_t)1 << is_16bit),
+                                        recon_buffer,
+                                        0,
+                                        0,
+                                        plane,
+                                        ed_ctx->md_ctx->shape,
+                                        plane ? ROUND_UV(ed_ctx->blk_org_x) >> 1 : txb_origin_x,
+                                        plane ? ROUND_UV(ed_ctx->blk_org_y) >> 1 : txb_origin_y,
+                                        &pcs->scs->seq_header,
+                                        ed_ctx->bit_depth);
         }
 
         // Encode Transform Unit -INTRA-
@@ -1382,20 +1214,20 @@ static void perform_inter_coding_loop(PictureControlSet* pcs, EncDecContext* ctx
     blk_ptr->v_has_coeff = 0;
 
     // Initialize the Transform Loop
-    uint16_t      eobs[MAX_TXB_COUNT][3];
-    const uint8_t tx_depth = blk_ptr->block_mi.tx_depth;
-    const uint16_t tot_tu = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
-    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
-    const int tx_width = tx_size_wide[tx_size];
-    const int tx_height = tx_size_high[tx_size];
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
+    uint16_t       eobs[MAX_TXB_COUNT][3];
+    const uint8_t  tx_depth     = blk_ptr->block_mi.tx_depth;
+    const uint16_t tot_tu       = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
+    const TxSize   tx_size      = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+    const int      tx_width     = tx_size_wide[tx_size];
+    const int      tx_height    = tx_size_high[tx_size];
+    const TxSize   tx_size_uv   = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int      tx_width_uv  = tx_size_wide[tx_size_uv];
+    const int      tx_height_uv = tx_size_high[tx_size_uv];
 
     for (ctx->txb_itr = 0; ctx->txb_itr < tot_tu; ctx->txb_itr++) {
-        const uint8_t uv_pass       = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
-        const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].x;
-        const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].y;
+        const uint8_t  uv_pass        = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
+        const uint16_t txb_origin_x   = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].x;
+        const uint16_t txb_origin_y   = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][ctx->txb_itr].y;
         md_ctx->luma_txb_skip_context = 0;
         md_ctx->luma_dc_sign_context  = 0;
         svt_aom_get_txb_ctx(pcs,
@@ -1631,32 +1463,28 @@ static void copy_qcoeffs(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* 
     int32_t* md_coeff = ((int32_t*)blk_ptr->coeff_tmp->buffer_y) + blk_coded_area;
 
     if ((blk_ptr->y_has_coeff & (1 << txb_itr))) {
-        const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
-        const int tx_width = tx_size_wide[tx_size];
-        const int tx_height = tx_size_high[tx_size];
+        const TxSize tx_size   = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+        const int    tx_width  = tx_size_wide[tx_size];
+        const int    tx_height = tx_size_high[tx_size];
         svt_memcpy(ep_coeff, md_coeff, sizeof(int32_t) * tx_height * tx_width);
     }
 
     if (ctx->md_ctx->has_uv && uv_pass) {
-        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-        const int tx_width_uv = tx_size_wide[tx_size_uv];
-        const int tx_height_uv = tx_size_high[tx_size_uv];
-        int32_t* ep_coeff_cb = ((int32_t*)coeff_buffer_sb->buffer_cb) + ctx->coded_area_sb_uv_update;
-        int32_t* md_coeff_cb = ((int32_t*)blk_ptr->coeff_tmp->buffer_cb) + blk_coded_area_uv;
+        const TxSize tx_size_uv   = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const int    tx_width_uv  = tx_size_wide[tx_size_uv];
+        const int    tx_height_uv = tx_size_high[tx_size_uv];
+        int32_t*     ep_coeff_cb  = ((int32_t*)coeff_buffer_sb->buffer_cb) + ctx->coded_area_sb_uv_update;
+        int32_t*     md_coeff_cb  = ((int32_t*)blk_ptr->coeff_tmp->buffer_cb) + blk_coded_area_uv;
 
         if ((blk_ptr->u_has_coeff & (1 << txb_itr))) {
-            svt_memcpy(ep_coeff_cb,
-                md_coeff_cb,
-                sizeof(int32_t) * tx_height_uv * tx_width_uv);
+            svt_memcpy(ep_coeff_cb, md_coeff_cb, sizeof(int32_t) * tx_height_uv * tx_width_uv);
         }
 
         int32_t* ep_coeff_cr = ((int32_t*)coeff_buffer_sb->buffer_cr) + ctx->coded_area_sb_uv_update;
         int32_t* md_coeff_cr = ((int32_t*)blk_ptr->coeff_tmp->buffer_cr) + blk_coded_area_uv;
 
         if ((blk_ptr->v_has_coeff & (1 << txb_itr))) {
-            svt_memcpy(ep_coeff_cr,
-                md_coeff_cr,
-                sizeof(int32_t) * tx_height_uv * tx_width_uv);
+            svt_memcpy(ep_coeff_cr, md_coeff_cr, sizeof(int32_t) * tx_height_uv * tx_width_uv);
         }
     }
 }
@@ -1671,14 +1499,14 @@ void update_coeff_cdf(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk
     const uint8_t        uv_pass         = tx_depth && ctx->txb_itr ? 0 : 1; //NM: 128x128 exeption
     const uint16_t       tile_idx        = ctx->tile_index;
     const int            is_inter        = is_inter_block(&blk_ptr->block_mi);
-    const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
-    const int tx_width = tx_size_wide[tx_size];
-    const int tx_height = tx_size_high[tx_size];
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
-    const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
-    const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
+    const TxSize         tx_size         = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+    const int            tx_width        = tx_size_wide[tx_size];
+    const int            tx_height       = tx_size_high[tx_size];
+    const TxSize         tx_size_uv      = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+    const int            tx_width_uv     = tx_size_wide[tx_size_uv];
+    const int            tx_height_uv    = tx_size_high[tx_size_uv];
+    const uint16_t       txb_origin_x    = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+    const uint16_t       txb_origin_y    = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
 
     md_ctx->luma_txb_skip_context = 0;
     md_ctx->luma_dc_sign_context  = 0;
@@ -1823,7 +1651,8 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
             if (is_zero_mv) {
                 ctx->tot_cnt_zero_mv += blk_geom->bwidth * blk_geom->bheight;
             }
-            if (blk_geom->sq_size == pcs->scs->sb_size && blk_ptr->block_mi.mode != NEWMV && blk_ptr->block_mi.mode != NEW_NEWMV) {
+            if (blk_geom->sq_size == pcs->scs->sb_size && blk_ptr->block_mi.mode != NEWMV &&
+                blk_ptr->block_mi.mode != NEW_NEWMV) {
                 pcs->sb_64x64_mvp[sb_index] = 1;
             }
         }
@@ -1851,12 +1680,12 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
         // Initialize the Transform Loop
         const uint8_t  tx_depth          = blk_ptr->block_mi.tx_depth;
         const uint16_t txb_count         = tx_blocks_per_depth[blk_geom->bsize][tx_depth];
-        const TxSize tx_size = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
-        const int tx_width = tx_size_wide[tx_size];
-        const int tx_height = tx_size_high[tx_size];
-        const TxSize tx_size_uv = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
-        const int tx_width_uv = tx_size_wide[tx_size_uv];
-        const int tx_height_uv = tx_size_high[tx_size_uv];
+        const TxSize   tx_size           = tx_depth_to_tx_size[tx_depth][blk_geom->bsize];
+        const int      tx_width          = tx_size_wide[tx_size];
+        const int      tx_height         = tx_size_high[tx_size];
+        const TxSize   tx_size_uv        = av1_get_max_uv_txsize(blk_geom->bsize, 1, 1);
+        const int      tx_width_uv       = tx_size_wide[tx_size_uv];
+        const int      tx_height_uv      = tx_size_high[tx_size_uv];
         uint32_t       blk_coded_area    = 0;
         uint32_t       blk_coded_area_uv = 0;
         for (ctx->txb_itr = 0; ctx->txb_itr < txb_count; ctx->txb_itr++) {
@@ -1935,9 +1764,9 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
             sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt].palette_info = NULL;
         }
     }
-    BlkStruct*   src_cu            = blk_ptr;
-    EcBlkStruct* dst_cu            = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
-    *output_blk_ptr                = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
+    BlkStruct*   src_cu = blk_ptr;
+    EcBlkStruct* dst_cu = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
+    *output_blk_ptr     = &sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt];
     svt_aom_move_blk_data(pcs, ctx, src_cu, dst_cu);
     sb_ptr->final_blk_arr[sb_ptr->final_blk_cnt++].av1xd = sb_ptr->av1xd;
     // MFMV Update
@@ -1974,13 +1803,13 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
 *
 *******************************************/
 static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_ptr, EcBlkStruct** output_blk_ptr,
-    const int mi_row, const int mi_col) {
-    ModeDecisionContext* md_ctx   = ctx->md_ctx;
+                     const int mi_row, const int mi_col) {
+    ModeDecisionContext* md_ctx = ctx->md_ctx;
     ctx->blk_geom = md_ctx->blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     ctx->blk_ptr = md_ctx->blk_ptr = blk_ptr;
     ctx->blk_org_x = md_ctx->blk_org_x = mi_col << MI_SIZE_LOG2;
     ctx->blk_org_y = md_ctx->blk_org_y = mi_row << MI_SIZE_LOG2;
-    md_ctx->has_uv = is_chroma_reference(mi_row, mi_col, md_ctx->blk_geom->bsize, 1, 1);
+    md_ctx->has_uv                     = is_chroma_reference(mi_row, mi_col, md_ctx->blk_geom->bsize, 1, 1);
     if (ctx->md_ctx->bypass_encdec) {
         update_b(pcs, ctx, blk_ptr, output_blk_ptr);
         return;
@@ -2030,9 +1859,9 @@ void svt_aom_encode_sb(SequenceControlSet* scs, PictureControlSet* pcs, EncDecCo
     const PartitionType partition    = pc_tree->partition;
     const int           quarter_step = mi_size_wide[bsize] >> 2;
 
-    ptree->partition = partition;
-    ptree->bsize     = bsize;
-    ctx->md_ctx->shape       = from_part_to_shape[partition];
+    ptree->partition   = partition;
+    ptree->bsize       = bsize;
+    ctx->md_ctx->shape = from_part_to_shape[partition];
     if (pcs->cdf_ctrl.update_se) {
         // Update the partition stats
         svt_aom_update_part_stats(pcs, partition, bsize, ctx->tile_index, ctx->sb_index, mi_row, mi_col);

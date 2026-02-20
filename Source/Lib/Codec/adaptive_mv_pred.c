@@ -1335,13 +1335,13 @@ MbModeInfo* get_mbmi(PictureControlSet* pcs, uint32_t blk_org_x, uint32_t blk_or
 }
 
 void svt_aom_update_mi_map(PictureControlSet* pcs, ModeDecisionContext* ctx, const PartitionType part,
-    const BlockSize bsize, const int mi_row, const int mi_col) {
-    BlkStruct* blk_ptr = ctx->blk_ptr;
+                           const BlockSize bsize, const int mi_row, const int mi_col) {
+    BlkStruct*     blk_ptr   = ctx->blk_ptr;
     const uint32_t mi_stride = pcs->mi_stride;
-    const int blk_org_y = mi_row << MI_SIZE_LOG2;
-    const int blk_org_x = mi_col << MI_SIZE_LOG2;
-    const int bwidth    = block_size_wide[bsize];
-    const int bheight   = block_size_high[bsize];
+    const int      blk_org_y = mi_row << MI_SIZE_LOG2;
+    const int      blk_org_x = mi_col << MI_SIZE_LOG2;
+    const int      bwidth    = block_size_wide[bsize];
+    const int      bheight   = block_size_high[bsize];
 
     const int32_t offset = mi_row * mi_stride + mi_col;
 
@@ -1384,10 +1384,7 @@ void svt_aom_update_mi_map(PictureControlSet* pcs, ModeDecisionContext* ctx, con
     // The data copied into each mi block is the same; therefore, copy the data from the blk_ptr only for the first block_mi
     // then use change the mi block pointers of the remaining blocks ot point to the first block_mi. All data that
     // is used from block_mi should be updated above.
-    svt_copy_mi_map_grid((pcs->mi_grid_base + offset),
-                         mi_stride,
-                         (bheight >> MI_SIZE_LOG2),
-                         (bwidth >> MI_SIZE_LOG2));
+    svt_copy_mi_map_grid((pcs->mi_grid_base + offset), mi_stride, (bheight >> MI_SIZE_LOG2), (bwidth >> MI_SIZE_LOG2));
 }
 
 static INLINE void record_samples(MbModeInfo* mbmi, int* pts, int* pts_inref, int row_offset, int sign_r,

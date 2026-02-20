@@ -226,10 +226,8 @@ static uint32_t get_num_ns_per_part(uint32_t part_it, uint32_t sq_size) {
 }
 
 static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_mds, uint32_t sq_size, uint32_t x,
-                             uint32_t y, uint8_t quad_it, uint8_t min_nsq_bsize) {
+                             uint32_t y, uint8_t min_nsq_bsize) {
     //the input block is the parent square block of size sq_size located at pos (x,y)
-
-    assert(quad_it <= 3);
     uint32_t part_it, nsq_it;
 
     uint32_t halfsize  = sq_size / 2;
@@ -250,37 +248,37 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
 
         for (nsq_it = 0; nsq_it < tot_num_ns_per_part; nsq_it++) {
             uint8_t depth = sq_size == max_sb / 1 ? 0
-                : sq_size == max_sb / 2                      ? 1
-                : sq_size == max_sb / 4                      ? 2
-                : sq_size == max_sb / 8                      ? 3
-                : sq_size == max_sb / 16                     ? 4
-                                                             : 5;
+                : sq_size == max_sb / 2           ? 1
+                : sq_size == max_sb / 4           ? 2
+                : sq_size == max_sb / 8           ? 3
+                : sq_size == max_sb / 16          ? 4
+                                                  : 5;
 
-            blk_geom[*idx_mds].sq_size          = sq_size;
+            blk_geom[*idx_mds].sq_size = sq_size;
 
             // part_it >= 3 for 128x128 blocks corresponds to HA/HB/VA/VB shapes since H4/V4 are not allowed
             // for 128x128 blocks.  Therefore, need to offset part_it by 2 to not index H4/V4 shapes.
-            uint32_t part_it_idx     = part_it >= 3 && sq_size == 128 ? part_it + 2 : part_it;
-            blk_geom[*idx_mds].d1_depth_offset      = d1_depth_offset[geom][depth];
-            blk_geom[*idx_mds].ns_depth_offset      = ns_depth_offset[geom][depth];
-            blk_geom[*idx_mds].bwidth               = quartsize * ns_quarter_size_mult[part_it_idx][0][nsq_it];
-            blk_geom[*idx_mds].bheight              = quartsize * ns_quarter_size_mult[part_it_idx][1][nsq_it];
+            uint32_t part_it_idx               = part_it >= 3 && sq_size == 128 ? part_it + 2 : part_it;
+            blk_geom[*idx_mds].d1_depth_offset = d1_depth_offset[geom][depth];
+            blk_geom[*idx_mds].ns_depth_offset = ns_depth_offset[geom][depth];
+            blk_geom[*idx_mds].bwidth          = quartsize * ns_quarter_size_mult[part_it_idx][0][nsq_it];
+            blk_geom[*idx_mds].bheight         = quartsize * ns_quarter_size_mult[part_it_idx][1][nsq_it];
             blk_geom[*idx_mds].bsize =
                 hvsize_to_bsize[svt_log2f(blk_geom[*idx_mds].bwidth) - 2][svt_log2f(blk_geom[*idx_mds].bheight) - 2];
             blk_geom[*idx_mds].bwidth_uv  = MAX(4, blk_geom[*idx_mds].bwidth >> 1);
             blk_geom[*idx_mds].bheight_uv = MAX(4, blk_geom[*idx_mds].bheight >> 1);
 
             blk_geom[*idx_mds].bsize_uv = get_plane_block_size(blk_geom[*idx_mds].bsize, 1, 1);
-            (*idx_mds)                    = (*idx_mds) + 1;
+            (*idx_mds)                  = (*idx_mds) + 1;
         }
     }
 
     uint32_t min_size = max_sb >> (max_depth - 1);
     if (halfsize >= min_size) {
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y, 0, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y, 1, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y + halfsize, 2, min_nsq_bsize);
-        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y + halfsize, 3, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x, y + halfsize, min_nsq_bsize);
+        md_scan_all_blks(geom, blk_geom, idx_mds, halfsize, x + halfsize, y + halfsize, min_nsq_bsize);
     }
 }
 
@@ -401,7 +399,7 @@ void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom) {
     }
     //(2) Construct md scan blk_geom_mds:  use info from dps
     uint32_t idx_mds = 0;
-    md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, 0, min_nsq_bsize);
+    md_scan_all_blks(geom, blk_geom, &idx_mds, max_sb, 0, 0, min_nsq_bsize);
 }
 
 #if FIXED_POINT_ASSERT_TEST

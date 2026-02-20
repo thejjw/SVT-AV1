@@ -85,7 +85,8 @@ static uint16_t get_variance_for_cu(const BlockSize bsize, const int org_x, cons
 
 // org_x/y are the block location with respect to current SB origin
 static void roi_map_apply_segmentation_based_quantization(PictureControlSet* pcs, SuperBlock* sb_ptr,
-    BlkStruct* blk_ptr, const BlockSize bsize, const int org_x, const int org_y) {
+                                                          BlkStruct* blk_ptr, const BlockSize bsize, const int org_x,
+                                                          const int org_y) {
     SequenceControlSet*    scs                 = pcs->ppcs->scs;
     const SvtAv1RoiMapEvt* roi_map             = pcs->ppcs->roi_map_evt;
     SegmentationParams*    segmentation_params = &pcs->ppcs->frm_hdr.segmentation_params;
@@ -98,12 +99,12 @@ static void roi_map_apply_segmentation_based_quantization(PictureControlSet* pcs
     } else { // sb128
         segment_id = MAX_SEGMENTS;
         // 4 b64 blocks to check intersection
-        int b64_seg_columns[4] = {sb_ptr->org_x, sb_ptr->org_x + 64, sb_ptr->org_x, sb_ptr->org_x + 64};
-        int b64_seg_rows[4]    = {sb_ptr->org_y, sb_ptr->org_y, sb_ptr->org_y + 64, sb_ptr->org_y + 64};
-        int blk_org_x          = sb_ptr->org_x + org_x;
-        int blk_org_y          = sb_ptr->org_y + org_y;
-        const int bwidth       = block_size_wide[bsize];
-        const int bheight      = block_size_high[bsize];
+        int       b64_seg_columns[4] = {sb_ptr->org_x, sb_ptr->org_x + 64, sb_ptr->org_x, sb_ptr->org_x + 64};
+        int       b64_seg_rows[4]    = {sb_ptr->org_y, sb_ptr->org_y, sb_ptr->org_y + 64, sb_ptr->org_y + 64};
+        int       blk_org_x          = sb_ptr->org_x + org_x;
+        int       blk_org_y          = sb_ptr->org_y + org_y;
+        const int bwidth             = block_size_wide[bsize];
+        const int bheight            = block_size_high[bsize];
         for (int i = 0; i < 4; ++i) {
             if (blk_org_x < b64_seg_columns[i] + 64 && blk_org_x + bwidth > b64_seg_columns[i] &&
                 blk_org_y < b64_seg_rows[i] + 64 && blk_org_y + bheight > b64_seg_rows[i]) {
@@ -128,8 +129,8 @@ static void roi_map_apply_segmentation_based_quantization(PictureControlSet* pcs
            0);
 }
 
-void svt_aom_apply_segmentation_based_quantization(PictureControlSet* pcs, SuperBlock* sb_ptr,
-    BlkStruct* blk_ptr, const BlockSize bsize, const int org_x, const int org_y) {
+void svt_aom_apply_segmentation_based_quantization(PictureControlSet* pcs, SuperBlock* sb_ptr, BlkStruct* blk_ptr,
+                                                   const BlockSize bsize, const int org_x, const int org_y) {
     if (pcs->ppcs->roi_map_evt != NULL) {
         roi_map_apply_segmentation_based_quantization(pcs, sb_ptr, blk_ptr, bsize, org_x, org_y);
         return;

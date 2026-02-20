@@ -52,8 +52,8 @@ typedef struct BlockGeom {
     BlockSize bsize; // bloc size
     BlockSize bsize_uv; // bloc size for Chroma 4:2:0
 
-    uint16_t    d1_depth_offset; // offset to the next d1 sq block
-    uint16_t    ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
+    uint16_t d1_depth_offset; // offset to the next d1 sq block
+    uint16_t ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
 } BlockGeom;
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);
@@ -123,6 +123,7 @@ static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_
     }
     return av1_get_adjusted_tx_size(uv_tx);
 }
+
 // bsize is the luma bsize. tx_depth only used for luma.
 static INLINE TxSize av1_get_tx_size(BlockSize bsize, int tx_depth, int plane /*, const MacroBlockD *xd*/) {
     //const MbModeInfo *mbmi = xd->mi[0];

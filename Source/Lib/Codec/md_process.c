@@ -178,9 +178,10 @@ static void setup_mds(SequenceControlSet* scs, MdScan* mds, uint32_t* mds_idx, i
     }
 }
 
-static void setup_pc_tree(PC_TREE* pc_tree, bool (*test_blk_array)[PART_S][4], int index, BlockSize bsize, const int min_sq_size) {
-    pc_tree->bsize = bsize;
-    pc_tree->index = index;
+static void setup_pc_tree(PC_TREE* pc_tree, bool (*test_blk_array)[PART_S][4], int index, BlockSize bsize,
+                          const int min_sq_size) {
+    pc_tree->bsize      = bsize;
+    pc_tree->index      = index;
     pc_tree->tested_blk = test_blk_array[0];
 
     // If applicable, add split depths
@@ -196,7 +197,7 @@ static void setup_pc_tree(PC_TREE* pc_tree, bool (*test_blk_array)[PART_S][4], i
         }
 
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
-            pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
+            pc_tree->split[i]         = pc_tree + i * blocks_to_skip + 1;
             pc_tree->split[i]->parent = pc_tree;
             setup_pc_tree(pc_tree->split[i], test_blk_array + i * blocks_to_skip + 1, i, subsize, min_sq_size);
         }

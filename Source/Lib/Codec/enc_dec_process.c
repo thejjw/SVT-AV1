@@ -1648,7 +1648,7 @@ static void set_child_to_be_tested(PictureControlSet* pcs, ModeDecisionContext* 
 }
 
 static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* ctx, PC_TREE* pc_tree, int* s_depth,
-                           int* e_depth, int64_t* s_th_offset, int64_t* e_th_offset) {
+                                  int* e_depth, int64_t* s_th_offset, int64_t* e_th_offset) {
     const int bwidth  = block_size_wide[pc_tree->bsize];
     const int bheight = block_size_high[pc_tree->bsize];
     assert(bwidth == bheight);
@@ -1658,8 +1658,7 @@ static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* c
         uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
         // cost-band-based modulation
-        uint64_t max_cost = RDCOST(
-            full_lambda, 16, ctx->depth_refinement_ctrls.max_cost_multiplier * bwidth * bheight);
+        uint64_t max_cost = RDCOST(full_lambda, 16, ctx->depth_refinement_ctrls.max_cost_multiplier * bwidth * bheight);
 
         // For incomplete blocks, H/V partitions may be allowed, while square is not. In those cases, the selected depth
         // may not have a valid SQ cost, so we need to check that the SQ block is available before using the cost
@@ -1680,18 +1679,17 @@ static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* c
         const uint32_t lower_depth_split_cost_th = ctx->depth_refinement_ctrls.lower_depth_split_cost_th;
         // Skip testing NSQ shapes at parent depth if the rate cost of splitting is very low
         if (lower_depth_split_cost_th && pc_tree->parent->tested_blk[PART_N][0]) {
-            const uint32_t   full_lambda     = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
-                                                           : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-            const uint64_t   split_rate      = svt_aom_partition_rate_cost(
-                pcs->ppcs,
-                pc_tree->parent->bsize,
-                pc_tree->parent->mi_row,
-                pc_tree->parent->mi_col,
-                ctx->md_rate_est_ctx,
-                PARTITION_SPLIT,
-                0,
-                0);
-            const uint64_t split_cost = RDCOST(full_lambda, split_rate, 0);
+            const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
+                                                     : ctx->full_sb_lambda_md[EB_8_BIT_MD];
+            const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                                    pc_tree->parent->bsize,
+                                                                    pc_tree->parent->mi_row,
+                                                                    pc_tree->parent->mi_col,
+                                                                    ctx->md_rate_est_ctx,
+                                                                    PARTITION_SPLIT,
+                                                                    0,
+                                                                    0);
+            const uint64_t split_cost  = RDCOST(full_lambda, split_rate, 0);
             if (split_cost * 10000 < pc_tree->parent->block_data[PART_N][0]->cost * lower_depth_split_cost_th) {
                 *s_depth = 0;
             }
@@ -1777,21 +1775,19 @@ static void is_parent_to_current_deviation_small(PictureControlSet* pcs, ModeDec
             ? MIN_SIGNED_VALUE
             : ctx->depth_refinement_ctrls.s2_parent_to_current_th + th_offset;
 
-        const int bwidth  = block_size_wide[pc_tree->bsize];
-        const int bheight = block_size_high[pc_tree->bsize];
+        const int      bwidth      = block_size_wide[pc_tree->bsize];
+        const int      bheight     = block_size_high[pc_tree->bsize];
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
         uint64_t max_cost = ctx->depth_refinement_ctrls.parent_max_cost_th_mult
-            ? RDCOST(
-                  full_lambda,
-                  18000 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult,
-                  60 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult * bwidth * bheight * 4)
+            ? RDCOST(full_lambda,
+                     18000 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult,
+                     60 * ctx->depth_refinement_ctrls.parent_max_cost_th_mult * bwidth * bheight * 4)
             : 0;
 
-        int64_t parent_to_current_deviation =
-            (int64_t)(((int64_t)MAX(pc_tree->parent->block_data[PART_N][0]->cost, 1) -
-                       (int64_t)MAX((pc_tree->block_data[PART_N][0]->cost * 4), 1)) *
-                      100) /
+        int64_t parent_to_current_deviation = (int64_t)(((int64_t)MAX(pc_tree->parent->block_data[PART_N][0]->cost, 1) -
+                                                         (int64_t)MAX((pc_tree->block_data[PART_N][0]->cost * 4), 1)) *
+                                                        100) /
             (int64_t)MAX((pc_tree->block_data[PART_N][0]->cost * 4), 1);
 
         if (parent_to_current_deviation >= s1_parent_to_current_th &&
@@ -1860,19 +1856,17 @@ static void is_child_to_current_deviation_small(PictureControlSet* pcs, ModeDeci
         child_cost                      = (child_cost / child_cnt) * 4;
         const uint32_t full_lambda      = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                       : ctx->full_sb_lambda_md[EB_8_BIT_MD];
-        const uint64_t child_split_rate = svt_aom_partition_rate_cost(
-            pcs->ppcs,
-            pc_tree->bsize,
-            pc_tree->mi_row,
-            pc_tree->mi_col,
-            ctx->md_rate_est_ctx,
-            PARTITION_SPLIT,
-            0, // partition ctxs not updated in pd0
-            0);
+        const uint64_t child_split_rate = svt_aom_partition_rate_cost(pcs->ppcs,
+                                                                      pc_tree->bsize,
+                                                                      pc_tree->mi_row,
+                                                                      pc_tree->mi_col,
+                                                                      ctx->md_rate_est_ctx,
+                                                                      PARTITION_SPLIT,
+                                                                      0, // partition ctxs not updated in pd0
+                                                                      0);
         child_cost += RDCOST(full_lambda, child_split_rate, 0);
-        child_to_current_deviation = (int64_t)(((int64_t)MAX(child_cost, 1) -
-                                                (int64_t)MAX(pc_tree->block_data[PART_N][0]->cost, 1)) *
-                                               100) /
+        child_to_current_deviation =
+            (int64_t)(((int64_t)MAX(child_cost, 1) - (int64_t)MAX(pc_tree->block_data[PART_N][0]->cost, 1)) * 100) /
             (int64_t)(MAX(pc_tree->block_data[PART_N][0]->cost, 1));
 
         if (child_to_current_deviation >= e1_sub_to_current_th) {
@@ -1982,8 +1976,7 @@ static void set_start_end_depth(PictureControlSet* pcs, ModeDecisionContext* ctx
         update_pred_th_offset(pcs, ctx, pc_tree, &s_depth, &e_depth, &s_th_offset, &e_th_offset);
         if (s_depth &&
             // Check tested_blk b/c use block's cost inside
-            pc_tree->tested_blk[PART_N][0] &&
-            sq_size < ((pcs->scs->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
+            pc_tree->tested_blk[PART_N][0] && sq_size < ((pcs->scs->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
             is_parent_to_current_deviation_small(pcs, ctx, pc_tree, s_th_offset, &s_depth);
             if (s_depth) {
                 add_parent_depth = 1;
@@ -2265,7 +2258,7 @@ static void lpd1_detector_post_pd0(PictureControlSet* pcs, ModeDecisionContext* 
                 // If block was not tested in PD0, won't have coeff info, so set to max and base detection on cost only (which is set
                 // even if 64x64 block is not tested)
                 const uint32_t nz_coeffs = pc_tree->tested_blk[PART_N][0] ? pc_tree->block_data[PART_N][0]->cnt_nz_coeff
-                                                                             : (uint32_t)~0;
+                                                                          : (uint32_t)~0;
 
                 const uint32_t lambda = md_ctx->full_sb_lambda_md[EB_8_BIT_MD]; // light-PD1 assumes 8-bit MD
                 const uint32_t rate   = md_ctx->lpd1_ctrls.cost_th_rate[pd1_lvl];

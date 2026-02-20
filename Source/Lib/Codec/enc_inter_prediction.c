@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "enc_inter_prediction.h"
+#include "enc_intra_prediction.h"
 #include "aom_dsp_rtcd.h"
 #include "rd_cost.h"
 #include "resize.h"
@@ -194,7 +195,7 @@ static void av1_make_masked_scaled_inter_predictor(
 }
 
 static const uint8_t bsize_curvfit_model_cat_lookup[BLOCK_SIZES_ALL] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
-                                                                       3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};
+                                                                        3, 3, 3, 3, 3, 0, 0, 1, 1, 2, 2};
 
 static int sse_norm_curvfit_model_cat_lookup(double sse_norm) {
     return (sse_norm > 16.0);
@@ -678,22 +679,6 @@ void model_rd_for_sb_with_curvfit(PictureControlSet* pcs, ModeDecisionContext* c
     *out_rate_sum = (int)rate_sum;
     *out_dist_sum = dist_sum;
 }
-
-void svt_av1_predict_intra_block(STAGE stage, MacroBlockD* xd, int32_t wpx, int32_t hpx,
-                                 TxSize tx_size, PredictionMode mode, int32_t angle_delta, int32_t use_palette,
-                                 PaletteInfo* palette_info, FilterIntraMode filter_intra_mode, uint8_t* topNeighArray,
-                                 uint8_t* leftNeighArray, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                 int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t tu_org_x_pict,
-                                 uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
-                                 uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr);
-void svt_av1_predict_intra_block_16bit(EbBitDepth bit_depth, STAGE stage, MacroBlockD* xd,
-                                       int32_t wpx, int32_t hpx, TxSize tx_size, PredictionMode mode,
-                                       int32_t angle_delta, int32_t use_palette, PaletteInfo* palette_info,
-                                       FilterIntraMode filter_intra_mode, uint16_t* topNeighArray,
-                                       uint16_t* leftNeighArray, EbPictureBufferDesc* recon_buffer, int32_t col_off,
-                                       int32_t row_off, int32_t plane, BlockSize bsize, Part shape, uint32_t tu_org_x_pict,
-                                       uint32_t tu_org_y_pict, uint32_t bl_org_x_pict, uint32_t bl_org_y_pict,
-                                       uint32_t bl_org_x_mb, uint32_t bl_org_y_mb, SeqHeader* seq_header_ptr);
 
 struct build_prediction_ctxt {
     const Av1Common* cm;
@@ -2020,10 +2005,10 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
     const uint32_t input_chroma_offset = ((ctx->blk_org_y + input_pic->org_y) * input_pic->stride_cb +
                                           (ctx->blk_org_x + input_pic->org_x)) /
         2;
-    const int32_t prediction_offset = prediction_ptr->org_x +
-        (prediction_ptr->org_y) * prediction_ptr->stride_y;
+    const int32_t prediction_offset        = prediction_ptr->org_x + (prediction_ptr->org_y) * prediction_ptr->stride_y;
     const int32_t prediction_chroma_offset = (prediction_ptr->org_x +
-        (prediction_ptr->org_y) * prediction_ptr->stride_cb) / 2;
+                                              (prediction_ptr->org_y) * prediction_ptr->stride_cb) /
+        2;
     const uint8_t         hbd                        = (bit_depth > 8) ? 1 : 0;
     EbSpatialFullDistType spatial_full_dist_type_fun = hbd ? svt_full_distortion_kernel16_bits
                                                            : svt_spatial_full_distortion_kernel;
@@ -2306,12 +2291,12 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
     // temp buffer for intra pred (luma/chroma computed separately, so can re-use buffer)
     DECLARE_ALIGNED(16, uint8_t, intra_pred[MAX_SB_SQUARE]);
 
-    uint8_t* dst;
-    int32_t  dst_stride, intra_stride;
-    uint32_t sb_size_luma   = pcs->scs->sb_size;
-    uint32_t sb_size_chroma = pcs->scs->sb_size >> 1;
-    const int bwidth = block_size_wide[bsize];
-    const int bheight = block_size_high[bsize];
+    uint8_t*  dst;
+    int32_t   dst_stride, intra_stride;
+    uint32_t  sb_size_luma   = pcs->scs->sb_size;
+    uint32_t  sb_size_chroma = pcs->scs->sb_size >> 1;
+    const int bwidth         = block_size_wide[bsize];
+    const int bheight        = block_size_high[bsize];
 
     EbPictureBufferDesc intra_pred_desc;
     intra_pred_desc.org_x = intra_pred_desc.org_y = 0;
@@ -2326,8 +2311,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
         const int       ssx         = plane ? 1 : 0;
         const int       ssy         = plane ? 1 : 0;
         const BlockSize plane_bsize = get_plane_block_size(bsize, ssx, ssy);
-        const int bwidth_uv = block_size_wide[plane_bsize];
-        const int bheight_uv = block_size_high[plane_bsize];
+        const int       bwidth_uv   = block_size_wide[plane_bsize];
+        const int       bheight_uv  = block_size_high[plane_bsize];
         //av1_build_interintra_predictors_sbp
         uint8_t topNeighArray[(64 * 2 + 1) << 1];
         uint8_t leftNeighArray[(64 * 2 + 1) << 1];
@@ -2378,8 +2363,7 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
             }
 
             if (blk_originx_uv != 0) {
-                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1
-                                                                                                                   : 2;
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1 : 2;
                 svt_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cb->left_array + ((uint64_t)blk_originy_uv << is16bit),
                            bheight_uv * multipler << is16bit);
@@ -2405,8 +2389,7 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
             }
 
             if (blk_originx_uv != 0) {
-                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1
-                                                                                                                   : 2;
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma + bheight_uv * 2) > sb_size_chroma ? 1 : 2;
                 svt_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            recon_neigh_cr->left_array + ((uint64_t)blk_originy_uv << is16bit),
                            bheight_uv * multipler << is16bit);
@@ -2418,39 +2401,33 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                         ->top_left_array[(recon_neigh_cr->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
             }
         }
-        const TxSize tx_size = tx_depth_to_tx_size[0][bsize];
+        const TxSize tx_size    = tx_depth_to_tx_size[0][bsize];
         const TxSize tx_size_uv = av1_get_max_uv_txsize(bsize, 1, 1);
+
+        if (!use_precomputed_intra || plane) {
+            svt_av1_predict_intra_block(blk_ptr->av1xd,
+                bsize,
+                plane ? tx_size_uv : tx_size,
+                interintra_to_intra_mode[interintra_mode],
+                0,
+                0,
+                NULL,
+                FILTER_INTRA_MODES,
+                topNeighArray + ((uint64_t)1 << is16bit),
+                leftNeighArray + ((uint64_t)1 << is16bit),
+                &intra_pred_desc,
+                0,
+                0,
+                plane,
+                shape,
+                0,
+                0,
+                &pcs->scs->seq_header,
+                bit_depth);
+        }
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
         if (is16bit) {
-            if (!use_precomputed_intra || plane) {
-                svt_av1_predict_intra_block_16bit(bit_depth,
-                                                  !ED_STAGE,
-                                                  blk_ptr->av1xd,
-                                                  plane ? bwidth_uv : bwidth,
-                                                  plane ? bheight_uv : bheight,
-                                                  plane ? tx_size_uv : tx_size,
-                                                  interintra_to_intra_mode[interintra_mode],
-                                                  0,
-                                                  0,
-                                                  NULL,
-                                                  FILTER_INTRA_MODES,
-                                                  (uint16_t*)topNeighArray + 1,
-                                                  (uint16_t*)leftNeighArray + 1,
-                                                  &intra_pred_desc,
-                                                  0,
-                                                  0,
-                                                  plane,
-                                                  bsize,
-                                                  shape,
-                                                  dst_origin_x,
-                                                  dst_origin_y,
-                                                  pu_origin_x,
-                                                  pu_origin_y,
-                                                  0,
-                                                  0,
-                                                  &pcs->scs->seq_header);
-            }
             svt_aom_combine_interintra_highbd(
                 interintra_mode,
                 use_wedge_interintra,
@@ -2466,38 +2443,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                 use_precomputed_intra && !plane ? bwidth : intra_stride, // Intra pred stride
                 bit_depth);
         } else
-#else
-        UNUSED(bit_depth);
 #endif
         {
-            if (!use_precomputed_intra || plane) {
-                svt_av1_predict_intra_block(!ED_STAGE,
-                                            blk_ptr->av1xd,
-                                            plane ? bwidth_uv : bwidth,
-                                            plane ? bheight_uv : bheight,
-                                            plane ? tx_size_uv : tx_size,
-                                            interintra_to_intra_mode[interintra_mode],
-                                            0,
-                                            0,
-                                            NULL,
-                                            FILTER_INTRA_MODES,
-                                            topNeighArray + 1,
-                                            leftNeighArray + 1,
-                                            &intra_pred_desc,
-                                            0,
-                                            0,
-                                            plane,
-                                            bsize,
-                                            shape,
-                                            dst_origin_x,
-                                            dst_origin_y,
-                                            pu_origin_x,
-                                            pu_origin_y,
-                                            0,
-                                            0,
-                                            &pcs->scs->seq_header);
-            }
-
             svt_aom_combine_interintra(
                 interintra_mode,
                 use_wedge_interintra,
@@ -3053,12 +3000,13 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
 }
 
 #if CONFIG_ENABLE_OBMC
-static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr, BlockSize bsize, uint8_t use_precomputed_obmc,
-                                      ModeDecisionContext* ctx, uint16_t pu_origin_x, uint16_t pu_origin_y,
-                                      EbPictureBufferDesc* pred_pic, uint16_t dst_origin_x, uint16_t dst_origin_y,
-                                      uint32_t component_mask, uint8_t bit_depth, uint8_t is_16bit_pipeline) {
-    uint8_t is16bit = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
-    const int bwidth = block_size_wide[bsize];
+static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr, BlockSize bsize,
+                                      uint8_t use_precomputed_obmc, ModeDecisionContext* ctx, uint16_t pu_origin_x,
+                                      uint16_t pu_origin_y, EbPictureBufferDesc* pred_pic, uint16_t dst_origin_x,
+                                      uint16_t dst_origin_y, uint32_t component_mask, uint8_t bit_depth,
+                                      uint8_t is_16bit_pipeline) {
+    uint8_t   is16bit = bit_depth > EB_EIGHT_BIT || is_16bit_pipeline;
+    const int bwidth  = block_size_wide[bsize];
     const int bheight = block_size_high[bsize];
 
     // cppcheck-suppress unassignedVariable
@@ -3347,8 +3295,8 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
 // The offset for the ref pic block is (ref_origin_x, ref_origin_y)
 EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet* pcs, BlockModeInfo* block_mi,
                                      WarpedMotionParams* wm_params_0, WarpedMotionParams* wm_params_1,
-                                     BlkStruct* blk_ptr, const BlockSize bsize, const Part shape, bool use_precomputed_obmc,
-                                     bool use_precomputed_ii, ModeDecisionContext* ctx,
+                                     BlkStruct* blk_ptr, const BlockSize bsize, const Part shape,
+                                     bool use_precomputed_obmc, bool use_precomputed_ii, ModeDecisionContext* ctx,
                                      NeighborArrayUnit* recon_neigh_y, NeighborArrayUnit* recon_neigh_cb,
                                      NeighborArrayUnit* recon_neigh_cr, EbPictureBufferDesc* ref_pic_0,
                                      EbPictureBufferDesc* ref_pic_1, uint16_t ref_origin_x, uint16_t ref_origin_y,
@@ -3488,16 +3436,16 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
             (((pred_pic->org_x + ((dst_origin_x >> 3) << 3)) / 2 +
               (pred_pic->org_y + ((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cr)
              << is16bit);
-        ConvolveParams conv_params_cb     = get_conv_params_no_round(0, 0, 0, tmp_dst_cb, 64, is_compound, bit_depth);
-        ConvolveParams conv_params_cr     = get_conv_params_no_round(0, 0, 0, tmp_dst_cr, 64, is_compound, bit_depth);
-        const uint8_t  ss_x               = 1; // pd->subsampling_x;
-        const uint8_t  ss_y               = 1; //pd->subsampling_y;
-        const BlockSize bsize_uv = get_plane_block_size(bsize, ss_x, ss_y);
-        const int bwidth_uv = block_size_wide[bsize_uv];
-        const int bheight_uv = block_size_high[bsize_uv];
-        const int16_t  pu_origin_y_chroma = ((ref_origin_y >> 3) << 3) / 2;
-        const int16_t  pu_origin_x_chroma = ((ref_origin_x >> 3) << 3) / 2;
-        uint8_t        sub8x8_inter       = 0;
+        ConvolveParams  conv_params_cb     = get_conv_params_no_round(0, 0, 0, tmp_dst_cb, 64, is_compound, bit_depth);
+        ConvolveParams  conv_params_cr     = get_conv_params_no_round(0, 0, 0, tmp_dst_cr, 64, is_compound, bit_depth);
+        const uint8_t   ss_x               = 1; // pd->subsampling_x;
+        const uint8_t   ss_y               = 1; //pd->subsampling_y;
+        const BlockSize bsize_uv           = get_plane_block_size(bsize, ss_x, ss_y);
+        const int       bwidth_uv          = block_size_wide[bsize_uv];
+        const int       bheight_uv         = block_size_high[bsize_uv];
+        const int16_t   pu_origin_y_chroma = ((ref_origin_y >> 3) << 3) / 2;
+        const int16_t   pu_origin_x_chroma = ((ref_origin_x >> 3) << 3) / 2;
+        uint8_t         sub8x8_inter       = 0;
 
         // special treatment for chroma in 4XN/NX4 blocks if one of the neighbour blocks of the parent square is
         // intra the chroma prediction will follow the normal path using the luma MV of the current nsq block which

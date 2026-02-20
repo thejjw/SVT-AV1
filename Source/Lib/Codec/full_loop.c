@@ -1738,10 +1738,10 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet* pcs, ModeDecisionCont
                                         uint64_t cb_full_distortion[DIST_CALC_TOTAL],
                                         uint64_t cr_full_distortion[DIST_CALC_TOTAL], uint64_t* cb_coeff_bits,
                                         uint64_t* cr_coeff_bits) {
-    uint32_t     full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
+    uint32_t     full_lambda  = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
+    const TxSize tx_size_uv   = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
+    const int    tx_width_uv  = tx_size_wide[tx_size_uv];
+    const int    tx_height_uv = tx_size_high[tx_size_uv];
 
     EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
     // If Cb component not detected as complex, can use TX shortcuts
@@ -1761,8 +1761,8 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet* pcs, ModeDecisionCont
     }
     assert(tx_size_uv < TX_SIZES_ALL);
     const int32_t chroma_shift = (MAX_TX_SCALE - av1_get_tx_scale_tab[tx_size_uv]) * 2;
-    uint32_t      bwidth  = tx_width_uv;
-    uint32_t      bheight = tx_height_uv;
+    uint32_t      bwidth       = tx_width_uv;
+    uint32_t      bheight      = tx_height_uv;
     if (pf_shape) {
         bwidth  = MAX((bwidth >> pf_shape), 4);
         bheight = (bheight >> pf_shape);
@@ -1956,29 +1956,30 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
 
     const double effective_ac_bias = get_effective_ac_bias(
         pcs->scs->static_config.ac_bias, pcs->slice_type == I_SLICE, pcs->temporal_layer_index);
-    const uint8_t tx_depth = cand_bf->cand->block_mi.tx_depth;
-    const TxSize tx_size = av1_get_tx_size(ctx->blk_geom->bsize, tx_depth, PLANE_TYPE_Y);
-    const TxSize tx_size_uv = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
-    const int tx_width_uv = tx_size_wide[tx_size_uv];
-    const int tx_height_uv = tx_size_high[tx_size_uv];
+    const uint8_t tx_depth     = cand_bf->cand->block_mi.tx_depth;
+    const TxSize  tx_size      = av1_get_tx_size(ctx->blk_geom->bsize, tx_depth, PLANE_TYPE_Y);
+    const TxSize  tx_size_uv   = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
+    const int     tx_width_uv  = tx_size_wide[tx_size_uv];
+    const int     tx_height_uv = tx_size_high[tx_size_uv];
     const bool    is_inter = (is_inter_mode(cand_bf->cand->block_mi.mode) || cand_bf->cand->block_mi.use_intrabc) ? true
                                                                                                                   : false;
-    const int tu_count = tx_depth ? 1
-        : tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth]; //NM: 128x128 exeption
+    const int     tu_count = tx_depth ? 1 : tx_blocks_per_depth[ctx->blk_geom->bsize][tx_depth]; //NM: 128x128 exeption
     uint32_t      txb_1d_offset = 0;
 
     int txb_itr = 0;
     do {
-        const uint32_t txb_origin_x = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
-        const uint32_t txb_origin_y = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
-        int32_t cropped_tx_width_uv = MIN((uint8_t)tx_width_uv,
-            (pcs->ppcs->aligned_width >> 1) - ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1));
-        int32_t cropped_tx_height_uv = MIN((uint8_t)tx_height_uv,
-            (pcs->ppcs->aligned_height >> 1) - ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1));
+        const uint32_t txb_origin_x        = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
+        const uint32_t txb_origin_y        = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
+        int32_t        cropped_tx_width_uv = MIN(
+            (uint8_t)tx_width_uv, (pcs->ppcs->aligned_width >> 1) - ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1));
+        int32_t cropped_tx_height_uv = MIN(
+            (uint8_t)tx_height_uv, (pcs->ppcs->aligned_height >> 1) - ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1));
         uint32_t tu_cb_origin_index = (ROUND_UV(txb_origin_x) +
-            (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cb)) >> 1;
+                                       (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cb)) >>
+            1;
         uint32_t tu_cr_origin_index = (ROUND_UV(txb_origin_x) +
-            (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cr)) >> 1;
+                                       (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cr)) >>
+            1;
         EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
         if (ctx->md_stage == MD_STAGE_3 && ctx->use_tx_shortcuts_mds3 && ctx->chroma_complexity == COMPONENT_LUMA) {
             pf_shape = N4_SHAPE;
@@ -2015,8 +2016,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
             }
             // Configure the Chroma Residual Ptr
 
-            chroma_residual_ptr =
-                &(((int16_t*)cand_bf->residual->buffer_cb)[tu_cb_origin_index]);
+            chroma_residual_ptr = &(((int16_t*)cand_bf->residual->buffer_cb)[tu_cb_origin_index]);
 
             // Cb Transform
             svt_aom_estimate_transform(pcs,
@@ -2083,9 +2083,12 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             ctx->hbd_md);
                 }
 
-                const uint32_t input_chroma_txb_origin_index = ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
+                const uint32_t input_chroma_txb_origin_index =
+                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y) + input_pic->org_y) >> 1) * input_pic->stride_cb;
-                const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) + (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cb)) >> 1;
+                const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
+                                                     (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cb)) >>
+                    1;
 
                 if (ssim_level == SSIM_LVL_1 || ssim_level == SSIM_LVL_3) {
                     txb_full_distortion[DIST_SSIM][1][DIST_CALC_PREDICTION] = svt_spatial_full_distortion_ssim_kernel(
@@ -2168,7 +2171,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                 // *Note - there are known issues with how this distortion metric is currently
                 //    calculated.  The amount of scaling between the two arrays is not
                 //    equivalent.
-                uint32_t bwidth = tx_width_uv;
+                uint32_t bwidth  = tx_width_uv;
                 uint32_t bheight = tx_height_uv;
                 if (pf_shape) {
                     bwidth  = MAX((bwidth >> pf_shape), 4);
@@ -2216,8 +2219,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
             }
             // Configure the Chroma Residual Ptr
 
-            chroma_residual_ptr =
-                &(((int16_t*)cand_bf->residual->buffer_cr)[tu_cr_origin_index]);
+            chroma_residual_ptr = &(((int16_t*)cand_bf->residual->buffer_cr)[tu_cr_origin_index]);
 
             // Cr Transform
             svt_aom_estimate_transform(pcs,
@@ -2281,9 +2283,12 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             tx_height_uv,
                                             ctx->hbd_md);
                 }
-                const uint32_t input_chroma_txb_origin_index = ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
+                const uint32_t input_chroma_txb_origin_index =
+                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y) + input_pic->org_y) >> 1) * input_pic->stride_cr;
-                const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) + (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cr)) >> 1;
+                const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
+                                                     (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cr)) >>
+                    1;
 
                 if (ssim_level == SSIM_LVL_1 || ssim_level == SSIM_LVL_3) {
                     txb_full_distortion[DIST_SSIM][2][DIST_CALC_PREDICTION] = svt_spatial_full_distortion_ssim_kernel(

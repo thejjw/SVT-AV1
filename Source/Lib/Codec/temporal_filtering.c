@@ -2161,14 +2161,14 @@ static void tf_64x64_inter_prediction(PictureParentControlSet* pcs, MeContext* m
 
     // Perform final pass using the 1/8 MV
     // AV1 MVs are always in 1/8th pel precision.
-    BlockModeInfo    block_mi = {.mv[0]              = {{me_ctx->tf_64x64_mv_x, me_ctx->tf_64x64_mv_y}},
-                                 .ref_frame[0]       = LAST_FRAME,
-                                 .ref_frame[1]       = NONE_FRAME,
-                                 .is_interintra_used = 0,
-                                 .motion_mode        = SIMPLE_TRANSLATION,
-                                 .interp_filters     = (uint32_t)interp_filters,
-                                 .mode               = NEWMV,
-                                 .use_intrabc        = 0};
+    BlockModeInfo block_mi = {.mv[0]              = {{me_ctx->tf_64x64_mv_x, me_ctx->tf_64x64_mv_y}},
+                              .ref_frame[0]       = LAST_FRAME,
+                              .ref_frame[1]       = NONE_FRAME,
+                              .is_interintra_used = 0,
+                              .motion_mode        = SIMPLE_TRANSLATION,
+                              .interp_filters     = (uint32_t)interp_filters,
+                              .mode               = NEWMV,
+                              .use_intrabc        = 0};
     svt_aom_inter_prediction(scs,
                              NULL, //pcs,
                              &block_mi,
@@ -2323,15 +2323,15 @@ static void tf_32x32_inter_prediction(PictureParentControlSet* pcs, MeContext* m
                 blk_ptr.av1xd->mb_to_right_edge  = ((pcs->av1_cm->mi_cols - bh - micol) * MI_SIZE) * 8;
                 // Perform final pass using the 1/8 MV
                 //AV1 MVs are always in 1/8th pel precision.
-                BlockModeInfo    block_mi = {.mv[0]              = {{me_ctx->tf_16x16_mv_x[idx_32x32 * 4 + idx_16x16],
-                                                                     me_ctx->tf_16x16_mv_y[idx_32x32 * 4 + idx_16x16]}},
-                                             .ref_frame[0]       = LAST_FRAME,
-                                             .ref_frame[1]       = NONE_FRAME,
-                                             .is_interintra_used = 0,
-                                             .motion_mode        = SIMPLE_TRANSLATION,
-                                             .interp_filters     = (uint32_t)interp_filters,
-                                             .mode               = NEWMV,
-                                             .use_intrabc        = 0};
+                BlockModeInfo block_mi = {.mv[0]              = {{me_ctx->tf_16x16_mv_x[idx_32x32 * 4 + idx_16x16],
+                                                                  me_ctx->tf_16x16_mv_y[idx_32x32 * 4 + idx_16x16]}},
+                                          .ref_frame[0]       = LAST_FRAME,
+                                          .ref_frame[1]       = NONE_FRAME,
+                                          .is_interintra_used = 0,
+                                          .motion_mode        = SIMPLE_TRANSLATION,
+                                          .interp_filters     = (uint32_t)interp_filters,
+                                          .mode               = NEWMV,
+                                          .use_intrabc        = 0};
                 svt_aom_inter_prediction(
                     scs,
                     NULL, //pcs,
@@ -2381,14 +2381,14 @@ static void tf_32x32_inter_prediction(PictureParentControlSet* pcs, MeContext* m
 
         // Perform final pass using the 1/8 MV
         //AV1 MVs are always in 1/8th pel precision.
-        BlockModeInfo    block_mi = {.mv[0] = {{me_ctx->tf_32x32_mv_x[idx_32x32], me_ctx->tf_32x32_mv_y[idx_32x32]}},
-                                     .ref_frame[0]       = LAST_FRAME,
-                                     .ref_frame[1]       = NONE_FRAME,
-                                     .is_interintra_used = 0,
-                                     .motion_mode        = SIMPLE_TRANSLATION,
-                                     .interp_filters     = (uint32_t)interp_filters,
-                                     .mode               = NEWMV,
-                                     .use_intrabc        = 0};
+        BlockModeInfo block_mi = {.mv[0] = {{me_ctx->tf_32x32_mv_x[idx_32x32], me_ctx->tf_32x32_mv_y[idx_32x32]}},
+                                  .ref_frame[0]       = LAST_FRAME,
+                                  .ref_frame[1]       = NONE_FRAME,
+                                  .is_interintra_used = 0,
+                                  .motion_mode        = SIMPLE_TRANSLATION,
+                                  .interp_filters     = (uint32_t)interp_filters,
+                                  .mode               = NEWMV,
+                                  .use_intrabc        = 0};
         svt_aom_inter_prediction(scs,
                                  NULL, //pcs,
                                  &block_mi,

@@ -24,9 +24,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define MAX_MB_PLANE 3
-#define MAX_MPM_CANDIDATES 3
-#define MERGE_PENALTY 10
 
 /*! \brief Holds the motion samples for warp motion model estimation
  */
@@ -168,7 +165,7 @@ static const uint32_t me_idx_85[] = {
     27, 28, 35, 36, 11, 41, 42, 49, 50, 12, 43, 44, 51, 52, 3,  13, 53, 54, 61, 62, 14, 55, 56, 63, 64, 17, 69, 70, 77,
     78, 18, 71, 72, 79, 80, 4,  15, 57, 58, 65, 66, 16, 59, 60, 67, 68, 19, 73, 74, 81, 82, 20, 75, 76, 83, 84};
 uint32_t svt_aom_get_me_block_offset(const uint32_t org_x, const uint32_t org_y, const BlockSize bsize,
-    const uint8_t enable_me_8x8, const uint8_t enable_me_16x16);
+                                     const uint8_t enable_me_8x8, const uint8_t enable_me_16x16);
 uint8_t  svt_aom_is_me_data_present(uint32_t me_block_offset, uint32_t me_cand_offset, const MeSbResults* me_results,
                                     uint8_t list_idx, uint8_t ref_idx);
 

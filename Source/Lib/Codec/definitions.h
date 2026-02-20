@@ -331,7 +331,6 @@ enum {
 #define MAX_LAD 120 // max lookahead-distance 2x60fps
 #define ROUND_UV(x) (((x) >> 3) << 3)
 #define SWITCHABLE_FILTER_CONTEXTS ((SWITCHABLE_FILTERS + 1) * 4)
-#define MAX_MB_PLANE 3
 #define CFL_BUF_LINE (32)
 #define CFL_BUF_LINE_I128 (CFL_BUF_LINE >> 3)
 #define CFL_BUF_LINE_I256 (CFL_BUF_LINE >> 4)
@@ -594,6 +593,10 @@ typedef enum ATTRIBUTE_PACKED {
     COMPONENT_ALL       = 4, // Y+Cb+Cr
     COMPONENT_NONE      = 15
 } COMPONENT_TYPE;
+
+typedef enum ATTRIBUTE_PACKED { AOM_PLANE_Y, AOM_PLANE_U, AOM_PLANE_V, MAX_MB_PLANE } Plane;
+
+typedef enum ATTRIBUTE_PACKED { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } PlaneType;
 
 static INLINE int32_t clamp(int32_t value, int32_t low, int32_t high) {
     return value < low ? low : (value > high ? high : value);
@@ -862,15 +865,15 @@ static const Part          from_part_to_shape[PART_S + 1]          = {
 
 // Width/height lookup tables in units of various block sizes
 static const uint8_t block_size_wide[BLOCK_SIZES_ALL] = {4,  4,  8,  8,   8,   16, 16, 16, 32, 32, 32,
-                                                 64, 64, 64, 128, 128, 4,  16, 8,  32, 16, 64};
+                                                         64, 64, 64, 128, 128, 4,  16, 8,  32, 16, 64};
 
 static const uint8_t block_size_high[BLOCK_SIZES_ALL] = {4,  8,  4,   8,  16,  8,  16, 32, 16, 32, 64,
-                                                 32, 64, 128, 64, 128, 16, 4,  32, 8,  64, 16};
+                                                         32, 64, 128, 64, 128, 16, 4,  32, 8,  64, 16};
 
 static const uint8_t mi_size_wide[BLOCK_SIZES_ALL] = {1,  1,  2,  2,  2,  4, 4, 4, 8, 8, 8,
-                                                     16, 16, 16, 32, 32, 1, 4, 2, 8, 4, 16};
+                                                      16, 16, 16, 32, 32, 1, 4, 2, 8, 4, 16};
 static const uint8_t mi_size_high[BLOCK_SIZES_ALL] = {1, 2,  1,  2,  4,  2, 4, 8, 4, 8,  16,
-                                                     8, 16, 32, 16, 32, 4, 1, 8, 2, 16, 4};
+                                                      8, 16, 32, 16, 32, 4, 1, 8, 2, 16, 4};
 
 // 4X4, 8X8, 16X16, 32X32, 64X64, 128X128
 #define SQR_BLOCK_SIZES 6
@@ -1154,9 +1157,6 @@ static const int32_t tx_size_high_log2[TX_SIZES_ALL] = {
     2, 3, 4, 5, 6, 3, 2, 4, 3, 5, 4, 6, 5, 4, 2, 5, 3, 6, 4,
 };
 #define ALIGN_POWER_OF_TWO(value, n) (((value) + ((1 << (n)) - 1)) & ~((1 << (n)) - 1))
-#define AOM_PLANE_Y 0 /**< Y (Luminance) plane */
-#define AOM_PLANE_U 1 /**< U (Chroma) plane */
-#define AOM_PLANE_V 2 /**< V (Chroma) plane */
 
 #define CONVERT_TO_SHORTPTR(x) ((uint16_t *)(((uintptr_t)(x)) << 1))
 #define CONVERT_TO_BYTEPTR(x) ((uint8_t *)(((uintptr_t)(x)) >> 1))
@@ -1282,8 +1282,6 @@ typedef enum ATTRIBUTE_PACKED {
     BIDIR_COMP_REFERENCE,
     COMP_REFERENCE_TYPES,
 } CompReferenceType;
-
-typedef enum ATTRIBUTE_PACKED { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } PlaneType;
 
 #define CFL_ALPHABET_SIZE_LOG2 4
 #define CFL_ALPHABET_SIZE (1 << CFL_ALPHABET_SIZE_LOG2)
@@ -1955,7 +1953,6 @@ typedef struct LoopFilter {
 } LoopFilter;
 
 #define MAX_SEGMENTS 8
-#define MAX_MB_PLANE 3
 
 // Need to align this structure so when it is declared and
 // passed it can be loaded into vector registers.
