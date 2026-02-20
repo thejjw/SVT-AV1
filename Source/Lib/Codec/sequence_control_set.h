@@ -49,7 +49,9 @@ typedef struct QpBasedThScaling {
     bool i_depth_removal_qp_based_th_scaling;
 #endif
     bool cap_max_size_qp_based_th_scaling;
+#if !CLN_REMOVE_VAR_SUB_DEPTH
     bool var_skip_sub_depth_qp_based_th_scaling;
+#endif
 #if FTR_VLPD0
     bool lpd0_qp_based_th_scaling;
 #endif
