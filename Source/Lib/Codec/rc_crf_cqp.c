@@ -223,18 +223,9 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
     bool use_qstep_based_q_calc = ppcs->r0_qps;
     // Since many frames can be processed at the same time, storing/using arf_q in rc param is not sufficient and will create a run to run.
     // So, for each frame, arf_q is updated based on the qp of its references.
-    if (scs->static_config.qp_scale_compress_strength == 0) {
-        rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2));
-        if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
-            rc->arf_q = MAX(rc->arf_q, ((pcs->ref_pic_qp_array[REF_LIST_1][0] << 2) + 2));
-        }
-    } else {
-        // new code that accurately converts back arf qindex values
-        // prevents the case of unintentional qindex drifting due to repeatedly adding 2 to each calculated temporal layer's qindex
-        rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[REF_LIST_0][0]]);
-        if (pcs->slice_type == B_SLICE) {
-            rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[REF_LIST_1][0]]);
-        }
+    rc->arf_q = MAX(rc->arf_q, pcs->ref_base_q_idx[REF_LIST_0][0]);
+    if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try) {
+        rc->arf_q = MAX(rc->arf_q, pcs->ref_base_q_idx[REF_LIST_1][0]);
     }
 #if DEBUG_QP_SCALING
     SVT_DEBUG("Frame %llu, temp. level %i, active worst quality %i, qstep based calc %i\n",
@@ -243,8 +234,8 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
               active_worst_quality,
               use_qstep_based_q_calc);
     SVT_DEBUG("  ref1 q %i, ref2 q %i, arf q %i\n",
-              (pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2,
-              (pcs->slice_type == B_SLICE) ? (pcs->ref_pic_qp_array[REF_LIST_1][0] << 2) + 2 : 0,
+              pcs->ref_base_q_idx[REF_LIST_0][0],
+              (pcs->slice_type == B_SLICE) ? pcs->ref_base_q_idx[REF_LIST_1][0] : 0,
               rc->arf_q);
 #endif
     // r0 scaling

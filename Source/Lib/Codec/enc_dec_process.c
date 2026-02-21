@@ -1196,9 +1196,7 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
 void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
     EbReferenceObject* ref_object = (EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr;
 
-    //= (EbPictureBufferDesc *)ref_object->reference_picture;
     EbPictureBufferDesc* ref_pic_ptr;
-    // =   (EbPictureBufferDesc *)ref_object->reference_picture16bit;
     EbPictureBufferDesc* ref_pic_16bit_ptr;
 
     {
@@ -1352,8 +1350,8 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
     // set up the ref POC
     ref_object->ref_poc = pcs->ppcs->picture_number;
 
-    // set up the QP
-    ref_object->qp = (uint8_t)pcs->ppcs->picture_qp;
+    // set up the base_q_idx
+    ref_object->base_q_idx = pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
 
     // set up the Slice Type
     ref_object->slice_type = pcs->ppcs->slice_type;

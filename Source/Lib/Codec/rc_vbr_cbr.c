@@ -913,7 +913,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
     } else {
         if (scs->use_flat_ipp) {
             // Use the lower of active_worst_quality and recent/average Q.
-            rc->arf_q = MAX(0, ((int)(pcs->ref_pic_qp_array[REF_LIST_0][0] << 2) + 2) - 30);
+            rc->arf_q = MAX(0, (int)pcs->ref_base_q_idx[REF_LIST_0][0] - 30);
 
             if (rc->arf_q < active_worst_quality) {
                 active_best_quality = rtc_minq[rc->arf_q];
@@ -923,7 +923,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
         } else {
             // Inherit qp from reference qps. Derive the temporal layer of the reference pictures
             EbReferenceObject* ref_obj_l0     = get_ref_obj(pcs, REF_LIST_0, 0);
-            uint8_t            ref_qp         = pcs->ref_pic_qp_array[REF_LIST_0][0];
+            uint8_t            ref_base_q_idx = pcs->ref_base_q_idx[REF_LIST_0][0];
             uint8_t            max_tmp_layer  = ref_obj_l0->tmp_layer_idx;
             int                dist           = abs((int)pcs->picture_number - (int)ref_obj_l0->ref_poc);
             bool               best_is_islice = ref_obj_l0->slice_type == I_SLICE;
@@ -938,7 +938,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
                         (ref_obj_l0->tmp_layer_idx == max_tmp_layer &&
                          abs((int)pcs->picture_number - (int)ref_obj_l0->ref_poc) < dist) ||
                         best_is_islice) {
-                        ref_qp         = pcs->ref_pic_qp_array[REF_LIST_0][i];
+                        ref_base_q_idx = pcs->ref_base_q_idx[REF_LIST_0][i];
                         max_tmp_layer  = ref_obj_l0->tmp_layer_idx;
                         dist           = abs((int)pcs->picture_number - (int)ref_obj_l0->ref_poc);
                         best_is_islice = false;
@@ -956,7 +956,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
                         (ref_obj_l1->tmp_layer_idx == max_tmp_layer &&
                          abs((int)pcs->picture_number - (int)ref_obj_l1->ref_poc) < dist) ||
                         best_is_islice) {
-                        ref_qp         = pcs->ref_pic_qp_array[REF_LIST_1][i];
+                        ref_base_q_idx = pcs->ref_base_q_idx[REF_LIST_1][i];
                         max_tmp_layer  = ref_obj_l1->tmp_layer_idx;
                         dist           = abs((int)pcs->picture_number - (int)ref_obj_l1->ref_poc);
                         best_is_islice = false;
@@ -964,7 +964,7 @@ static int calc_active_best_quality_no_stats_cbr(PictureControlSet* pcs, int act
                 }
             }
             uint8_t ref_tmp_layer = max_tmp_layer;
-            rc->arf_q             = MAX(0, ((int)(ref_qp << 2) + 2) - 30);
+            rc->arf_q             = MAX(0, (int)ref_base_q_idx - 30);
             active_best_quality   = rtc_minq[rc->arf_q];
             int q                 = active_worst_quality;
             // Adjust wors and boost QP based on the average sad of the current picture
@@ -1087,7 +1087,7 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     int min_boost       = get_gf_high_motion_quality(q, bit_depth);
     int boost           = min_boost - active_best_quality;
 
-    double arf_boost_factor = (pcs->ref_slice_type_array[REF_LIST_0][0] == I_SLICE &&
+    double arf_boost_factor = (pcs->ref_slice_type[REF_LIST_0][0] == I_SLICE &&
                                pcs->ref_pic_r0[REF_LIST_0][0] - pcs->ppcs->r0 >= 0.08)
         ? 1.3
         : 1.0;
@@ -1239,17 +1239,17 @@ static int rc_pick_q_and_bounds(PictureControlSet* pcs) {
     return q;
 }
 
-static int NOINLINE find_min_ref_qp(PictureControlSet* pcs, RefList k) {
-    int ref_qp = INT_MAX;
-    int cnt    = (k == REF_LIST_0) ? pcs->ppcs->ref_list0_count_try : pcs->ppcs->ref_list1_count_try;
+static int NOINLINE find_min_ref_base_q_idx(PictureControlSet* pcs, RefList k) {
+    int ref_base_q_idx = INT_MAX;
+    int cnt            = (k == REF_LIST_0) ? pcs->ppcs->ref_list0_count_try : pcs->ppcs->ref_list1_count_try;
     for (int i = 0; i < cnt; i++) {
         EbReferenceObject* ref_obj  = get_ref_obj(pcs, k, i);
         bool               pic_used = ref_obj->tmp_layer_idx < pcs->temporal_layer_index || pcs->scs->use_flat_ipp;
-        if (pcs->ref_slice_type_array[k][i] != I_SLICE && pic_used) {
-            ref_qp = MIN(ref_qp, pcs->ref_pic_qp_array[k][i]);
+        if (pcs->ref_slice_type[k][i] != I_SLICE && pic_used) {
+            ref_base_q_idx = MIN(ref_base_q_idx, pcs->ref_base_q_idx[k][i]);
         }
     }
-    return (ref_qp < INT_MAX) ? ref_qp : -1;
+    return (ref_base_q_idx < INT_MAX) ? ref_base_q_idx : -1;
 }
 
 /******************************************************
@@ -1268,28 +1268,23 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
     } else {
         new_qindex = rc_pick_q_and_bounds(pcs);
     }
-    new_qindex      = clamp_qindex(scs, new_qindex);
-    pcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
+    new_qindex = clamp_qindex(scs, new_qindex);
 
-    // Limiting the QP based on the QP of the Reference frame
+    // Limit the qindex based on the qindex of the reference frames
     if (pcs->temporal_layer_index != 0 && !scs->use_flat_ipp) {
-        int list0_ref_qp = find_min_ref_qp(pcs, REF_LIST_0);
-        int list1_ref_qp = find_min_ref_qp(pcs, REF_LIST_1);
-        int ref_qp       = MAX(list0_ref_qp, list1_ref_qp);
-        int limit        = scs->static_config.gop_constraint_rc ? 2 : 0;
+        int list0_ref_base_q_idx = find_min_ref_base_q_idx(pcs, REF_LIST_0);
+        int list1_ref_base_q_idx = find_min_ref_base_q_idx(pcs, REF_LIST_1);
+        int ref_base_q_idx       = MAX(list0_ref_base_q_idx, list1_ref_base_q_idx);
+        int limit                = scs->static_config.gop_constraint_rc ? 2 : 0;
 
-        if (pcs->picture_qp < ref_qp - limit) {
-            pcs->picture_qp = clamp_qp(scs, ref_qp - limit);
-        }
+        new_qindex = MAX(new_qindex, ref_base_q_idx - limit * 4);
     } else if (scs->enc_ctx->rc_cfg.mode == AOM_CBR) {
-        int list0_ref_qp = find_min_ref_qp(pcs, REF_LIST_0);
-        int list1_ref_qp = find_min_ref_qp(pcs, REF_LIST_1);
-        int ref_qp       = MAX(list0_ref_qp, list1_ref_qp);
-        int limit        = 4;
+        int list0_ref_base_q_idx = find_min_ref_base_q_idx(pcs, REF_LIST_0);
+        int list1_ref_base_q_idx = find_min_ref_base_q_idx(pcs, REF_LIST_1);
+        int ref_base_q_idx       = MAX(list0_ref_base_q_idx, list1_ref_base_q_idx);
+        int limit                = 4;
 
-        if (pcs->picture_qp < ref_qp - limit) {
-            pcs->picture_qp = clamp_qp(scs, ref_qp - limit);
-        }
+        new_qindex = MAX(new_qindex, ref_base_q_idx - limit * 4);
     } else if (pcs->ppcs->transition_present != 1 && pcs->slice_type != I_SLICE) {
         if (!scs->static_config.gop_constraint_rc) {
             uint64_t cur_dist = 0, ref_dist = 0;
@@ -1300,25 +1295,26 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
                 cur_dist += pcs->ppcs->me_64x64_distortion[sb_index];
             }
 
-            int ref_qp = 0;
-            int limit  = 25;
+            int limit = 25;
             if (cur_dist > 3 * ref_dist || (pcs->ppcs->r0 - ref_obj_l0->r0 > 0)) {
                 limit = 6;
             }
-            if (pcs->ref_slice_type_array[REF_LIST_0][0] != I_SLICE) {
-                ref_qp = pcs->ref_pic_qp_array[REF_LIST_0][0];
+            int ref_base_q_idx = 0;
+            if (pcs->ref_slice_type[REF_LIST_0][0] != I_SLICE) {
+                ref_base_q_idx = pcs->ref_base_q_idx[REF_LIST_0][0];
             }
             if (pcs->slice_type == B_SLICE && pcs->ppcs->ref_list1_count_try &&
-                pcs->ref_slice_type_array[REF_LIST_1][0] != I_SLICE) {
-                ref_qp = MAX(ref_qp, pcs->ref_pic_qp_array[REF_LIST_1][0]);
+                pcs->ref_slice_type[REF_LIST_1][0] != I_SLICE) {
+                ref_base_q_idx = MAX(ref_base_q_idx, pcs->ref_base_q_idx[REF_LIST_1][0]);
             }
-            if (pcs->picture_qp < ref_qp - limit) {
-                pcs->picture_qp = clamp_qp(scs, ref_qp - limit);
-            }
+            new_qindex = MAX(new_qindex, ref_base_q_idx - limit * 4);
         }
     }
 
-    frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs->picture_qp];
+    new_qindex      = clamp_qindex(scs, new_qindex);
+    pcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
+
+    frm_hdr->quantization_params.base_q_idx = new_qindex;
 }
 
 static int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs, double correction_factor, EbBitDepth bit_depth,

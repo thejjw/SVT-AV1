@@ -175,8 +175,8 @@ typedef struct PictureControlSet {
     // Reference Lists
     EbObjectWrapper* ref_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 
-    uint8_t   ref_pic_qp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
-    SliceType ref_slice_type_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    uint8_t   ref_base_q_idx[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    SliceType ref_slice_type[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     double    ref_pic_r0[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // GOP
     uint64_t         picture_number;
