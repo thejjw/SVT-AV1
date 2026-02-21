@@ -3343,7 +3343,14 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                             //Jing: Don't work for tile_parallel since the SB of bottom tile comes early than the bottom SB of top tile
 
 #if OPT_DLF
+#if OPT_Q_CDEF
+                            if ((pcs->ppcs->cdef_search_ctrls.enabled &&
+                                 !pcs->ppcs->cdef_search_ctrls.use_qp_strength &&
+                                 !pcs->ppcs->cdef_search_ctrls.use_reference_cdef_fs) ||
+                                pcs->ppcs->enable_restoration ||
+#else
                             if (pcs->ppcs->cdef_search_ctrls.enabled || pcs->ppcs->enable_restoration ||
+#endif
                                 pcs->ppcs->is_ref || scs->static_config.recon_enabled) {
 #endif
                                 if (pcs->ppcs->frm_hdr.loop_filter_params.filter_level[0] ||
