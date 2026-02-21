@@ -3867,45 +3867,47 @@ static void check_best_indepedant_cfl(PictureControlSet* pcs, EbPictureBufferDes
 }
 
 static void av1_intra_luma_prediction(ModeDecisionContext* ctx, PictureControlSet* pcs,
-                                             ModeDecisionCandidateBuffer* cand_bf) {
-    const uint8_t is_inter     = 0; // set to 0 b/c this is an intra path
+                                      ModeDecisionCandidateBuffer* cand_bf) {
+    const uint8_t is_inter = 0; // set to 0 b/c this is an intra path
 
-    const uint16_t txb_origin_x = ctx->blk_org_x + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x;
-    const uint16_t txb_origin_y = ctx->blk_org_y + tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y;
-    const TxSize tx_size      = tx_depth_to_tx_size[ctx->tx_depth][ctx->blk_geom->bsize];
-    const int    tx_width     = tx_size_wide[tx_size];
-    const int    tx_height    = tx_size_high[tx_size];
+    const uint16_t txb_origin_x = ctx->blk_org_x +
+        tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x;
+    const uint16_t txb_origin_y = ctx->blk_org_y +
+        tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y;
+    const TxSize   tx_size      = tx_depth_to_tx_size[ctx->tx_depth][ctx->blk_geom->bsize];
+    const int      tx_width     = tx_size_wide[tx_size];
+    const int      tx_height    = tx_size_high[tx_size];
     const uint32_t sb_size_luma = pcs->ppcs->scs->sb_size;
-
 
     uint8_t top_neigh_array[(64 * 2 + 1) << 1];
     uint8_t left_neigh_array[(64 * 2 + 1) << 1];
 
-    const bool is_16bit = !!ctx->hbd_md;
-    const PredictionMode mode = cand_bf->cand->block_mi.mode;
-    const IntraSize intra_size = cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y] == 0 ? svt_aom_intra_unit[mode] : (IntraSize) { 2, 2 };
-    NeighborArrayUnit* recon_neigh = is_16bit ? ctx->tx_search_luma_recon_na_16bit : ctx->tx_search_luma_recon_na;
+    const bool           is_16bit    = !!ctx->hbd_md;
+    const PredictionMode mode        = cand_bf->cand->block_mi.mode;
+    const IntraSize      intra_size  = cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y] == 0 ? svt_aom_intra_unit[mode]
+                                                                                              : (IntraSize){2, 2};
+    NeighborArrayUnit*   recon_neigh = is_16bit ? ctx->tx_search_luma_recon_na_16bit : ctx->tx_search_luma_recon_na;
     if (txb_origin_y != 0) {
         svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
-            recon_neigh->top_array + (txb_origin_x << is_16bit),
-            (tx_width * intra_size.top) << is_16bit);
+                   recon_neigh->top_array + (txb_origin_x << is_16bit),
+                   (tx_width * intra_size.top) << is_16bit);
     }
     if (txb_origin_x != 0) {
         uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * intra_size.left) > sb_size_luma
             ? 1
             : intra_size.left;
         svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
-            recon_neigh->left_array + (txb_origin_y << is_16bit),
-            (tx_height * multipler) << is_16bit);
+                   recon_neigh->left_array + (txb_origin_y << is_16bit),
+                   (tx_height * multipler) << is_16bit);
     }
     if (txb_origin_y != 0 && txb_origin_x != 0) {
         if (is_16bit) {
-            uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+            uint16_t* top_hbd  = (uint16_t*)top_neigh_array;
             uint16_t* left_hbd = (uint16_t*)left_neigh_array;
-            top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h + txb_origin_x - txb_origin_y)[0];
+            top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h +
+                                        txb_origin_x - txb_origin_y)[0];
 
-        }
-        else {
+        } else {
             top_neigh_array[0] = left_neigh_array[0] =
                 recon_neigh->top_left_array[recon_neigh->max_pic_h + txb_origin_x - txb_origin_y];
         }

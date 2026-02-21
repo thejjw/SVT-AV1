@@ -54,6 +54,11 @@ typedef struct BlockGeom {
 
     uint16_t d1_depth_offset; // offset to the next d1 sq block
     uint16_t ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
+#if _DEBUG
+    // when debugging, track the mds_idx for each block so can confirm we are using the
+    // correct MDS when we get the BlkGeom. Should not be used in the code though.
+    uint32_t mds_idx;
+#endif
 } BlockGeom;
 
 void svt_aom_build_blk_geom(GeomIndex geom, BlockGeom* blk_geom_table);

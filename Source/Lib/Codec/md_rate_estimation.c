@@ -733,12 +733,11 @@ static AOM_INLINE void update_inter_mode_stats(FRAME_CONTEXT* fc, PredictionMode
 /*******************************************************************************
  * Updates all the palette stats/CDF for the current block
  ******************************************************************************/
-static AOM_INLINE void update_palette_cdf(SequenceControlSet* scs, MacroBlockD* xd, const MbModeInfo* const mbmi,
-                                          BlkStruct* blk_ptr, const int mi_row, const int mi_col) {
-    FRAME_CONTEXT*   fc                = xd->tile_ctx;
-    const BlockGeom* blk_geom          = get_blk_geom_mds(scs->blk_geom_mds, blk_ptr->mds_idx);
-    const BlockSize  bsize             = blk_geom->bsize;
-    const int        palette_bsize_ctx = svt_aom_get_palette_bsize_ctx(bsize);
+static AOM_INLINE void update_palette_cdf(MacroBlockD* xd, const MbModeInfo* const mbmi, BlkStruct* blk_ptr,
+                                          const int mi_row, const int mi_col) {
+    FRAME_CONTEXT*  fc                = xd->tile_ctx;
+    const BlockSize bsize             = mbmi->bsize;
+    const int       palette_bsize_ctx = svt_aom_get_palette_bsize_ctx(bsize);
 
     if (mbmi->block_mi.mode == DC_PRED) {
         const int n                = blk_ptr->palette_size[0];
@@ -771,8 +770,9 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_pt
     const MbModeInfo* const mbmi     = xd->mi[0];
     FRAME_CONTEXT*          fc       = xd->tile_ctx;
     const PredictionMode    y_mode   = mbmi->block_mi.mode;
-    const BlockGeom*        blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
     const BlockSize         bsize    = mbmi->bsize;
+    const int               bwidth   = block_size_wide[bsize];
+    const int               bheight  = block_size_high[bsize];
     assert(bsize < BLOCK_SIZES_ALL);
     assert(y_mode < 13);
 
@@ -801,7 +801,7 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_pt
         return;
     }
     const UvPredictionMode uv_mode     = blk_ptr->block_mi.uv_mode;
-    const int              cfl_allowed = blk_geom->bwidth <= 32 && blk_geom->bheight <= 32;
+    const int              cfl_allowed = bwidth <= 32 && bheight <= 32;
     update_cdf(fc->uv_mode_cdf[cfl_allowed][y_mode], uv_mode, UV_INTRA_MODES - !cfl_allowed);
     if (uv_mode == UV_CFL_PRED) {
         const int8_t  joint_sign = blk_ptr->block_mi.cfl_alpha_signs;
@@ -825,7 +825,7 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_pt
                    2 * MAX_ANGLE_DELTA + 1);
     }
     if (svt_aom_allow_palette(pcs->ppcs->frm_hdr.allow_screen_content_tools, bsize)) {
-        update_palette_cdf(pcs->scs, xd, mbmi, blk_ptr, mi_row, mi_col);
+        update_palette_cdf(xd, mbmi, blk_ptr, mi_row, mi_col);
     }
 }
 
@@ -836,9 +836,7 @@ void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row
     FrameHeader*            frm_hdr = &pcs->ppcs->frm_hdr;
     MacroBlockD*            xd      = blk_ptr->av1xd;
     const MbModeInfo* const mbmi    = xd->mi[0];
-
-    const BlockGeom* blk_geom = get_blk_geom_mds(pcs->scs->blk_geom_mds, blk_ptr->mds_idx);
-    BlockSize        bsize    = blk_geom->bsize;
+    const BlockSize         bsize   = mbmi->bsize;
     assert(bsize < BLOCK_SIZES_ALL);
     FRAME_CONTEXT* fc             = xd->tile_ctx;
     const int      seg_ref_active = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled &&

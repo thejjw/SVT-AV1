@@ -19,7 +19,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 // clang-format off
 static const IntraSize svt_aom_intra_unit[] =
 {

@@ -437,7 +437,8 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
                                  int32_t angle_delta, int32_t use_palette, PaletteInfo* palette_info,
                                  FilterIntraMode filter_intra_mode, uint8_t* top_neigh_array, uint8_t* left_neigh_array,
                                  EbPictureBufferDesc* recon_buffer, int32_t col_off, int32_t row_off, int32_t plane,
-                                 Part shape, uint32_t dst_offset_x, uint32_t dst_offset_y, SeqHeader* seq_header_ptr, EbBitDepth bit_depth) {
+                                 Part shape, uint32_t dst_offset_x, uint32_t dst_offset_y, SeqHeader* seq_header_ptr,
+                                 EbBitDepth bit_depth) {
     const int       ss_x        = plane ? 1 : 0;
     const int       ss_y        = plane ? 1 : 0;
     const BlockSize plane_bsize = get_plane_block_size(bsize, ss_x, ss_y);
@@ -449,18 +450,21 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
     uint8_t* dst;
     int32_t  dst_stride;
     if (plane == 0) {
-        dst = recon_buffer->buffer_y + ((dst_offset_x + recon_buffer->org_x +
-            (dst_offset_y + recon_buffer->org_y) * recon_buffer->stride_y) << is_16bit);
+        dst = recon_buffer->buffer_y +
+            ((dst_offset_x + recon_buffer->org_x + (dst_offset_y + recon_buffer->org_y) * recon_buffer->stride_y)
+             << is_16bit);
         dst_stride = recon_buffer->stride_y;
     } else if (plane == 1) {
         dst = recon_buffer->buffer_cb +
             (((dst_offset_x + recon_buffer->org_x / 2 +
-             (dst_offset_y + recon_buffer->org_y / 2) * recon_buffer->stride_cb)) << is_16bit);
+               (dst_offset_y + recon_buffer->org_y / 2) * recon_buffer->stride_cb))
+             << is_16bit);
         dst_stride = recon_buffer->stride_cb;
     } else {
         dst = recon_buffer->buffer_cr +
             (((dst_offset_x + recon_buffer->org_x / 2 +
-             (dst_offset_y + recon_buffer->org_y / 2) * recon_buffer->stride_cr)) << is_16bit);
+               (dst_offset_y + recon_buffer->org_y / 2) * recon_buffer->stride_cr))
+             << is_16bit);
         dst_stride = recon_buffer->stride_cr;
     }
 
@@ -469,7 +473,7 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
     const int32_t x     = col_off << MI_SIZE_LOG2;
     const int32_t y     = row_off << MI_SIZE_LOG2;
     if (use_palette) {
-        const uint8_t* const  map = palette_info->color_idx_map;
+        const uint8_t* const  map     = palette_info->color_idx_map;
         const uint16_t* const palette = palette_info->pmi.palette_colors + plane * PALETTE_MAX_SIZE;
         if (is_16bit) {
             uint16_t* dst16 = (uint16_t*)dst;
@@ -478,8 +482,7 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
                     dst16[r * dst_stride + c] = palette[map[(r + y) * wpx + c + x]];
                 }
             }
-        }
-        else {
+        } else {
             for (int r = 0; r < txhpx; ++r) {
                 for (int c = 0; c < txwpx; ++c) {
                     dst[r * dst_stride + c] = (uint8_t)palette[map[(r + y) * wpx + c + x]];
@@ -541,39 +544,39 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
     if (is_16bit) {
         build_intra_predictors_high(xd,
-            (uint16_t*)top_neigh_array,
-            (uint16_t*)left_neigh_array,
-            (uint16_t*)dst,
-            dst_stride,
-            mode,
-            angle_delta,
-            filter_intra_mode,
-            tx_size,
-            disable_edge_filter,
-            have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
-            have_top_right ? AOMMIN(txwpx, xr) : 0,
-            have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
-            have_bottom_left ? AOMMIN(txhpx, yd) : 0,
-            plane,
-            bit_depth);
+                                    (uint16_t*)top_neigh_array,
+                                    (uint16_t*)left_neigh_array,
+                                    (uint16_t*)dst,
+                                    dst_stride,
+                                    mode,
+                                    angle_delta,
+                                    filter_intra_mode,
+                                    tx_size,
+                                    disable_edge_filter,
+                                    have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
+                                    have_top_right ? AOMMIN(txwpx, xr) : 0,
+                                    have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
+                                    have_bottom_left ? AOMMIN(txhpx, yd) : 0,
+                                    plane,
+                                    bit_depth);
         return;
     }
 #endif
     build_intra_predictors(xd,
-        top_neigh_array,
-        left_neigh_array,
-        dst,
-        dst_stride,
-        mode,
-        angle_delta,
-        filter_intra_mode,
-        tx_size,
-        disable_edge_filter,
-        have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
-        have_top_right ? AOMMIN(txwpx, xr) : 0,
-        have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
-        have_bottom_left ? AOMMIN(txhpx, yd) : 0,
-        plane);
+                           top_neigh_array,
+                           left_neigh_array,
+                           dst,
+                           dst_stride,
+                           mode,
+                           angle_delta,
+                           filter_intra_mode,
+                           tx_size,
+                           disable_edge_filter,
+                           have_top ? AOMMIN(txwpx, xr + txwpx) : 0,
+                           have_top_right ? AOMMIN(txwpx, xr) : 0,
+                           have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
+                           have_bottom_left ? AOMMIN(txhpx, yd) : 0,
+                           plane);
 }
 
 /** IntraPrediction()
@@ -581,12 +584,12 @@ is the main function to compute intra prediction for a PU
 */
 EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, PictureControlSet* pcs,
                                      ModeDecisionCandidateBuffer* cand_bf) {
-    EbErrorType  return_error   = EB_ErrorNone;
-    const TxSize tx_size        = tx_depth_to_tx_size[cand_bf->cand->block_mi.tx_depth][ctx->blk_geom->bsize];
-    const TxSize tx_size_chroma = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
+    EbErrorType    return_error   = EB_ErrorNone;
+    const TxSize   tx_size        = tx_depth_to_tx_size[cand_bf->cand->block_mi.tx_depth][ctx->blk_geom->bsize];
+    const TxSize   tx_size_chroma = av1_get_max_uv_txsize(ctx->blk_geom->bsize, 1, 1);
     const uint32_t sb_size_luma   = pcs->ppcs->scs->sb_size;
     const uint32_t sb_size_chroma = pcs->ppcs->scs->sb_size / 2;
-    const bool is_16bit = !!hbd_md;
+    const bool     is_16bit       = !!hbd_md;
 
     uint8_t        top_neigh_array[(64 * 2 + 1) << 1];
     uint8_t        left_neigh_array[(64 * 2 + 1) << 1];
@@ -596,49 +599,47 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
     int32_t end_plane   = ctx->mds_do_chroma ? MAX_MB_PLANE : 1;
     for (int32_t plane = start_plane; plane < end_plane; ++plane) {
         if (plane) {
-            mode = (cand_bf->cand->block_mi.uv_mode == UV_CFL_PRED)
-                ? (PredictionMode)UV_DC_PRED
-                : (PredictionMode)cand_bf->cand->block_mi.uv_mode;
+            mode = (cand_bf->cand->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
+                                                                    : (PredictionMode)cand_bf->cand->block_mi.uv_mode;
         } else {
             mode = cand_bf->cand->block_mi.mode;
         }
         assert(mode < INTRA_MODES);
-        int ang = plane ? cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_UV]
-                        : cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y];
-        const IntraSize intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){ 2, 2 };
-        const int bwidth = plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth;
-        const int bheight = plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight;
-        const int blk_org_x = plane ? ctx->round_origin_x >> 1: ctx->blk_org_x;
-        const int blk_org_y = plane ? ctx->round_origin_y >> 1: ctx->blk_org_y;
-        const int sb_size = plane ? sb_size_chroma : sb_size_luma;
+        int                ang         = plane ? cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_UV]
+                                               : cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y];
+        const IntraSize    intra_size  = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
+        const int          bwidth      = plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth;
+        const int          bheight     = plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight;
+        const int          blk_org_x   = plane ? ctx->round_origin_x >> 1 : ctx->blk_org_x;
+        const int          blk_org_y   = plane ? ctx->round_origin_y >> 1 : ctx->blk_org_y;
+        const int          sb_size     = plane ? sb_size_chroma : sb_size_luma;
         NeighborArrayUnit* recon_neigh = plane == 0 ? (is_16bit ? ctx->luma_recon_na_16bit : ctx->recon_neigh_y)
-                                        : plane == 1 ? (is_16bit ? ctx->cb_recon_na_16bit : ctx->recon_neigh_cb)
-                                        : (is_16bit ? ctx->cr_recon_na_16bit : ctx->recon_neigh_cr);
+            : plane == 1                            ? (is_16bit ? ctx->cb_recon_na_16bit : ctx->recon_neigh_cb)
+                                                    : (is_16bit ? ctx->cr_recon_na_16bit : ctx->recon_neigh_cr);
 
         // Copy neighbour arrays
         if (blk_org_y != 0) {
             svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
-                recon_neigh->top_array + (blk_org_x << is_16bit),
-                (bwidth * intra_size.top) << is_16bit);
+                       recon_neigh->top_array + (blk_org_x << is_16bit),
+                       (bwidth * intra_size.top) << is_16bit);
         }
 
         if (blk_org_x != 0) {
-            const uint16_t multipler = (blk_org_y % sb_size + bheight * intra_size.left) > sb_size
-                ? 1
-                : intra_size.left;
+            const uint16_t multipler = (blk_org_y % sb_size + bheight * intra_size.left) > sb_size ? 1
+                                                                                                   : intra_size.left;
             svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
-                recon_neigh->left_array + (blk_org_y << is_16bit),
-                (bheight * multipler) << is_16bit);
+                       recon_neigh->left_array + (blk_org_y << is_16bit),
+                       (bheight * multipler) << is_16bit);
         }
 
         if (blk_org_y != 0 && blk_org_x != 0) {
             if (is_16bit) {
-                uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+                uint16_t* top_hbd  = (uint16_t*)top_neigh_array;
                 uint16_t* left_hbd = (uint16_t*)left_neigh_array;
-                top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h + blk_org_x - blk_org_y)[0];
+                top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h +
+                                            blk_org_x - blk_org_y)[0];
 
-            }
-            else {
+            } else {
                 top_neigh_array[0] = left_neigh_array[0] =
                     recon_neigh->top_left_array[recon_neigh->max_pic_h + blk_org_x - blk_org_y];
             }
@@ -650,7 +651,7 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
             plane ? tx_size_chroma : tx_size,
             mode,
             plane ? cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_UV]
-                    : cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y],
+                  : cand_bf->cand->block_mi.angle_delta[PLANE_TYPE_Y],
             plane == 0 ? (cand_bf->cand->palette_info ? cand_bf->cand->palette_size[0] > 0 : 0) : 0,
             plane == 0 ? cand_bf->cand->palette_info : NULL,
             plane ? FILTER_INTRA_MODES : cand_bf->cand->block_mi.filter_intra_mode,
@@ -671,38 +672,41 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
 }
 
 static void intra_luma_prediction_for_interintra(ModeDecisionContext* ctx, PictureControlSet* pcs,
-                                                        InterIntraMode       interintra_mode,
-                                                        EbPictureBufferDesc* prediction_ptr) {
-    const uint8_t  is_inter     = 0; // set to 0 b/c this is an intra path
-    const TxSize   tx_size      = tx_depth_to_tx_size[0][ctx->blk_geom->bsize];
-    const PredictionMode mode   = interintra_to_intra_mode[interintra_mode];
-    const uint32_t sb_size_luma = pcs->ppcs->scs->sb_size;
+                                                 InterIntraMode interintra_mode, EbPictureBufferDesc* prediction_ptr) {
+    const uint8_t        is_inter     = 0; // set to 0 b/c this is an intra path
+    const TxSize         tx_size      = tx_depth_to_tx_size[0][ctx->blk_geom->bsize];
+    const PredictionMode mode         = interintra_to_intra_mode[interintra_mode];
+    const uint32_t       sb_size_luma = pcs->ppcs->scs->sb_size;
 
     const bool is_16bit = !!ctx->hbd_md;
     // No angular modes for interintra
     const IntraSize intra_size = svt_aom_intra_unit[mode];
-    uint8_t top_neigh_array[(64 * 2 + 1) << 1];
-    uint8_t left_neigh_array[(64 * 2 + 1) << 1];
+    uint8_t         top_neigh_array[(64 * 2 + 1) << 1];
+    uint8_t         left_neigh_array[(64 * 2 + 1) << 1];
 
     NeighborArrayUnit* recon_neigh = is_16bit ? ctx->luma_recon_na_16bit : ctx->recon_neigh_y;
     if (ctx->blk_org_y != 0) {
-        svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit), recon_neigh->top_array + (ctx->blk_org_x << is_16bit), (ctx->blk_geom->bwidth * intra_size.top) << is_16bit);
+        svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
+                   recon_neigh->top_array + (ctx->blk_org_x << is_16bit),
+                   (ctx->blk_geom->bwidth * intra_size.top) << is_16bit);
     }
 
     if (ctx->blk_org_x != 0) {
-        uint16_t multipler = (ctx->blk_org_y % sb_size_luma + ctx->blk_geom->bheight * intra_size.left) > sb_size_luma ? 1 : intra_size.left;
+        uint16_t multipler = (ctx->blk_org_y % sb_size_luma + ctx->blk_geom->bheight * intra_size.left) > sb_size_luma
+            ? 1
+            : intra_size.left;
         svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
-            recon_neigh->left_array + (ctx->blk_org_y << is_16bit),
-                    (ctx->blk_geom->bheight * multipler) << is_16bit);
+                   recon_neigh->left_array + (ctx->blk_org_y << is_16bit),
+                   (ctx->blk_geom->bheight * multipler) << is_16bit);
     }
 
     if (ctx->blk_org_y != 0 && ctx->blk_org_x != 0) {
         if (is_16bit) {
-            uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+            uint16_t* top_hbd  = (uint16_t*)top_neigh_array;
             uint16_t* left_hbd = (uint16_t*)left_neigh_array;
-            top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h + ctx->blk_org_x - ctx->blk_org_y)[0];
-        }
-        else {
+            top_hbd[0] = left_hbd[0] = ((uint16_t*)(recon_neigh->top_left_array) + recon_neigh->max_pic_h +
+                                        ctx->blk_org_x - ctx->blk_org_y)[0];
+        } else {
             top_neigh_array[0] = left_neigh_array[0] =
                 recon_neigh->top_left_array[recon_neigh->max_pic_h + ctx->blk_org_x - ctx->blk_org_y];
         }

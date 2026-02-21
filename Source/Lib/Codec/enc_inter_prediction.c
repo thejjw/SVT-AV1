@@ -2406,24 +2406,24 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
 
         if (!use_precomputed_intra || plane) {
             svt_av1_predict_intra_block(blk_ptr->av1xd,
-                bsize,
-                plane ? tx_size_uv : tx_size,
-                interintra_to_intra_mode[interintra_mode],
-                0,
-                0,
-                NULL,
-                FILTER_INTRA_MODES,
-                topNeighArray + ((uint64_t)1 << is16bit),
-                leftNeighArray + ((uint64_t)1 << is16bit),
-                &intra_pred_desc,
-                0,
-                0,
-                plane,
-                shape,
-                0,
-                0,
-                &pcs->scs->seq_header,
-                bit_depth);
+                                        bsize,
+                                        plane ? tx_size_uv : tx_size,
+                                        interintra_to_intra_mode[interintra_mode],
+                                        0,
+                                        0,
+                                        NULL,
+                                        FILTER_INTRA_MODES,
+                                        topNeighArray + ((uint64_t)1 << is16bit),
+                                        leftNeighArray + ((uint64_t)1 << is16bit),
+                                        &intra_pred_desc,
+                                        0,
+                                        0,
+                                        plane,
+                                        shape,
+                                        0,
+                                        0,
+                                        &pcs->scs->seq_header,
+                                        bit_depth);
         }
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH

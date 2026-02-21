@@ -269,7 +269,10 @@ static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_
             blk_geom[*idx_mds].bheight_uv = MAX(4, blk_geom[*idx_mds].bheight >> 1);
 
             blk_geom[*idx_mds].bsize_uv = get_plane_block_size(blk_geom[*idx_mds].bsize, 1, 1);
-            (*idx_mds)                  = (*idx_mds) + 1;
+#if _DEBUG
+            blk_geom[*idx_mds].mds_idx = (*idx_mds);
+#endif
+            (*idx_mds) = (*idx_mds) + 1;
         }
     }
 

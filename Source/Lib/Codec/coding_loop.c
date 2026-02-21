@@ -787,28 +787,34 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             &ed_ctx->md_ctx->luma_dc_sign_context);
 
         // Copy neighbour arrays for intra prediction
-        const PredictionMode mode = blk_ptr->block_mi.mode;
-        const int ang = blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y];
-        const IntraSize intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
-        uint8_t top_neigh_array[(64 * 2 + 1) << 1];
-        uint8_t left_neigh_array[(64 * 2 + 1) << 1];
+        const PredictionMode mode       = blk_ptr->block_mi.mode;
+        const int            ang        = blk_ptr->block_mi.angle_delta[PLANE_TYPE_Y];
+        const IntraSize      intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
+        uint8_t              top_neigh_array[(64 * 2 + 1) << 1];
+        uint8_t              left_neigh_array[(64 * 2 + 1) << 1];
         if (txb_origin_y != 0) {
-            svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit), ep_luma_recon_na->top_array + (txb_origin_x << is_16bit), (tx_width * intra_size.top) << is_16bit);
+            svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
+                       ep_luma_recon_na->top_array + (txb_origin_x << is_16bit),
+                       (tx_width * intra_size.top) << is_16bit);
         }
 
         if (txb_origin_x != 0) {
-            uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * intra_size.left) > sb_size_luma ? 1 : intra_size.left;
-            svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit), ep_luma_recon_na->left_array + (txb_origin_y << is_16bit), (tx_height * multipler) << is_16bit);
+            uint16_t multipler = (txb_origin_y % sb_size_luma + tx_height * intra_size.left) > sb_size_luma
+                ? 1
+                : intra_size.left;
+            svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
+                       ep_luma_recon_na->left_array + (txb_origin_y << is_16bit),
+                       (tx_height * multipler) << is_16bit);
         }
 
         if (txb_origin_y != 0 && txb_origin_x != 0) {
             if (is_16bit) {
-                uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+                uint16_t* top_hbd  = (uint16_t*)top_neigh_array;
                 uint16_t* left_hbd = (uint16_t*)left_neigh_array;
-                top_hbd[0] = left_hbd[0] = ((uint16_t*)(ep_luma_recon_na->top_left_array) + ep_luma_recon_na->max_pic_h + txb_origin_x - txb_origin_y)[0];
+                top_hbd[0] = left_hbd[0] = ((uint16_t*)(ep_luma_recon_na->top_left_array) +
+                                            ep_luma_recon_na->max_pic_h + txb_origin_x - txb_origin_y)[0];
 
-            }
-            else {
+            } else {
                 top_neigh_array[0] = left_neigh_array[0] =
                     ep_luma_recon_na->top_left_array[ep_luma_recon_na->max_pic_h + txb_origin_x - txb_origin_y];
             }
@@ -925,37 +931,38 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
             uint8_t left_neigh_array[(64 * 2 + 1) << 1];
 
             // Copy neighbour arrays for intra prediction
-            const PredictionMode mode = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
-                                                                : (PredictionMode)blk_ptr->block_mi.uv_mode;
-            const int ang = blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV];
-            const IntraSize intra_size = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize) { 2, 2 };
-            NeighborArrayUnit* eb_uv_neigh_array = plane == 1 ? ep_cb_recon_na : ep_cr_recon_na;
+            const PredictionMode mode              = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED)
+                             ? (PredictionMode)UV_DC_PRED
+                             : (PredictionMode)blk_ptr->block_mi.uv_mode;
+            const int            ang               = blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV];
+            const IntraSize      intra_size        = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
+            NeighborArrayUnit*   eb_uv_neigh_array = plane == 1 ? ep_cb_recon_na : ep_cr_recon_na;
             if (blk_originy_uv != 0) {
                 svt_memcpy(top_neigh_array + ((uint64_t)1 << is_16bit),
-                    eb_uv_neigh_array->top_array + (blk_originx_uv << is_16bit),
-                    (ed_ctx->blk_geom->bwidth_uv * intra_size.top) << is_16bit);
+                           eb_uv_neigh_array->top_array + (blk_originx_uv << is_16bit),
+                           (ed_ctx->blk_geom->bwidth_uv * intra_size.top) << is_16bit);
             }
 
             if (blk_originx_uv != 0) {
-                uint16_t multipler = (blk_originy_uv % sb_size_chroma + ed_ctx->blk_geom->bheight_uv * intra_size.left) >
-                    sb_size_chroma
+                uint16_t multipler = (blk_originy_uv % sb_size_chroma +
+                                      ed_ctx->blk_geom->bheight_uv * intra_size.left) > sb_size_chroma
                     ? 1
                     : intra_size.left;
                 svt_memcpy(left_neigh_array + ((uint64_t)1 << is_16bit),
-                    eb_uv_neigh_array->left_array + (blk_originy_uv << is_16bit),
-                    (ed_ctx->blk_geom->bheight_uv * multipler) << is_16bit);
+                           eb_uv_neigh_array->left_array + (blk_originy_uv << is_16bit),
+                           (ed_ctx->blk_geom->bheight_uv * multipler) << is_16bit);
             }
 
             if (blk_originy_uv != 0 && blk_originx_uv != 0) {
                 if (is_16bit) {
-                    uint16_t* top_hbd = (uint16_t*)top_neigh_array;
+                    uint16_t* top_hbd  = (uint16_t*)top_neigh_array;
                     uint16_t* left_hbd = (uint16_t*)left_neigh_array;
-                    top_hbd[0] = left_hbd[0] =
-                        ((uint16_t*)(eb_uv_neigh_array->top_left_array) + eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv)[0];
-                }
-                else {
+                    top_hbd[0] = left_hbd[0] = ((uint16_t*)(eb_uv_neigh_array->top_left_array) +
+                                                eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv)[0];
+                } else {
                     top_neigh_array[0] = left_neigh_array[0] =
-                        eb_uv_neigh_array->top_left_array[eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv];
+                        eb_uv_neigh_array
+                            ->top_left_array[eb_uv_neigh_array->max_pic_h + blk_originx_uv - blk_originy_uv];
                 }
             }
 
