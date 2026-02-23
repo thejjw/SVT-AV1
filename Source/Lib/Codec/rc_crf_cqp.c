@@ -482,10 +482,10 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     if (pcs->ppcs->seq_param_changed) {
         rc->active_worst_quality = scs_qindex;
     }
-    frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs->picture_qp];
+    frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs->ppcs->picture_qp];
 
     if (pcs->ppcs->qp_on_the_fly) {
-        pcs->picture_qp                         = clamp_qp(scs, pcs->ppcs->picture_qp);
+        pcs->ppcs->picture_qp                   = clamp_qp(scs, pcs->ppcs->picture_qp);
         frm_hdr->quantization_params.base_q_idx = scs_qindex;
     } else {
         if (scs->enable_qp_scaling_flag) {
@@ -541,7 +541,7 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
                 scs, ((frm_hdr->quantization_params.base_q_idx + 2) >> 2) + pcs->ppcs->sframe_qp_offset);
             frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[new_qp];
         }
-        pcs->picture_qp = clamp_qp(scs, (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
+        pcs->ppcs->picture_qp = clamp_qp(scs, (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
     }
 
     // Calculate chroma qindex
@@ -570,7 +570,6 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
             svt_aom_crf_assign_max_rate(pcs->ppcs);
         }
     }
-    pcs->ppcs->picture_qp = pcs->picture_qp;
     svt_aom_setup_segmentation(pcs, scs);
 }
 

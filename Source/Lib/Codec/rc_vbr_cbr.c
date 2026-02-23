@@ -1311,8 +1311,8 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
         }
     }
 
-    new_qindex      = clamp_qindex(scs, new_qindex);
-    pcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
+    new_qindex            = clamp_qindex(scs, new_qindex);
+    pcs->ppcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
 
     frm_hdr->quantization_params.base_q_idx = new_qindex;
 }

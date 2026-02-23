@@ -218,8 +218,6 @@ typedef struct PictureControlSet {
     // Slice Type
     SliceType slice_type;
 
-    // Rate Control
-    uint8_t picture_qp;
     // SB Array
     uint16_t b64_total_count;
     uint16_t init_b64_total_count;

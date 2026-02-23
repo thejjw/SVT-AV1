@@ -682,13 +682,11 @@ void* svt_aom_picture_manager_kernel(void* input_ptr) {
                 child_pcs->frame_height != child_pcs->scs->max_input_luma_height) {
                 pcs_update_param(child_pcs);
             }
-            child_pcs->picture_qp           = entry_ppcs->picture_qp;
             child_pcs->picture_number       = entry_ppcs->picture_number;
             child_pcs->slice_type           = entry_ppcs->slice_type;
             child_pcs->temporal_layer_index = entry_ppcs->temporal_layer_index;
 
             child_pcs->ppcs->total_num_bits = 0;
-            child_pcs->ppcs->picture_qp     = entry_ppcs->picture_qp;
             child_pcs->enc_mode             = entry_ppcs->enc_mode;
             child_pcs->b64_total_count      = entry_ppcs->b64_total_count;
 

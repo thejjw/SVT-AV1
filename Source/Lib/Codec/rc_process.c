@@ -820,7 +820,6 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
 
             if (pcs->ppcs->is_overlay) {
                 // overlay: ppcs->picture_qp has been updated by altref RC_INPUT
-                pcs->picture_qp = pcs->ppcs->picture_qp;
             } else {
                 if (scs->enc_ctx->rc_cfg.mode == AOM_Q) {
                     svt_av1_rc_calc_qindex_crf_cqp(pcs, scs, rc);
@@ -831,16 +830,13 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
                     svt_av1_rc_calc_qindex_rate_control(pcs, scs);
                 }
             }
-            pcs->ppcs->picture_qp = pcs->picture_qp;
 
             if (pcs->ppcs->is_alt_ref) {
                 // overlay use the same QP with alt_ref, to align with
                 // rate_control_param_queue update code in below RC_PACKETIZATION_FEEDBACK_RESULT.
-                PictureParentControlSet* overlay_ppcs_ptr = pcs->ppcs->overlay_ppcs_ptr;
-                FrameHeader*             overlay_frm_hdr  = &overlay_ppcs_ptr->frm_hdr;
-                FrameHeader*             frm_hdr          = &pcs->ppcs->frm_hdr;
-                overlay_ppcs_ptr->picture_qp              = pcs->picture_qp;
-                overlay_frm_hdr->quantization_params      = frm_hdr->quantization_params;
+                PictureParentControlSet* overlay_ppcs     = pcs->ppcs->overlay_ppcs_ptr;
+                overlay_ppcs->picture_qp                  = pcs->ppcs->picture_qp;
+                overlay_ppcs->frm_hdr.quantization_params = pcs->ppcs->frm_hdr.quantization_params;
             }
 
             if (!is_superres_recode_task) {

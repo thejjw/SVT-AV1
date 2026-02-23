@@ -2193,7 +2193,6 @@ static void recode_loop_decision_maker(PictureControlSet* pcs, SequenceControlSe
         ppcs->picture_qp = (uint8_t)CLIP3((int32_t)scs->static_config.min_qp_allowed,
                                           (int32_t)scs->static_config.max_qp_allowed,
                                           (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
-        pcs->picture_qp  = ppcs->picture_qp;
 
         // set initial SB base_q_idx values
         pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;
@@ -2346,7 +2345,7 @@ static void lpd1_detector_post_pd0(PictureControlSet* pcs, ModeDecisionContext* 
                         (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                     if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                         pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
+                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->ppcs->picture_qp)) {
                         md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
                     }
                 }
@@ -2456,7 +2455,8 @@ static void lpd1_detector_skip_pd0(PictureControlSet* pcs, ModeDecisionContext* 
                             (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                         if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                             pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
+                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) *
+                                    (73 - pcs->ppcs->picture_qp)) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
                         }
                     } else {
@@ -2598,7 +2598,7 @@ static void lpd0_detector(PictureControlSet* pcs, ModeDecisionContext* md_ctx, u
                     // use_ref_info level 3 (most aggressive)
                     else {
                         if ((l0_refs || l1_refs) && (!l0_refs || l0_was_intra) && (!l1_refs || l1_was_intra) &&
-                            pcs->ref_intra_percentage > MAX(1, 50 - (pcs->picture_qp >> 1))) {
+                            pcs->ref_intra_percentage > MAX(1, 50 - (pcs->ppcs->picture_qp >> 1))) {
                             lpd0_ctrls->pd0_level = pd0_lvl - 1;
                             continue;
                         }
@@ -2614,7 +2614,7 @@ static void lpd0_detector(PictureControlSet* pcs, ModeDecisionContext* md_ctx, u
                     /* me_8x8_cost_variance_th is shifted by 5 then mulitplied by the pic QP (max 63).  Therefore, the TH must be less than
                        (((uint32_t)~0) >> 1) to avoid overflow issues from the multiplication. */
                     if (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] < (((uint32_t)~0) >> 1) &&
-                        me_8x8_cost_variance > (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] >> 5) * pcs->picture_qp) {
+                        me_8x8_cost_variance > (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] >> 5) * ppcs->picture_qp) {
                         lpd0_ctrls->pd0_level = pd0_lvl - 1;
                         continue;
                     }

@@ -3867,7 +3867,7 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                 uint64_t cost = *(buffer_ptr_array[cand_index]->full_cost);
                 if (scs->vq_ctrls.sharpness_ctrls.unipred_bias && pcs->ppcs->is_noise_level &&
                     is_inter_singleref_mode(buffer_ptr_array[cand_index]->cand->block_mi.mode)) {
-                    cost = (cost * uni_psy_bias[pcs->picture_qp]) / 100;
+                    cost = (cost * uni_psy_bias[pcs->ppcs->picture_qp]) / 100;
                 }
 
                 if (cost < lowest_cost) {
