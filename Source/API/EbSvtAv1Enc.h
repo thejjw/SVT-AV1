@@ -204,6 +204,13 @@ typedef struct SvtAv1SFramePositions {
     int8_t*   sframe_qp_offsets;
 } SvtAv1SFramePositions;
 
+typedef struct SvtAv1QualityZone {
+    uint32_t start_frame; // inclusive
+    uint32_t end_frame; // inclusive
+    int      zone_baseq; // base CRF/CQP value for this zone
+    int      zone_qsidx; // quarter step index
+} SvtAv1QualityZone;
+
 // Will contain the EbEncApi which will live in the EncHandle class
 // Only modifiable during config-time.
 typedef struct EbSvtAv1EncConfiguration {
@@ -975,11 +982,20 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     int hbd_mds;
 
+    /* @brief Quality zones configuration
+     *
+     * Default is no zones.
+     */
+    SvtAv1QualityZone* quality_zones;
+    uint16_t           num_zones;
+
     // clang-format off
     /* Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct */
     uint8_t padding[128
         - sizeof(PredStructure) + sizeof (uint8_t) // pred_strucutre type was changed from uint8_t to PredStructure
         - sizeof(int) // This was added to take into account the new hbd_mds field while keeping previous ABI compat
+        - sizeof(SvtAv1QualityZone*)
+        - sizeof(uint16_t)
     ];
     // clang-format on
 } EbSvtAv1EncConfiguration;
