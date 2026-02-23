@@ -385,10 +385,11 @@ static const int rd_frame_type_factor[2][SVT_AV1_FRAME_UPDATE_TYPES] = {{150, 18
 
 static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t me_q_index, EbBitDepth bit_depth,
                               int64_t rdmult) {
-    FrameType frame_type = pcs->ppcs->frm_hdr.frame_type;
+    PictureParentControlSet* ppcs       = pcs->ppcs;
+    FrameType                frame_type = ppcs->frm_hdr.frame_type;
     // To set gf_update_type based on current TL vs. the max TL (e.g. for 5L, max TL is 4)
-    uint8_t temporal_layer_index = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->temporal_layer_index;
-    uint8_t max_temporal_layer   = pcs->scs->use_flat_ipp ? 0 : pcs->ppcs->hierarchical_levels;
+    uint8_t temporal_layer_index = pcs->scs->use_flat_ipp ? 0 : ppcs->temporal_layer_index;
+    uint8_t max_temporal_layer   = pcs->scs->use_flat_ipp ? 0 : ppcs->hierarchical_levels;
 
     // Update rdmult based on the frame's position in the miniGOP
     uint8_t gf_update_type = frame_type == KEY_FRAME ? SVT_AV1_KF_UPDATE
@@ -402,19 +403,19 @@ static uint32_t update_lambda(PictureControlSet* pcs, uint8_t q_index, uint8_t m
     if (pcs->scs->stats_based_sb_lambda_modulation) {
         int factor = 128;
         if (pcs->scs->static_config.rtc) {
-            int qdiff = me_q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
+            int qdiff = me_q_index - ppcs->frm_hdr.quantization_params.base_q_idx;
             if (qdiff < 0) {
                 factor = (qdiff <= -4) ? 100 : 115;
             }
-        } else if (pcs->ppcs->frm_hdr.delta_q_params.delta_q_present || pcs->ppcs->r0_delta_qp_md) {
-            int qdiff = q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
+        } else if (ppcs->frm_hdr.delta_q_params.delta_q_present || ppcs->r0_delta_qp_md) {
+            int qdiff = q_index - ppcs->frm_hdr.quantization_params.base_q_idx;
             if (qdiff < 0) {
                 factor = (qdiff <= -8) ? 90 : 115;
             } else if (qdiff > 0) {
                 factor = (qdiff <= 8) ? 135 : 150;
             }
         } else {
-            int qdiff = me_q_index - pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
+            int qdiff = me_q_index - ppcs->frm_hdr.quantization_params.base_q_idx;
             if (qdiff < 0) {
                 factor = (qdiff <= -4) ? 100 : 115;
             } else if (qdiff > 0) {
@@ -596,13 +597,14 @@ void reset_rc_param(PictureParentControlSet* ppcs) {
  * - Sets rate averaging period
  ******************************************************/
 static void rc_init_frame_stats(PictureControlSet* pcs, SequenceControlSet* scs, RATE_CONTROL* rc) {
+    PictureParentControlSet* ppcs = pcs->ppcs;
     // Get r0
-    if (pcs->ppcs->r0_gen) {
-        svt_aom_generate_r0beta(pcs->ppcs);
+    if (ppcs->r0_gen) {
+        svt_aom_generate_r0beta(ppcs);
     }
 
     if (scs->static_config.aq_mode && scs->super_block_size == 64 && scs->enc_ctx->rc_cfg.mode == AOM_CBR) {
-        svt_aom_cyclic_refresh_init(pcs->ppcs);
+        svt_aom_cyclic_refresh_init(ppcs);
     }
 
     // Get reference frame statistics
@@ -619,13 +621,13 @@ static void rc_init_frame_stats(PictureControlSet* pcs, SequenceControlSet* scs,
     rc->rate_average_periodin_frames = MIN(rc->rate_average_periodin_frames, MAX_RATE_AVG_PERIOD);
 
     // Store the avg ME distortion
-    if (pcs->ppcs->slice_type != I_SLICE) {
+    if (ppcs->slice_type != I_SLICE) {
         rc->prev_avg_base_me_dist = rc->cur_avg_base_me_dist;
         uint64_t avg_me_dist      = 0;
-        for (int b64_idx = 0; b64_idx < pcs->ppcs->b64_total_count; ++b64_idx) {
-            avg_me_dist += pcs->ppcs->me_64x64_distortion[b64_idx];
+        for (int b64_idx = 0; b64_idx < ppcs->b64_total_count; ++b64_idx) {
+            avg_me_dist += ppcs->me_64x64_distortion[b64_idx];
         }
-        avg_me_dist /= pcs->ppcs->b64_total_count;
+        avg_me_dist /= ppcs->b64_total_count;
         rc->cur_avg_base_me_dist = (uint32_t)avg_me_dist;
     }
 }
@@ -666,7 +668,8 @@ int svt_av1_calculate_boost_bits(int frame_count, int boost, int64_t total_group
  ******************************************************/
 static bool rc_handle_superres(PictureControlSet* pcs, RateControlContext* context_ptr,
                                EbObjectWrapper* rate_control_tasks_wrapper_ptr) {
-    SequenceControlSet* scs = pcs->scs;
+    PictureParentControlSet* ppcs = pcs->ppcs;
+    SequenceControlSet*      scs  = pcs->scs;
 
     if (scs->static_config.pass != ENC_SINGLE_PASS) {
         return false;
@@ -677,24 +680,23 @@ static bool rc_handle_superres(PictureControlSet* pcs, RateControlContext* conte
     }
 
     // Determine denom and scale down picture by selected denom
-    svt_aom_init_resize_picture(scs, pcs->ppcs);
-    if (pcs->ppcs->frame_superres_enabled || pcs->ppcs->frame_resize_enabled) {
+    svt_aom_init_resize_picture(scs, ppcs);
+    if (ppcs->frame_superres_enabled || ppcs->frame_resize_enabled) {
         // Reset gm based on super-res on/off
-        bool super_res_off = pcs->ppcs->frame_superres_enabled == false &&
-            scs->static_config.resize_mode == RESIZE_NONE;
-        svt_aom_set_gm_controls(pcs->ppcs, svt_aom_derive_gm_level(pcs->ppcs, super_res_off));
+        bool super_res_off = ppcs->frame_superres_enabled == false && scs->static_config.resize_mode == RESIZE_NONE;
+        svt_aom_set_gm_controls(ppcs, svt_aom_derive_gm_level(ppcs, super_res_off));
 
         // Initialize Segments as picture decision process
-        pcs->ppcs->me_segments_completion_count = 0;
-        pcs->ppcs->me_processed_b64_count       = 0;
+        ppcs->me_segments_completion_count = 0;
+        ppcs->me_processed_b64_count       = 0;
 
-        for (uint32_t segment_index = 0; segment_index < pcs->ppcs->me_segments_total_count; ++segment_index) {
+        for (uint32_t segment_index = 0; segment_index < ppcs->me_segments_total_count; ++segment_index) {
             // Get Empty Results Object
             EbObjectWrapper* out_results_wrapper;
             svt_get_empty_object(context_ptr->picture_decision_results_output_fifo_ptr, &out_results_wrapper);
 
             PictureDecisionResults* out_results = (PictureDecisionResults*)out_results_wrapper->object_ptr;
-            out_results->pcs_wrapper            = pcs->ppcs->p_pcs_wrapper_ptr;
+            out_results->pcs_wrapper            = ppcs->p_pcs_wrapper_ptr;
             out_results->segment_index          = segment_index;
             out_results->task_type              = TASK_SUPERRES_RE_ME;
             // Post the Full Results Object
@@ -707,22 +709,22 @@ static bool rc_handle_superres(PictureControlSet* pcs, RateControlContext* conte
     }
 
     // PA ref objs are no longer needed if super-res isn't performed on current frame
-    if (pcs->ppcs->tpl_ctrls.enable) {
-        if (pcs->ppcs->temporal_layer_index == 0) {
-            for (uint32_t i = 0; i < pcs->ppcs->tpl_group_size; i++) {
-                if (svt_aom_is_incomp_mg_frame(pcs->ppcs->tpl_group[i])) {
-                    if (pcs->ppcs->tpl_group[i]->ext_mg_id == pcs->ppcs->ext_mg_id + 1) {
-                        svt_aom_release_pa_reference_objects(scs, pcs->ppcs->tpl_group[i]);
+    if (ppcs->tpl_ctrls.enable) {
+        if (ppcs->temporal_layer_index == 0) {
+            for (uint32_t i = 0; i < ppcs->tpl_group_size; i++) {
+                if (svt_aom_is_incomp_mg_frame(ppcs->tpl_group[i])) {
+                    if (ppcs->tpl_group[i]->ext_mg_id == ppcs->ext_mg_id + 1) {
+                        svt_aom_release_pa_reference_objects(scs, ppcs->tpl_group[i]);
                     }
                 } else {
-                    if (pcs->ppcs->tpl_group[i]->ext_mg_id == pcs->ppcs->ext_mg_id) {
-                        svt_aom_release_pa_reference_objects(scs, pcs->ppcs->tpl_group[i]);
+                    if (ppcs->tpl_group[i]->ext_mg_id == ppcs->ext_mg_id) {
+                        svt_aom_release_pa_reference_objects(scs, ppcs->tpl_group[i]);
                     }
                 }
             }
         }
     } else {
-        svt_aom_release_pa_reference_objects(scs, pcs->ppcs);
+        svt_aom_release_pa_reference_objects(scs, ppcs);
     }
 
     return false;
@@ -807,18 +809,19 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
                    scs->static_config.superres_mode == SUPERRES_AUTO);
             // intentionally reuse code in RC_INPUT
         case RC_INPUT:
-            pcs = (PictureControlSet*)rc_tasks->pcs_wrapper->object_ptr;
-            scs = pcs->scs;
-            rc  = &scs->enc_ctx->rc;
+            pcs  = (PictureControlSet*)rc_tasks->pcs_wrapper->object_ptr;
+            ppcs = pcs->ppcs;
+            scs  = pcs->scs;
+            rc   = &scs->enc_ctx->rc;
 
             rc_init_frame_stats(pcs, scs, rc);
 
             if (!is_superres_recode_task) {
-                pcs->ppcs->blk_lambda_tuning = false;
+                ppcs->blk_lambda_tuning = false;
             }
-            reset_rc_param(pcs->ppcs);
+            reset_rc_param(ppcs);
 
-            if (pcs->ppcs->is_overlay) {
+            if (ppcs->is_overlay) {
                 // overlay: ppcs->picture_qp has been updated by altref RC_INPUT
             } else {
                 if (scs->enc_ctx->rc_cfg.mode == AOM_Q) {
@@ -831,12 +834,12 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
                 }
             }
 
-            if (pcs->ppcs->is_alt_ref) {
+            if (ppcs->is_alt_ref) {
                 // overlay use the same QP with alt_ref, to align with
                 // rate_control_param_queue update code in below RC_PACKETIZATION_FEEDBACK_RESULT.
-                PictureParentControlSet* overlay_ppcs     = pcs->ppcs->overlay_ppcs_ptr;
-                overlay_ppcs->picture_qp                  = pcs->ppcs->picture_qp;
-                overlay_ppcs->frm_hdr.quantization_params = pcs->ppcs->frm_hdr.quantization_params;
+                PictureParentControlSet* overlay_ppcs     = ppcs->overlay_ppcs_ptr;
+                overlay_ppcs->picture_qp                  = ppcs->picture_qp;
+                overlay_ppcs->frm_hdr.quantization_params = ppcs->frm_hdr.quantization_params;
             }
 
             if (!is_superres_recode_task) {

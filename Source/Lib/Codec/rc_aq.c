@@ -179,9 +179,9 @@ static int av1_get_deltaq_sb_variance_boost(uint8_t base_q_idx, uint16_t* varian
 
 void svt_av1_variance_adjust_qp(PictureControlSet* pcs) {
     PictureParentControlSet* ppcs = pcs->ppcs;
-    SequenceControlSet*      scs  = pcs->ppcs->scs;
+    SequenceControlSet*      scs  = ppcs->scs;
 
-    pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
+    ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
 
     // super res pictures scaled with different sb count, should use sb_total_count for each picture
     uint16_t sb_cnt = scs->sb_total_count;
@@ -243,7 +243,7 @@ void svt_av1_variance_adjust_qp(PictureControlSet* pcs) {
              ppcs->frm_hdr.quantization_params.base_q_idx,
              min_qindex,
              max_qindex,
-             pcs->ppcs->frm_hdr.delta_q_params.delta_q_res,
+             ppcs->frm_hdr.delta_q_params.delta_q_res,
              normalized_base_q_idx,
              range);
 #endif
@@ -293,7 +293,7 @@ static void cyclic_sb_qp_derivation(PictureControlSet* pcs) {
 
     ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
 
-    uint64_t avg_me_dist = pcs->ppcs->norm_me_dist;
+    uint64_t avg_me_dist = ppcs->norm_me_dist;
 
     cr->actual_num_seg1_sbs = 0;
     cr->actual_num_seg2_sbs = 0;
@@ -345,7 +345,7 @@ static void generate_b64_me_qindex_map(PictureControlSet* pcs) {
     static const int         min_offset[MAX_TEMPORAL_LAYERS] = {-8, -8, -8, -8, -8, -8};
     static const int         max_offset[MAX_TEMPORAL_LAYERS] = {8, 8, 8, 8, 8, 8};
     if (pcs->slice_type != I_SLICE &&
-        (min_offset[pcs->ppcs->temporal_layer_index] != 0 || max_offset[pcs->ppcs->temporal_layer_index] != 0)) {
+        (min_offset[ppcs->temporal_layer_index] != 0 || max_offset[ppcs->temporal_layer_index] != 0)) {
         uint64_t avg_me_dist = 0;
         uint64_t min_dist    = (uint64_t)~0;
         uint64_t max_dist    = 0;
@@ -362,11 +362,11 @@ static void generate_b64_me_qindex_map(PictureControlSet* pcs) {
             int offset    = 0;
             if (diff_dist <= 0) {
                 offset = (min_dist != avg_me_dist)
-                    ? min_offset[pcs->ppcs->temporal_layer_index] * diff_dist / (int)(min_dist - avg_me_dist)
+                    ? min_offset[ppcs->temporal_layer_index] * diff_dist / (int)(min_dist - avg_me_dist)
                     : 0;
             } else {
                 offset = (max_dist != avg_me_dist)
-                    ? max_offset[pcs->ppcs->temporal_layer_index] * diff_dist / (int)(max_dist - avg_me_dist)
+                    ? max_offset[ppcs->temporal_layer_index] * diff_dist / (int)(max_dist - avg_me_dist)
                     : 0;
             }
 
@@ -476,9 +476,9 @@ static void sb_setup_lambda(PictureControlSet* pcs, SuperBlock* sb_ptr) {
  ******************************************************/
 void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
     PictureParentControlSet* ppcs = pcs->ppcs;
-    SequenceControlSet*      scs  = pcs->ppcs->scs;
+    SequenceControlSet*      scs  = ppcs->scs;
     if (ppcs->r0_delta_qp_quant) {
-        pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
+        ppcs->frm_hdr.delta_q_params.delta_q_present = 1;
     }
 
     // super res pictures scaled with different sb count, should use sb_total_count for each picture
@@ -486,7 +486,7 @@ void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
     if (ppcs->frame_superres_enabled || ppcs->frame_resize_enabled) {
         sb_cnt = pcs->sb_total_count;
     }
-    if (ppcs->r0_delta_qp_md && pcs->ppcs->tpl_is_valid == 1) {
+    if (ppcs->r0_delta_qp_md && ppcs->tpl_is_valid == 1) {
 #if DEBUG_VAR_BOOST_STATS
         SVT_DEBUG("TPL qindex boost, frame %llu, temp. level %i\n", pcs->picture_number, pcs->temporal_layer_index);
 #endif
@@ -494,7 +494,7 @@ void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
             SuperBlock* sb_ptr = pcs->sb_ptr_array[sb_addr];
             double      beta   = ppcs->pa_me_data->tpl_beta[sb_addr];
             int         offset = svt_av1_get_deltaq_offset(
-                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, pcs->ppcs->slice_type == I_SLICE);
+                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, ppcs->slice_type == I_SLICE);
             offset = AOMMIN(offset, 9 * 4 - 1);
             offset = AOMMAX(offset, -9 * 4 + 1);
 
@@ -519,8 +519,8 @@ void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
  ******************************************************/
 void svt_av1_normalize_sb_delta_q(PictureControlSet* pcs) {
     PictureParentControlSet* ppcs        = pcs->ppcs;
-    SequenceControlSet*      scs         = pcs->ppcs->scs;
-    uint8_t                  delta_q_res = pcs->ppcs->frm_hdr.delta_q_params.delta_q_res;
+    SequenceControlSet*      scs         = ppcs->scs;
+    uint8_t                  delta_q_res = ppcs->frm_hdr.delta_q_params.delta_q_res;
 
     assert(delta_q_res == 2 || delta_q_res == 4 || delta_q_res == 8);
 
@@ -559,10 +559,11 @@ void svt_av1_normalize_sb_delta_q(PictureControlSet* pcs) {
 
 // Initialize SB qindex values and apply per-SB adjustments (variance boost, TPL, cyclic refresh).
 void svt_av1_rc_init_sb_qindex(PictureControlSet* pcs, SequenceControlSet* scs) {
-    FrameHeader* frm_hdr = &pcs->ppcs->frm_hdr;
+    PictureParentControlSet* ppcs    = pcs->ppcs;
+    FrameHeader*             frm_hdr = &ppcs->frm_hdr;
 
     // set initial SB base_q_idx values
-    pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;
+    frm_hdr->delta_q_params.delta_q_present = 0;
     for (int sb_addr = 0; sb_addr < pcs->sb_total_count; ++sb_addr) {
         pcs->sb_ptr_array[sb_addr]->qindex = frm_hdr->quantization_params.base_q_idx;
     }
@@ -573,14 +574,14 @@ void svt_av1_rc_init_sb_qindex(PictureControlSet* pcs, SequenceControlSet* scs) 
         svt_av1_variance_adjust_qp(pcs);
     }
     // QPM with tpl_la
-    if (scs->static_config.aq_mode == 2 && pcs->ppcs->tpl_ctrls.enable && pcs->ppcs->r0 != 0) {
+    if (scs->static_config.aq_mode == 2 && ppcs->tpl_ctrls.enable && ppcs->r0 != 0) {
         svt_aom_sb_qp_derivation_tpl_la(pcs);
     }
-    if (pcs->ppcs->cyclic_refresh.apply_cyclic_refresh) {
+    if (ppcs->cyclic_refresh.apply_cyclic_refresh) {
         cyclic_sb_qp_derivation(pcs);
     }
 
-    if (pcs->ppcs->frm_hdr.delta_q_params.delta_q_present && pcs->ppcs->frm_hdr.delta_q_params.delta_q_res != 1) {
+    if (frm_hdr->delta_q_params.delta_q_present && frm_hdr->delta_q_params.delta_q_res != 1) {
         // adjust delta q res and normalize superblock delta q values to reduce signaling overhead
         svt_av1_normalize_sb_delta_q(pcs);
     }
