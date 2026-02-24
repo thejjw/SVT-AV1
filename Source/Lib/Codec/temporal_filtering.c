@@ -81,8 +81,6 @@ static const uint32_t idx_32x32_to_idx_8x8[4][4][4] = {
 // clang-format on
 
 int32_t svt_aom_get_frame_update_type(SequenceControlSet* scs, PictureParentControlSet* pcs);
-int32_t svt_av1_compute_qdelta_fp(int32_t qstart_fp8, int32_t qtarget_fp8, EbBitDepth bit_depth);
-int32_t svt_av1_compute_qdelta(double qstart, double qtarget, EbBitDepth bit_depth);
 #if DEBUG_SCALING
 // save YUV to file - auxiliary function for debug
 void save_YUV_to_file(char* filename, EbByte buffer_y, EbByte buffer_u, EbByte buffer_v, uint16_t width,

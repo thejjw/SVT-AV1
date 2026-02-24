@@ -1684,7 +1684,7 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet* pcs, ModeDecisionContex
                            is_inter,
                            scs->vq_ctrls.sharpness_ctrls.rdoq,
                            pcs->ppcs->frm_hdr.delta_q_params.delta_q_present,
-                           pcs->picture_qp,
+                           pcs->ppcs->picture_qp,
                            lambda,
                            (component_type == COMPONENT_LUMA) ? 0 : 1);
     }

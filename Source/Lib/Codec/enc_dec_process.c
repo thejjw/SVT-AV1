@@ -173,14 +173,14 @@ static void reset_enc_dec(EncDecContext* ed_ctx, PictureControlSet* pcs, Sequenc
     svt_aom_lambda_assign(pcs,
                           &ed_ctx->pic_fast_lambda[EB_8_BIT_MD],
                           &ed_ctx->pic_full_lambda[EB_8_BIT_MD],
-                          8,
+                          EB_EIGHT_BIT,
                           pcs->ppcs->frm_hdr.quantization_params.base_q_idx,
                           true);
 
     svt_aom_lambda_assign(pcs,
                           &ed_ctx->pic_fast_lambda[EB_10_BIT_MD],
                           &ed_ctx->pic_full_lambda[EB_10_BIT_MD],
-                          10,
+                          EB_TEN_BIT,
                           pcs->ppcs->frm_hdr.quantization_params.base_q_idx,
                           true);
     if (segment_index == 0) {
@@ -1196,9 +1196,7 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
 void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
     EbReferenceObject* ref_object = (EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr;
 
-    //= (EbPictureBufferDesc *)ref_object->reference_picture;
     EbPictureBufferDesc* ref_pic_ptr;
-    // =   (EbPictureBufferDesc *)ref_object->reference_picture16bit;
     EbPictureBufferDesc* ref_pic_16bit_ptr;
 
     {
@@ -1352,8 +1350,8 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
     // set up the ref POC
     ref_object->ref_poc = pcs->ppcs->picture_number;
 
-    // set up the QP
-    ref_object->qp = (uint8_t)pcs->ppcs->picture_qp;
+    // set up the base_q_idx
+    ref_object->base_q_idx = pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
 
     // set up the Slice Type
     ref_object->slice_type = pcs->ppcs->slice_type;
@@ -2150,8 +2148,6 @@ static void perform_pred_depth_refinement(PictureControlSet* pcs, ModeDecisionCo
     refine_depth(pcs, ctx, pc_tree, mds, mi_row, mi_col, max_pd0_size, min_pd0_size);
 }
 
-void svt_variance_adjust_qp(PictureControlSet* pcs);
-void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs);
 void mdc_init_qp_update(PictureControlSet* pcs);
 void svt_aom_init_enc_dec_segement(PictureParentControlSet* ppcs);
 
@@ -2197,7 +2193,6 @@ static void recode_loop_decision_maker(PictureControlSet* pcs, SequenceControlSe
         ppcs->picture_qp = (uint8_t)CLIP3((int32_t)scs->static_config.min_qp_allowed,
                                           (int32_t)scs->static_config.max_qp_allowed,
                                           (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
-        pcs->picture_qp  = ppcs->picture_qp;
 
         // set initial SB base_q_idx values
         pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;
@@ -2208,7 +2203,7 @@ static void recode_loop_decision_maker(PictureControlSet* pcs, SequenceControlSe
 
         // adjust SB qindex based on variance
         if (scs->static_config.enable_variance_boost) {
-            svt_variance_adjust_qp(pcs);
+            svt_av1_variance_adjust_qp(pcs);
         }
 
         // 2pass QPM with tpl_la
@@ -2350,7 +2345,7 @@ static void lpd1_detector_post_pd0(PictureControlSet* pcs, ModeDecisionContext* 
                         (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                     if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                         pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
+                            (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->ppcs->picture_qp)) {
                         md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
                     }
                 }
@@ -2460,7 +2455,8 @@ static void lpd1_detector_skip_pd0(PictureControlSet* pcs, ModeDecisionContext* 
                             (((uint32_t)~0) >> 2) to avoid overflow issues from the multiplication. */
                         if (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] < (((uint32_t)~0) >> 2) &&
                             pcs->ppcs->me_8x8_cost_variance[md_ctx->sb_index] >
-                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) * (73 - pcs->picture_qp)) {
+                                (md_ctx->lpd1_ctrls.me_8x8_cost_variance_th[pd1_lvl] >> 5) *
+                                    (73 - pcs->ppcs->picture_qp)) {
                             md_ctx->lpd1_ctrls.pd1_level = pd1_lvl - 1;
                         }
                     } else {
@@ -2602,7 +2598,7 @@ static void lpd0_detector(PictureControlSet* pcs, ModeDecisionContext* md_ctx, u
                     // use_ref_info level 3 (most aggressive)
                     else {
                         if ((l0_refs || l1_refs) && (!l0_refs || l0_was_intra) && (!l1_refs || l1_was_intra) &&
-                            pcs->ref_intra_percentage > MAX(1, 50 - (pcs->picture_qp >> 1))) {
+                            pcs->ref_intra_percentage > MAX(1, 50 - (pcs->ppcs->picture_qp >> 1))) {
                             lpd0_ctrls->pd0_level = pd0_lvl - 1;
                             continue;
                         }
@@ -2618,7 +2614,7 @@ static void lpd0_detector(PictureControlSet* pcs, ModeDecisionContext* md_ctx, u
                     /* me_8x8_cost_variance_th is shifted by 5 then mulitplied by the pic QP (max 63).  Therefore, the TH must be less than
                        (((uint32_t)~0) >> 1) to avoid overflow issues from the multiplication. */
                     if (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] < (((uint32_t)~0) >> 1) &&
-                        me_8x8_cost_variance > (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] >> 5) * pcs->picture_qp) {
+                        me_8x8_cost_variance > (lpd0_ctrls->me_8x8_cost_variance_th[pd0_lvl] >> 5) * ppcs->picture_qp) {
                         lpd0_ctrls->pd0_level = pd0_lvl - 1;
                         continue;
                     }

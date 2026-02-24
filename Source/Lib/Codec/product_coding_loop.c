@@ -1682,7 +1682,7 @@ static void md_stage_0(PictureControlSet* pcs, ModeDecisionContext* ctx,
             tot_processed_cand++;
 
             if (apply_unipred_bias && is_inter_singleref_mode(cand_bf->cand->block_mi.mode)) {
-                *cand_bf->fast_cost = (*cand_bf->fast_cost * uni_psy_bias[pcs->picture_qp]) / 100;
+                *cand_bf->fast_cost = (*cand_bf->fast_cost * uni_psy_bias[pcs->ppcs->picture_qp]) / 100;
             }
             if (*cand_bf->fast_cost < ctx->mds0_best_cost) {
                 ctx->mds0_best_cost  = *cand_bf->fast_cost;
@@ -2594,7 +2594,7 @@ static int md_subpel_search(SUBPEL_STAGE       search_stage, //ME or PME
                                        &best_mv,
                                        &not_used,
                                        &pred_sse,
-                                       pcs->picture_qp,
+                                       pcs->ppcs->picture_qp,
                                        ctx->blk_geom->bsize,
                                        early_exit);
     me_mv->x                      = best_mv.x;
@@ -2913,7 +2913,7 @@ static void perform_md_reference_pruning(PictureControlSet* pcs, ModeDecisionCon
         }
     }
     uint32_t th = (ctx->ref_pruning_ctrls.check_closest_multiplier * (ctx->blk_geom->bheight * ctx->blk_geom->bwidth) *
-                   pcs->picture_qp) /
+                   pcs->ppcs->picture_qp) /
         24;
     if (ctx->ref_pruning_ctrls.check_closest_multiplier && early_inter_distortion_array[0] < th &&
         early_inter_distortion_array[REF_LIST_MAX_DEPTH] < th) {

@@ -227,9 +227,8 @@ void svt_aom_setup_segmentation(PictureControlSet* pcs, SequenceControlSet* scs)
     if (segmentation_params->segmentation_enabled) {
         segmentation_params->segmentation_update_data =
             1; //always updating for now. Need to set this based on actual deltas
-        segmentation_params->segmentation_update_map = 1;
-        segmentation_params->segmentation_temporal_update =
-            false; //!(pcs->ppcs->av1FrameType == KEY_FRAME || pcs->ppcs->av1FrameType == INTRA_ONLY_FRAME);
+        segmentation_params->segmentation_update_map      = 1;
+        segmentation_params->segmentation_temporal_update = false; //!frame_is_intra_only(pcs->ppcs);
         find_segment_qps(segmentation_params, pcs);
         for (int i = 0; i < MAX_SEGMENTS; i++) {
             segmentation_params->feature_enabled[i][SEG_LVL_ALT_Q] = 1;

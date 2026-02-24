@@ -2260,7 +2260,7 @@ static void interpolation_filter_search(PictureControlSet* pcs, ModeDecisionCont
 
         if (scs->vq_ctrls.sharpness_ctrls.ifs && pcs->ppcs->is_noise_level) {
             if (filter_sets[i][0] == 1 || filter_sets[i][1] == 1) {
-                tmp_rd = (tmp_rd * ifs_smooth_bias[pcs->picture_qp]) / 100;
+                tmp_rd = (tmp_rd * ifs_smooth_bias[pcs->ppcs->picture_qp]) / 100;
             }
         }
 
