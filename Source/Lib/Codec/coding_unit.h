@@ -37,8 +37,6 @@ extern "C" {
 #define MAX_CU_COST (0xFFFFFFFFFFFFFFFFull >> 1)
 #define MAX_MODE_COST (13754408443200 * 8) // RDCOST(6544618, 128 * 128 * 255 * 255, 128 * 128 * 255 * 255) * 8;
 
-extern const uint32_t intra_luma_to_chroma[INTRA_MODES];
-
 typedef struct {
     Mv      mfmv0;
     uint8_t ref_frame_offset;

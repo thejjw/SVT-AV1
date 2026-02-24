@@ -19,6 +19,7 @@
 #endif
 
 #include "utility.h"
+#include "common_utils.h"
 #include "svt_log.h"
 #include <math.h>
 
@@ -224,6 +225,31 @@ static uint32_t get_num_ns_per_part(uint32_t part_it, uint32_t sq_size) {
     uint32_t tot_num_ns_per_part = part_it < 1 ? 1 : part_it < 3 ? 2 : part_it < 5 && sq_size < 128 ? 4 : 3;
     return tot_num_ns_per_part;
 }
+
+//gives the index of next quadrant child within a depth
+static const uint32_t ns_depth_offset[GEOM_TOT][6] = {{21, 5, 1, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {41, 9, 1, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {85, 21, 5, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {105, 25, 5, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {169, 41, 9, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {425, 105, 25, 5, NOT_USED_VALUE, NOT_USED_VALUE},
+                                                      {681, 169, 41, 9, 1, NOT_USED_VALUE},
+                                                      {849, 209, 49, 9, 1, NOT_USED_VALUE},
+                                                      {1101, 269, 61, 9, 1, NOT_USED_VALUE},
+                                                      {4421, 1101, 269, 61, 9, 1},
+                                                      {2377, 593, 145, 33, 5, NOT_USED_VALUE}};
+//gives the next depth block(first qudrant child) from a given parent square
+static const uint32_t d1_depth_offset[GEOM_TOT][6] = {{1, 1, 1, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 1, 1, 1, NOT_USED_VALUE},
+                                                      {1, 1, 1, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 1, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 5, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 5, 1, NOT_USED_VALUE},
+                                                      {13, 13, 13, 5, 1, NOT_USED_VALUE},
+                                                      {25, 25, 25, 5, 1, NOT_USED_VALUE},
+                                                      {17, 25, 25, 25, 5, 1},
+                                                      {5, 13, 13, 13, 5, NOT_USED_VALUE}};
 
 static void md_scan_all_blks(GeomIndex geom, BlockGeom* blk_geom, uint32_t* idx_mds, uint32_t sq_size, uint32_t x,
                              uint32_t y, uint8_t min_nsq_bsize) {

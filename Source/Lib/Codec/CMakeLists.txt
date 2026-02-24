@@ -88,6 +88,7 @@ set(all_files
         coefficients.h
         common_dsp_rtcd.c
         common_dsp_rtcd.h
+        common_utils.c
         common_utils.h
         compute_mean.h
         compute_sad.h

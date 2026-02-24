@@ -21,14 +21,6 @@
 
 const int av1_get_tx_scale_tab[TX_SIZES_ALL] = {0, 0, 0, 1, 2, 0, 0, 0, 0, 1, 1, 2, 2, 0, 0, 0, 0, 1, 1};
 
-const TxSize get_txsize_entropy_ctx_tab[TX_SIZES_ALL] = {0, 1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 2, 2, 3, 3};
-
-const int get_txb_bwl_tab[TX_SIZES_ALL] = {2, 3, 4, 5, 5, 2, 3, 3, 4, 4, 5, 5, 5, 2, 4, 3, 5, 4, 5};
-
-const int get_txb_wide_tab[TX_SIZES_ALL] = {4, 8, 16, 32, 32, 4, 8, 8, 16, 16, 32, 32, 32, 4, 16, 8, 32, 16, 32};
-
-const int get_txb_high_tab[TX_SIZES_ALL] = {4, 8, 16, 32, 32, 8, 4, 16, 8, 32, 16, 32, 32, 16, 4, 32, 8, 32, 16};
-
 void     svt_aom_residual_kernel(uint8_t* input, uint32_t input_offset, uint32_t input_stride, uint8_t* pred,
                                  uint32_t pred_offset, uint32_t pred_stride, int16_t* residual, uint32_t residual_offset,
                                  uint32_t residual_stride, bool hbd, uint32_t area_width, uint32_t area_height);
@@ -1069,11 +1061,11 @@ static void svt_av1_optimize_b(PictureControlSet* pcs, ModeDecisionContext* ctx,
     const int16_t*         scan       = scan_order->scan;
     const int              shift      = av1_get_tx_scale_tab[tx_size];
     const PlaneType        plane_type = plane;
-    const TxSize           txs_ctx    = get_txsize_entropy_ctx_tab[tx_size];
+    const TxSize           txs_ctx    = get_txsize_entropy_ctx(tx_size);
     const TxClass          tx_class   = tx_type_to_class[tx_type];
-    const int              bwl        = get_txb_bwl_tab[tx_size];
-    const int              width      = get_txb_wide_tab[tx_size];
-    const int              height     = get_txb_high_tab[tx_size];
+    const int              bwl        = get_txb_bwl(tx_size);
+    const int              width      = get_txb_wide(tx_size);
+    const int              height     = get_txb_high(tx_size);
     assert(width == (1 << bwl));
     assert(txs_ctx < TX_SIZES);
     const LvMapCoeffCost* txb_costs      = &ctx->md_rate_est_ctx->coeff_fac_bits[txs_ctx][plane_type];
@@ -1971,9 +1963,10 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
         const uint32_t txb_origin_x        = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
         const uint32_t txb_origin_y        = tx_org[ctx->blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
         int32_t        cropped_tx_width_uv = MIN(
-            (uint8_t)tx_width_uv, (pcs->ppcs->aligned_width >> 1) - ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1));
+            (uint32_t)tx_width_uv, (pcs->ppcs->aligned_width >> 1) - ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1));
         int32_t cropped_tx_height_uv = MIN(
-            (uint8_t)tx_height_uv, (pcs->ppcs->aligned_height >> 1) - ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1));
+            (uint32_t)tx_height_uv,
+            (pcs->ppcs->aligned_height >> 1) - ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1));
         uint32_t tu_cb_origin_index = (ROUND_UV(txb_origin_x) +
                                        (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cb)) >>
             1;

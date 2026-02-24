@@ -712,10 +712,6 @@ typedef struct BlockLocation {
     uint32_t input_origin_index;
     // chroma block location in picture
     uint32_t input_cb_origin_in_index;
-    // luma block location in SB
-    uint32_t blk_origin_index;
-    // chroma block location in SB
-    uint32_t blk_chroma_origin_index;
 } BlockLocation;
 
 typedef struct Lpd0Ctrls {

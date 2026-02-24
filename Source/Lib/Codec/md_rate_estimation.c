@@ -622,9 +622,6 @@ int         svt_aom_get_comp_group_idx_context_enc(const MacroBlockD* xd);
 
 int svt_aom_allow_intrabc(const FrameHeader* frm_hdr, SliceType slice_type);
 
-INLINE int32_t is_chroma_reference(int32_t mi_row, int32_t mi_col, BlockSize bsize, int32_t subsampling_x,
-                                   int32_t subsampling_y);
-
 int svt_aom_allow_palette(int allow_screen_content_tools, BlockSize bsize);
 
 int svt_aom_get_palette_bsize_ctx(BlockSize bsize);

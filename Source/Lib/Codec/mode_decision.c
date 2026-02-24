@@ -37,6 +37,22 @@
 #include "utility.h"
 #include "adaptive_mv_pred.h"
 
+static const uint32_t intra_luma_to_chroma[INTRA_MODES] = {
+    UV_DC_PRED, // Average of above and left pixels
+    UV_V_PRED, // Vertical
+    UV_H_PRED, // Horizontal
+    UV_D45_PRED, // Directional 45  degree
+    UV_D135_PRED, // Directional 135 degree
+    UV_D113_PRED, // Directional 113 degree
+    UV_D157_PRED, // Directional 157 degree
+    UV_D203_PRED, // Directional 203 degree
+    UV_D67_PRED, // Directional 67  degree
+    UV_SMOOTH_PRED, // Combination of horizontal and vertical interpolation
+    UV_SMOOTH_V_PRED, // Vertical interpolation
+    UV_SMOOTH_H_PRED, // Horizontal interpolation
+    UV_PAETH_PRED, // Predict from the direction of smallest gradient
+};
+
 void calc_target_weighted_pred(PictureControlSet* pcs, ModeDecisionContext* ctx, const Av1Common* cm,
                                const MacroBlockD* xd, int mi_row, int mi_col, const uint8_t* above, int above_stride,
                                const uint8_t* left, int left_stride);
@@ -99,68 +115,42 @@ Get the ME offset for a given block (the offset used to locate the PA MVs from t
 */
 uint32_t svt_aom_get_me_block_offset(const uint32_t org_x, const uint32_t org_y, const BlockSize bsize,
                                      const uint8_t enable_me_8x8, const uint8_t enable_me_16x16) {
-    const uint32_t first_quad_org_x = org_x % 32;
-    const uint32_t first_quad_org_y = org_y % 32;
-
     const int      bwidth     = block_size_wide[bsize];
     const int      bheight    = block_size_high[bsize];
     const uint32_t max_length = MAX(bwidth, bheight);
 
     uint32_t me_idx = 0;
     switch (max_length) {
-    case 128:
-    case 64:
-        me_idx = 0;
-        break;
-    case 32:
-        me_idx = 1;
-
-        if ((org_x % 64) / 32) {
-            me_idx += 21;
-        }
-        if ((org_y % 64) / 32) {
-            me_idx += 42;
-        }
-        break;
-    case 16:
-        me_idx = 2;
-        if ((first_quad_org_x % 32) / 16) {
-            me_idx += 5;
-        }
-        if ((first_quad_org_y % 32) / 16) {
-            me_idx += 10;
-        }
-
-        if ((org_x % 64) / 32) {
-            me_idx += 21;
-        }
-        if ((org_y % 64) / 32) {
-            me_idx += 42;
-        }
-        break;
+    case 4:
     case 8:
-    default:
-        me_idx = 3;
-        if ((first_quad_org_x % 16) / 8) {
+        me_idx++;
+        if (org_x & 8) { // (org_x % 16) / 8
             me_idx += 1;
         }
-        if ((first_quad_org_y % 16) / 8) {
+        if (org_y & 8) { // (org_y % 16) / 8
             me_idx += 2;
         }
-
-        if ((first_quad_org_x % 32) / 16) {
+        AOM_FALLTHROUGH_INTENDED;
+    case 16:
+        me_idx++;
+        if (org_x & 16) { // (org_x % 32) / 16
             me_idx += 5;
         }
-        if ((first_quad_org_y % 32) / 16) {
+        if (org_y & 16) { // (org_y % 32) / 16
             me_idx += 10;
         }
-
-        if ((org_x % 64) / 32) {
+        AOM_FALLTHROUGH_INTENDED;
+    case 32:
+        me_idx++;
+        if (org_x & 32) { // (org_x % 64) / 32
             me_idx += 21;
         }
-        if ((org_y % 64) / 32) {
+        if (org_y & 32) { // (org_y % 64) / 32
             me_idx += 42;
         }
+        break;
+    default:
+        // me_idx = 0;
         break;
     }
 
@@ -2977,6 +2967,29 @@ static void svt_aom_inject_inter_candidates(PictureControlSet* pcs, ModeDecision
     if (ctx->inject_new_pme && ctx->updated_enable_pme) {
         inject_pme_candidates(pcs, ctx, cand_total_cnt, allow_bipred);
     }
+}
+
+static const TxType g_intra_mode_to_tx_type[INTRA_MODES] = {
+    DCT_DCT, // DC
+    ADST_DCT, // V
+    DCT_ADST, // H
+    DCT_DCT, // D45
+    ADST_ADST, // D135
+    ADST_DCT, // D117
+    DCT_ADST, // D153
+    DCT_ADST, // D207
+    ADST_DCT, // D63
+    ADST_ADST, // SMOOTH
+    ADST_DCT, // SMOOTH_V
+    DCT_ADST, // SMOOTH_H
+    ADST_ADST, // PAETH
+};
+
+static INLINE TxType intra_mode_to_tx_type(PredictionMode pred_mode, UvPredictionMode pred_mode_uv,
+                                           PlaneType plane_type) {
+    const PredictionMode mode = (plane_type == PLANE_TYPE_Y) ? pred_mode : get_uv_mode(pred_mode_uv);
+    assert(mode < INTRA_MODES);
+    return g_intra_mode_to_tx_type[mode];
 }
 
 /* For intra prediction, the chroma transform type may not follow the luma type.

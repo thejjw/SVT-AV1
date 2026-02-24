@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 #include "aom_dsp_rtcd.h"
-#include "definitions.h"
+#include "common_utils.h"
 #include "restoration.h"
 #include "unit_test_utility.h"
 #include "util.h"

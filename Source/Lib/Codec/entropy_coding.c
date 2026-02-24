@@ -29,6 +29,37 @@
 #include "mode_decision.h"
 #include "restoration.h"
 
+const uint8_t eob_to_pos_small[33] = {
+    0, 1, 2, // 0-2
+    3, 3, // 3-4
+    4, 4, 4, 4, // 5-8
+    5, 5, 5, 5, 5, 5, 5, 5, // 9-16
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 // 17-32
+};
+
+const int16_t eob_group_start[12]         = {0, 1, 2, 3, 5, 9, 17, 33, 65, 129, 257, 513};
+const int16_t svt_aom_eob_offset_bits[12] = {0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+const uint8_t eob_to_pos_large[17] = {
+    6, // place holder
+    7, // 33-64
+    8,
+    8, // 65-128
+    9,
+    9,
+    9,
+    9, // 129-256
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10, // 257-512
+    11 // 513-
+};
+
 static void mem_put_varsize(uint8_t* const dst, const int sz, const int val) {
     switch (sz) {
     case 1:
@@ -421,14 +452,14 @@ static int32_t av1_write_coeffs_txb_1d(PictureParentControlSet* ppcs, FRAME_CONT
                                        int16_t dc_sign_ctx, int16_t eob) {
     (void)pu_index;
     (void)coeff_stride;
-    const TxSize txs_ctx = (TxSize)((txsize_sqr_map[tx_size] + txsize_sqr_up_map[tx_size] + 1) >> 1);
+    const TxSize txs_ctx = get_txsize_entropy_ctx(tx_size);
     TxType       tx_type = component_type == COMPONENT_LUMA ? blk_ptr->tx_type[txb_index] : blk_ptr->tx_type_uv;
     const ScanOrder* const scan_order = get_scan_order(tx_size, tx_type);
     const int16_t* const   scan       = scan_order->scan;
     int32_t                c;
-    const int16_t          bwl    = (const uint16_t)get_txb_bwl_tab[tx_size];
-    const uint16_t         width  = (const uint16_t)get_txb_wide_tab[tx_size];
-    const uint16_t         height = (const uint16_t)get_txb_high_tab[tx_size];
+    const int16_t          bwl    = (const uint16_t)get_txb_bwl(tx_size);
+    const uint16_t         width  = (const uint16_t)get_txb_wide(tx_size);
+    const uint16_t         height = (const uint16_t)get_txb_high(tx_size);
 
     uint8_t        levels_buf[TX_PAD_2D];
     uint8_t* const levels = set_levels(levels_buf, width);
@@ -475,7 +506,7 @@ static int32_t av1_write_coeffs_txb_1d(PictureParentControlSet* ppcs, FRAME_CONT
         aom_write_symbol(ec_writer, eob_pt - 1, frame_context->eob_flag_cdf1024[component_type][eob_multi_ctx], 11);
         break;
     }
-    const int eob_offset_bits = eb_k_eob_offset_bits[eob_pt];
+    const int eob_offset_bits = svt_aom_eob_offset_bits[eob_pt];
     if (eob_offset_bits > 0) {
         const int eob_ctx   = eob_pt - 3;
         int       eob_shift = eob_offset_bits - 1;
@@ -4414,7 +4445,7 @@ static INLINE int block_signals_txsize(BlockSize bsize) {
 
 static INLINE int get_vartx_max_txsize(/*const MbModeInfo *xd,*/ BlockSize bsize, int plane) {
     /* if (xd->lossless[xd->mi[0]->segment_id]) return TX_4X4;*/
-    const TxSize max_txsize = eb_max_txsize_rect_lookup[bsize];
+    const TxSize max_txsize = blocksize_to_txsize[bsize];
     if (plane == 0) {
         return max_txsize; // luma
     }
@@ -4570,7 +4601,7 @@ static INLINE void set_txfm_ctxs(TxSize tx_size, int n8_w, int n8_h, int skip, c
 }
 
 static INLINE int tx_size_to_depth(TxSize tx_size, BlockSize bsize) {
-    TxSize ctx_size = eb_max_txsize_rect_lookup[bsize];
+    TxSize ctx_size = blocksize_to_txsize[bsize];
     int    depth    = 0;
     while (tx_size != ctx_size) {
         depth++;
@@ -4588,7 +4619,7 @@ static INLINE int get_tx_size_context(const MacroBlockD* xd) {
     const MbModeInfo*       mbmi        = xd->mi[0];
     const MbModeInfo* const above_mbmi  = xd->above_mbmi;
     const MbModeInfo* const left_mbmi   = xd->left_mbmi;
-    const TxSize            max_tx_size = eb_max_txsize_rect_lookup[mbmi->bsize];
+    const TxSize            max_tx_size = blocksize_to_txsize[mbmi->bsize];
     const int               max_tx_wide = tx_size_wide[max_tx_size];
     const int               max_tx_high = tx_size_high[max_tx_size];
     const int               has_above   = xd->up_available;

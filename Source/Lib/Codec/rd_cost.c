@@ -191,7 +191,7 @@ static void update_eob_context(int eob, TxSize tx_size, TxClass tx_class, PlaneT
         break;
     }
 
-    const int eob_offset_bits = eb_k_eob_offset_bits[eob_pt];
+    const int eob_offset_bits = svt_aom_eob_offset_bits[eob_pt];
     if (eob_offset_bits > 0) {
         const int eob_ctx   = eob_pt - 3;
         const int eob_shift = eob_offset_bits - 1;
@@ -207,7 +207,7 @@ int get_eob_cost(int eob, const LvMapEobCost* txb_eob_costs, const LvMapCoeffCos
     const int eob_multi_ctx = (tx_class == TX_CLASS_2D) ? 0 : 1;
     int       eob_cost      = txb_eob_costs->eob_cost[eob_multi_ctx][eob_pt - 1];
 
-    const int eob_offset_bits = eb_k_eob_offset_bits[eob_pt];
+    const int eob_offset_bits = svt_aom_eob_offset_bits[eob_pt];
     if (eob_offset_bits > 0) {
         const int eob_ctx   = eob_pt - 3;
         const int eob_shift = eob_offset_bits - 1;
@@ -374,9 +374,9 @@ uint64_t svt_av1_cost_coeffs_txb(ModeDecisionContext* ctx, uint8_t allow_update_
     const TxSize  txs_ctx  = (TxSize)((txsize_sqr_map[transform_size] + txsize_sqr_up_map[transform_size] + 1) >> 1);
     const TxClass tx_class = tx_type_to_class[transform_type];
     int32_t       cost;
-    const int32_t bwl    = get_txb_bwl_tab[transform_size];
-    const int32_t width  = get_txb_wide_tab[transform_size];
-    const int32_t height = get_txb_high_tab[transform_size];
+    const int32_t bwl    = get_txb_bwl(transform_size);
+    const int32_t width  = get_txb_wide(transform_size);
+    const int32_t height = get_txb_high(transform_size);
 
     const ScanOrder* const scan_order = get_scan_order(transform_size, transform_type);
     const int16_t* const   scan       = scan_order->scan;
@@ -1522,7 +1522,7 @@ static INLINE int block_signals_txsize(BlockSize bsize) {
 
 static INLINE int get_vartx_max_txsize(/*const MbModeInfo *xd,*/ BlockSize bsize, int plane) {
     /* if (xd->lossless[xd->mi[0]->segment_id]) return TX_4X4;*/
-    const TxSize max_txsize = eb_max_txsize_rect_lookup[bsize];
+    const TxSize max_txsize = blocksize_to_txsize[bsize];
     if (plane == 0) {
         return max_txsize; // luma
     }
@@ -1692,7 +1692,7 @@ static INLINE void set_txfm_ctxs(TxSize tx_size, int n8_w, int n8_h, int skip, c
 }
 
 static INLINE int tx_size_to_depth(TxSize tx_size, BlockSize bsize) {
-    TxSize ctx_size = eb_max_txsize_rect_lookup[bsize];
+    TxSize ctx_size = blocksize_to_txsize[bsize];
     int    depth    = 0;
     while (tx_size != ctx_size) {
         depth++;
@@ -1710,7 +1710,7 @@ static INLINE int get_tx_size_context(const MacroBlockD* xd) {
     const MbModeInfo*       mbmi        = xd->mi[0];
     const MbModeInfo* const above_mbmi  = xd->above_mbmi;
     const MbModeInfo* const left_mbmi   = xd->left_mbmi;
-    const TxSize            max_tx_size = eb_max_txsize_rect_lookup[mbmi->bsize];
+    const TxSize            max_tx_size = blocksize_to_txsize[mbmi->bsize];
     const int               max_tx_wide = tx_size_wide[max_tx_size];
     const int               max_tx_high = tx_size_high[max_tx_size];
     const int               has_above   = xd->up_available;
