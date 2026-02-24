@@ -476,7 +476,9 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     }
 
     int32_t new_qindex = scs_qindex;
-    if (!ppcs->qp_on_the_fly) {
+    if (ppcs->qp_on_the_fly) {
+        new_qindex = quantizer_to_qindex[ppcs->picture_qp];
+    } else {
         if (scs->enable_qp_scaling_flag) {
             // if CRF
             if (ppcs->tpl_ctrls.enable) {

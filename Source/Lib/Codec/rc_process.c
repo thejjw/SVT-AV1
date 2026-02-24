@@ -839,11 +839,7 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
                     }
                     svt_av1_rc_calc_qindex_rate_control(pcs, scs);
                 }
-                // TODO: qp_on_the_fly mode seems off - QP and qindex are generated from different values
-                if (!ppcs->qp_on_the_fly) {
-                    ppcs->picture_qp = (ppcs->frm_hdr.quantization_params.base_q_idx + 2) >> 2;
-                }
-                ppcs->picture_qp = clamp_qp(scs, ppcs->picture_qp);
+                ppcs->picture_qp = clamp_qp(scs, (ppcs->frm_hdr.quantization_params.base_q_idx + 2) >> 2);
             }
 
             if (ppcs->is_alt_ref) {
