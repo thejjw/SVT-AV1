@@ -12,7 +12,6 @@
 #include "pcs.h"
 #include "sequence_control_set.h"
 #include "entropy_coding.h"
-#include "segmentation.h"
 #include "utility.h"
 #include "md_process.h"
 
@@ -42,7 +41,7 @@ static EbReferenceObject* get_ref_obj(PictureControlSet* pcs, RefList ref_list, 
  * Update the qindex and active worse quality based on the already
  *  spent bits in the sliding window
  ******************************************************/
-static void svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
+static int32_t svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
     SequenceControlSet* scs                 = ppcs->scs;
     EncodeContext*      enc_ctx             = scs->enc_ctx;
     RATE_CONTROL*       rc                  = &enc_ctx->rc;
@@ -106,8 +105,6 @@ static void svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
                rc->gfu_boost);
 #endif
     }
-    FrameHeader* frm_hdr    = &ppcs->frm_hdr;
-    int32_t      new_qindex = frm_hdr->quantization_params.base_q_idx;
     // Increase the qindex based on the status of the spent bits in the window
     int remaining_frames       = frames_in_sw - coded_frames_num_sw;
     int available_bit_ratio    = (int)(100 * available_bit_sw / max_bits_sw);
@@ -136,7 +133,6 @@ static void svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
            available_frames_ratio,
            adjustment);
 #endif
-    new_qindex += adjustment;
     // Increase the active_worse_quality based on the adjustment
     if (ppcs->temporal_layer_index == 0) {
         rc->active_worst_quality += (adjustment / 2);
@@ -150,17 +146,12 @@ static void svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
                                      quantizer_to_qindex[scs->static_config.max_qp_allowed],
                                      rc->active_worst_quality);
 
-    frm_hdr->quantization_params.base_q_idx = (uint8_t)CLIP3(quantizer_to_qindex[scs->static_config.min_qp_allowed],
-                                                             quantizer_to_qindex[scs->static_config.max_qp_allowed],
-                                                             new_qindex);
-
-    ppcs->picture_qp = (uint8_t)CLIP3(scs->static_config.min_qp_allowed,
-                                      scs->static_config.max_qp_allowed,
-                                      (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
     // clip the max frame size to 32 bits
     ppcs->max_frame_size = (int)CLIP3(1, (0xFFFFFFFFull >> 1), (uint64_t)max_frame_size);
     // The target is set to 80% of the max.
     ppcs->this_frame_target = ppcs->max_frame_size * 8 / 10;
+
+    return adjustment;
 }
 
 static int svt_av1_frame_type_qdelta(RATE_CONTROL* rc, rate_factor_level rf_lvl, int q, int bit_depth,
@@ -452,8 +443,7 @@ static int cqp_qindex_calc(PictureControlSet* pcs, int qindex) {
             }
         }
     }
-    int32_t delta_qindex = svt_av1_compute_qdelta(q_val, q_val_target, bit_depth);
-    q                    = qindex + delta_qindex;
+    q = qindex + svt_av1_compute_qdelta(q_val, q_val_target, bit_depth);
 #endif
 
     return q;
@@ -470,13 +460,13 @@ static int cqp_qindex_calc(PictureControlSet* pcs, int qindex) {
  * - Chroma qindex calculation
  * - Max rate assignment and segmentation
  ******************************************************/
-void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* scs, RATE_CONTROL* rc) {
-    PictureParentControlSet* ppcs    = pcs->ppcs;
-    FrameHeader*             frm_hdr = &ppcs->frm_hdr;
+void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* scs) {
+    RATE_CONTROL*            rc       = &scs->enc_ctx->rc;
+    PictureParentControlSet* ppcs     = pcs->ppcs;
+    QuantizationParams*      q_params = &ppcs->frm_hdr.quantization_params;
 
-    uint8_t scs_qp     = scs->static_config.startup_qp_offset != 0 && ppcs->is_startup_gop
-            ? clamp_qp(scs, scs->static_config.qp + scs->static_config.startup_qp_offset)
-            : (uint8_t)scs->static_config.qp;
+    uint8_t scs_qp = ppcs->is_startup_gop ? clamp_qp(scs, scs->static_config.qp + scs->static_config.startup_qp_offset)
+                                          : (uint8_t)scs->static_config.qp;
     int     scs_qindex = clamp_qindex(scs, quantizer_to_qindex[scs_qp] + scs->static_config.extended_crf_qindex_offset);
 
     // if RC mode is 0, fixed QP is used
@@ -484,14 +474,10 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     if (ppcs->seq_param_changed) {
         rc->active_worst_quality = scs_qindex;
     }
-    frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[ppcs->picture_qp];
 
-    if (ppcs->qp_on_the_fly) {
-        ppcs->picture_qp                        = clamp_qp(scs, ppcs->picture_qp);
-        frm_hdr->quantization_params.base_q_idx = scs_qindex;
-    } else {
+    int32_t new_qindex = scs_qindex;
+    if (!ppcs->qp_on_the_fly) {
         if (scs->enable_qp_scaling_flag) {
-            int32_t new_qindex;
             // if CRF
             if (ppcs->tpl_ctrls.enable) {
                 if (pcs->picture_number == 0) {
@@ -502,52 +488,54 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
             } else { // if CQP
                 new_qindex = cqp_qindex_calc(pcs, scs_qindex);
             }
-            frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, new_qindex);
-        } else {
-            frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, scs_qindex);
+            new_qindex = clamp_qindex(scs, new_qindex);
         }
 
         if (scs->static_config.use_fixed_qindex_offsets) {
-            int32_t qindex = scs->static_config.use_fixed_qindex_offsets == 1 ? scs_qindex
-                                                                              : frm_hdr->quantization_params.base_q_idx;
-
-            if (!frame_is_intra_only(ppcs)) {
-                qindex += scs->static_config.qindex_offsets[pcs->temporal_layer_index];
-            } else {
-                qindex += scs->static_config.key_frame_qindex_offset;
+            if (scs->static_config.use_fixed_qindex_offsets == 1) {
+                new_qindex = scs_qindex;
             }
-            frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, qindex);
+            if (!frame_is_intra_only(ppcs)) {
+                new_qindex += scs->static_config.qindex_offsets[pcs->temporal_layer_index];
+            } else {
+                new_qindex += scs->static_config.key_frame_qindex_offset;
+            }
+            new_qindex = clamp_qindex(scs, new_qindex);
         }
 
         // Extended CRF range (63.25 - 70), add offset to compress QP scaling
         if (scs->static_config.qp == MAX_QP_VALUE && scs->static_config.extended_crf_qindex_offset) {
-            int32_t qindex = frm_hdr->quantization_params.base_q_idx;
-            qindex += (MAXQ - qindex) * scs->static_config.extended_crf_qindex_offset / 56;
-            frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, qindex);
+            new_qindex += (MAXQ - new_qindex) * scs->static_config.extended_crf_qindex_offset / 56;
+            new_qindex = clamp_qindex(scs, new_qindex);
         }
 
         // Luminance QP bias: gives more bitrate to darker scenes
         if (scs->static_config.luminance_qp_bias) {
-            int32_t qindex = frm_hdr->quantization_params.base_q_idx;
-            qindex += (int32_t)rint(
+            new_qindex += (int32_t)rint(
                 -pow((255 - ppcs->avg_luma) /
                          (1024.0 / (pcs->temporal_layer_index * 4 * (0.01 * scs->static_config.luminance_qp_bias))),
                      0.5) *
-                (qindex / 8.0));
-            frm_hdr->quantization_params.base_q_idx = clamp_qindex(scs, qindex);
+                (new_qindex / 8.0));
+            new_qindex = clamp_qindex(scs, new_qindex);
         }
 
         // S-frame QP offset
         if (ppcs->sframe_qp_offset) {
-            uint8_t new_qp                          = clamp_qp(scs,
-                                      ((frm_hdr->quantization_params.base_q_idx + 2) >> 2) + ppcs->sframe_qp_offset);
-            frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[new_qp];
+            int new_qp = clamp_qp(scs, ((new_qindex + 2) >> 2) + ppcs->sframe_qp_offset);
+            new_qindex = clamp_qindex(scs, quantizer_to_qindex[new_qp]);
         }
-        ppcs->picture_qp = clamp_qp(scs, (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
+
+        if (scs->enable_qp_scaling_flag) {
+            // max bit rate is only active for 1 pass CRF
+            if (scs->static_config.max_bit_rate) {
+                new_qindex += svt_aom_crf_assign_max_rate(ppcs);
+                new_qindex = clamp_qindex(scs, new_qindex);
+            }
+        }
     }
 
     // Calculate chroma qindex
-    int32_t chroma_qindex = frm_hdr->quantization_params.base_q_idx;
+    int32_t chroma_qindex = new_qindex;
     if (frame_is_intra_only(ppcs)) {
         chroma_qindex += scs->static_config.key_frame_chroma_qindex_offset;
     } else {
@@ -556,23 +544,15 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
 
     if (scs->static_config.tune == TUNE_IQ) {
         // Constant chroma boost with gradual ramp-down for very high qindex levels
-        chroma_qindex -= CLIP3(0, 16, (frm_hdr->quantization_params.base_q_idx / 2) - 14);
+        chroma_qindex -= CLIP3(0, 16, new_qindex / 2 - 14);
     }
     chroma_qindex = clamp_qindex(scs, chroma_qindex);
 
     // Calculate chroma delta q for Cb and Cr
-    frm_hdr->quantization_params.delta_q_dc[1] = frm_hdr->quantization_params.delta_q_ac[1] = CLIP3(
-        -64, 63, chroma_qindex - frm_hdr->quantization_params.base_q_idx);
-    frm_hdr->quantization_params.delta_q_dc[2] = frm_hdr->quantization_params.delta_q_ac[2] = CLIP3(
-        -64, 63, chroma_qindex - frm_hdr->quantization_params.base_q_idx);
+    q_params->delta_q_dc[1] = q_params->delta_q_ac[1] = CLIP3(-64, 63, chroma_qindex - new_qindex);
+    q_params->delta_q_dc[2] = q_params->delta_q_ac[2] = CLIP3(-64, 63, chroma_qindex - new_qindex);
 
-    if (scs->enable_qp_scaling_flag && !ppcs->qp_on_the_fly) {
-        // max bit rate is only active for 1 pass CRF
-        if (scs->static_config.max_bit_rate) {
-            svt_aom_crf_assign_max_rate(ppcs);
-        }
-    }
-    svt_aom_setup_segmentation(pcs, scs);
+    q_params->base_q_idx = new_qindex;
 }
 
 /**************************************************************************************************************

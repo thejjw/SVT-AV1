@@ -25,6 +25,7 @@
 #include "rd_cost.h"
 #include "lambda_rate_tables.h"
 #include "pass2_strategy.h"
+#include "segmentation.h"
 
 #include "pd_results.h"
 #include "src_ops_process.h"
@@ -40,6 +41,12 @@ const double svt_av1_tpl_hl_base_frame_div_factor[EB_MAX_TEMPORAL_LAYERS] = {1, 
 
 const double svt_av1_r0_weight[3]                = {0.75 /* I_SLICE */, 0.9 /* BASE */, 1 /* NON-BASE */};
 const double svt_av1_qp_scale_compress_weight[4] = {1, 1.125, 1.25, 1.375};
+
+static uint8_t NOINLINE clamp_qp(SequenceControlSet* scs, int qp) {
+    int qmin = scs->static_config.min_qp_allowed;
+    int qmax = scs->static_config.max_qp_allowed;
+    return (uint8_t)CLIP3(qmin, qmax, qp);
+}
 
 int svt_aom_frame_is_kf_gf_arf(PictureParentControlSet* ppcs) {
     return frame_is_intra_only(ppcs) || ppcs->update_type == SVT_AV1_ARF_UPDATE ||
@@ -596,7 +603,8 @@ void reset_rc_param(PictureParentControlSet* ppcs) {
  * - Calculates ME distortion
  * - Sets rate averaging period
  ******************************************************/
-static void rc_init_frame_stats(PictureControlSet* pcs, SequenceControlSet* scs, RATE_CONTROL* rc) {
+static void rc_init_frame_stats(PictureControlSet* pcs, SequenceControlSet* scs) {
+    RATE_CONTROL*            rc   = &scs->enc_ctx->rc;
     PictureParentControlSet* ppcs = pcs->ppcs;
     // Get r0
     if (ppcs->r0_gen) {
@@ -791,7 +799,6 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
     SequenceControlSet*      scs;
     PictureControlSet*       pcs;
     PictureParentControlSet* ppcs;
-    RATE_CONTROL*            rc;
 
     for (;;) {
         // Get RateControl Task
@@ -812,9 +819,8 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
             pcs  = (PictureControlSet*)rc_tasks->pcs_wrapper->object_ptr;
             ppcs = pcs->ppcs;
             scs  = pcs->scs;
-            rc   = &scs->enc_ctx->rc;
 
-            rc_init_frame_stats(pcs, scs, rc);
+            rc_init_frame_stats(pcs, scs);
 
             if (!is_superres_recode_task) {
                 ppcs->blk_lambda_tuning = false;
@@ -825,13 +831,19 @@ void* svt_aom_rate_control_kernel(void* input_ptr) {
                 // overlay: ppcs->picture_qp has been updated by altref RC_INPUT
             } else {
                 if (scs->enc_ctx->rc_cfg.mode == AOM_Q) {
-                    svt_av1_rc_calc_qindex_crf_cqp(pcs, scs, rc);
+                    svt_av1_rc_calc_qindex_crf_cqp(pcs, scs);
+                    svt_aom_setup_segmentation(pcs, scs);
                 } else {
                     if (!is_superres_recode_task) {
                         svt_av1_rc_process_rate_allocation(pcs, scs);
                     }
                     svt_av1_rc_calc_qindex_rate_control(pcs, scs);
                 }
+                // TODO: qp_on_the_fly mode seems off - QP and qindex are generated from different values
+                if (!ppcs->qp_on_the_fly) {
+                    ppcs->picture_qp = (ppcs->frm_hdr.quantization_params.base_q_idx + 2) >> 2;
+                }
+                ppcs->picture_qp = clamp_qp(scs, ppcs->picture_qp);
             }
 
             if (ppcs->is_alt_ref) {

@@ -18,12 +18,6 @@
 
 #include "rc_tables.h"
 
-static uint8_t NOINLINE clamp_qp(SequenceControlSet* scs, int qp) {
-    int qmin = scs->static_config.min_qp_allowed;
-    int qmax = scs->static_config.max_qp_allowed;
-    return (uint8_t)CLIP3(qmin, qmax, qp);
-}
-
 static uint8_t NOINLINE clamp_qindex(SequenceControlSet* scs, int qindex) {
     int qmin = quantizer_to_qindex[scs->static_config.min_qp_allowed];
     int qmax = quantizer_to_qindex[scs->static_config.max_qp_allowed];
@@ -1263,8 +1257,7 @@ static int NOINLINE find_min_ref_base_q_idx(PictureControlSet* pcs, RefList k) {
  * - Limits QP based on reference frame QP
  ******************************************************/
 void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControlSet* scs) {
-    PictureParentControlSet* ppcs    = pcs->ppcs;
-    FrameHeader*             frm_hdr = &ppcs->frm_hdr;
+    PictureParentControlSet* ppcs = pcs->ppcs;
 
     // Qindex calculating
     int32_t new_qindex;
@@ -1316,10 +1309,7 @@ void svt_av1_rc_calc_qindex_rate_control(PictureControlSet* pcs, SequenceControl
         }
     }
 
-    new_qindex       = clamp_qindex(scs, new_qindex);
-    ppcs->picture_qp = clamp_qp(scs, (new_qindex + 2) >> 2);
-
-    frm_hdr->quantization_params.base_q_idx = new_qindex;
+    ppcs->frm_hdr.quantization_params.base_q_idx = clamp_qindex(scs, new_qindex);
 }
 
 static int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs, double correction_factor, EbBitDepth bit_depth,

@@ -244,8 +244,7 @@ int32_t svt_av1_compute_qdelta_fp(int32_t qstart_fp8, int32_t qtarget_fp8, EbBit
 void svt_aom_cyclic_refresh_init(struct PictureParentControlSet* ppcs);
 
 // CQP/CRF
-void svt_av1_rc_calc_qindex_crf_cqp(struct PictureControlSet* pcs, struct SequenceControlSet* scs,
-                                    struct RATE_CONTROL* rc);
+void svt_av1_rc_calc_qindex_crf_cqp(struct PictureControlSet* pcs, struct SequenceControlSet* scs);
 void svt_av1_coded_frames_stat_calc(struct PictureParentControlSet* ppcs);
 
 // VBR/CBR
