@@ -1918,6 +1918,188 @@ static void svt_aom_set_dlf_controls(PictureParentControlSet* pcs, uint8_t dlf_l
 /*
     set controls for intra block copy
 */
+#if OPT_INTRA_BC_PATH
+static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
+    IntrabcCtrls* intrabc_ctrls = &pcs->intrabc_ctrls;
+
+    switch (ibc_level) {
+    case 0:
+        intrabc_ctrls->enabled = 0;
+        break;
+
+    case 1:
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 0;
+        intrabc_ctrls->nsq_parent_gating = 0;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 64;
+        intrabc_ctrls->max_cand_per_bucket = 256;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh        = (1 << 20);
+        intrabc_ctrls->mesh_search_mv_diff_threshold = -1;
+        intrabc_ctrls->mesh_patterns[0]              = (MeshPattern){256, 1};
+        intrabc_ctrls->mesh_patterns[1]              = (MeshPattern){256, 1};
+        intrabc_ctrls->mesh_patterns[2]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_patterns[3]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_qp_scaling               = 0;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 2:
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 0;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 64;
+        intrabc_ctrls->max_cand_per_bucket = 256;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh        = (1 << 20);
+        intrabc_ctrls->mesh_search_mv_diff_threshold = -1;
+        intrabc_ctrls->mesh_patterns[0]              = (MeshPattern){256, 8};
+        intrabc_ctrls->mesh_patterns[1]              = (MeshPattern){64, 1};
+        intrabc_ctrls->mesh_patterns[2]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_patterns[3]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_qp_scaling               = 0;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 3:
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 1;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 64;
+        intrabc_ctrls->max_cand_per_bucket = 256;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh        = (1 << 20);
+        intrabc_ctrls->mesh_search_mv_diff_threshold = 0;
+        intrabc_ctrls->mesh_patterns[0]              = (MeshPattern){256, 8};
+        intrabc_ctrls->mesh_patterns[1]              = (MeshPattern){64, 1};
+        intrabc_ctrls->mesh_patterns[2]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_patterns[3]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_qp_scaling               = 1;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 4:
+
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 1;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 64;
+        intrabc_ctrls->max_cand_per_bucket = 64;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh        = (1 << 24);
+        intrabc_ctrls->mesh_search_mv_diff_threshold = 0;
+        intrabc_ctrls->mesh_patterns[0]              = (MeshPattern){256, 8};
+        intrabc_ctrls->mesh_patterns[1]              = (MeshPattern){32, 1};
+        intrabc_ctrls->mesh_patterns[2]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_patterns[3]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_qp_scaling               = 1;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 5:
+
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 1;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 8;
+        intrabc_ctrls->max_cand_per_bucket = 64;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh        = (1 << 24);
+        intrabc_ctrls->mesh_search_mv_diff_threshold = 0;
+        intrabc_ctrls->mesh_patterns[0]              = (MeshPattern){256, 8};
+        intrabc_ctrls->mesh_patterns[1]              = (MeshPattern){32, 1};
+        intrabc_ctrls->mesh_patterns[2]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_patterns[3]              = (MeshPattern){0, 0};
+        intrabc_ctrls->mesh_qp_scaling               = 1;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 6:
+
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 1;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 8;
+        intrabc_ctrls->max_cand_per_bucket = 32;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh = (uint64_t)~0;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 0;
+
+        break;
+
+    case 7:
+
+        intrabc_ctrls->enabled = 1;
+
+        intrabc_ctrls->palette_hint      = 1;
+        intrabc_ctrls->nsq_parent_gating = 1;
+        intrabc_ctrls->b4_parent_gating  = 0;
+
+        // Hash search settings
+        intrabc_ctrls->max_block_size_hash = 8;
+        intrabc_ctrls->max_cand_per_bucket = 32;
+
+        // Mesh search settings
+        intrabc_ctrls->exhaustive_mesh_thresh = (uint64_t)~0;
+
+        // Search direction(s)
+        intrabc_ctrls->search_dir = 1;
+
+        break;
+
+    default:
+        assert(0);
+        break;
+    }
+}
+#else
 static void set_intrabc_level(PictureParentControlSet* pcs, SequenceControlSet* scs, uint8_t ibc_level) {
     IntraBCCtrls* intraBC_ctrls = &pcs->intraBC_ctrls;
 #if TUNE_STILL_IMAGE
@@ -2041,10 +2223,48 @@ static void set_intrabc_level(PictureParentControlSet* pcs, SequenceControlSet* 
         break;
     }
 }
-
+#endif
 /*
     set controls for Palette prediction
 */
+#if OPT_PALETTE_PATH
+static void set_palette_level(PictureParentControlSet* pcs, uint8_t palette_level) {
+    PaletteCtrls* palette_ctrls = &pcs->palette_ctrls;
+
+    switch (palette_level) {
+    case 0:
+        palette_ctrls->enabled = 0;
+        break;
+    case 1:
+        palette_ctrls->enabled             = 1;
+        palette_ctrls->dominant_color_step = 1;
+        palette_ctrls->kmean_color_step    = 1;
+        palette_ctrls->centroid_refinement = 1;
+        break;
+    case 2:
+        palette_ctrls->enabled             = 1;
+        palette_ctrls->dominant_color_step = 2;
+        palette_ctrls->kmean_color_step    = 1;
+        palette_ctrls->centroid_refinement = 0;
+        break;
+    case 3:
+        palette_ctrls->enabled             = 1;
+        palette_ctrls->dominant_color_step = (uint8_t)~0;
+        palette_ctrls->kmean_color_step    = 1;
+        palette_ctrls->centroid_refinement = 0;
+        break;
+    case 4:
+        palette_ctrls->enabled             = 1;
+        palette_ctrls->dominant_color_step = (uint8_t)~0;
+        palette_ctrls->kmean_color_step    = 2;
+        palette_ctrls->centroid_refinement = 0;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#else
 static void set_palette_level(PictureParentControlSet* pcs, uint8_t palette_level) {
     PaletteCtrls* palette_ctrls = &pcs->palette_ctrls;
 
@@ -2072,7 +2292,7 @@ static void set_palette_level(PictureParentControlSet* pcs, uint8_t palette_leve
         break;
     }
 }
-
+#endif
 /*
 * return the max canidate count for MDS0
   Used by candidate injection and memory allocation
@@ -2179,9 +2399,13 @@ void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureP
             intrabc_level = 0;
         }
     }
-
+#if OPT_INTRA_BC_PATH
+    set_intrabc_level(pcs, intrabc_level);
+    frm_hdr->allow_intrabc = pcs->intrabc_ctrls.enabled;
+#else
     set_intrabc_level(pcs, scs, intrabc_level);
     frm_hdr->allow_intrabc = pcs->intraBC_ctrls.enabled;
+#endif
 
     // Set palette level
     if (sc_class1) {
@@ -2349,8 +2573,13 @@ void svt_aom_sig_deriv_multi_processes_rtc(SequenceControlSet* scs, PictureParen
 
     // Set intra-bc level
     uint8_t intrabc_level = 0;
+#if OPT_INTRA_BC_PATH
+    set_intrabc_level(pcs, intrabc_level);
+    frm_hdr->allow_intrabc = pcs->intrabc_ctrls.enabled;
+#else
     set_intrabc_level(pcs, scs, intrabc_level);
     frm_hdr->allow_intrabc = pcs->intraBC_ctrls.enabled;
+#endif
 
     // Set palette level
     if (sc_class1) {
@@ -2459,17 +2688,58 @@ void svt_aom_sig_deriv_multi_processes_allintra(SequenceControlSet* scs, Picture
     EncMode               enc_mode         = pcs->enc_mode;
     const ResolutionRange input_resolution = pcs->input_resolution;
     const uint8_t         fast_decode      = scs->static_config.fast_decode;
-
+#if FTR_SC_STILL_IMAGE
+    const uint8_t sc_class1 = pcs->sc_class1;
+#endif
     // Set the Multi-Pass PD level
     pcs->multi_pass_pd_level = MULTI_PASS_PD_ON;
 
     // Set intra-bc level
+#if FTR_SC_STILL_IMAGE
+    uint8_t intrabc_level;
+    if (sc_class1) {
+        // Use intrabc_level 1 or 2 to achieve maximum intra-BC coding gain (higher computational complexity)
+        if (enc_mode <= ENC_M3) {
+            intrabc_level = 3;
+        } else if (enc_mode <= ENC_M4) {
+            intrabc_level = 4;
+        } else if (enc_mode <= ENC_M5) {
+            intrabc_level = 5;
+        } else {
+            intrabc_level = 0;
+        }
+    } else {
+        intrabc_level = 0;
+    }
+#else
     uint8_t intrabc_level = 0;
+#endif
+#if OPT_INTRA_BC_PATH
+    set_intrabc_level(pcs, intrabc_level);
+    frm_hdr->allow_intrabc = pcs->intrabc_ctrls.enabled;
+#else
     set_intrabc_level(pcs, scs, intrabc_level);
     frm_hdr->allow_intrabc = pcs->intraBC_ctrls.enabled;
+#endif
 
     // Set palette level
+#if FTR_SC_STILL_IMAGE
+    if (sc_class1) {
+        if (enc_mode <= ENC_M5) {
+            pcs->palette_level = 1;
+        } else if (enc_mode <= ENC_M6) {
+            pcs->palette_level = 2;
+        } else if (enc_mode <= ENC_M7) {
+            pcs->palette_level = 4;
+        } else {
+            pcs->palette_level = 0;
+        }
+    } else {
+        pcs->palette_level = 0;
+    }
+#else
     pcs->palette_level = 0;
+#endif
     set_palette_level(pcs, pcs->palette_level);
 
     frm_hdr->allow_screen_content_tools = (pcs->palette_level || frm_hdr->allow_intrabc) ? 1 : 0;
@@ -5252,7 +5522,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
             nic_pruning_ctrls->mds1_class_th = (uint64_t)~0;
             nic_pruning_ctrls->mds2_class_th = (uint64_t)~0;
             nic_pruning_ctrls->mds3_class_th = (uint64_t)~0;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 0;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5282,7 +5554,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 25;
             nic_pruning_ctrls->mds3_band_cnt = 4;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5316,7 +5590,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 25;
             nic_pruning_ctrls->mds3_band_cnt = 8;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5351,7 +5627,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 25;
             nic_pruning_ctrls->mds3_band_cnt = 8;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5413,7 +5691,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 20;
             nic_pruning_ctrls->mds3_band_cnt = 12;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5474,7 +5754,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 15;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5509,7 +5791,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 5;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5571,7 +5855,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 5;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 0;
 
             // Cand pruning settings
@@ -5632,7 +5918,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 5;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 1;
 
             // Cand pruning settings
@@ -5663,7 +5951,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 5;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 1;
 
             // Cand pruning settings
@@ -5694,7 +5984,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 5;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 1;
 
             // Cand pruning settings
@@ -5725,7 +6017,9 @@ uint8_t svt_aom_set_nic_controls(ModeDecisionContext* ctx, uint8_t nic_level) {
 
             nic_pruning_ctrls->mds3_class_th = 0;
             nic_pruning_ctrls->mds3_band_cnt = 16;
-
+#if OPT_NIC_SC
+            nic_pruning_ctrls->i_mds3_class_th_mult = 50;
+#endif
             nic_pruning_ctrls->enable_skipping_mds1 = 1;
 
             // Cand pruning settings
@@ -10410,6 +10704,7 @@ static void set_pic_lpd0_lvl_allintra(PictureControlSet* pcs, EncMode enc_mode) 
     } else {
         pcs->pic_lpd0_lvl = 7;
     }
+
     if (pcs->scs->super_block_size == 128) {
         pcs->pic_lpd0_lvl = 0;
     }
@@ -11835,7 +12130,9 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
     const uint8_t            fast_decode      = scs->static_config.fast_decode;
     const uint32_t           sq_qp            = scs->static_config.qp;
     FrameHeader*             frm_hdr          = &ppcs->frm_hdr;
-
+#if OPT_DEPTHS_SC
+    const uint8_t sc_class1 = ppcs->sc_class1;
+#endif
     //MFMV
     mfmv_controls(pcs, 0);
 
@@ -12022,13 +12319,31 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
 
     // Set the depth refinement level
 #if FTR_NIC_DREFI_NEW_LVL_DEFS
-    if (enc_mode <= ENC_M4) {
-        pcs->pic_block_based_depth_refinement_level = 6;
-    } else if (enc_mode <= ENC_M5) {
-        pcs->pic_block_based_depth_refinement_level = 9;
+#if OPT_DEPTHS_SC
+    if (sc_class1) {
+        if (enc_mode <= ENC_M1) {
+            pcs->pic_block_based_depth_refinement_level = 1;
+        } else if (enc_mode <= ENC_M3) {
+            pcs->pic_block_based_depth_refinement_level = 5;
+        } else if (enc_mode <= ENC_M4) {
+            pcs->pic_block_based_depth_refinement_level = 6;
+        } else if (enc_mode <= ENC_M5) {
+            pcs->pic_block_based_depth_refinement_level = 9;
+        } else {
+            pcs->pic_block_based_depth_refinement_level = 10;
+        }
     } else {
-        pcs->pic_block_based_depth_refinement_level = 10;
+#endif
+        if (enc_mode <= ENC_M4) {
+            pcs->pic_block_based_depth_refinement_level = 6;
+        } else if (enc_mode <= ENC_M5) {
+            pcs->pic_block_based_depth_refinement_level = 9;
+        } else {
+            pcs->pic_block_based_depth_refinement_level = 10;
+        }
+#if OPT_DEPTHS_SC
     }
+#endif
 #else
     if (enc_mode <= ENC_M2) {
         pcs->pic_block_based_depth_refinement_level = 5;

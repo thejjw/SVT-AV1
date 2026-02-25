@@ -30,12 +30,14 @@
 #include "enc_mode_config.h"
 #include "global_me.h"
 #include "aom_dsp_rtcd.h"
-
+#if !OPT_INTRA_BC_PATH
 #define MAX_MESH_SPEED 5 // Max speed setting for mesh motion method
+#endif
 #define MAX_OFFSET_WIDTH 64
 #define MAX_OFFSET_HEIGHT 0
 #define MFMV_STACK_SIZE 3
 
+#if !OPT_INTRA_BC_PATH
 static const MeshPattern good_quality_mesh_patterns[MAX_MESH_SPEED + 1][MAX_MESH_STEP] = {
     {{64, 8}, {28, 4}, {15, 1}, {7, 1}},
     {{64, 8}, {28, 4}, {15, 1}, {7, 1}},
@@ -54,7 +56,7 @@ static const MeshPattern intrabc_mesh_patterns[MAX_MESH_SPEED + 1][MAX_MESH_STEP
     {{64, 4}, {16, 1}, {0, 0}, {0, 0}},
     {{64, 4}, {16, 1}, {0, 0}, {0, 0}},
 };
-
+#endif
 static void set_global_motion_field(PictureControlSet* pcs) {
     // Init Global Motion Vector
     uint8_t frame_index;
@@ -601,6 +603,43 @@ static void av1_setup_motion_field(Av1Common* cm, PictureControlSet* pcs) {
 EbErrorType svt_av1_hash_table_create(HashTable* p_hash_table);
 int32_t     svt_aom_noise_log1p_fp16(int32_t noise_level_fp16);
 
+#if OPT_INTRA_BC_PATH
+static void generate_ibc_data(PictureControlSet* pcs) {
+    const int pic_width  = pcs->ppcs->aligned_width;
+    const int pic_height = pcs->ppcs->aligned_height;
+
+    uint32_t* block_hash_values[2];
+    int       j;
+
+    for (j = 0; j < 2; j++) {
+        EB_MALLOC_ARRAY_NO_CHECK(block_hash_values[j], pic_width * pic_height);
+    }
+    svt_aom_rtime_alloc_svt_av1_hash_table_create(&pcs->hash_table);
+    Yv12BufferConfig cpi_source;
+    svt_aom_link_eb_to_aom_buffer_desc_8bit(pcs->ppcs->enhanced_pic, &cpi_source);
+    svt_av1_crc32c_calculator_init(&pcs->crc_calculator);
+    svt_av1_generate_block_2x2_hash_value(&cpi_source, block_hash_values[0], pcs);
+    uint8_t       src_idx     = 0;
+    const uint8_t max_sb_size = pcs->ppcs->intrabc_ctrls.max_block_size_hash;
+    for (int size = 4; size <= max_sb_size; size <<= 1, src_idx = !src_idx) {
+        const uint8_t dst_idx = !src_idx;
+        svt_av1_generate_block_hash_value(
+            &cpi_source, size, block_hash_values[src_idx], block_hash_values[dst_idx], pcs);
+        if (size != 4 || !pcs->pic_disallow_4x4) {
+            svt_aom_rtime_alloc_svt_av1_add_to_hash_map_by_row_with_precal_data(
+                &pcs->hash_table,
+                block_hash_values[dst_idx],
+                pic_width,
+                pic_height,
+                size,
+                pcs->ppcs->intrabc_ctrls.max_cand_per_bucket);
+        }
+    }
+    for (j = 0; j < 2; j++) {
+        EB_FREE_ARRAY(block_hash_values[j]);
+    }
+}
+#else
 static void generate_ibc_data(PictureControlSet* pcs) {
     if (!pcs->ppcs->frm_hdr.allow_intrabc) {
         return;
@@ -662,6 +701,7 @@ static void generate_ibc_data(PictureControlSet* pcs) {
 
     svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->y_stride);
 }
+#endif
 #if FTR_INTRA_COEFF_LVL
 static void derive_intra_coeff_level(PictureControlSet* pcs) {
     uint64_t cmplx = pcs->ppcs->pic_avg_variance / MAX(1, pcs->scs->static_config.qp);
@@ -1028,11 +1068,40 @@ void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
         svt_av1_qm_init(pcs->ppcs);
         // Initialize the rate estimation tables for the frame
         init_frame_rate_tables(pcs);
+#if OPT_INTRA_BC_PATH
+        if (frm_hdr->allow_intrabc) {
+            IntrabcCtrls* intraBC_ctrls = &(pcs->ppcs->intrabc_ctrls);
+            // Generate hash table for intra-Bc if max block size is set
+            if (intraBC_ctrls->max_block_size_hash) {
+                generate_ibc_data(pcs);
+            }
 
+            // Initialize search sites for diamond/3-step search for intra-Bc
+            svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->y_stride);
+
+#if OPT_MESH_QP
+            if (intraBC_ctrls->mesh_qp_scaling) {
+                // QP-scaled thresholds
+                uint32_t q_weight, q_weight_denom;
+                svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.intra_bc_mesh_qp_scaling,
+                                                        &q_weight,
+                                                        &q_weight_denom,
+                                                        pcs->scs->static_config.qp);
+
+                MeshPattern* mesh_patterns = intraBC_ctrls->mesh_patterns;
+
+                for (int i = 0; i < MAX_MESH_STEP; i++) {
+                    mesh_patterns[i].range = DIVIDE_AND_ROUND(mesh_patterns[i].range * q_weight, q_weight_denom);
+                }
+            }
+#endif
+        }
+#else
         // generate hash table for IBC, if enabled
         if (frm_hdr->allow_intrabc) {
             generate_ibc_data(pcs);
         }
+#endif
         CdefSearchControls* cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
         const uint8_t       skip_perc  = pcs->ref_skip_percentage;
         if (me_based_cdef_skip(pcs) || (skip_perc > 75 && cdef_ctrls->use_skip_detector) ||

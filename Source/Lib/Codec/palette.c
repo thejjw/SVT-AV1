@@ -247,6 +247,29 @@ void svt_aom_get_block_dimensions(BlockSize bsize, int plane, const MacroBlockD*
 
 // Bias toward using colors in the cache.
 // TODO: Try other schemes to improve compression.
+#if OPT_PALETTE_PATH
+static AOM_INLINE void optimize_palette_colors(uint16_t* color_cache, int n_cache, int n_colors, int stride,
+                                               int* centroids, int bit_depth, uint8_t qp_index) {
+    if (n_cache <= 0) {
+        return;
+    }
+    for (int i = 0; i < n_colors * stride; i += stride) {
+        int min_diff = abs((int)centroids[i] - (int)color_cache[0]);
+        int idx      = 0;
+        for (int j = 1; j < n_cache; ++j) {
+            const int this_diff = abs((int)centroids[i] - (int)color_cache[j]);
+            if (this_diff < min_diff) {
+                min_diff = this_diff;
+                idx      = j;
+            }
+        }
+        const int min_threshold = (6 + (qp_index >> 6)) << (bit_depth - 8);
+        if (min_diff <= min_threshold) {
+            centroids[i] = color_cache[idx];
+        }
+    }
+}
+#else
 static AOM_INLINE void optimize_palette_colors(uint16_t* color_cache, int n_cache, int n_colors, int stride,
                                                int* centroids) {
     if (n_cache <= 0) {
@@ -267,7 +290,7 @@ static AOM_INLINE void optimize_palette_colors(uint16_t* color_cache, int n_cach
         }
     }
 }
-
+#endif
 // Extends 'color_map' array from 'orig_width x orig_height' to 'new_width x
 // new_height'. Extra rows and columns are filled in by copying last valid
 // row/column.
@@ -292,10 +315,22 @@ static AOM_INLINE void extend_palette_color_map(uint8_t* const color_map, int or
     }
 }
 
+#if OPT_PALETTE_PATH
+static void palette_rd_y(PaletteInfo* palette_info, uint8_t* palette_size_array, ModeDecisionContext* ctx,
+                         bool opt_colors, BlockSize bsize, const int* data, int* centroids, int n,
+                         uint16_t* color_cache, int n_cache, int bit_depth) {
+#else
 static void palette_rd_y(PaletteInfo* palette_info, uint8_t* palette_size_array, ModeDecisionContext* ctx,
                          BlockSize bsize, const int* data, int* centroids, int n, uint16_t* color_cache, int n_cache,
                          int bit_depth) {
+#endif
+#if OPT_PALETTE_PATH
+    if (opt_colors) {
+        optimize_palette_colors(color_cache, n_cache, n, 1, centroids, bit_depth, ctx->qp_index);
+    }
+#else
     optimize_palette_colors(color_cache, n_cache, n, 1, centroids);
+#endif
     int k = av1_remove_duplicates(centroids, n);
     if (k < PALETTE_MIN_SIZE) {
         // Too few unique colors to create a palette. And DC_PRED will work
@@ -323,7 +358,207 @@ static void palette_rd_y(PaletteInfo* palette_info, uint8_t* palette_size_array,
 
 int svt_av1_count_colors(const uint8_t* src, int stride, int rows, int cols, int* val_count);
 int svt_av1_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, int bit_depth, int* val_count);
+#if OPT_PALETTE_PATH
+static void cache_based_centroid_refinement(int* data, int rows, int cols, int n, int* centroids,
+                                            uint8_t* color_idx_map, uint16_t* color_cache, int n_cache) {
+    const int total = rows * cols;
+    uint8_t   temp_map[MAX_SB_SQUARE];
 
+    // Compute baseline SSE
+    uint64_t baseline_sse = 0;
+    for (int i = 0; i < total; i++) {
+        int diff = data[i] - centroids[color_idx_map[i]];
+        baseline_sse += (uint64_t)diff * diff;
+    }
+
+    for (int c = 0; c < n; c++) {
+        int      original = centroids[c];
+        int      best_val = original;
+        uint64_t best_sse = baseline_sse;
+
+        for (int k = 0; k < n_cache; k++) {
+            int candidate = color_cache[k];
+            if (candidate == original) {
+                continue;
+            }
+
+            centroids[c] = candidate;
+
+            // Reassign pixels
+            for (int i = 0; i < total; i++) {
+                int best_idx  = 0;
+                int best_dist = abs(data[i] - centroids[0]);
+
+                for (int j = 1; j < n; j++) {
+                    int dist = abs(data[i] - centroids[j]);
+                    if (dist < best_dist) {
+                        best_dist = dist;
+                        best_idx  = j;
+                    }
+                }
+                temp_map[i] = best_idx;
+            }
+
+            // Compute SSE
+            uint64_t sse = 0;
+            for (int i = 0; i < total; i++) {
+                int diff = data[i] - centroids[temp_map[i]];
+                sse += (uint64_t)diff * diff;
+            }
+
+            if (sse < best_sse) {
+                best_sse = sse;
+                best_val = candidate;
+                memcpy(color_idx_map, temp_map, total);
+            }
+        }
+
+        centroids[c] = best_val;
+    }
+}
+
+void search_palette_luma(PictureControlSet* pcs, ModeDecisionContext* ctx, PaletteInfo* palette_cand,
+                         uint8_t* palette_size_array, uint32_t* tot_palette_cands) {
+    int  colors;
+    bool is16bit = ctx->hbd_md > 0;
+
+    EbPictureBufferDesc* src_pic = is16bit ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+
+    const int src_stride        = src_pic->y_stride;
+    unsigned  palette_bit_depth = is16bit ? EB_TEN_BIT : EB_EIGHT_BIT;
+
+    const uint8_t* const src = src_pic->y_buffer +
+        (((ctx->blk_org_x) + (ctx->blk_org_y) * src_pic->y_stride) << is16bit);
+
+    int block_width, block_height, rows, cols;
+    svt_aom_get_block_dimensions(
+        ctx->blk_geom->bsize, 0, ctx->blk_ptr->av1xd, &block_width, &block_height, &rows, &cols);
+
+    int      count_buf[1 << 12];
+    unsigned bit_depth = pcs->ppcs->scs->encoder_bit_depth;
+
+    if (is16bit) {
+        colors = svt_av1_count_colors_highbd((uint16_t*)src, src_stride, rows, cols, bit_depth, count_buf);
+    } else {
+        colors = svt_av1_count_colors(src, src_stride, rows, cols, count_buf);
+    }
+
+    if (colors <= 1 || colors > 64) {
+        return;
+    }
+
+    const int max_n = AOMMIN(colors, PALETTE_MAX_SIZE);
+    const int min_n = PALETTE_MIN_SIZE;
+
+    int* data = ctx->palette_buffer->kmeans_data_buf;
+    int  centroids[PALETTE_MAX_SIZE];
+    int  lb, ub;
+
+    lb = ub = is16bit ? ((uint16_t*)src)[0] : ((uint8_t*)src)[0];
+
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            int val = is16bit ? ((uint16_t*)src)[r * src_stride + c] : ((uint8_t*)src)[r * src_stride + c];
+
+            data[r * cols + c] = val;
+            if (val < lb) {
+                lb = val;
+            }
+            if (val > ub) {
+                ub = val;
+            }
+        }
+    }
+
+    uint16_t  color_cache[2 * PALETTE_MAX_SIZE];
+    const int n_cache = svt_get_palette_cache_y(ctx->blk_ptr->av1xd, color_cache);
+
+    //  Extract dominant colors
+    int top_colors[PALETTE_MAX_SIZE] = {0};
+    for (int i = 0; i < max_n; ++i) {
+        int max_count = 0;
+        for (int j = 0; j < (1 << palette_bit_depth); ++j) {
+            if (count_buf[j] > max_count) {
+                max_count     = count_buf[j];
+                top_colors[i] = j;
+            }
+        }
+        count_buf[top_colors[i]] = 0;
+    }
+
+    //  Dominant-color search
+    uint8_t dominant_color_step = pcs->ppcs->palette_ctrls.dominant_color_step;
+    if (dominant_color_step != (uint8_t)~0) {
+        for (int n = max_n; n >= min_n; n -= dominant_color_step) {
+            for (int i = 0; i < n; ++i) {
+                centroids[i] = top_colors[i];
+            }
+
+            uint32_t cand_index = *tot_palette_cands;
+
+            palette_rd_y(&palette_cand[cand_index],
+                         &palette_size_array[cand_index],
+                         ctx,
+                         false,
+                         ctx->blk_geom->bsize,
+                         data,
+                         centroids,
+                         n,
+                         color_cache,
+                         n_cache,
+                         palette_bit_depth);
+
+            if (palette_size_array[cand_index] >= PALETTE_MIN_SIZE) {
+                (*tot_palette_cands)++;
+            }
+        }
+    }
+
+    // K-means search
+    uint8_t kmean_color_step = pcs->ppcs->palette_ctrls.kmean_color_step;
+    if (kmean_color_step != (uint8_t)~0) {
+        for (int n = max_n; n >= min_n; n -= kmean_color_step) {
+            if (colors == PALETTE_MIN_SIZE) {
+                centroids[0] = lb;
+                centroids[1] = ub;
+            } else {
+                for (int i = 0; i < n; ++i) {
+                    centroids[i] = lb + (2 * i + 1) * (ub - lb) / n / 2;
+                }
+
+                av1_k_means(data, centroids, palette_cand[*tot_palette_cands].color_idx_map, rows * cols, n, 1, 50);
+            }
+            if (pcs->ppcs->palette_ctrls.centroid_refinement) {
+                cache_based_centroid_refinement(data,
+                                                rows,
+                                                cols,
+                                                n,
+                                                centroids,
+                                                palette_cand[*tot_palette_cands].color_idx_map,
+                                                color_cache,
+                                                n_cache);
+            }
+            uint32_t cand_index = *tot_palette_cands;
+
+            palette_rd_y(&palette_cand[cand_index],
+                         &palette_size_array[cand_index],
+                         ctx,
+                         true,
+                         ctx->blk_geom->bsize,
+                         data,
+                         centroids,
+                         n,
+                         color_cache,
+                         n_cache,
+                         palette_bit_depth);
+
+            if (palette_size_array[cand_index] >= PALETTE_MIN_SIZE) {
+                (*tot_palette_cands)++;
+            }
+        }
+    }
+}
+#else
 /****************************************
    determine all palette luma candidates
  ****************************************/
@@ -461,6 +696,7 @@ void search_palette_luma(PictureControlSet* pcs, ModeDecisionContext* ctx, Palet
         }
     }
 }
+#endif
 
 typedef AomCdfProb (*MapCdf)[PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)];
 typedef const int (*ColorCost)[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS];
@@ -526,6 +762,160 @@ static void get_color_map_params_rate(ModeDecisionCandidate* cand, MdRateEstimat
     }
 }
 
+#if OPT_PALETTE_PATH
+#define SWAP(i, j)                               \
+    do {                                         \
+        const uint8_t tmp_score = score_rank[i]; \
+        const uint8_t tmp_color = color_rank[i]; \
+        score_rank[i]           = score_rank[j]; \
+        color_rank[i]           = color_rank[j]; \
+        score_rank[j]           = tmp_score;     \
+        color_rank[j]           = tmp_color;     \
+    } while (0)
+
+#define MAX_COLOR_CONTEXT_HASH 8
+// Negative values are invalid
+int svt_aom_palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1] = {-1, -1, 0, -1, -1, 4, 3, 2, 1};
+#define NUM_PALETTE_NEIGHBORS 3 // left, top-left and top.
+#define INVALID_COLOR_IDX (UINT8_MAX)
+
+static inline int av1_fast_palette_color_index_context_on_edge(const uint8_t* color_map, int stride, int r, int c,
+                                                               int* color_idx) {
+    const bool has_left  = (c - 1 >= 0);
+    const bool has_above = (r - 1 >= 0);
+    assert(r > 0 || c > 0);
+    assert(has_above ^ has_left);
+    assert(color_idx);
+    (void)has_left;
+
+    const uint8_t color_neighbor = has_above ? color_map[(r - 1) * stride + (c - 0)]
+                                             : color_map[(r - 0) * stride + (c - 1)];
+    // If the neighbor color has higher index than current color index, then we
+    // move up by 1.
+    const uint8_t current_color = *color_idx = color_map[r * stride + c];
+    if (color_neighbor > current_color) {
+        (*color_idx)++;
+    } else if (color_neighbor == current_color) {
+        *color_idx = 0;
+    }
+
+    // Get hash value of context.
+    // The non-diagonal neighbors get a weight of 2.
+    const uint8_t color_score          = 2;
+    const uint8_t hash_multiplier      = 1;
+    const uint8_t color_index_ctx_hash = color_score * hash_multiplier;
+
+    // Lookup context from hash.
+    const int color_index_ctx = svt_aom_palette_color_index_context_lookup[color_index_ctx_hash];
+    assert(color_index_ctx == 0);
+    (void)color_index_ctx;
+    return 0;
+}
+
+// A faster version of av1_get_palette_color_index_context used by the encoder
+// exploiting the fact that the encoder does not need to maintain a color order.
+static inline int av1_fast_palette_color_index_context(const uint8_t* color_map, int stride, int r, int c,
+                                                       int* color_idx) {
+    assert(r > 0 || c > 0);
+
+    const bool has_above = (r - 1 >= 0);
+    const bool has_left  = (c - 1 >= 0);
+    assert(has_above || has_left);
+    if (has_above ^ has_left) {
+        return av1_fast_palette_color_index_context_on_edge(color_map, stride, r, c, color_idx);
+    }
+
+    // This goes in the order of left, top, and top-left. This has the advantage
+    // that unless anything here are not distinct or invalid, this will already
+    // be in sorted order. Furthermore, if either of the first two is
+    // invalid, we know the last one is also invalid.
+    uint8_t color_neighbors[NUM_PALETTE_NEIGHBORS];
+    color_neighbors[0] = color_map[(r - 0) * stride + (c - 1)];
+    color_neighbors[1] = color_map[(r - 1) * stride + (c - 0)];
+    color_neighbors[2] = color_map[(r - 1) * stride + (c - 1)];
+
+    // Aggregate duplicated values.
+    // Since our array is so small, using a couple if statements is faster
+    uint8_t scores[NUM_PALETTE_NEIGHBORS] = {2, 2, 1};
+    uint8_t num_invalid_colors            = 0;
+    if (color_neighbors[0] == color_neighbors[1]) {
+        scores[0] += scores[1];
+        color_neighbors[1] = INVALID_COLOR_IDX;
+        num_invalid_colors += 1;
+
+        if (color_neighbors[0] == color_neighbors[2]) {
+            scores[0] += scores[2];
+            num_invalid_colors += 1;
+        }
+    } else if (color_neighbors[0] == color_neighbors[2]) {
+        scores[0] += scores[2];
+        num_invalid_colors += 1;
+    } else if (color_neighbors[1] == color_neighbors[2]) {
+        scores[1] += scores[2];
+        num_invalid_colors += 1;
+    }
+
+    const uint8_t num_valid_colors = NUM_PALETTE_NEIGHBORS - num_invalid_colors;
+
+    uint8_t* color_rank = color_neighbors;
+    uint8_t* score_rank = scores;
+
+    // Sort everything
+    if (num_valid_colors > 1) {
+        if (color_neighbors[1] == INVALID_COLOR_IDX) {
+            scores[1]          = scores[2];
+            color_neighbors[1] = color_neighbors[2];
+        }
+
+        // We need to swap the first two elements if they have the same score but
+        // the color indices are not in the right order
+        if (score_rank[0] < score_rank[1] || (score_rank[0] == score_rank[1] && color_rank[0] > color_rank[1])) {
+            SWAP(0, 1);
+        }
+        if (num_valid_colors > 2) {
+            if (score_rank[0] < score_rank[2]) {
+                SWAP(0, 2);
+            }
+            if (score_rank[1] < score_rank[2]) {
+                SWAP(1, 2);
+            }
+        }
+    }
+
+    // If any of the neighbor colors has higher index than current color index,
+    // then we move up by 1 unless the current color is the same as one of the
+    // neighbors.
+    const uint8_t current_color = *color_idx = color_map[r * stride + c];
+    for (int idx = 0; idx < num_valid_colors; idx++) {
+        if (color_rank[idx] > current_color) {
+            (*color_idx)++;
+        } else if (color_rank[idx] == current_color) {
+            *color_idx = idx;
+            break;
+        }
+    }
+
+    // Get hash value of context.
+    uint8_t              color_index_ctx_hash                    = 0;
+    static const uint8_t hash_multipliers[NUM_PALETTE_NEIGHBORS] = {1, 2, 2};
+    for (int idx = 0; idx < num_valid_colors; ++idx) {
+        color_index_ctx_hash += score_rank[idx] * hash_multipliers[idx];
+    }
+    assert(color_index_ctx_hash > 0);
+    assert(color_index_ctx_hash <= MAX_COLOR_CONTEXT_HASH);
+
+    // Lookup context from hash.
+    const int color_index_ctx = 9 - color_index_ctx_hash;
+    assert(color_index_ctx == svt_aom_palette_color_index_context_lookup[color_index_ctx_hash]);
+    assert(color_index_ctx >= 0);
+    assert(color_index_ctx < PALETTE_COLOR_INDEX_CONTEXTS);
+    return color_index_ctx;
+}
+
+#undef INVALID_COLOR_IDX
+#undef SWAP
+#endif
+
 static int cost_and_tokenize_map(Av1ColorMapParam* param, TOKENEXTRA** t, int plane, int calc_rate,
                                  int allow_update_cdf, MapCdf map_pb_cdf) {
     const uint8_t* const color_map         = param->color_map;
@@ -542,10 +932,15 @@ static int cost_and_tokenize_map(Av1ColorMapParam* param, TOKENEXTRA** t, int pl
 
     for (int k = 1; k < rows + cols - 1; ++k) {
         for (int j = AOMMIN(k, cols - 1); j >= AOMMAX(0, k - rows + 1); --j) {
-            int       i = k - j;
-            int       color_new_idx;
+            int i = k - j;
+            int color_new_idx;
+#if OPT_PALETTE_PATH
+            const int color_ctx = av1_fast_palette_color_index_context(
+                color_map, plane_block_width, i, j, &color_new_idx);
+#else
             const int color_ctx = svt_aom_get_palette_color_index_context_optimized(
                 color_map, plane_block_width, i, j, &color_new_idx);
+#endif
             assert(color_new_idx >= 0 && color_new_idx < n);
             if (calc_rate) {
                 this_rate += (*color_cost)[palette_size_idx][color_ctx][color_new_idx];

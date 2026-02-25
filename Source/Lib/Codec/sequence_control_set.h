@@ -55,6 +55,9 @@ typedef struct QpBasedThScaling {
 #if FTR_VLPD0
     bool lpd0_qp_based_th_scaling;
 #endif
+#if OPT_MESH_QP
+    bool intra_bc_mesh_qp_scaling;
+#endif
 } QpBasedThScaling;
 
 // Forward declaration for block geometry

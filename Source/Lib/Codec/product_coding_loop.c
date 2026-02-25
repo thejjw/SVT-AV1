@@ -4443,12 +4443,15 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
     for (int tx_type_group_idx = 0; tx_type_group_idx < tx_type_tot_group; ++tx_type_group_idx) {
         uint32_t best_tx_non_coeff = 64 * 64;
         for (int tx_type_idx = 0; tx_type_idx < TX_TYPES; ++tx_type_idx) {
+#if OPT_UNIFY_TXT_SC_NSC
+            tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
+#else
             if (pcs->ppcs->sc_class1) {
                 tx_type = tx_type_group_sc[tx_type_group_idx][tx_type_idx];
             } else {
                 tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
             }
-
+#endif
             if (tx_type == INVALID_TX_TYPE) {
                 break;
             }
@@ -6434,7 +6437,9 @@ static void full_loop_core(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
     }
     // Check if should perform TX type search
     if (ctx->blk_geom->sq_size <= 64 && start_tx_depth == 0 && end_tx_depth == 0 && // TXS off
+#if OPT_UNIFY_TXT_SC_NSC
         !pcs->ppcs->sc_class1 && // Can't be SC b/c SC tries DCT_DCT and IDTX when only_dct_dct is 1
+#endif
         search_dct_dct_only(pcs,
                             ctx,
                             cand_bf,
@@ -7338,10 +7343,15 @@ static void post_mds0_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
                                             &q_weight,
                                             &q_weight_denom,
                                             pcs->ppcs->scs->static_config.qp);
+#if OPT_NIC_SC
+    uint64_t mds1_class_th = (pcs->slice_type == I_SLICE || pruning_ctrls.mds1_class_th == (uint64_t)~0)
+        ? (uint64_t)~0
+        : DIVIDE_AND_ROUND(pruning_ctrls.mds1_class_th * q_weight, q_weight_denom);
+#else
     uint64_t mds1_class_th = (pruning_ctrls.mds1_class_th == (uint64_t)~0)
         ? pruning_ctrls.mds1_class_th
         : DIVIDE_AND_ROUND(pruning_ctrls.mds1_class_th * q_weight, q_weight_denom);
-
+#endif
     uint8_t  mds1_band_cnt            = pruning_ctrls.mds1_band_cnt;
     uint16_t mds1_cand_th_rank_factor = pruning_ctrls.mds1_cand_th_rank_factor;
 
@@ -7410,9 +7420,15 @@ static void post_mds1_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
         ? pruning_ctrls.mds2_cand_base_th
         : DIVIDE_AND_ROUND(pruning_ctrls.mds2_cand_base_th * q_weight, q_weight_denom);
 
-    const uint64_t                mds2_class_th        = (pruning_ctrls.mds2_class_th == (uint64_t)~0)
-                              ? pruning_ctrls.mds2_class_th
-                              : DIVIDE_AND_ROUND(pruning_ctrls.mds2_class_th * q_weight, q_weight_denom);
+#if OPT_NIC_SC
+    const uint64_t mds2_class_th = (pcs->slice_type == I_SLICE || pruning_ctrls.mds2_class_th == (uint64_t)~0)
+        ? (uint64_t)~0
+        : DIVIDE_AND_ROUND(pruning_ctrls.mds2_class_th * q_weight, q_weight_denom);
+#else
+    const uint64_t mds2_class_th = (pruning_ctrls.mds2_class_th == (uint64_t)~0)
+        ? pruning_ctrls.mds2_class_th
+        : DIVIDE_AND_ROUND(pruning_ctrls.mds2_class_th * q_weight, q_weight_denom);
+#endif
     const uint8_t                 mds2_band_cnt        = pruning_ctrls.mds2_band_cnt;
     const uint16_t                mds2_relative_dev_th = pruning_ctrls.mds2_relative_dev_th;
     ModeDecisionCandidateBuffer** cand_bf_arr          = ctx->cand_bf_ptr_array;
@@ -7488,9 +7504,19 @@ static void post_mds2_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
         ? pruning_ctrls.mds3_cand_base_th
         : DIVIDE_AND_ROUND(pruning_ctrls.mds3_cand_base_th * q_weight, q_weight_denom);
 
-    const uint64_t                mds3_class_th = (pruning_ctrls.mds3_class_th == (uint64_t)~0)
-                       ? pruning_ctrls.mds3_class_th
-                       : DIVIDE_AND_ROUND(pruning_ctrls.mds3_class_th * q_weight, q_weight_denom);
+#if OPT_NIC_SC
+    uint64_t mds3_class_th = (pruning_ctrls.mds3_class_th == (uint64_t)~0)
+        ? pruning_ctrls.mds3_class_th
+        : DIVIDE_AND_ROUND(pruning_ctrls.mds3_class_th * q_weight, q_weight_denom);
+    if (pcs->slice_type == I_SLICE && mds3_class_th != (uint64_t)~0) {
+        mds3_class_th = MAX(25, mds3_class_th * pruning_ctrls.i_mds3_class_th_mult);
+    }
+#else
+    const uint64_t mds3_class_th = (pruning_ctrls.mds3_class_th == (uint64_t)~0)
+        ? pruning_ctrls.mds3_class_th
+        : DIVIDE_AND_ROUND(pruning_ctrls.mds3_class_th * q_weight, q_weight_denom);
+#endif
+
     const uint8_t                 mds3_band_cnt = pruning_ctrls.mds3_band_cnt;
     ModeDecisionCandidateBuffer** cand_bf_arr   = ctx->cand_bf_ptr_array;
     ctx->md_stage_3_total_count                 = 0;
@@ -8936,7 +8962,11 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
 #endif
     uint32_t fast_candidate_total_count;
     ctx->md_stage = MD_STAGE_0;
+#if OPT_NSQ_INTRABC_PARENT_GATE
+    generate_md_stage_0_cand(pcs, ctx, pc_tree, &fast_candidate_total_count);
+#else
     generate_md_stage_0_cand(pcs, ctx, &fast_candidate_total_count);
+#endif
     if (pcs->slice_type != I_SLICE && ctx->approx_inter_rate < 2) {
         if (!ctx->shut_fast_rate) {
             estimate_ref_frames_num_bits(ctx, pcs);
