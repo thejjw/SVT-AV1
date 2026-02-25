@@ -691,8 +691,18 @@ typedef enum ATTRIBUTE_PACKED {
 } Pd1Level;
 
 // If adding/removing a class, must also update is_intra_class func and MD_STAGE_NICS array
+#if OPT_INTRA_BC_CLASS
+typedef enum CandClass {
+    CAND_CLASS_0,
+    CAND_CLASS_1,
+    CAND_CLASS_2,
+    CAND_CLASS_3,
+    CAND_CLASS_4,
+    CAND_CLASS_TOTAL
+} CandClass;
+#else
 typedef enum CandClass { CAND_CLASS_0, CAND_CLASS_1, CAND_CLASS_2, CAND_CLASS_3, CAND_CLASS_TOTAL } CandClass;
-
+#endif
 typedef enum MdStage { MD_STAGE_0, MD_STAGE_1, MD_STAGE_2, MD_STAGE_3, MD_STAGE_TOTAL, INVALID_MD_STAGE } MdStage;
 
 typedef enum MdStagingMode {
@@ -703,11 +713,23 @@ typedef enum MdStagingMode {
 } MdStagingMode;
 
 static INLINE bool is_intra_class(CandClass c) {
+#if OPT_INTRA_BC_CLASS
+    return (c == CAND_CLASS_0 || c == CAND_CLASS_3 || c == CAND_CLASS_4);
+#else
     return (c == CAND_CLASS_0 || c == CAND_CLASS_3);
+#endif
 }
 
 #define NICS_PIC_TYPE 3
 #define NICS_SCALING_LEVELS 16
+#if OPT_INTRA_BC_CLASS //---
+static const uint32_t MD_STAGE_NICS[NICS_PIC_TYPE][CAND_CLASS_TOTAL] = {
+    // C0    C1    C2     C3
+    {64, 0, 0, 64, 64}, // I SLICE
+    {32, 32, 32, 32, 32}, // REF FRAMES
+    {16, 16, 16, 16, 16}, // NON-REF FRAMES
+};
+#else
 static const uint32_t MD_STAGE_NICS[NICS_PIC_TYPE][CAND_CLASS_TOTAL] =
 
     {
@@ -716,7 +738,7 @@ static const uint32_t MD_STAGE_NICS[NICS_PIC_TYPE][CAND_CLASS_TOTAL] =
         {32, 32, 32, 8}, // REF FRAMES
         {16, 16, 16, 4}, // NON-REF FRAMES
 };
-
+#endif
 #define MD_STAGE_NICS_SCAL_DENUM 16
 
 static const uint32_t MD_STAGE_NICS_SCAL_NUM[NICS_SCALING_LEVELS][MD_STAGE_TOTAL] = {
@@ -975,20 +997,21 @@ typedef enum ATTRIBUTE_PACKED {
 #endif
 
 #define MAX_TX_TYPE_GROUP 6
-static const TxType tx_type_group[MAX_TX_TYPE_GROUP][TX_TYPES]    = {{DCT_DCT, INVALID_TX_TYPE},
-                                                                     {V_DCT, H_DCT, INVALID_TX_TYPE},
-                                                                     {ADST_ADST, INVALID_TX_TYPE},
-                                                                     {ADST_DCT, DCT_ADST, INVALID_TX_TYPE},
-                                                                     {FLIPADST_FLIPADST, IDTX, INVALID_TX_TYPE},
-                                                                     {FLIPADST_DCT,
-                                                                      DCT_FLIPADST,
-                                                                      ADST_FLIPADST,
-                                                                      FLIPADST_ADST,
-                                                                      V_ADST,
-                                                                      H_ADST,
-                                                                      V_FLIPADST,
-                                                                      H_FLIPADST,
-                                                                      INVALID_TX_TYPE}};
+static const TxType tx_type_group[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, INVALID_TX_TYPE},
+                                                                  {V_DCT, H_DCT, INVALID_TX_TYPE},
+                                                                  {ADST_ADST, INVALID_TX_TYPE},
+                                                                  {ADST_DCT, DCT_ADST, INVALID_TX_TYPE},
+                                                                  {FLIPADST_FLIPADST, IDTX, INVALID_TX_TYPE},
+                                                                  {FLIPADST_DCT,
+                                                                   DCT_FLIPADST,
+                                                                   ADST_FLIPADST,
+                                                                   FLIPADST_ADST,
+                                                                   V_ADST,
+                                                                   H_ADST,
+                                                                   V_FLIPADST,
+                                                                   H_FLIPADST,
+                                                                   INVALID_TX_TYPE}};
+#if !OPT_UNIFY_TXT_SC_NSC
 static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, IDTX, INVALID_TX_TYPE},
                                                                      {V_DCT, H_DCT, INVALID_TX_TYPE},
                                                                      {ADST_ADST, INVALID_TX_TYPE},
@@ -1003,6 +1026,7 @@ static const TxType tx_type_group_sc[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, I
                                                                       V_FLIPADST,
                                                                       H_FLIPADST,
                                                                       INVALID_TX_TYPE}};
+#endif
 
 typedef enum ATTRIBUTE_PACKED {
     // DCT only

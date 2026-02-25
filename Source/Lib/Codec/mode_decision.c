@@ -36,7 +36,9 @@
 #include "src_ops_process.h"
 #include "utility.h"
 #include "adaptive_mv_pred.h"
-
+#if OPT_INTRA_BC_PATH
+#include "av1me.h"
+#endif
 static const uint32_t intra_luma_to_chroma[INTRA_MODES] = {
     UV_DC_PRED, // Average of above and left pixels
     UV_V_PRED, // Vertical
@@ -3038,7 +3040,168 @@ static void assert_release(int statement) {
         SVT_LOG("ASSERT_ERRRR\n");
     }
 }
+#if OPT_INTRA_BC_PATH
+static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, const SequenceControlSet* scs,
+                            BlkStruct* blk_ptr, Mv* dv_cand, uint8_t* num_dv_cand) {
+    IntraBcContext  x_st;
+    IntraBcContext* x           = &x_st;
+    uint32_t        full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
 
+    svt_memcpy(&x->crc_calculator, &pcs->crc_calculator, sizeof(pcs->crc_calculator));
+    x->approx_inter_rate = ctx->approx_inter_rate;
+    x->xd                = blk_ptr->av1xd;
+    x->nmv_vec_cost      = ctx->md_rate_est_ctx->nmv_vec_cost;
+    x->mv_cost_stack     = ctx->md_rate_est_ctx->nmvcoststack;
+    BlockSize bsize      = ctx->blk_geom->bsize;
+    assert(bsize < BLOCK_SIZES_ALL);
+    FrameHeader*           frm_hdr    = &pcs->ppcs->frm_hdr;
+    const Av1Common* const cm         = pcs->ppcs->av1_cm;
+    MvReferenceFrame       ref_frame  = INTRA_FRAME;
+    const int              num_planes = 3;
+    MacroBlockD*           xd         = blk_ptr->av1xd;
+    const TileInfo*        tile       = &xd->tile;
+    const int              mi_row     = -xd->mb_to_top_edge / (8 * MI_SIZE);
+    const int              mi_col     = -xd->mb_to_left_edge / (8 * MI_SIZE);
+    const int              w          = block_size_wide[bsize];
+    const int              h          = block_size_high[bsize];
+    const int              sb_row     = mi_row >> scs->seq_header.sb_size_log2;
+    const int              sb_col     = mi_col >> scs->seq_header.sb_size_log2;
+
+    // Set up limit values for MV components.
+    // Mv beyond the range do not produce new/different prediction block.
+    const int mi_width   = mi_size_wide[bsize];
+    const int mi_height  = mi_size_high[bsize];
+    x->mv_limits.row_min = -(((mi_row + mi_height) * MI_SIZE) + AOM_INTERP_EXTEND);
+    x->mv_limits.col_min = -(((mi_col + mi_width) * MI_SIZE) + AOM_INTERP_EXTEND);
+    x->mv_limits.row_max = (cm->mi_rows - mi_row) * MI_SIZE + AOM_INTERP_EXTEND;
+    x->mv_limits.col_max = (cm->mi_cols - mi_col) * MI_SIZE + AOM_INTERP_EXTEND;
+    //set search paramters
+    x->sadperbit16 = svt_aom_get_sad_per_bit(frm_hdr->quantization_params.base_q_idx, 0);
+    x->errorperbit = full_lambda >> RD_EPB_SHIFT;
+    x->errorperbit += (x->errorperbit == 0);
+    //temp buffer for hash me
+    for (int i = 0; i < 2; i++) {
+        EB_MALLOC_ARRAY_NO_CHECK(x->hash_value_buffer[i], AOM_BUFFER_SIZE_FOR_BLOCK_HASH);
+    }
+
+    Mv nearestmv, nearmv;
+    svt_av1_find_best_ref_mvs_from_stack(0, ctx->ref_mv_stack /*mbmi_ext*/, xd, ref_frame, &nearestmv, &nearmv, 0);
+    if (nearestmv.as_int == INVALID_MV) {
+        nearestmv.as_int = 0;
+    }
+    if (nearmv.as_int == INVALID_MV) {
+        nearmv.as_int = 0;
+    }
+    Mv dv_ref = nearestmv.as_int == 0 ? nearmv : nearestmv;
+    if (dv_ref.as_int == 0) {
+        svt_aom_find_ref_dv(&dv_ref, tile, scs->seq_header.sb_mi_size, mi_row, mi_col);
+    }
+    // Ref DV should not have sub-pel.
+    assert((dv_ref.x & 7) == 0);
+    assert((dv_ref.y & 7) == 0);
+    ctx->ref_mv_stack[INTRA_FRAME][0].this_mv = dv_ref;
+
+    /* pointer to current frame */
+    Yv12BufferConfig cur_buf;
+    svt_aom_link_eb_to_aom_buffer_desc_8bit(pcs->ppcs->enhanced_pic, &cur_buf);
+    struct Buf2D yv12_mb[MAX_PLANES];
+    svt_av1_setup_pred_block(bsize, yv12_mb, &cur_buf, mi_row, mi_col);
+    for (int i = 0; i < num_planes; ++i) {
+        x->xdplane[i].pre[0] = yv12_mb[i]; // ref in ME
+    }
+    // setup src for DV search same as ref
+    x->plane[0].src = x->xdplane[0].pre[0];
+
+#if OPT_INTRA_BC_PATH
+    enum IntrabcMotionDirection max_dir = pcs->ppcs->intrabc_ctrls.search_dir ? IBC_MOTION_LEFT : IBC_MOTION_DIRECTIONS;
+
+    for (enum IntrabcMotionDirection dir = IBC_MOTION_ABOVE; dir < max_dir; ++dir) {
+#else
+    // up to two dv candidates will be generated
+    // IBC Modes:   0: OFF 1:Slow   2:Faster   3:Fastest
+    enum IntrabcMotionDirection max_dir = pcs->ppcs->intraBC_ctrls.ibc_direction ? IBC_MOTION_LEFT
+                                                                                 : IBC_MOTION_DIRECTIONS;
+
+    for (enum IntrabcMotionDirection dir = IBC_MOTION_ABOVE; dir < max_dir; ++dir) {
+#endif
+        const MvLimits tmp_mv_limits = x->mv_limits;
+
+        switch (dir) {
+        case IBC_MOTION_ABOVE:
+            x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
+            x->mv_limits.col_max = (tile->mi_col_end - mi_col) * MI_SIZE - w;
+            x->mv_limits.row_min = (tile->mi_row_start - mi_row) * MI_SIZE;
+            x->mv_limits.row_max = (sb_row * scs->seq_header.sb_mi_size - mi_row) * MI_SIZE - h;
+            break;
+        case IBC_MOTION_LEFT:
+            x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
+            x->mv_limits.col_max = (sb_col * scs->seq_header.sb_mi_size - mi_col) * MI_SIZE - w;
+            // TODO: Minimize the overlap between above and
+            // left areas.
+            x->mv_limits.row_min     = (tile->mi_row_start - mi_row) * MI_SIZE;
+            int bottom_coded_mi_edge = AOMMIN((sb_row + 1) * scs->seq_header.sb_mi_size, tile->mi_row_end);
+            x->mv_limits.row_max     = (bottom_coded_mi_edge - mi_row) * MI_SIZE - h;
+            break;
+        default:
+            assert(0);
+        }
+        assert_release(x->mv_limits.col_min >= tmp_mv_limits.col_min);
+        assert_release(x->mv_limits.col_max <= tmp_mv_limits.col_max);
+        assert_release(x->mv_limits.row_min >= tmp_mv_limits.row_min);
+        assert_release(x->mv_limits.row_max <= tmp_mv_limits.row_max);
+
+        svt_av1_set_mv_search_range(&x->mv_limits, &dv_ref);
+
+        if (x->mv_limits.col_max < x->mv_limits.col_min || x->mv_limits.row_max < x->mv_limits.row_min) {
+            x->mv_limits = tmp_mv_limits;
+            continue;
+        }
+        Mv mvp_full = dv_ref;
+        mvp_full.x >>= 3;
+        mvp_full.y >>= 3;
+        x->best_mv.as_int = 0;
+
+        // Hash Search
+        const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[bsize];
+
+        int best_hash_cost = INT_MAX;
+        Mv  best_hash_mv   = {{0, 0}};
+
+        svt_av1_intrabc_hash_search(
+            pcs, x, bsize, mi_col * MI_SIZE, mi_row * MI_SIZE, &dv_ref, 1, fn_ptr, &best_hash_cost, &best_hash_mv);
+
+        // Hash produced a candidate
+        if (best_hash_cost < INT_MAX) {
+            Mv dv;
+            dv.x = best_hash_mv.x * 8;
+            dv.y = best_hash_mv.y * 8;
+
+            dv_cand[*num_dv_cand] = dv;
+            (*num_dv_cand)++;
+
+            x->best_mv = best_hash_mv;
+        }
+        // Full-pixel fallback if hash didn't produce a candidate
+        else {
+            svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, &dv_ref);
+
+            Mv dv = {{x->best_mv.x * 8, x->best_mv.y * 8}};
+
+            if (!mv_check_bounds(&x->mv_limits, &dv) &&
+                svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
+                dv_cand[*num_dv_cand] = dv;
+                (*num_dv_cand)++;
+            }
+        }
+
+        x->mv_limits = tmp_mv_limits;
+    }
+
+    for (int i = 0; i < 2; i++) {
+        EB_FREE_ARRAY(x->hash_value_buffer[i]);
+    }
+}
+#else
 static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, const SequenceControlSet* scs,
                             BlkStruct* blk_ptr, Mv* dv_cand, uint8_t* num_dv_cand) {
     IntraBcContext  x_st;
@@ -3189,7 +3352,7 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         EB_FREE_ARRAY(x->hash_value_buffer[i]);
     }
 }
-
+#endif
 static void inject_intra_bc_candidates(PictureControlSet* pcs, ModeDecisionContext* ctx, const SequenceControlSet* scs,
                                        BlkStruct* blk_ptr, uint32_t* cand_cnt) {
     Mv      dv_cand[2];
@@ -3629,9 +3792,13 @@ void generate_md_stage_0_cand_light_pd1(ModeDecisionContext* ctx, uint32_t* cand
 
     *candidate_total_count_ptr = cand_total_cnt;
 }
-
+#if OPT_NSQ_INTRABC_PARENT_GATE
+EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext* ctx, const PC_TREE* const pc_tree,
+                                     uint32_t* candidate_total_count_ptr) {
+#else
 EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                      uint32_t* candidate_total_count_ptr) {
+#endif
     const SequenceControlSet* scs            = pcs->scs;
     const SliceType           slice_type     = pcs->slice_type;
     uint32_t                  cand_total_cnt = 0;
@@ -3661,6 +3828,54 @@ EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext
             inject_filter_intra_candidates(pcs, ctx, &cand_total_cnt);
         }
 
+#if OPT_INTRABC_PALETTE_HINT
+
+        bool eval_intrabc = true;
+
+        if (svt_av1_allow_palette(ctx->md_palette_level, ctx->blk_geom->bsize)) {
+            uint32_t palette_start_cnt = cand_total_cnt;
+
+            inject_palette_candidates(pcs, ctx, &cand_total_cnt);
+
+            eval_intrabc = cand_total_cnt > palette_start_cnt;
+        }
+
+        if (ctx->md_allow_intrabc) {
+            if (!pcs->ppcs->intrabc_ctrls.palette_hint || eval_intrabc) {
+#if OPT_B4_INTRABC_B8_GATE
+                bool do_intra_bc = true;
+
+                if (ctx->shape == PART_N) {
+                    if (pcs->ppcs->intrabc_ctrls.b4_parent_gating && ctx->blk_geom->sq_size == 4 &&
+                        pc_tree->parent->tested_blk[PART_N][0]) {
+                        if (pc_tree->parent->block_data[PART_N][0]->block_mi.use_intrabc == 0) {
+                            do_intra_bc = false;
+                        }
+                    }
+                } else {
+                    if (pcs->ppcs->intrabc_ctrls.nsq_parent_gating && pc_tree->tested_blk[PART_N][0]) {
+                        if (pc_tree->block_data[PART_N][0]->block_mi.use_intrabc == 0) {
+                            do_intra_bc = false;
+                        }
+                    }
+                }
+
+                if (do_intra_bc)
+#else
+                BlkStruct* sq_blk_ptr = &ctx->md_blk_arr_nsq[ctx->blk_geom->sqi_mds];
+
+#if OPT_NSQ_INTRABC_PARENT_GATE
+                if (!pcs->ppcs->intraBC_ctrls.nsq_parent_gating ||
+                    (ctx->blk_geom->shape == PART_N ||
+                     (ctx->avail_blk_flag[ctx->blk_geom->sqi_mds] && sq_blk_ptr->block_mi.use_intrabc)))
+#endif
+#endif
+                {
+                    inject_intra_bc_candidates(pcs, ctx, scs, ctx->blk_ptr, &cand_total_cnt);
+                }
+            }
+        }
+#else
         if (ctx->md_allow_intrabc) {
             inject_intra_bc_candidates(pcs, ctx, scs, ctx->blk_ptr, &cand_total_cnt);
         }
@@ -3668,6 +3883,7 @@ EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext
         if (svt_av1_allow_palette(ctx->md_palette_level, ctx->blk_geom->bsize)) {
             inject_palette_candidates(pcs, ctx, &cand_total_cnt);
         }
+#endif
     }
     if (slice_type != I_SLICE) {
         svt_aom_inject_inter_candidates(pcs, ctx, &cand_total_cnt);
@@ -3697,6 +3913,20 @@ EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext
         ModeDecisionCandidate* cand = &ctx->fast_cand_array[cand_i];
         if (is_intra_mode(cand->block_mi.mode)) {
             // Intra prediction
+#if OPT_INTRA_BC_CLASS
+            if ((cand->palette_info == NULL || cand->palette_size[0] == 0) && cand->block_mi.use_intrabc == 0) {
+                cand->cand_class = CAND_CLASS_0;
+                ctx->md_stage_0_count[CAND_CLASS_0]++;
+            } else if (cand->block_mi.use_intrabc == 0) {
+                // Palette Prediction
+                cand->cand_class = CAND_CLASS_3;
+                ctx->md_stage_0_count[CAND_CLASS_3]++;
+            } else {
+                // Intra-BC Prediction
+                cand->cand_class = CAND_CLASS_4;
+                ctx->md_stage_0_count[CAND_CLASS_4]++;
+            }
+#else
             if (cand->palette_info == NULL || cand->palette_size[0] == 0) {
                 cand->cand_class = CAND_CLASS_0;
                 ctx->md_stage_0_count[CAND_CLASS_0]++;
@@ -3705,6 +3935,7 @@ EbErrorType generate_md_stage_0_cand(PictureControlSet* pcs, ModeDecisionContext
                 cand->cand_class = CAND_CLASS_3;
                 ctx->md_stage_0_count[CAND_CLASS_3]++;
             }
+#endif
         } else { // INTER
             if (cand->block_mi.mode == NEWMV || cand->block_mi.mode == NEW_NEWMV || merge_inter_cands) {
                 // MV Prediction

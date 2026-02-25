@@ -56,6 +56,25 @@ extern "C" {
 #define TUNE_M7_ALLINTRA            1 // Fix M7
 #define FIX_IS_DC_ONLY_SAFE         1 // Skip the spread check for 8x8 blocks when determining whether DC-only is safe, as 4x4 sub-block variance is unavailable
 
+
+#define FTR_SC_STILL_IMAGE          1 // Add support for --scm 1 in all-intra coding
+#define OPT_NIC_SC                  1 // Turn off early class pruning; use conservative pruning before MDS3 stage
+
+#define OPT_PALETTE_PATH            1 // Optimize the estimation of the palette color index rate cost, cache-based colors refinement
+
+#define OPT_INTRA_BC_CLASS          1 // Add a dedicated class for intra-BC
+#define OPT_INTRA_BC_PATH           1 // Restructured the intra-bc MV search
+
+#define OPT_DEPTHS_SC               1 // Tune depth refinement for SC
+
+#define OPT_INTRABC_PALETTE_HINT    1 // Use palette search as a hint to selectively trigger intra-bc search; if no palette candidates are found, skip intra-BC search
+#define OPT_NSQ_INTRABC_PARENT_GATE 1 // For NSQ, skip the intra-BC search if it was not selected for the parent SQ
+#define OPT_MESH_SKIP_STABLE_MV     1 // Skip the mesh-search if the best MV does not change after the diamond-search, indicating the best match is likely already found
+#define OPT_B4_INTRABC_B8_GATE      1 // For 4x4, skip the intra-BC search if it was not selected for the parent 8x8
+#define OPT_MESH_QP                 1 // Scale mesh search ranges based on QP
+
+#define OPT_UNIFY_TXT_SC_NSC        1 // Use the same txt-type ordering for both SC and NSC.
+
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
 #define DEBUG_TPL               0 // Prints to debug TPL

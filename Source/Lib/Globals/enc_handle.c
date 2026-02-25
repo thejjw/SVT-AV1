@@ -3517,6 +3517,9 @@ void set_qp_based_th_scaling_ctrls_default(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 0;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     } else {
         qp_ctrls->tf_me_qp_based_th_scaling        = 1;
         qp_ctrls->tf_ref_qp_based_th_scaling       = 1;
@@ -3530,6 +3533,9 @@ void set_qp_based_th_scaling_ctrls_default(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 1;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     }
 }
 
@@ -3550,6 +3556,9 @@ void set_qp_based_th_scaling_ctrls_rtc(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 0;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     } else {
         qp_ctrls->tf_me_qp_based_th_scaling        = 1;
         qp_ctrls->tf_ref_qp_based_th_scaling       = 1;
@@ -3563,6 +3572,9 @@ void set_qp_based_th_scaling_ctrls_rtc(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 1;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     }
 }
 
@@ -3583,6 +3595,9 @@ void set_qp_based_th_scaling_ctrls_all_intra(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 1;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     } else if (enc_mode <= ENC_M6) {
         qp_ctrls->tf_me_qp_based_th_scaling        = 0;
         qp_ctrls->tf_ref_qp_based_th_scaling       = 0;
@@ -3596,6 +3611,9 @@ void set_qp_based_th_scaling_ctrls_all_intra(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 1;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     } else {
         qp_ctrls->tf_me_qp_based_th_scaling        = 1;
         qp_ctrls->tf_ref_qp_based_th_scaling       = 1;
@@ -3609,6 +3627,9 @@ void set_qp_based_th_scaling_ctrls_all_intra(SequenceControlSet* scs) {
         qp_ctrls->txt_qp_based_th_scaling          = 1;
         qp_ctrls->cap_max_size_qp_based_th_scaling = 1;
         qp_ctrls->lpd0_qp_based_th_scaling         = 1;
+#if OPT_MESH_QP
+        qp_ctrls->intra_bc_mesh_qp_scaling = 1;
+#endif
     }
 }
 #else
@@ -4461,6 +4482,16 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     scs->subsampling_y     = (scs->chroma_format_idc >= EB_YUV422 ? 0 : 1);
     // Force screen-content detection OFF when allintra
 #if OPT_SC_ALLINTRA_DETECTION
+#if FTR_SC_STILL_IMAGE
+    const bool allintra = scs->allintra;
+
+    if (allintra && config_struct->screen_content_mode > 1) {
+        scs->static_config.screen_content_mode = 0;
+        SVT_WARN("Screen-content detection is disabled for all-intra coding; forcing NSC path\n");
+    } else {
+        scs->static_config.screen_content_mode = config_struct->screen_content_mode;
+    }
+#else
     const bool allintra = scs->allintra;
     if (allintra) {
         scs->static_config.screen_content_mode = 0;
@@ -4468,6 +4499,7 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     } else {
         scs->static_config.screen_content_mode = config_struct->screen_content_mode;
     }
+#endif
 #else
     scs->static_config.screen_content_mode = scs->allintra ? 0 : config_struct->screen_content_mode;
 #endif

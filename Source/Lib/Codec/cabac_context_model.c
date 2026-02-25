@@ -2758,7 +2758,7 @@ void svt_av1_reset_cdf_symbol_counters(FRAME_CONTEXT* fc) {
     RESET_CDF_COUNTER(fc->cfl_sign_cdf, CFL_JOINT_SIGNS);
     RESET_CDF_COUNTER(fc->cfl_alpha_cdf, CFL_ALPHABET_SIZE);
 }
-
+#if !OPT_PALETTE_PATH
 /********************************************************************************************************************************/
 
 #define MAX_COLOR_CONTEXT_HASH 8
@@ -2869,7 +2869,7 @@ int svt_aom_get_palette_color_index_context_optimized(const uint8_t* color_map, 
     assert(color_index_ctx < PALETTE_COLOR_INDEX_CONTEXTS);
     return color_index_ctx;
 }
-
+#endif
 #undef NUM_PALETTE_NEIGHBORS
 #undef MAX_COLOR_CONTEXT_HASH
 
