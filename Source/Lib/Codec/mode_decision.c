@@ -859,6 +859,41 @@ static int8_t bipred_3x3_y_pos[BIPRED_3x3_REFINMENT_POSITIONS]      = {0, 1, 1, 
 
 #if OPT_PER_BLK_INTRA
 static INLINE uint8_t is_dc_only_safe(PictureControlSet* pcs, ModeDecisionContext* ctx) {
+#if FIX_IS_DC_ONLY_SAFE
+    // Early exit if pruning not enabled, SB-128, NSQ, or 4x4 (no variance available)
+    if (!ctx->intra_ctrls.prune_using_edge_info || pcs->scs->super_block_size == 128 || ctx->shape != PART_N ||
+        ctx->blk_geom->sq_size == 4) {
+        return 0;
+    }
+
+    // Block variance lookup
+    int            blk_idx;
+    int            sub_idx[4];
+    const Position blk_org = {.x = ctx->blk_org_x - ctx->sb_origin_x, .y = ctx->blk_org_y - ctx->sb_origin_y};
+    svt_aom_get_blk_var_map(ctx->blk_geom->sq_size, blk_org.x, blk_org.y, &blk_idx, sub_idx);
+
+    uint16_t* sb_var  = pcs->ppcs->variance[ctx->sb_index];
+    uint32_t  blk_var = sb_var[blk_idx];
+
+    // For 8x8, we do not have 4x4 sub-variance, skip spread check
+    if (ctx->blk_geom->sq_size == 8) {
+        return (blk_var < 2000);
+    }
+
+    // For 16x16 and above, compute spread from sub-blocks
+    uint32_t min_var = UINT32_MAX;
+    uint32_t max_var = 0;
+
+    for (int i = 0; i < 4; i++) {
+        uint32_t v = sb_var[sub_idx[i]];
+        min_var    = MIN(min_var, v);
+        max_var    = MAX(max_var, v);
+    }
+
+    uint32_t spread_var = max_var - min_var;
+
+    return (blk_var < 2000 && spread_var < 4000);
+#else
     // Early exit if pruning not enabled, SB-128, NSQ
     if (!ctx->intra_ctrls.prune_using_edge_info || pcs->scs->super_block_size == 128 || ctx->shape != PART_N) {
         return 0;
@@ -887,6 +922,7 @@ static INLINE uint8_t is_dc_only_safe(PictureControlSet* pcs, ModeDecisionContex
 
     // Safe if uniform block
     return (blk_var < 2000 && spread_var < 4000);
+#endif
 }
 #endif
 // Inject inter-intra, WM, OBMC for unipred simple-trans candidate
