@@ -34,7 +34,6 @@
 extern "C" {
 #endif // __cplusplus
 
-
 #define FTR_INTRA_COEFF_LVL         1 // Add coeff-level for INTRA frames using average input variance and input QP.
 #define FTR_VLPD0                   1 // Use a variance-based cost model directly from spatial statistics
 #define OPT_RDOQ_BIS                1 // Replace the area-based cutoff with an adaptive cutoff that uses both transform size and the coded coefficient length (EOB) towards reducing over-pruning on textured blocks

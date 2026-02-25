@@ -811,10 +811,10 @@ static void restore_param(PictureParentControlSet* ppcs, RateControlIntervalPara
     int64_t last_frame_diff = (int)(scs->twopass.stats_buf_ctx->stats_in_end[-1].frame - ppcs->last_idr_picture + 1);
     if (scs->lap_rc) {
         if (scs->static_config.hierarchical_levels != ppcs->hierarchical_levels || ppcs->end_of_sequence_region) {
-            key_max = MIN(key_max, last_frame_diff);
+            key_max = (int)MIN(key_max, last_frame_diff);
         }
     } else {
-        key_max = MIN(key_max, last_frame_diff);
+        key_max = (int)MIN(key_max, last_frame_diff);
     }
 
     TWO_PASS*     twopass = &scs->twopass;

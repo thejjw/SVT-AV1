@@ -95,8 +95,8 @@ static void mode_decision_context_dctor(EbPtr p) {
     }
     EB_FREE_ARRAY(obj->mds);
     EB_FREE_ARRAY(obj->pc_tree);
-    EB_FREE_ARRAY(obj->avail_blk_flag);
-    EB_FREE_ARRAY(obj->cost_avail);
+    EB_FREE_ARRAY(obj->tested_blk);
+    obj->blocks_to_alloc = 0;
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     if (obj->rate_est_table) {
         EB_FREE_ARRAY(obj->rate_est_table);
@@ -178,9 +178,11 @@ static void setup_mds(SequenceControlSet* scs, MdScan* mds, uint32_t* mds_idx, i
     }
 }
 
-static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const int min_sq_size) {
-    pc_tree->bsize = bsize;
-    pc_tree->index = index;
+static void setup_pc_tree(PC_TREE* pc_tree, bool (*test_blk_array)[PART_S][4], int index, BlockSize bsize,
+                          const int min_sq_size) {
+    pc_tree->bsize      = bsize;
+    pc_tree->index      = index;
+    pc_tree->tested_blk = test_blk_array[0];
 
     // If applicable, add split depths
     const int sq_size = block_size_wide[bsize];
@@ -195,8 +197,9 @@ static void setup_pc_tree(PC_TREE* pc_tree, int index, BlockSize bsize, const in
         }
 
         for (int i = 0; i < SUB_PARTITIONS_SPLIT; ++i) {
-            pc_tree->split[i] = pc_tree + i * blocks_to_skip + 1;
-            setup_pc_tree(pc_tree->split[i], i, subsize, min_sq_size);
+            pc_tree->split[i]         = pc_tree + i * blocks_to_skip + 1;
+            pc_tree->split[i]->parent = pc_tree;
+            setup_pc_tree(pc_tree->split[i], test_blk_array + i * blocks_to_skip + 1, i, subsize, min_sq_size);
         }
     }
 }
@@ -520,8 +523,6 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     }
     ctx->md_blk_arr_nsq[0].av1xd = NULL;
     EB_MALLOC_ARRAY(ctx->md_blk_arr_nsq[0].av1xd, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->avail_blk_flag, block_max_count_sb);
-    EB_MALLOC_ARRAY(ctx->cost_avail, block_max_count_sb);
 
     // Alloc mds and pc_tree, which are used to track tested blocks in MD
 #if TUNE_STILL_IMAGE
@@ -547,7 +548,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     uint32_t mds_idx = 0;
     setup_mds(scs, ctx->mds, &mds_idx, 0, scs->seq_header.sb_size, min_bsize);
     EB_CALLOC_ARRAY(ctx->pc_tree, blocks_to_alloc);
-    setup_pc_tree(ctx->pc_tree, 0, scs->seq_header.sb_size, min_bsize);
+    EB_MALLOC_ARRAY(ctx->tested_blk, blocks_to_alloc);
+    setup_pc_tree(ctx->pc_tree, ctx->tested_blk, 0, scs->seq_header.sb_size, min_bsize);
+    ctx->blocks_to_alloc = blocks_to_alloc;
 
 #if TUNE_STILL_IMAGE
     bool bypass_encdec = allintra ? svt_aom_get_bypass_encdec_allintra(enc_mode)
