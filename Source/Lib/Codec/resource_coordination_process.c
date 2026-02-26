@@ -466,10 +466,10 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
 
     if (!is_16bit_input) {
         uint16_t input_row_index;
-        uint32_t luma_buffer_offset = (dst_picture_ptr->stride_y * scs->top_padding + scs->left_padding)
+        uint32_t luma_buffer_offset = (dst_picture_ptr->stride_y * scs->border + scs->border)
             << is_16bit_input;
         uint32_t chroma_buffer_offset =
-            (dst_picture_ptr->stride_cr * (scs->top_padding >> 1) + (scs->left_padding >> 1)) << is_16bit_input;
+            (dst_picture_ptr->stride_cr * (scs->border >> 1) + (scs->border >> 1)) << is_16bit_input;
         uint16_t luma_stride   = dst_picture_ptr->stride_y << is_16bit_input;
         uint16_t chroma_stride = dst_picture_ptr->stride_cb << is_16bit_input;
         uint16_t luma_width    = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
@@ -618,8 +618,8 @@ bool buffer_update_needed(EbBufferHeaderType* input_buffer, struct SequenceContr
     uint32_t max_height = !(scs->max_input_luma_height % 8)
         ? scs->max_input_luma_height
         : scs->max_input_luma_height + (scs->max_input_luma_height % 8);
-    if (((EbPictureBufferDesc*)(input_buffer->p_buffer))->max_width != max_width ||
-        ((EbPictureBufferDesc*)(input_buffer->p_buffer))->max_height != max_height) {
+    if (((EbPictureBufferDesc*)(input_buffer->p_buffer))->width != max_width ||
+        ((EbPictureBufferDesc*)(input_buffer->p_buffer))->height != max_height) {
         return true;
     } else {
         return false;
@@ -646,10 +646,7 @@ static EbErrorType svt_overlay_buffer_header_update(EbBufferHeaderType* input_bu
     input_pic_buf_desc_init_data.bit_depth    = (EbBitDepth)config->encoder_bit_depth;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
-    input_pic_buf_desc_init_data.left_padding  = scs->left_padding;
-    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
-    input_pic_buf_desc_init_data.top_padding   = scs->top_padding;
-    input_pic_buf_desc_init_data.bot_padding   = scs->bot_padding;
+    input_pic_buf_desc_init_data.border = scs->border;
 
     input_pic_buf_desc_init_data.split_mode = is_16bit ? true : false;
 
@@ -1195,8 +1192,8 @@ void* svt_aom_resource_coordination_kernel(void* input_ptr) {
             // make pa_ref full sample buffer access the luma8bit part from the y8b Pool
             EbPaReferenceObject* pa_ref_obj = (EbPaReferenceObject*)pcs->pa_ref_pic_wrapper->object_ptr;
             // if resolution has changed, and the pa_ref settings do not match scs settings, update pa reference params
-            if (pa_ref_obj->input_padded_pic->max_width != scs->max_input_luma_width ||
-                pa_ref_obj->input_padded_pic->max_height != scs->max_input_luma_height) {
+            if (pa_ref_obj->input_padded_pic->width != scs->max_input_luma_width ||
+                pa_ref_obj->input_padded_pic->height != scs->max_input_luma_height) {
                 svt_pa_reference_param_update(pa_ref_obj, scs);
             }
             EbPictureBufferDesc* input_padded_pic = (EbPictureBufferDesc*)pa_ref_obj->input_padded_pic;

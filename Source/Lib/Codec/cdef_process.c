@@ -88,11 +88,9 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
                                   EbPictureBufferDesc* recon_picture_dst, int num_planes, int skip_copy) {
     recon_picture_dst->org_x        = recon_picture_src->org_x;
     recon_picture_dst->org_y        = recon_picture_src->org_y;
-    recon_picture_dst->origin_bot_y = recon_picture_src->origin_bot_y;
+    recon_picture_dst->border = recon_picture_src->border;
     recon_picture_dst->width        = recon_picture_src->width;
     recon_picture_dst->height       = recon_picture_src->height;
-    recon_picture_dst->max_width    = recon_picture_src->max_width;
-    recon_picture_dst->max_height   = recon_picture_src->max_height;
     recon_picture_dst->bit_depth    = recon_picture_src->bit_depth;
     recon_picture_dst->color_format = recon_picture_src->color_format;
 

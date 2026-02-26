@@ -1899,8 +1899,8 @@ static void md_full_pel_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     }
 
     if ((ctx->blk_org_x + ctx->blk_geom->bwidth + (mvx >> 3) + search_position_end_x) >
-        (ref_pic->org_x + ref_pic->max_width - 1)) {
-        search_position_end_x = (ref_pic->org_x + ref_pic->max_width - 1) -
+        (ref_pic->org_x + ref_pic->width - 1)) {
+        search_position_end_x = (ref_pic->org_x + ref_pic->width - 1) -
             (ctx->blk_org_x + ctx->blk_geom->bwidth + (mvx >> 3));
     }
 
@@ -1909,8 +1909,8 @@ static void md_full_pel_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     }
 
     if ((ctx->blk_org_y + ctx->blk_geom->bheight + (mvy >> 3) + search_position_end_y) >
-        (ref_pic->org_y + ref_pic->max_height - 1)) {
-        search_position_end_y = (ref_pic->org_y + ref_pic->max_height - 1) -
+        (ref_pic->org_y + ref_pic->height - 1)) {
+        search_position_end_y = (ref_pic->org_y + ref_pic->height - 1) -
             (ctx->blk_org_y + ctx->blk_geom->bheight + (mvy >> 3));
     }
     if (dist_type == SAD && ctx->enable_psad) {
@@ -2223,12 +2223,12 @@ static void md_nsq_motion_search(PictureControlSet* pcs, ModeDecisionContext* ct
 */
 static void clip_mv_on_pic_boundary(int32_t blk_org_x, int32_t blk_org_y, int32_t bwidth, int32_t bheight,
                                     EbPictureBufferDesc* ref_pic, int16_t* mvx, int16_t* mvy) {
-    if (blk_org_x + (*mvx >> 3) + bwidth > ref_pic->max_width + ref_pic->org_x) {
-        *mvx = (ref_pic->max_width - blk_org_x) << 3;
+    if (blk_org_x + (*mvx >> 3) + bwidth > ref_pic->width + ref_pic->org_x) {
+        *mvx = (ref_pic->width - blk_org_x) << 3;
     }
 
-    if (blk_org_y + (*mvy >> 3) + bheight > ref_pic->max_height + ref_pic->org_y) {
-        *mvy = (ref_pic->max_height - blk_org_y) << 3;
+    if (blk_org_y + (*mvy >> 3) + bheight > ref_pic->height + ref_pic->org_y) {
+        *mvy = (ref_pic->height - blk_org_y) << 3;
     }
 
     if (blk_org_x + (*mvx >> 3) < -ref_pic->org_x) {

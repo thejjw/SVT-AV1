@@ -98,10 +98,7 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext* thread_ctx, const EbEn
                    .max_width          = scs->super_block_size,
                    .max_height         = scs->super_block_size,
                    .bit_depth          = EB_SIXTEEN_BIT,
-                   .left_padding       = 0,
-                   .right_padding      = 0,
-                   .top_padding        = 0,
-                   .bot_padding        = 0,
+                   .border       = 0,
                    .split_mode         = false,
                    .color_format       = color_format,
                });
@@ -372,9 +369,6 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
         chroma_subsamp_y   = 1;
     }
 
-    dst->max_width  = src->max_width;
-    dst->max_height = src->max_height;
-
     svt_aom_fgn_copy_rect(src->buffer_y + ((src->org_y * src->stride_y + src->org_x) << use_high_bit_depth),
                           src->stride_y,
                           dst->buffer_y + ((dst->org_y * dst->stride_y + dst->org_x) << use_high_bit_depth),
@@ -486,10 +480,7 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                 temp_recon_desc_init_data.max_height         = (uint16_t)scs->max_input_luma_height;
                 temp_recon_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
-                temp_recon_desc_init_data.left_padding  = padding;
-                temp_recon_desc_init_data.right_padding = padding;
-                temp_recon_desc_init_data.top_padding   = padding;
-                temp_recon_desc_init_data.bot_padding   = padding;
+                temp_recon_desc_init_data.border  = padding;
                 temp_recon_desc_init_data.split_mode    = false;
                 temp_recon_desc_init_data.color_format  = scs->static_config.encoder_color_format;
 
@@ -521,8 +512,8 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
             uint16_t recon_w = recon_ptr->width;
             uint16_t recon_h = recon_ptr->height;
             if (scs->static_config.resize_mode != RESIZE_NONE) {
-                recon_w = recon_ptr->max_width; //ALIGN_POWER_OF_TWO(recon_ptr->width, 3);
-                recon_h = recon_ptr->max_height; //ALIGN_POWER_OF_TWO(recon_ptr->height, 3);
+                recon_w = recon_ptr->width; //ALIGN_POWER_OF_TWO(recon_ptr->width, 3);
+                recon_h = recon_ptr->height; //ALIGN_POWER_OF_TWO(recon_ptr->height, 3);
             }
             // Keep the recon at full resolution and show the lower resolution video on the top right part
             // Y Recon Samples
@@ -900,7 +891,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
             buffer_cr         = pcs->ppcs->save_source_picture_ptr[2];
             buffer_bit_inc_cr = pcs->ppcs->save_source_picture_bit_inc_ptr[2];
         } else {
-            uint32_t height_y = input_pic->height + input_pic->org_y + input_pic->origin_bot_y;
+            uint32_t height_y = input_pic->height + (2 * input_pic->border);
 
             buffer_y  = input_pic->buffer_y;
             buffer_cb = input_pic->buffer_cb;
@@ -1107,7 +1098,7 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
             buffer_cr         = pcs->ppcs->save_source_picture_ptr[2];
             buffer_bit_inc_cr = pcs->ppcs->save_source_picture_bit_inc_ptr[2];
         } else {
-            uint32_t height_y = input_pic->height + input_pic->org_y + input_pic->origin_bot_y;
+            uint32_t height_y = input_pic->height + (2 * input_pic->border);
 
             buffer_y  = input_pic->buffer_y;
             buffer_cb = input_pic->buffer_cb;
@@ -1452,10 +1443,10 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
             ((sb_org_x + input_pic->org_x) >> 1);
 
         sb_width  = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
-             ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->right_padding) - sb_org_x)
+             ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->border) - sb_org_x)
              : sb_width;
         sb_height = ((sb_height < MIN_SB_SIZE) || ((sb_height > MIN_SB_SIZE) && (sb_height < MAX_SB_SIZE)))
-            ? MIN(scs->sb_size, (pcs->ppcs->aligned_height + scs->bot_padding) - sb_org_y)
+            ? MIN(scs->sb_size, (pcs->ppcs->aligned_height + scs->border) - sb_org_y)
             : sb_height;
 
         // PACK Y

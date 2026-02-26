@@ -652,10 +652,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer* buff
     picture_buffer_desc_init_data.bit_depth          = max_bitdepth;
     picture_buffer_desc_init_data.color_format       = EB_YUV420;
     picture_buffer_desc_init_data.buffer_enable_mask = buffer_desc_mask;
-    picture_buffer_desc_init_data.left_padding       = 0;
-    picture_buffer_desc_init_data.right_padding      = 0;
-    picture_buffer_desc_init_data.top_padding        = 0;
-    picture_buffer_desc_init_data.bot_padding        = 0;
+    picture_buffer_desc_init_data.border = 0;
     picture_buffer_desc_init_data.split_mode         = false;
     picture_buffer_desc_init_data.is_16bit_pipeline  = max_bitdepth > EB_EIGHT_BIT;
 
@@ -664,10 +661,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer* buff
     thirty_two_width_picture_buffer_desc_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask = buffer_desc_mask;
-    thirty_two_width_picture_buffer_desc_init_data.left_padding       = 0;
-    thirty_two_width_picture_buffer_desc_init_data.right_padding      = 0;
-    thirty_two_width_picture_buffer_desc_init_data.top_padding        = 0;
-    thirty_two_width_picture_buffer_desc_init_data.bot_padding        = 0;
+    thirty_two_width_picture_buffer_desc_init_data.border = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode         = false;
     thirty_two_width_picture_buffer_desc_init_data.is_16bit_pipeline  = true;
 
@@ -704,10 +698,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     picture_buffer_desc_init_data.bit_depth                           = max_bitdepth;
     picture_buffer_desc_init_data.color_format                        = EB_YUV420;
     picture_buffer_desc_init_data.buffer_enable_mask                  = PICTURE_BUFFER_DESC_FULL_MASK;
-    picture_buffer_desc_init_data.left_padding                        = 0;
-    picture_buffer_desc_init_data.right_padding                       = 0;
-    picture_buffer_desc_init_data.top_padding                         = 0;
-    picture_buffer_desc_init_data.bot_padding                         = 0;
+    picture_buffer_desc_init_data.border = 0;
     picture_buffer_desc_init_data.split_mode                          = false;
     picture_buffer_desc_init_data.is_16bit_pipeline                   = max_bitdepth > EB_EIGHT_BIT;
     double_width_picture_buffer_desc_init_data.max_width              = sb_size;
@@ -715,10 +706,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     double_width_picture_buffer_desc_init_data.bit_depth              = EB_SIXTEEN_BIT;
     double_width_picture_buffer_desc_init_data.color_format           = EB_YUV420;
     double_width_picture_buffer_desc_init_data.buffer_enable_mask     = PICTURE_BUFFER_DESC_FULL_MASK;
-    double_width_picture_buffer_desc_init_data.left_padding           = 0;
-    double_width_picture_buffer_desc_init_data.right_padding          = 0;
-    double_width_picture_buffer_desc_init_data.top_padding            = 0;
-    double_width_picture_buffer_desc_init_data.bot_padding            = 0;
+    double_width_picture_buffer_desc_init_data.border = 0;
     double_width_picture_buffer_desc_init_data.split_mode             = false;
     double_width_picture_buffer_desc_init_data.is_16bit_pipeline      = true;
     thirty_two_width_picture_buffer_desc_init_data.max_width          = sb_size;
@@ -726,10 +714,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     thirty_two_width_picture_buffer_desc_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-    thirty_two_width_picture_buffer_desc_init_data.left_padding       = 0;
-    thirty_two_width_picture_buffer_desc_init_data.right_padding      = 0;
-    thirty_two_width_picture_buffer_desc_init_data.top_padding        = 0;
-    thirty_two_width_picture_buffer_desc_init_data.bot_padding        = 0;
+    thirty_two_width_picture_buffer_desc_init_data.border = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode         = false;
     thirty_two_width_picture_buffer_desc_init_data.is_16bit_pipeline  = true;
 

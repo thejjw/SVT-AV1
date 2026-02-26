@@ -575,13 +575,11 @@ void svt_aom_convert_pic_8bit_to_16bit(EbPictureBufferDesc* src_8bit, EbPictureB
 void svt_aom_copy_buffer_info(EbPictureBufferDesc* src_ptr, EbPictureBufferDesc* dst_ptr) {
     dst_ptr->width             = src_ptr->width;
     dst_ptr->height            = src_ptr->height;
-    dst_ptr->max_width         = src_ptr->max_width;
-    dst_ptr->max_height        = src_ptr->max_height;
     dst_ptr->stride_y          = src_ptr->stride_y;
     dst_ptr->stride_cb         = src_ptr->stride_cb;
     dst_ptr->stride_cr         = src_ptr->stride_cr;
     dst_ptr->org_x             = src_ptr->org_x;
-    dst_ptr->origin_bot_y      = src_ptr->origin_bot_y;
+    dst_ptr->border = src_ptr->border;
     dst_ptr->org_y             = src_ptr->org_y;
     dst_ptr->stride_bit_inc_y  = src_ptr->stride_bit_inc_y;
     dst_ptr->stride_bit_inc_cb = src_ptr->stride_bit_inc_cb;

@@ -53,11 +53,9 @@ typedef struct EbPictureBufferDesc {
     // Picture Parameters
     uint16_t      org_x; // Horizontal padding distance
     uint16_t      org_y; // Vertical padding distance
-    uint16_t      origin_bot_y; // Vertical bottom padding distance
+    uint16_t      border; // Padding applied to top/left/right/bottom of picture (luma)
     uint16_t      width; // Luma picture width which excludes the padding
     uint16_t      height; // Luma picture height which excludes the padding
-    uint16_t      max_width; // input Luma picture width
-    uint16_t      max_height; // input Luma picture height
     EbBitDepth    bit_depth; // Pixel Bit Depth
     EbColorFormat color_format; // Chroma Subsumpling
 
@@ -212,10 +210,7 @@ typedef struct EbPictureBufferDescInitData {
     EbColorFormat color_format;
     uint32_t      buffer_enable_mask;
     int32_t       rest_units_per_tile;
-    uint16_t      left_padding;
-    uint16_t      right_padding;
-    uint16_t      top_padding;
-    uint16_t      bot_padding;
+    uint16_t      border;
     bool          split_mode; //ON: allocate 8bit data separately from nbit data
 
     uint8_t mfmv;

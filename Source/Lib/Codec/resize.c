@@ -791,7 +791,7 @@ void save_YUV_to_file_highbd(char* filename, uint16_t* buffer_y, uint16_t* buffe
 static void pack_highbd_pic_2d(const EbPictureBufferDesc* pic_ptr, uint16_t* buffer_16bit[3], uint32_t ss_x,
                                uint32_t ss_y) {
     uint16_t width  = pic_ptr->stride_y;
-    uint16_t height = (uint16_t)(pic_ptr->org_y + pic_ptr->height + pic_ptr->origin_bot_y);
+    uint16_t height = (uint16_t)(pic_ptr->height + (2 * pic_ptr->border));
 
     svt_aom_pack2d_src(pic_ptr->buffer_y,
                        pic_ptr->stride_y,
@@ -827,7 +827,7 @@ static void pack_highbd_pic_2d(const EbPictureBufferDesc* pic_ptr, uint16_t* buf
 static void svt_aom_unpack_highbd_pic_2d(uint16_t* buffer_highbd[3], EbPictureBufferDesc* pic_ptr, uint32_t ss_x,
                                          uint32_t ss_y) {
     uint16_t width  = pic_ptr->stride_y;
-    uint16_t height = (uint16_t)(pic_ptr->org_y + pic_ptr->height + pic_ptr->origin_bot_y);
+    uint16_t height = (uint16_t)(pic_ptr->height + (2 * pic_ptr->border));
 
     svt_aom_un_pack2d(buffer_highbd[0],
                       pic_ptr->stride_y,
@@ -1392,10 +1392,7 @@ EbErrorType svt_aom_downscaled_source_buffer_desc_ctor(EbPictureBufferDesc** pic
                            picture_ptr_for_reference->packed_flag == false)
                 ? true
                 : false;
-    initData.left_padding       = picture_ptr_for_reference->org_x;
-    initData.right_padding      = picture_ptr_for_reference->org_x;
-    initData.top_padding        = picture_ptr_for_reference->org_y;
-    initData.bot_padding        = picture_ptr_for_reference->origin_bot_y;
+    initData.border = picture_ptr_for_reference->border;
     initData.is_16bit_pipeline  = picture_ptr_for_reference->is_16bit_pipeline;
 
     EB_NEW(*picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
@@ -1498,10 +1495,7 @@ static EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc**    d
     ref_pic_buf_desc_init_data.color_format       = pcs->scs->static_config.encoder_color_format;
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
-    ref_pic_buf_desc_init_data.left_padding  = picture_ptr_for_reference->org_x;
-    ref_pic_buf_desc_init_data.right_padding = picture_ptr_for_reference->org_x;
-    ref_pic_buf_desc_init_data.top_padding   = picture_ptr_for_reference->org_y;
-    ref_pic_buf_desc_init_data.bot_padding   = picture_ptr_for_reference->origin_bot_y;
+    ref_pic_buf_desc_init_data.border = picture_ptr_for_reference->border;
     ref_pic_buf_desc_init_data.mfmv          = pcs->scs->mfmv_enabled;
 
     //TODO:12bit
@@ -1539,11 +1533,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.left_padding       = picture_ptr_for_reference->org_x;
-    initData.right_padding      = picture_ptr_for_reference->org_x;
-
-    initData.top_padding = picture_ptr_for_reference->org_y;
-    initData.bot_padding = picture_ptr_for_reference->origin_bot_y;
+    initData.border = picture_ptr_for_reference->border;
 
     EB_NEW(*input_padded_pic, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
 
@@ -1554,10 +1544,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.left_padding       = picture_ptr_for_reference->org_x >> 1;
-    initData.right_padding      = picture_ptr_for_reference->org_x >> 1;
-    initData.top_padding        = picture_ptr_for_reference->org_y >> 1;
-    initData.bot_padding        = picture_ptr_for_reference->origin_bot_y >> 1;
+    initData.border = picture_ptr_for_reference->border >> 1;
 
     EB_NEW(*quarter_downsampled_picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
 
@@ -1568,10 +1555,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.left_padding       = picture_ptr_for_reference->org_x >> 2;
-    initData.right_padding      = picture_ptr_for_reference->org_x >> 2;
-    initData.top_padding        = picture_ptr_for_reference->org_y >> 2;
-    initData.bot_padding        = picture_ptr_for_reference->origin_bot_y >> 2;
+    initData.border = picture_ptr_for_reference->border >> 2;
 
     EB_NEW(*sixteenth_downsampled_picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
     return EB_ErrorNone;

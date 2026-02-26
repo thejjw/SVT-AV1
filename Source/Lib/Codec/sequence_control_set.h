@@ -135,10 +135,7 @@ typedef struct SequenceControlSet {
     uint32_t          chroma_height;
     uint32_t          pad_right;
     uint32_t          pad_bottom;
-    uint16_t          left_padding;
-    uint16_t          top_padding;
-    uint16_t          right_padding;
-    uint16_t          bot_padding;
+    uint16_t          border; // Padding to be applied to picture buffers
     double            frame_rate;
     uint32_t          encoder_bit_depth;
     EbInputResolution input_resolution;

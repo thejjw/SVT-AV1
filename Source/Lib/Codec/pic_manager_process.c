@@ -624,8 +624,8 @@ void* svt_aom_picture_manager_kernel(void* input_ptr) {
                 // tool
                 EbReferenceObject* ref = (EbReferenceObject*)ref_pic_wrapper->object_ptr;
                 // if resolution has changed, and the ref_picsettings do not match scs settings, update ref_pic params
-                if (ref->reference_picture->max_width != entry_scs_ptr->max_input_luma_width ||
-                    ref->reference_picture->max_height != entry_scs_ptr->max_input_luma_height) {
+                if (ref->reference_picture->width != entry_scs_ptr->max_input_luma_width ||
+                    ref->reference_picture->height != entry_scs_ptr->max_input_luma_height) {
                     svt_reference_param_update(ref, entry_scs_ptr);
                 }
                 svt_reference_object_reset(ref, entry_scs_ptr);
@@ -644,8 +644,8 @@ void* svt_aom_picture_manager_kernel(void* input_ptr) {
             svt_object_inc_live_count(enc_dec_wrapper, 1);
             EncDecSet* enc_dec_ptr = (EncDecSet*)enc_dec_wrapper->object_ptr;
             // if resolution has changed, and the recon pic settings do not match scs settings, update recon coeff params
-            if (enc_dec_ptr->recon_pic->max_width != entry_scs_ptr->max_input_luma_width ||
-                enc_dec_ptr->recon_pic->max_height != entry_scs_ptr->max_input_luma_height) {
+            if (enc_dec_ptr->recon_pic->width != entry_scs_ptr->max_input_luma_width ||
+                enc_dec_ptr->recon_pic->height != entry_scs_ptr->max_input_luma_height) {
                 recon_coef_update_param(enc_dec_ptr, entry_scs_ptr);
             }
             enc_dec_ptr->enc_dec_wrapper = enc_dec_wrapper;

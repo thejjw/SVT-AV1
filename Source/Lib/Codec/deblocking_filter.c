@@ -741,11 +741,9 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
     bool is_16bit           = pcs->ppcs->scs->is_16bit_pipeline;
     dstBuffer->org_x        = srcBuffer->org_x;
     dstBuffer->org_y        = srcBuffer->org_y;
-    dstBuffer->origin_bot_y = srcBuffer->origin_bot_y;
+    dstBuffer->border = srcBuffer->border;
     dstBuffer->width        = srcBuffer->width;
     dstBuffer->height       = srcBuffer->height;
-    dstBuffer->max_width    = srcBuffer->max_width;
-    dstBuffer->max_height   = srcBuffer->max_height;
     dstBuffer->bit_depth    = srcBuffer->bit_depth;
     dstBuffer->color_format = srcBuffer->color_format;
     dstBuffer->luma_size    = srcBuffer->luma_size;
@@ -1296,10 +1294,7 @@ EbErrorType svt_av1_pick_filter_level(EbPictureBufferDesc* srcBuffer, // source 
         temp_lf_recon_desc_init_data.max_height         = (uint16_t)scs->max_input_luma_height;
         temp_lf_recon_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
-        temp_lf_recon_desc_init_data.left_padding  = padding;
-        temp_lf_recon_desc_init_data.right_padding = padding;
-        temp_lf_recon_desc_init_data.top_padding   = padding;
-        temp_lf_recon_desc_init_data.bot_padding   = padding;
+        temp_lf_recon_desc_init_data.border  = padding;
         temp_lf_recon_desc_init_data.split_mode    = false;
         temp_lf_recon_desc_init_data.color_format  = scs->static_config.encoder_color_format;
         bool is_16bit                              = scs->static_config.encoder_bit_depth > 8 ? true : false;

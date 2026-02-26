@@ -1076,10 +1076,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     // it points directly to the Luma input samples of the app data
     ref_pic_buf_desc_init_data.buffer_enable_mask = 0;
 
-    ref_pic_buf_desc_init_data.left_padding        = scs->left_padding;
-    ref_pic_buf_desc_init_data.right_padding       = scs->right_padding;
-    ref_pic_buf_desc_init_data.top_padding         = scs->top_padding;
-    ref_pic_buf_desc_init_data.bot_padding         = scs->bot_padding;
+    ref_pic_buf_desc_init_data.border = scs->border;
     ref_pic_buf_desc_init_data.split_mode          = false;
     ref_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     ref_pic_buf_desc_init_data.mfmv                = 0;
@@ -1091,10 +1088,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     quart_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     quart_pic_buf_desc_init_data.color_format        = EB_YUV420;
     quart_pic_buf_desc_init_data.buffer_enable_mask  = allintra ? 0 : PICTURE_BUFFER_DESC_LUMA_MASK;
-    quart_pic_buf_desc_init_data.left_padding        = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.right_padding       = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.top_padding         = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.bot_padding         = scs->b64_size >> 1;
+    quart_pic_buf_desc_init_data.border = scs->b64_size >> 1;
     quart_pic_buf_desc_init_data.split_mode          = false;
     quart_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     quart_pic_buf_desc_init_data.mfmv                = 0;
@@ -1106,10 +1100,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     sixteenth_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     sixteenth_pic_buf_desc_init_data.color_format        = EB_YUV420;
     sixteenth_pic_buf_desc_init_data.buffer_enable_mask  = allintra ? 0 : PICTURE_BUFFER_DESC_LUMA_MASK;
-    sixteenth_pic_buf_desc_init_data.left_padding        = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.right_padding       = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.top_padding         = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.bot_padding         = scs->b64_size >> 2;
+    sixteenth_pic_buf_desc_init_data.border = scs->b64_size >> 2;
     sixteenth_pic_buf_desc_init_data.split_mode          = false;
     sixteenth_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     sixteenth_pic_buf_desc_init_data.mfmv                = 0;
@@ -1151,10 +1142,7 @@ static int create_tpl_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     // Allocate one ref pic to be used in TPL
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_Y_FLAG;
 
-    ref_pic_buf_desc_init_data.left_padding      = TPL_PADX; // scs->left_padding;
-    ref_pic_buf_desc_init_data.right_padding     = TPL_PADX; // scs->right_padding;
-    ref_pic_buf_desc_init_data.top_padding       = TPL_PADY; // scs->top_padding;
-    ref_pic_buf_desc_init_data.bot_padding       = TPL_PADY; // scs->bot_padding;
+    ref_pic_buf_desc_init_data.border = TPL_PAD;
     ref_pic_buf_desc_init_data.split_mode        = false;
     ref_pic_buf_desc_init_data.mfmv              = 0;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = false;
@@ -1200,10 +1188,7 @@ static int create_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
         padding += scs->super_block_size;
     }
 
-    ref_pic_buf_desc_init_data.left_padding      = padding;
-    ref_pic_buf_desc_init_data.right_padding     = padding;
-    ref_pic_buf_desc_init_data.top_padding       = padding;
-    ref_pic_buf_desc_init_data.bot_padding       = padding;
+    ref_pic_buf_desc_init_data.border = padding;
     ref_pic_buf_desc_init_data.mfmv              = scs->mfmv_enabled;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = scs->is_16bit_pipeline;
     // Hsan: split_mode is set @ eb_reference_object_ctor() as both unpacked reference and packed reference are needed for a 10BIT input; unpacked reference @ MD, and packed reference @ EP
@@ -1305,10 +1290,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
         PictureControlSetInitData input_data;
         input_data.picture_width        = scs->max_input_luma_width;
         input_data.picture_height       = scs->max_input_luma_height;
-        input_data.left_padding         = scs->left_padding;
-        input_data.right_padding        = scs->right_padding;
-        input_data.top_padding          = scs->top_padding;
-        input_data.bot_padding          = scs->bot_padding;
+        input_data.border         = scs->border;
         input_data.color_format         = color_format;
         input_data.b64_size             = scs->b64_size;
         input_data.enc_mode             = scs->static_config.enc_mode;
@@ -1390,10 +1372,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
 
         input_data.picture_width  = scs->max_input_luma_width;
         input_data.picture_height = scs->max_input_luma_height;
-        input_data.left_padding   = scs->left_padding;
-        input_data.right_padding  = scs->right_padding;
-        input_data.top_padding    = scs->top_padding;
-        input_data.bot_padding    = scs->bot_padding;
+        input_data.border   = scs->border;
         input_data.bit_depth      = scs->encoder_bit_depth;
         input_data.color_format   = color_format;
         input_data.b64_size       = scs->b64_size;
@@ -1437,10 +1416,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
         input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
         input_data.picture_width       = scs->max_input_luma_width;
         input_data.picture_height      = scs->max_input_luma_height;
-        input_data.left_padding        = scs->left_padding;
-        input_data.right_padding       = scs->right_padding;
-        input_data.top_padding         = scs->top_padding;
-        input_data.bot_padding         = scs->bot_padding;
+        input_data.border = scs->border;
         input_data.bit_depth           = scs->encoder_bit_depth;
         input_data.color_format        = color_format;
         input_data.b64_size            = scs->b64_size;
@@ -4123,19 +4099,13 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
         }
     }
     // Configure the padding
-    scs->left_padding  = BLOCK_SIZE_64 + 4;
-    scs->top_padding   = BLOCK_SIZE_64 + 4;
-    scs->right_padding = BLOCK_SIZE_64 + 4;
-    scs->bot_padding   = scs->super_block_size + 4;
+    scs->border = BLOCK_SIZE_64 + 4;
 
     //for 10bit,  increase the pad of source from 68 to 72 (mutliple of 8) to accomodate 2bit-compression flow
     //we actually need to change the horizontal dimension only, but for simplicity/uniformity we do all directions
     // if (scs->static_config.encoder_bit_depth != EB_EIGHT_BIT)
     {
-        scs->left_padding += 4;
-        scs->top_padding += 4;
-        scs->right_padding += 4;
-        scs->bot_padding += 4;
+        scs->border += 4;
     }
 
     scs->static_config.enable_overlays = !scs->static_config.enable_tf ||
@@ -4922,8 +4892,8 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
     EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
-    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->top_padding + scs->left_padding;
-    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->top_padding >> 1) + (scs->left_padding >> 1);
+    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->border + scs->border;
+    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->border >> 1) + (scs->border >> 1);
     uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
     uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
@@ -5009,8 +4979,8 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
 
-    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->top_padding + scs->left_padding;
-    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->top_padding >> 1) + (scs->left_padding >> 1);
+    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->border + scs->border;
+    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->border >> 1) + (scs->border >> 1);
     uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
     uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
@@ -5130,10 +5100,7 @@ EbErrorType svt_input_buffer_header_update(EbBufferHeaderType* input_buffer, Seq
     input_pic_buf_desc_init_data.bit_depth    = (EbBitDepth)config->encoder_bit_depth;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
-    input_pic_buf_desc_init_data.left_padding  = scs->left_padding;
-    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
-    input_pic_buf_desc_init_data.top_padding   = scs->top_padding;
-    input_pic_buf_desc_init_data.bot_padding   = scs->bot_padding;
+    input_pic_buf_desc_init_data.border = scs->border;
 
     input_pic_buf_desc_init_data.split_mode = is_16bit ? true : false;
 
@@ -5170,10 +5137,7 @@ EbErrorType svt_input_y8b_update(EbBufferHeaderType* input_buffer, SequenceContr
     input_pic_buf_desc_init_data.bit_depth    = EB_EIGHT_BIT;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
-    input_pic_buf_desc_init_data.left_padding  = scs->left_padding;
-    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
-    input_pic_buf_desc_init_data.top_padding   = scs->top_padding;
-    input_pic_buf_desc_init_data.bot_padding   = scs->bot_padding;
+    input_pic_buf_desc_init_data.border = scs->border;
 
     input_pic_buf_desc_init_data.split_mode = is_16bit ? true : false;
 
@@ -5210,17 +5174,17 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
             const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t             subsampling_y =
                 ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
-            const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_height = (input_pic->max_height + subsampling_y) >> subsampling_y;
+            const uint32_t chroma_width  = (input_pic->width + subsampling_x) >> subsampling_x;
+            const uint32_t chroma_height = (input_pic->height + subsampling_y) >> subsampling_y;
             const uint32_t chroma_org_x  = (input_pic->org_x + subsampling_x) >> subsampling_x;
             const uint32_t chroma_org_y  = (input_pic->org_y + subsampling_y) >> subsampling_y;
 
-            uint32_t y8b_input_size = ((y8b_input_picture_ptr->max_width + (y8b_input_picture_ptr->org_x << 1)) *
-                                       (y8b_input_picture_ptr->max_height + (y8b_input_picture_ptr->org_y << 1)));
+            uint32_t y8b_input_size = ((y8b_input_picture_ptr->width + (y8b_input_picture_ptr->org_x << 1)) *
+                                       (y8b_input_picture_ptr->height + (y8b_input_picture_ptr->org_y << 1)));
             memset(y8b_input_picture_ptr->buffer_y, 0, (y8b_input_size * sizeof(uint8_t)));
 
-            uint32_t input_size = (input_pic->max_width + (input_pic->org_x << 1)) *
-                (input_pic->max_height + (input_pic->org_y << 1));
+            uint32_t input_size = (input_pic->width + (input_pic->org_x << 1)) *
+                (input_pic->height + (input_pic->org_y << 1));
             uint32_t chroma_input_size = (chroma_width + (chroma_org_x << 1)) * (chroma_height + (chroma_org_y << 1));
 
             memset(input_pic->buffer_cb, 128, chroma_input_size * sizeof(uint8_t));
@@ -5241,17 +5205,17 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
             const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
             const uint8_t             subsampling_y =
                 ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
-            const uint32_t chroma_width  = (input_pic->max_width + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_height = (input_pic->max_height + subsampling_y) >> subsampling_y;
+            const uint32_t chroma_width  = (input_pic->width + subsampling_x) >> subsampling_x;
+            const uint32_t chroma_height = (input_pic->height + subsampling_y) >> subsampling_y;
             const uint32_t chroma_org_x  = (input_pic->org_x + subsampling_x) >> subsampling_x;
             const uint32_t chroma_org_y  = (input_pic->org_y + subsampling_y) >> subsampling_y;
 
-            uint32_t y8b_input_size = ((y8b_input_picture_ptr->max_width + (y8b_input_picture_ptr->org_x << 1)) *
-                                       (y8b_input_picture_ptr->max_height + (y8b_input_picture_ptr->org_y << 1)));
+            uint32_t y8b_input_size = ((y8b_input_picture_ptr->width + (y8b_input_picture_ptr->org_x << 1)) *
+                                       (y8b_input_picture_ptr->height + (y8b_input_picture_ptr->org_y << 1)));
             memset(y8b_input_picture_ptr->buffer_y, 0, (y8b_input_size * sizeof(uint8_t)));
 
-            uint32_t input_size        = ((input_pic->max_width + (input_pic->org_x << 1)) *
-                                   (input_pic->max_height + (input_pic->org_y << 1)));
+            uint32_t input_size        = ((input_pic->width + (input_pic->org_x << 1)) *
+                                   (input_pic->height + (input_pic->org_y << 1)));
             uint32_t chroma_input_size = (chroma_width + (chroma_org_x << 1)) * (chroma_height + (chroma_org_y << 1));
 
             memset(input_pic->buffer_cb, 128, chroma_input_size * sizeof(uint8_t));
@@ -5742,10 +5706,7 @@ static EbErrorType allocate_frame_buffer(SequenceControlSet* scs, EbBufferHeader
     input_pic_buf_desc_init_data.bit_depth    = (EbBitDepth)config->encoder_bit_depth;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
-    input_pic_buf_desc_init_data.left_padding  = scs->left_padding;
-    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
-    input_pic_buf_desc_init_data.top_padding   = scs->top_padding;
-    input_pic_buf_desc_init_data.bot_padding   = scs->bot_padding;
+    input_pic_buf_desc_init_data.border = scs->border;
 
     input_pic_buf_desc_init_data.split_mode = is_16bit ? true : false;
 
@@ -5785,10 +5746,7 @@ static EbErrorType allocate_y8b_frame_buffer(SequenceControlSet* scs, EbBufferHe
     input_pic_buf_desc_init_data.bit_depth    = EB_EIGHT_BIT;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
-    input_pic_buf_desc_init_data.left_padding  = scs->left_padding;
-    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
-    input_pic_buf_desc_init_data.top_padding   = scs->top_padding;
-    input_pic_buf_desc_init_data.bot_padding   = scs->bot_padding;
+    input_pic_buf_desc_init_data.border = scs->border;
 
     input_pic_buf_desc_init_data.split_mode = is_16bit ? true : false;
 

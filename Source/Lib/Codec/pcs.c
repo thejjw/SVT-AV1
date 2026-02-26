@@ -257,10 +257,7 @@ EbErrorType recon_coef_update_param(EncDecSet* object_ptr, SequenceControlSet* s
     if (scs->static_config.superres_mode > SUPERRES_NONE || scs->static_config.resize_mode > RESIZE_NONE) {
         padding += scs->sb_size;
     }
-    input_pic_buf_desc_init_data.left_padding  = padding;
-    input_pic_buf_desc_init_data.right_padding = padding;
-    input_pic_buf_desc_init_data.top_padding   = padding;
-    input_pic_buf_desc_init_data.bot_padding   = padding;
+    input_pic_buf_desc_init_data.border = padding;
     input_pic_buf_desc_init_data.split_mode    = false;
 
     //  Reconstructed Picture Buffer
@@ -304,10 +301,7 @@ static EbErrorType recon_coef_ctor(EncDecSet* object_ptr, EbPtr object_init_data
     if (init_data_ptr->is_scale) {
         padding += init_data_ptr->sb_size;
     }
-    input_pic_buf_desc_init_data.left_padding  = padding;
-    input_pic_buf_desc_init_data.right_padding = padding;
-    input_pic_buf_desc_init_data.top_padding   = padding;
-    input_pic_buf_desc_init_data.bot_padding   = padding;
+    input_pic_buf_desc_init_data.border = padding;
     input_pic_buf_desc_init_data.split_mode    = false;
 
     object_ptr->recon_pic_16bit = NULL;
@@ -347,10 +341,7 @@ static EbErrorType recon_coef_ctor(EncDecSet* object_ptr, EbPtr object_init_data
     coeff_init_data.max_height         = init_data_ptr->sb_size;
     coeff_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     coeff_init_data.color_format       = init_data_ptr->color_format;
-    coeff_init_data.left_padding       = 0;
-    coeff_init_data.right_padding      = 0;
-    coeff_init_data.top_padding        = 0;
-    coeff_init_data.bot_padding        = 0;
+    coeff_init_data.border = 0;
     coeff_init_data.split_mode         = false;
     coeff_init_data.is_16bit_pipeline  = init_data_ptr->is_16bit_pipeline;
     for (sb_index = 0; sb_index < object_ptr->init_b64_total_count; ++sb_index) {
@@ -398,10 +389,7 @@ EbErrorType pcs_update_param(PictureControlSet* pcs) {
     coeff_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
     coeff_buffer_desc_init_data.color_format       = scs->static_config.encoder_color_format;
 
-    coeff_buffer_desc_init_data.left_padding      = padding;
-    coeff_buffer_desc_init_data.right_padding     = padding;
-    coeff_buffer_desc_init_data.top_padding       = padding;
-    coeff_buffer_desc_init_data.bot_padding       = padding;
+    coeff_buffer_desc_init_data.border = padding;
     coeff_buffer_desc_init_data.split_mode        = false;
     coeff_buffer_desc_init_data.is_16bit_pipeline = scs->is_16bit_pipeline;
     if ((is_16bit) || (scs->is_16bit_pipeline)) {
@@ -509,10 +497,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     coeff_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
     coeff_buffer_desc_init_data.color_format       = init_data_ptr->color_format;
 
-    coeff_buffer_desc_init_data.left_padding      = padding;
-    coeff_buffer_desc_init_data.right_padding     = padding;
-    coeff_buffer_desc_init_data.top_padding       = padding;
-    coeff_buffer_desc_init_data.bot_padding       = padding;
+    coeff_buffer_desc_init_data.border = padding;
     coeff_buffer_desc_init_data.split_mode        = false;
     coeff_buffer_desc_init_data.is_16bit_pipeline = init_data_ptr->is_16bit_pipeline;
     object_ptr->color_format                      = init_data_ptr->color_format;
@@ -1307,10 +1292,7 @@ EbErrorType ppcs_update_param(PictureParentControlSet* ppcs) {
         input_pic_buf_desc_init_data.max_height         = scs->max_input_luma_height;
         input_pic_buf_desc_init_data.bit_depth          = 8; //Should be 8bit
         input_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_CHROMA_MASK;
-        input_pic_buf_desc_init_data.left_padding       = scs->left_padding;
-        input_pic_buf_desc_init_data.right_padding      = scs->right_padding;
-        input_pic_buf_desc_init_data.top_padding        = scs->top_padding;
-        input_pic_buf_desc_init_data.bot_padding        = scs->bot_padding;
+        input_pic_buf_desc_init_data.border = scs->border;
         input_pic_buf_desc_init_data.color_format       = EB_YUV420; //set to 420 for MD
         input_pic_buf_desc_init_data.split_mode         = false;
         svt_picture_buffer_desc_update(ppcs->chroma_downsampled_pic, (EbPtr)&input_pic_buf_desc_init_data);
@@ -1358,10 +1340,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
         input_pic_buf_desc_init_data.max_height         = init_data_ptr->picture_height;
         input_pic_buf_desc_init_data.bit_depth          = 8; //Should be 8bit
         input_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_CHROMA_MASK;
-        input_pic_buf_desc_init_data.left_padding       = init_data_ptr->left_padding;
-        input_pic_buf_desc_init_data.right_padding      = init_data_ptr->right_padding;
-        input_pic_buf_desc_init_data.top_padding        = init_data_ptr->top_padding;
-        input_pic_buf_desc_init_data.bot_padding        = init_data_ptr->bot_padding;
+        input_pic_buf_desc_init_data.border = init_data_ptr->border;
         input_pic_buf_desc_init_data.color_format       = EB_YUV420; //set to 420 for MD
         input_pic_buf_desc_init_data.split_mode         = false;
         EB_NEW(object_ptr->chroma_downsampled_pic, svt_picture_buffer_desc_ctor, (EbPtr)&input_pic_buf_desc_init_data);

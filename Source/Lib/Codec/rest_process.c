@@ -111,10 +111,7 @@ EbErrorType svt_aom_rest_context_ctor(EbThreadContext* thread_ctx, const EbEncHa
         init_data.max_height         = (uint16_t)scs->max_input_luma_height;
         init_data.bit_depth          = is_16bit ? EB_SIXTEEN_BIT : EB_EIGHT_BIT;
         init_data.color_format       = config->encoder_color_format;
-        init_data.left_padding       = AOM_RESTORATION_FRAME_BORDER;
-        init_data.right_padding      = AOM_RESTORATION_FRAME_BORDER;
-        init_data.top_padding        = AOM_RESTORATION_FRAME_BORDER;
-        init_data.bot_padding        = AOM_RESTORATION_FRAME_BORDER;
+        init_data.border = AOM_RESTORATION_FRAME_BORDER;
         init_data.split_mode         = false;
         init_data.is_16bit_pipeline  = is_16bit;
 

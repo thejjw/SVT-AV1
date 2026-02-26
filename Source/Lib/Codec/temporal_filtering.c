@@ -3683,8 +3683,8 @@ static EbErrorType save_src_pic_buffers(PictureParentControlSet* centre_pcs, uin
 
     // copy buffers
     // Y
-    uint32_t height_y  = (uint32_t)(src_pic_ptr->height + src_pic_ptr->org_y + src_pic_ptr->origin_bot_y);
-    uint32_t height_uv = (uint32_t)((src_pic_ptr->height + src_pic_ptr->org_y + src_pic_ptr->origin_bot_y) >> ss_y);
+    uint32_t height_y  = (uint32_t)(src_pic_ptr->height + (2 * src_pic_ptr->border));
+    uint32_t height_uv = (uint32_t)((src_pic_ptr->height + (2 * src_pic_ptr->border)) >> ss_y);
 
     assert(height_y * src_pic_ptr->stride_y == src_pic_ptr->luma_size);
     assert(height_uv * src_pic_ptr->stride_cb == src_pic_ptr->chroma_size);
@@ -3752,7 +3752,7 @@ static EbErrorType save_y_src_pic_buffers(PictureParentControlSet* centre_pcs, b
 
     // copy buffers
     // Y
-    uint32_t height_y = (uint32_t)(src_pic_ptr->height + src_pic_ptr->org_y + src_pic_ptr->origin_bot_y);
+    uint32_t height_y = (uint32_t)(src_pic_ptr->height + (2 * src_pic_ptr->border));
 
     assert(height_y * src_pic_ptr->stride_y == src_pic_ptr->luma_size);
 

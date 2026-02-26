@@ -1132,10 +1132,7 @@ typedef struct TplDispResults {
 typedef struct PictureControlSetInitData {
     uint16_t      picture_width;
     uint16_t      picture_height;
-    uint16_t      left_padding;
-    uint16_t      right_padding;
-    uint16_t      top_padding;
-    uint16_t      bot_padding;
+    uint16_t      border;
     EbBitDepth    bit_depth;
     EbColorFormat color_format;
     uint32_t      b64_size;

@@ -53,22 +53,22 @@ static void initialize_samples_neighboring_reference_picture(
                                                               ref_object->reference_picture->stride_y,
                                                               ref_object->reference_picture->width,
                                                               ref_object->reference_picture->height,
-                                                              picture_buffer_desc_init_data_ptr->left_padding,
-                                                              picture_buffer_desc_init_data_ptr->top_padding);
+                                                              picture_buffer_desc_init_data_ptr->border,
+                                                              picture_buffer_desc_init_data_ptr->border);
 
         initialize_samples_neighboring_reference_picture_8bit(ref_object->reference_picture->buffer_cb,
                                                               ref_object->reference_picture->stride_cb,
                                                               ref_object->reference_picture->width >> 1,
                                                               ref_object->reference_picture->height >> 1,
-                                                              picture_buffer_desc_init_data_ptr->left_padding >> 1,
-                                                              picture_buffer_desc_init_data_ptr->top_padding >> 1);
+                                                              picture_buffer_desc_init_data_ptr->border >> 1,
+                                                              picture_buffer_desc_init_data_ptr->border >> 1);
 
         initialize_samples_neighboring_reference_picture_8bit(ref_object->reference_picture->buffer_cr,
                                                               ref_object->reference_picture->stride_cr,
                                                               ref_object->reference_picture->width >> 1,
                                                               ref_object->reference_picture->height >> 1,
-                                                              picture_buffer_desc_init_data_ptr->left_padding >> 1,
-                                                              picture_buffer_desc_init_data_ptr->top_padding >> 1);
+                                                              picture_buffer_desc_init_data_ptr->border >> 1,
+                                                              picture_buffer_desc_init_data_ptr->border >> 1);
     }
 }
 
@@ -115,10 +115,7 @@ EbErrorType svt_reference_param_update(EbReferenceObject* ref_object, SequenceCo
         padding += scs->super_block_size;
     }
 
-    picture_buffer_desc_init_data_ptr.left_padding      = padding;
-    picture_buffer_desc_init_data_ptr.right_padding     = padding;
-    picture_buffer_desc_init_data_ptr.top_padding       = padding;
-    picture_buffer_desc_init_data_ptr.bot_padding       = padding;
+    picture_buffer_desc_init_data_ptr.border = padding;
     picture_buffer_desc_init_data_ptr.mfmv              = scs->mfmv_enabled;
     picture_buffer_desc_init_data_ptr.is_16bit_pipeline = scs->is_16bit_pipeline;
 
@@ -266,10 +263,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     // it points directly to the Luma input samples of the app data
     ref_pic_buf_desc_init_data.buffer_enable_mask = 0;
 
-    ref_pic_buf_desc_init_data.left_padding        = scs->left_padding;
-    ref_pic_buf_desc_init_data.right_padding       = scs->right_padding;
-    ref_pic_buf_desc_init_data.top_padding         = scs->top_padding;
-    ref_pic_buf_desc_init_data.bot_padding         = scs->bot_padding;
+    ref_pic_buf_desc_init_data.border = scs->border;
     ref_pic_buf_desc_init_data.split_mode          = false;
     ref_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     ref_pic_buf_desc_init_data.mfmv                = 0;
@@ -280,10 +274,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     quart_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     quart_pic_buf_desc_init_data.color_format        = EB_YUV420;
     quart_pic_buf_desc_init_data.buffer_enable_mask  = PICTURE_BUFFER_DESC_LUMA_MASK;
-    quart_pic_buf_desc_init_data.left_padding        = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.right_padding       = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.top_padding         = scs->b64_size >> 1;
-    quart_pic_buf_desc_init_data.bot_padding         = scs->b64_size >> 1;
+    quart_pic_buf_desc_init_data.border = scs->b64_size >> 1;
     quart_pic_buf_desc_init_data.split_mode          = false;
     quart_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     quart_pic_buf_desc_init_data.mfmv                = 0;
@@ -294,10 +285,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     sixteenth_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     sixteenth_pic_buf_desc_init_data.color_format        = EB_YUV420;
     sixteenth_pic_buf_desc_init_data.buffer_enable_mask  = PICTURE_BUFFER_DESC_LUMA_MASK;
-    sixteenth_pic_buf_desc_init_data.left_padding        = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.right_padding       = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.top_padding         = scs->b64_size >> 2;
-    sixteenth_pic_buf_desc_init_data.bot_padding         = scs->b64_size >> 2;
+    sixteenth_pic_buf_desc_init_data.border = scs->b64_size >> 2;
     sixteenth_pic_buf_desc_init_data.split_mode          = false;
     sixteenth_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     sixteenth_pic_buf_desc_init_data.mfmv                = 0;
@@ -375,10 +363,7 @@ EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject* tpl_ref_obj, Se
     // Allocate one ref pic to be used in TPL
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_Y_FLAG;
 
-    ref_pic_buf_desc_init_data.left_padding      = TPL_PADX;
-    ref_pic_buf_desc_init_data.right_padding     = TPL_PADX;
-    ref_pic_buf_desc_init_data.top_padding       = TPL_PADY;
-    ref_pic_buf_desc_init_data.bot_padding       = TPL_PADY;
+    ref_pic_buf_desc_init_data.border = TPL_PAD;
     ref_pic_buf_desc_init_data.split_mode        = false;
     ref_pic_buf_desc_init_data.mfmv              = 0;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = false;
