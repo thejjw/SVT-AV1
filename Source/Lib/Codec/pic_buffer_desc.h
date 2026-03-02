@@ -50,6 +50,11 @@ typedef struct EbPictureBufferDesc {
     uint16_t stride_bit_inc_cb; // pointer to the U chroma buffer Bit increment
     uint16_t stride_bit_inc_cr; // pointer to the V chroma buffer Bit increment
 
+#if CLN_BUF_OFFSETS
+    uint8_t* buffer_alloc;
+    size_t   buffer_alloc_sz;
+#endif
+
     // Picture Parameters
     uint16_t      org_x; // Horizontal padding distance
     uint16_t      org_y; // Vertical padding distance

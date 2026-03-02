@@ -83,7 +83,11 @@ void svt_aom_gm_pre_processor(PictureParentControlSet* pcs, PictureParentControl
 
     int frm_corners[2 * MAX_CORNERS];
     int num_frm_corners = svt_av1_fast_corner_detect(
+#if CLN_BUF_OFFSETS
+        input_detection->buffer_y,
+#else
         input_detection->buffer_y + input_detection->org_x + input_detection->org_y * input_detection->stride_y,
+#endif
         input_detection->width,
         input_detection->height,
         input_detection->stride_y,
@@ -204,7 +208,11 @@ void svt_aom_global_motion_estimation(PictureParentControlSet* pcs, EbPictureBuf
         // If generating the correspondences from corners, search for the current frame's corners outside the loop over all ref pics
         if (pcs->gm_ctrls.correspondence_method == CORNERS) {
             num_frm_corners = svt_av1_fast_corner_detect(
+#if CLN_BUF_OFFSETS
+                input_detection->buffer_y,
+#else
                 input_detection->buffer_y + input_detection->org_x + input_detection->org_y * input_detection->stride_y,
+#endif
                 input_detection->width,
                 input_detection->height,
                 input_detection->stride_y,
@@ -330,8 +338,13 @@ static void compute_global_motion(PictureParentControlSet* pcs, int* frm_corners
                                   uint8_t list_idx, uint8_t ref_idx) {
     WarpedMotionParams        global_motion = default_warp_params;
     const WarpedMotionParams* ref_params    = &default_warp_params;
+#if CLN_BUF_OFFSETS
+    unsigned char* frm_buffer = input_pic->buffer_y;
+    unsigned char* ref_buffer = ref_pic->buffer_y;
+#else
     unsigned char* frm_buffer = input_pic->buffer_y + input_pic->org_x + input_pic->org_y * input_pic->stride_y;
     unsigned char* ref_buffer = ref_pic->buffer_y + ref_pic->org_x + ref_pic->org_y * ref_pic->stride_y;
+#endif
 
     const uint32_t ref_sad_error = svt_nxm_sad_kernel(
         ref_buffer, ref_pic->stride_y, frm_buffer, input_pic->stride_y, input_pic->height, input_pic->width);
@@ -341,10 +354,15 @@ static void compute_global_motion(PictureParentControlSet* pcs, int* frm_corners
         return;
     }
 
+#if CLN_BUF_OFFSETS
+    unsigned char* det_frm_buffer = det_input_pic->buffer_y;
+    unsigned char* det_ref_buffer = det_ref_pic->buffer_y;
+#else
     unsigned char* det_frm_buffer = det_input_pic->buffer_y + det_input_pic->org_x +
         det_input_pic->org_y * det_input_pic->stride_y;
     unsigned char* det_ref_buffer = det_ref_pic->buffer_y + det_ref_pic->org_x +
         det_ref_pic->org_y * det_ref_pic->stride_y;
+#endif
 
     int size_correspondence = num_frm_corners;
     if (pcs->gm_ctrls.correspondence_method < CORNERS) {

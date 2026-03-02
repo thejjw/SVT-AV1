@@ -449,6 +449,28 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
 
     uint8_t* dst;
     int32_t  dst_stride;
+#if CLN_BUF_OFFSETS
+    if (plane == 0) {
+        dst = recon_buffer->buffer_y +
+            ((dst_offset_x + (dst_offset_y) * recon_buffer->stride_y)
+                << is_16bit);
+        dst_stride = recon_buffer->stride_y;
+    }
+    else if (plane == 1) {
+        dst = recon_buffer->buffer_cb +
+            (((dst_offset_x +
+                (dst_offset_y) * recon_buffer->stride_cb))
+                << is_16bit);
+        dst_stride = recon_buffer->stride_cb;
+    }
+    else {
+        dst = recon_buffer->buffer_cr +
+            (((dst_offset_x +
+                (dst_offset_y) * recon_buffer->stride_cr))
+                << is_16bit);
+        dst_stride = recon_buffer->stride_cr;
+    }
+#else
     if (plane == 0) {
         dst = recon_buffer->buffer_y +
             ((dst_offset_x + recon_buffer->org_x + (dst_offset_y + recon_buffer->org_y) * recon_buffer->stride_y)
@@ -467,6 +489,7 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
              << is_16bit);
         dst_stride = recon_buffer->stride_cr;
     }
+#endif
 
     const int32_t txwpx = tx_size_wide[tx_size];
     const int32_t txhpx = tx_size_high[tx_size];
@@ -737,6 +760,7 @@ void svt_aom_precompute_intra_pred_for_inter_intra(PictureControlSet* pcs, ModeD
     uint32_t            j;
     EbPictureBufferDesc pred_desc;
     pred_desc.org_x = pred_desc.org_y = 0;
+    pred_desc.border = 0;
     pred_desc.stride_y                = ctx->blk_geom->bwidth;
 
     for (j = 0; j < INTERINTRA_MODES; ++j) {
@@ -763,7 +787,11 @@ EbErrorType svt_aom_update_neighbor_samples_array_open_loop_mb(uint8_t use_top_r
     uint32_t block_width_neigh  = use_top_righ_bottom_left ? bwidth << 1 : bwidth;
     uint32_t block_height_neigh = use_top_righ_bottom_left ? bheight << 1 : bheight;
     // Adjust the Source ptr to start at the origin of the block being updated
+#if CLN_BUF_OFFSETS
+    src_ptr = input_ptr->buffer_y + (((src_origin_y) * stride) + (src_origin_x));
+#else
     src_ptr = input_ptr->buffer_y + (((src_origin_y + input_ptr->org_y) * stride) + (src_origin_x + input_ptr->org_x));
+#endif
 
     //Initialise the Luma Intra Reference Array to the mid range value 128 (for CUs at the picture boundaries)
     EB_MEMSET(above_ref, 127, block_width_neigh + 1);

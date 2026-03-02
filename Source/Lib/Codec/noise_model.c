@@ -2264,6 +2264,12 @@ static int32_t denoise_and_model_realloc_if_necessary(struct AomDenoiseAndModel*
 }
 
 static void unpack_2d_pic(uint8_t* packed[3], EbPictureBufferDesc* outputPicturePtr) {
+#if CLN_BUF_OFFSETS
+    uint32_t luma_buffer_offset = 0;
+    uint32_t chroma_buffer_offset = 0;
+    uint32_t bit_inc_luma_offset = 0;
+    uint32_t bit_inc_chroma_offset = 0;
+#else
     uint32_t luma_buffer_offset = ((outputPicturePtr->org_y) * outputPicturePtr->stride_y) + (outputPicturePtr->org_x);
     uint32_t chroma_buffer_offset = (((outputPicturePtr->org_y) >> 1) * outputPicturePtr->stride_cb) +
         ((outputPicturePtr->org_x) >> 1);
@@ -2271,6 +2277,7 @@ static void unpack_2d_pic(uint8_t* packed[3], EbPictureBufferDesc* outputPicture
         (outputPicturePtr->org_x >> 2);
     uint32_t bit_inc_chroma_offset = (((outputPicturePtr->org_y) >> 1) * outputPicturePtr->stride_bit_inc_cb >> 2) +
         ((outputPicturePtr->org_x >> 2) >> 1);
+#endif
     uint16_t luma_width    = (uint16_t)(outputPicturePtr->width);
     uint16_t chroma_width  = luma_width >> 1;
     uint16_t luma_height   = (uint16_t)(outputPicturePtr->height);
@@ -2317,11 +2324,17 @@ int32_t svt_aom_denoise_and_model_run(struct AomDenoiseAndModel* ctx, EbPictureB
     }
 
     if (!use_highbd) { // 8 bits input
+#if CLN_BUF_OFFSETS
+        raw_data[0] = sd->buffer_y;
+        raw_data[1] = sd->buffer_cb;
+        raw_data[2] = sd->buffer_cr;
+#else
         raw_data[0] = sd->buffer_y + sd->org_y * sd->stride_y + sd->org_x;
         raw_data[1] = sd->buffer_cb + sd->stride_cb * (sd->org_y >> chroma_sub_log2[0]) +
             (sd->org_x >> chroma_sub_log2[1]);
         raw_data[2] = sd->buffer_cr + sd->stride_cr * (sd->org_y >> chroma_sub_log2[0]) +
             (sd->org_x >> chroma_sub_log2[1]);
+#endif
     } else { // 10 bits input
         svt_aom_pack_2d_pic(sd, ctx->packed);
 

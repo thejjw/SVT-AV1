@@ -139,6 +139,16 @@ void* svt_aom_dlf_kernel(void* input_ptr) {
             }
 
             if (scs->seq_header.cdef_level && pcs->ppcs->cdef_level) {
+#if CLN_BUF_OFFSETS
+                pcs->cdef_input_recon[0] = recon_pic->buffer_y;
+                pcs->cdef_input_recon[1] = recon_pic->buffer_cb;
+                pcs->cdef_input_recon[2] = recon_pic->buffer_cr;
+
+                EbPictureBufferDesc* input_pic = is_16bit ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+                pcs->cdef_input_source[0] = input_pic->buffer_y;
+                pcs->cdef_input_source[1] = input_pic->buffer_cb;
+                pcs->cdef_input_source[2] = input_pic->buffer_cr;
+#else
                 const uint32_t offset_y  = recon_pic->org_x + recon_pic->org_y * recon_pic->stride_y;
                 pcs->cdef_input_recon[0] = recon_pic->buffer_y + (offset_y << is_16bit);
                 const uint32_t offset_cb = (recon_pic->org_x + recon_pic->org_y * recon_pic->stride_cb) >> 1;
@@ -153,6 +163,7 @@ void* svt_aom_dlf_kernel(void* input_ptr) {
                 pcs->cdef_input_source[1]           = input_pic->buffer_cb + (input_offset_cb << is_16bit);
                 const uint32_t input_offset_cr      = (input_pic->org_x + input_pic->org_y * input_pic->stride_cr) >> 1;
                 pcs->cdef_input_source[2]           = input_pic->buffer_cr + (input_offset_cr << is_16bit);
+#endif
             }
         }
 

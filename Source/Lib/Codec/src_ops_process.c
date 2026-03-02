@@ -464,7 +464,11 @@ static void tpl_subpel_search(SequenceControlSet* scs, PictureParentControlSet* 
 
     // Ref and src buffers
     MSBuffers* ms_buffers       = &ms_params->var_params.ms_buffers;
+#if CLN_BUF_OFFSETS
+    int32_t    ref_origin_index = mb_origin_x + (mb_origin_y) * ref_pic->stride_y;
+#else
     int32_t    ref_origin_index = ref_pic->org_x + mb_origin_x + (mb_origin_y + ref_pic->org_y) * ref_pic->stride_y;
+#endif
 
     // Ref buffer
     struct svt_buf_2d ref_struct;
@@ -475,8 +479,13 @@ static void tpl_subpel_search(SequenceControlSet* scs, PictureParentControlSet* 
     ms_buffers->ref   = &ref_struct;
 
     // Src buffer
+#if CLN_BUF_OFFSETS
+    uint32_t input_origin_index = (mb_origin_x) +
+        (mb_origin_y) * input_pic->stride_y;
+#else
     uint32_t input_origin_index = (mb_origin_x + input_pic->org_x) +
         (mb_origin_y + input_pic->org_y) * input_pic->stride_y;
+#endif
     struct svt_buf_2d src_struct;
     src_struct.buf    = input_pic->buffer_y + input_origin_index;
     src_struct.width  = input_pic->width;
@@ -587,10 +596,15 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
 
         const int dst_buffer_stride = recon_pic->stride_y;
         const int dst_mb_offset     = mb_origin_y * dst_buffer_stride + mb_origin_x;
+#if CLN_BUF_OFFSETS
+        uint8_t*  dst_buffer        = recon_pic->buffer_y + dst_mb_offset;
+        uint8_t*  src_mb            = input_pic->buffer_y + mb_origin_x + (mb_origin_y) * src_stride;
+#else
         const int dst_basic_offset  = recon_pic->org_y * recon_pic->stride_y + recon_pic->org_x;
         uint8_t*  dst_buffer        = recon_pic->buffer_y + dst_basic_offset + dst_mb_offset;
         uint8_t*  src_mb            = input_pic->buffer_y + input_pic->org_x + mb_origin_x +
             (input_pic->org_y + mb_origin_y) * src_stride;
+#endif
 
         int64_t  recon_error = 1, sse = 1;
         uint64_t best_ref_poc = 0;
@@ -802,9 +816,15 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                 if (pcs->tpl_ctrls.subpel_depth != FULL_PEL) {
                     tpl_subpel_search(scs, pcs, ref_pic_ptr, input_pic, &xd, mb_origin_x, mb_origin_y, bsize, &best_mv);
                 }
+#if CLN_BUF_OFFSETS
+                int32_t ref_origin_index = ((int32_t)mb_origin_x + (best_mv.x / 8)) +
+                    ((int32_t)mb_origin_y + (best_mv.y / 8)) *
+                    (int32_t)ref_pic_ptr->stride_y;
+#else
                 int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x + ((int32_t)mb_origin_x + (best_mv.x / 8)) +
                     ((int32_t)mb_origin_y + (best_mv.y / 8) + (int32_t)ref_pic_ptr->org_y) *
                         (int32_t)ref_pic_ptr->stride_y;
+#endif
 
                 // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
                 uint8_t subpel_mv = (best_mv.x & 0x7 || best_mv.y & 0x7);
@@ -816,7 +836,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
 
                     svt_aom_enc_make_inter_predictor(
                         scs,
+#if CLN_BUF_OFFSETS
+                        ref_pic_ptr->buffer_y,
+#else
                         ref_pic_ptr->buffer_y + ref_pic_ptr->org_x + (ref_pic_ptr->org_y * ref_pic_ptr->stride_y),
+#endif
                         NULL, // src_ptr_2b,
                         compensated_blk,
                         (int16_t)mb_origin_y,
@@ -893,10 +917,17 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     uint32_t list_index    = best_rf_idx < 4 ? 0 : 1;
                     uint32_t ref_pic_index = best_rf_idx >= 4 ? (best_rf_idx - 4) : best_rf_idx;
                     ref_pic_ptr            = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
+#if CLN_BUF_OFFSETS
+                    int32_t ref_origin_index =
+                        ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
+                        ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) *
+                        (int32_t)ref_pic_ptr->stride_y;
+#else
                     int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x +
                         ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
                         ((int32_t)mb_origin_y + (final_best_mv.y >> 3) + (int32_t)ref_pic_ptr->org_y) *
                             (int32_t)ref_pic_ptr->stride_y;
+#endif
                     // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
                     uint8_t subpel_mv = (final_best_mv.x & 0x7 || final_best_mv.y & 0x7);
                     if (subpel_mv) {
@@ -907,7 +938,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
 
                         svt_aom_enc_make_inter_predictor(
                             scs,
+#if CLN_BUF_OFFSETS
+                            ref_pic_ptr->buffer_y,
+#else
                             ref_pic_ptr->buffer_y + ref_pic_ptr->org_x + (ref_pic_ptr->org_y * ref_pic_ptr->stride_y),
+#endif
                             NULL, // src_ptr_2b,
                             compensated_blk,
                             (int16_t)mb_origin_y,
@@ -997,9 +1032,15 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     (EbPictureBufferDesc*)pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
             }
 
+#if CLN_BUF_OFFSETS
+            int32_t ref_origin_index = ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
+                ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) *
+                (int32_t)ref_pic_ptr->stride_y;
+#else
             int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x + ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
                 ((int32_t)mb_origin_y + (final_best_mv.y >> 3) + (int32_t)ref_pic_ptr->org_y) *
                     (int32_t)ref_pic_ptr->stride_y;
+#endif
             // REDO COMPENSATION WITH REF PIC (INSTEAD OF REF BEING THE SRC PIC)
             // Need to do compensation for subpel, otherwise, can get pixels directly from RECON picture
             uint8_t subpel_mv = (final_best_mv.x & 0x7 || final_best_mv.y & 0x7);
@@ -1011,7 +1052,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
 
                 svt_aom_enc_make_inter_predictor(
                     scs,
+#if CLN_BUF_OFFSETS
+                    ref_pic_ptr->buffer_y,
+#else
                     ref_pic_ptr->buffer_y + ref_pic_ptr->org_x + (ref_pic_ptr->org_y * ref_pic_ptr->stride_y),
+#endif
                     NULL, // src_ptr_2b,
                     dst_buffer,
                     (int16_t)mb_origin_y,
@@ -1057,7 +1102,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
             above_row = above_data + MAX_TPL_SIZE;
             left_col  = left_data + MAX_TPL_SIZE;
 
+#if CLN_BUF_OFFSETS
+            uint8_t* recon_buffer = recon_pic->buffer_y;
+#else
             uint8_t* recon_buffer = recon_pic->buffer_y + dst_basic_offset;
+#endif
 
             if (intra_dc_sad_path) {
                 const uint8_t mb_inside = (mb_origin_x + size <= pcs->enhanced_pic->width) &&
@@ -1393,8 +1442,13 @@ static void tpl_mc_flow_dispenser(EncodeContext* enc_ctx, SequenceControlSet* sc
                              recon_pic->stride_y,
                              recon_pic->width,
                              recon_pic->height,
+#if CLN_BUF_OFFSETS
+                             recon_pic->border,
+                             recon_pic->border);
+#else
                              recon_pic->org_x,
                              recon_pic->org_y);
+#endif
 
     return;
 }
@@ -2133,7 +2187,11 @@ unsigned int svt_aom_get_perpixel_variance(const uint8_t* buf, uint32_t stride, 
 static void aom_av1_set_mb_ssim_rdmult_scaling(PictureParentControlSet* pcs) {
     Av1Common* cm       = pcs->av1_cm;
     const int  y_stride = pcs->enhanced_pic->stride_y;
+#if CLN_BUF_OFFSETS
+    uint8_t*   y_buffer = pcs->enhanced_pic->buffer_y;
+#else
     uint8_t*   y_buffer = pcs->enhanced_pic->buffer_y + pcs->enhanced_pic->org_x + pcs->enhanced_pic->org_y * y_stride;
+#endif
 
     const int block_size = BLOCK_16X16;
 

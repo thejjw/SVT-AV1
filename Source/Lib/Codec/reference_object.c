@@ -25,6 +25,25 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
     uint16_t sample_count;
 
     // 1. zero out the top row
+#if CLN_BUF_OFFSETS
+    recon_samples_ptr = recon_samples_buffer_ptr - stride - 1;
+    svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
+
+    // 2. zero out the bottom row
+    recon_samples_ptr = recon_samples_buffer_ptr + (recon_height) * stride - 1;
+    svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
+
+    // 3. zero out the left column
+    recon_samples_ptr = recon_samples_buffer_ptr - 1;
+    for (sample_count = 0; sample_count < recon_height; sample_count++) {
+        recon_samples_ptr[sample_count * stride] = 0;
+    }
+    // 4. zero out the right column
+    recon_samples_ptr = recon_samples_buffer_ptr + recon_width;
+    for (sample_count = 0; sample_count < recon_height; sample_count++) {
+        recon_samples_ptr[sample_count * stride] = 0;
+    }
+#else
     recon_samples_ptr = recon_samples_buffer_ptr + (top_padding - 1) * stride + left_padding - 1;
     svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
 
@@ -42,6 +61,7 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
     for (sample_count = 0; sample_count < recon_height; sample_count++) {
         recon_samples_ptr[sample_count * stride] = 0;
     }
+#endif
 }
 
 static void initialize_samples_neighboring_reference_picture(

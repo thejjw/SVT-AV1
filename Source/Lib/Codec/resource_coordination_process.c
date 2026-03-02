@@ -466,10 +466,15 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
 
     if (!is_16bit_input) {
         uint16_t input_row_index;
+#if CLN_BUF_OFFSETS // TODO: why does 8bit need to copy line by line?
+        uint32_t luma_buffer_offset = 0;
+        uint32_t chroma_buffer_offset = 0;
+#else
         uint32_t luma_buffer_offset = (dst_picture_ptr->stride_y * scs->border + scs->border)
             << is_16bit_input;
         uint32_t chroma_buffer_offset =
             (dst_picture_ptr->stride_cr * (scs->border >> 1) + (scs->border >> 1)) << is_16bit_input;
+#endif
         uint16_t luma_stride   = dst_picture_ptr->stride_y << is_16bit_input;
         uint16_t chroma_stride = dst_picture_ptr->stride_cb << is_16bit_input;
         uint16_t luma_width    = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
@@ -499,6 +504,11 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
         }
     } else { // 10bit packed
 
+#if CLN_BUF_OFFSETS
+        // This assumes all buffers are used/allocated. Therefore, use the new buffer_alloc
+        // and copy the whole thing in one shot.
+        svt_memcpy(dst_picture_ptr->buffer_alloc, src_picture_ptr->buffer_alloc, src_picture_ptr->buffer_alloc_sz);
+#else
         svt_memcpy(dst_picture_ptr->buffer_y, src_picture_ptr->buffer_y, src_picture_ptr->luma_size);
 
         svt_memcpy(dst_picture_ptr->buffer_cb, src_picture_ptr->buffer_cb, src_picture_ptr->chroma_size);
@@ -513,6 +523,7 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
 
         svt_memcpy(
             dst_picture_ptr->buffer_bit_inc_cr, src_picture_ptr->buffer_bit_inc_cr, src_picture_ptr->chroma_size >> 2);
+#endif
     }
     return return_error;
 }

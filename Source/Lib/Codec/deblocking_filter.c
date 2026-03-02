@@ -147,7 +147,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
+#if CLN_BUF_OFFSETS // svt_av1_setup_dst_planes
+                src->buffer_y,
+#else
                 &src->buffer_y[(src->org_x + src->org_y * src->stride_y) << pd->is_16bit],
+#endif
                 (scs->max_input_luma_width -
                  scs->max_input_pad_right), // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom),
@@ -162,7 +166,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
+#if CLN_BUF_OFFSETS
+                src->buffer_cb,
+#else
                 &src->buffer_cb[((src->org_x + src->org_y * src->stride_cb) << pd->is_16bit) / 2],
+#endif
                 (scs->max_input_luma_width - scs->max_input_pad_right) >>
                     1, // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom) >> 1,
@@ -177,7 +185,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
+#if CLN_BUF_OFFSETS
+                src->buffer_cr,
+#else
                 &src->buffer_cr[((src->org_x + src->org_y * src->stride_cr) << pd->is_16bit) / 2],
+#endif
                 (scs->max_input_luma_width - scs->max_input_pad_right) >>
                     1, // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom) >> 1,
@@ -750,7 +762,9 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
     dstBuffer->chroma_size  = srcBuffer->chroma_size;
     dstBuffer->packed_flag  = srcBuffer->packed_flag;
 
+#if !CLN_BUF_OFFSETS // svt_copy_buffer
     uint32_t luma_buffer_offset = (srcBuffer->org_x + srcBuffer->org_y * srcBuffer->stride_y) << is_16bit;
+#endif
     uint16_t luma_width         = ALIGN_POWER_OF_TWO(srcBuffer->width, 3) << is_16bit;
     uint16_t luma_height        = ALIGN_POWER_OF_TWO(srcBuffer->height, 3);
 
@@ -762,22 +776,36 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
         dstBuffer->stride_bit_inc_y = srcBuffer->stride_bit_inc_y;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height; input_row_index++) {
+#if CLN_BUF_OFFSETS
+            svt_memcpy((dstBuffer->buffer_y + stride_y * input_row_index),
+                       (srcBuffer->buffer_y + stride_y * input_row_index),
+                       luma_width);
+#else
             svt_memcpy((dstBuffer->buffer_y + luma_buffer_offset + stride_y * input_row_index),
                        (srcBuffer->buffer_y + luma_buffer_offset + stride_y * input_row_index),
                        luma_width);
+#endif
         }
     } else if (plane == 1) {
         uint16_t stride_cb           = srcBuffer->stride_cb << is_16bit;
         dstBuffer->stride_cb         = srcBuffer->stride_cb;
         dstBuffer->stride_bit_inc_cb = srcBuffer->stride_bit_inc_cb;
 
+#if !CLN_BUF_OFFSETS
         uint32_t chroma_buffer_offset = (srcBuffer->org_x / 2 + srcBuffer->org_y / 2 * srcBuffer->stride_cb)
             << is_16bit;
+#endif
 
         for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
+#if CLN_BUF_OFFSETS
+            svt_memcpy((dstBuffer->buffer_cb + stride_cb * input_row_index),
+                       (srcBuffer->buffer_cb + stride_cb * input_row_index),
+                       chroma_width);
+#else
             svt_memcpy((dstBuffer->buffer_cb + chroma_buffer_offset + stride_cb * input_row_index),
                        (srcBuffer->buffer_cb + chroma_buffer_offset + stride_cb * input_row_index),
                        chroma_width);
+#endif
         }
     } else if (plane == 2) {
         uint16_t stride_cr = srcBuffer->stride_cr << is_16bit;
@@ -785,13 +813,21 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
         dstBuffer->stride_cr         = srcBuffer->stride_cr;
         dstBuffer->stride_bit_inc_cr = srcBuffer->stride_bit_inc_cr;
 
+#if !CLN_BUF_OFFSETS
         uint32_t chroma_buffer_offset = (srcBuffer->org_x / 2 + srcBuffer->org_y / 2 * srcBuffer->stride_cr)
             << is_16bit;
+#endif
 
         for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
+#if CLN_BUF_OFFSETS
+            svt_memcpy((dstBuffer->buffer_cr + stride_cr * input_row_index),
+                       (srcBuffer->buffer_cr + stride_cr * input_row_index),
+                       chroma_width);
+#else
             svt_memcpy((dstBuffer->buffer_cr + chroma_buffer_offset + stride_cr * input_row_index),
                        (srcBuffer->buffer_cr + chroma_buffer_offset + stride_cr * input_row_index),
                        chroma_width);
+#endif
         }
     }
 }
@@ -818,10 +854,15 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
         EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->ppcs->enhanced_pic;
 
         if (plane == 0) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_y;
+            input_buffer = input_pic->buffer_y;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y]);
             input_buffer = (uint8_t*)&(
                 (input_pic->buffer_y)[input_pic->org_x + input_pic->org_y * input_pic->stride_y]);
+#endif
 
             return svt_spatial_full_distortion_kernel(input_buffer,
                                                       0,
@@ -832,10 +873,15 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
                                                       input_align_width,
                                                       input_align_height);
         } else if (plane == 1) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_cb;
+            input_buffer = input_pic->buffer_cb;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr->buffer_cb)[recon_ptr->org_x / 2 + recon_ptr->org_y / 2 * recon_ptr->stride_cb]);
             input_buffer = (uint8_t*)&(
                 (input_pic->buffer_cb)[input_pic->org_x / 2 + input_pic->org_y / 2 * input_pic->stride_cb]);
+#endif
 
             return svt_spatial_full_distortion_kernel(input_buffer,
                                                       0,
@@ -846,10 +892,15 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
                                                       input_align_width >> ss_x,
                                                       input_align_height >> ss_y);
         } else if (plane == 2) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_cr;
+            input_buffer = input_pic->buffer_cr;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr->buffer_cr)[recon_ptr->org_x / 2 + recon_ptr->org_y / 2 * recon_ptr->stride_cr]);
             input_buffer = (uint8_t*)&(
                 (input_pic->buffer_cr)[input_pic->org_x / 2 + input_pic->org_y / 2 * input_pic->stride_cr]);
+#endif
 
             return svt_spatial_full_distortion_kernel(input_buffer,
                                                       0,
@@ -865,10 +916,15 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
         EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->input_frame16bit;
 
         if (plane == 0) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_y;
+            input_buffer = input_pic->buffer_y;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr->buffer_y)[(recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y) << is_16bit]);
             input_buffer = (uint8_t*)&(
                 (input_pic->buffer_y)[(input_pic->org_x + input_pic->org_y * input_pic->stride_y) << is_16bit]);
+#endif
 
             return svt_full_distortion_kernel16_bits(input_buffer,
                                                      0,
@@ -879,12 +935,17 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
                                                      input_align_width,
                                                      input_align_height);
         } else if (plane == 1) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_cb;
+            input_buffer = input_pic->buffer_cb;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr
                      ->buffer_cb)[(recon_ptr->org_x / 2 + recon_ptr->org_y / 2 * recon_ptr->stride_cb) << is_16bit]);
             input_buffer = (uint8_t*)&(
                 (input_pic
                      ->buffer_cb)[(input_pic->org_x / 2 + input_pic->org_y / 2 * input_pic->stride_cb) << is_16bit]);
+#endif
 
             return svt_full_distortion_kernel16_bits(input_buffer,
                                                      0,
@@ -895,12 +956,17 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
                                                      (input_align_width + ss_x) >> ss_x,
                                                      (input_align_height + ss_y) >> ss_y);
         } else if (plane == 2) {
+#if CLN_BUF_OFFSETS
+            recon_coeff_buffer = recon_ptr->buffer_cr;
+            input_buffer = input_pic->buffer_cr;
+#else
             recon_coeff_buffer = (uint8_t*)&(
                 (recon_ptr
                      ->buffer_cr)[(recon_ptr->org_x / 2 + recon_ptr->org_y / 2 * recon_ptr->stride_cr) << is_16bit]);
             input_buffer = (uint8_t*)&(
                 (input_pic
                      ->buffer_cr)[(input_pic->org_x / 2 + input_pic->org_y / 2 * input_pic->stride_cr) << is_16bit]);
+#endif
 
             return svt_full_distortion_kernel16_bits(input_buffer,
                                                      0,

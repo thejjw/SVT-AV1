@@ -336,8 +336,13 @@ void search_palette_luma(PictureControlSet* pcs, ModeDecisionContext* ctx, Palet
     const int            src_stride = src_pic->stride_y;
     // bit depth for palette search
     unsigned             bit_depth_pal = is16bit ? EB_TEN_BIT : EB_EIGHT_BIT;
+#if CLN_BUF_OFFSETS
+    const uint8_t* const src = src_pic->buffer_y +
+        (((ctx->blk_org_x) + (ctx->blk_org_y) * src_pic->stride_y) << is16bit);
+#else
     const uint8_t* const src           = src_pic->buffer_y +
         (((ctx->blk_org_x + src_pic->org_x) + (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y) << is16bit);
+#endif
     int          block_width, block_height, rows, cols;
     MacroBlockD* xd    = ctx->blk_ptr->av1xd;
     BlockSize    bsize = ctx->blk_geom->bsize;

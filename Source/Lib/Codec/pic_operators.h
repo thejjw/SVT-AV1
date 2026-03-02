@@ -98,9 +98,8 @@ void svt_aom_yv12_copy_y_c(const Yv12BufferConfig* src_ybc, Yv12BufferConfig* ds
 void svt_aom_yv12_copy_u_c(const Yv12BufferConfig* src_bc, Yv12BufferConfig* dst_bc);
 void svt_aom_yv12_copy_v_c(const Yv12BufferConfig* src_bc, Yv12BufferConfig* dst_bc);
 void svt_aom_pack_highbd_pic(const EbPictureBufferDesc* pic_ptr, uint16_t* buffer_16bit[3], uint32_t ss_x,
-                             uint32_t ss_y, bool include_padding);
-void svt_aom_unpack_highbd_pic(uint16_t* buffer_highbd[3], EbPictureBufferDesc* pic_ptr, uint32_t ss_x, uint32_t ss_y,
-                               bool include_padding);
+                             uint32_t ss_y);
+void svt_aom_unpack_highbd_pic(uint16_t* buffer_highbd[3], EbPictureBufferDesc* pic_ptr, uint32_t ss_x, uint32_t ss_y);
 
 static inline void svt_av1_picture_copy_y(EbPictureBufferDesc* src, uint32_t src_origin_index, EbPictureBufferDesc* dst,
                                           uint32_t dst_origin_index, uint32_t area_width, uint32_t area_height,
