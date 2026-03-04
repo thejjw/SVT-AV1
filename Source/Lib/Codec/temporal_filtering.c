@@ -3792,8 +3792,10 @@ static uint32_t filt_unfilt_dist(PictureParentControlSet* ppcs, EbByte filt, EbB
 
             uint32_t buffer_index = b64_origin_y * stride_y + b64_origin_x;
 
+            uint32_t b64_width  = MIN(ppcs->scs->b64_size, ppcs->aligned_width - b64_origin_x);
+            uint32_t b64_height = MIN(ppcs->scs->b64_size, ppcs->aligned_height - b64_origin_y);
             dist += (uint32_t)(spatial_full_dist_type_fun(
-                filt, buffer_index, stride_y, unfil, buffer_index, stride_y, ppcs->scs->b64_size, ppcs->scs->b64_size));
+                filt, buffer_index, stride_y, unfil, buffer_index, stride_y, b64_width, b64_height));
         }
     }
     return (dist / (pic_width_in_b64 * pic_height_in_b64));
