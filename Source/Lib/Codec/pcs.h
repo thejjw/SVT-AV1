@@ -950,16 +950,9 @@ typedef struct PictureParentControlSet {
     int32_t                         noise_levels_log1p_fp16[MAX_MB_PLANE];
     int32_t                         pic_decision_reorder_queue_idx;
     struct PictureParentControlSet* temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
-#if CLN_BUF_OFFSETS
     // Buffer that can be allocated in TF to store the original source picture in, if
     // it will be needed.
     EbPictureBufferDesc*            saved_src_pic;
-#else
-    EbByte                          save_source_picture_ptr[3];
-    EbByte                          save_source_picture_bit_inc_ptr[3];
-    uint16_t                        save_source_picture_width;
-    uint16_t                        save_source_picture_height;
-#endif
     EbHandle                        temp_filt_done_semaphore;
     EbHandle                        temp_filt_mutex;
 

@@ -327,17 +327,10 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     DECLARE_ALIGNED(16, uint8_t, ii_pred_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     // get inter pred for ref0
     EbPictureBufferDesc* src_pic     = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-#if CLN_BUF_OFFSETS
     uint16_t* src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x) +
         (ctx->blk_org_y) * src_pic->stride_y;
     uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x) +
         (ctx->blk_org_y) * src_pic->stride_y;
-#else
-    uint16_t*            src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
-        (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y;
-    uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x + src_pic->org_x) +
-        (ctx->blk_org_y + src_pic->org_y) * src_pic->stride_y;
-#endif
 
     uint8_t  bit_depth   = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
     uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
@@ -345,9 +338,8 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     uint32_t            bwidth  = ctx->blk_geom->bwidth;
     uint32_t            bheight = ctx->blk_geom->bheight;
     EbPictureBufferDesc pred_desc;
-    pred_desc.org_x = pred_desc.org_y = 0;
     pred_desc.border = 0;
-    pred_desc.stride_y                = bwidth;
+    pred_desc.stride_y = bwidth;
 
     EbPictureBufferDesc* ref_pic_list0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
     EbPictureBufferDesc* ref_pic_list1 = NULL;
@@ -1959,13 +1951,8 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
     error_per_bit += (error_per_bit == 0);
     uint32_t             blk_origin_index   = 0;
     EbPictureBufferDesc* input_pic          = ppcs->enhanced_pic; // 10BIT not supported
-#if CLN_BUF_OFFSETS
     uint32_t             input_origin_index = (ctx->blk_org_y) * input_pic->stride_y +
         (ctx->blk_org_x);
-#else
-    uint32_t             input_origin_index = (ctx->blk_org_y + input_pic->org_y) * input_pic->stride_y +
-        (ctx->blk_org_x + input_pic->org_x);
-#endif
     const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
     unsigned int            sse;
     uint8_t*                src_y = input_pic->buffer_y + input_origin_index;

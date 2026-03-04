@@ -18,19 +18,12 @@
 #include "utility.h"
 #include "enc_mode_config.h"
 
-#if CLN_BUF_OFFSETS
 static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
                                                            uint16_t recon_width, uint16_t recon_height) {
-#else
-void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
-                                                           uint16_t recon_width, uint16_t recon_height,
-                                                           uint16_t left_padding, uint16_t top_padding) {
-#endif
     uint8_t* recon_samples_ptr;
     uint16_t sample_count;
 
     // 1. zero out the top row
-#if CLN_BUF_OFFSETS
     recon_samples_ptr = recon_samples_buffer_ptr - stride - 1;
     svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
 
@@ -48,28 +41,8 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
     for (sample_count = 0; sample_count < recon_height; sample_count++) {
         recon_samples_ptr[sample_count * stride] = 0;
     }
-#else
-    recon_samples_ptr = recon_samples_buffer_ptr + (top_padding - 1) * stride + left_padding - 1;
-    svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
-
-    // 2. zero out the bottom row
-    recon_samples_ptr = recon_samples_buffer_ptr + (top_padding + recon_height) * stride + left_padding - 1;
-    svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
-
-    // 3. zero out the left column
-    recon_samples_ptr = recon_samples_buffer_ptr + top_padding * stride + left_padding - 1;
-    for (sample_count = 0; sample_count < recon_height; sample_count++) {
-        recon_samples_ptr[sample_count * stride] = 0;
-    }
-    // 4. zero out the right column
-    recon_samples_ptr = recon_samples_buffer_ptr + top_padding * stride + left_padding + recon_width;
-    for (sample_count = 0; sample_count < recon_height; sample_count++) {
-        recon_samples_ptr[sample_count * stride] = 0;
-    }
-#endif
 }
 
-#if CLN_BUF_OFFSETS
 static void initialize_samples_neighboring_reference_picture(EbPictureBufferDesc* ref_pic) {
     initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_y,
         ref_pic->stride_y,
@@ -86,35 +59,6 @@ static void initialize_samples_neighboring_reference_picture(EbPictureBufferDesc
         ref_pic->width >> 1,
         ref_pic->height >> 1);
 }
-#else
-static void initialize_samples_neighboring_reference_picture(
-    EbReferenceObject* ref_object, EbPictureBufferDescInitData* picture_buffer_desc_init_data_ptr,
-    EbBitDepth bit_depth) {
-    UNUSED(bit_depth);
-    {
-        initialize_samples_neighboring_reference_picture_8bit(ref_object->reference_picture->buffer_y,
-                                                              ref_object->reference_picture->stride_y,
-                                                              ref_object->reference_picture->width,
-                                                              ref_object->reference_picture->height,
-                                                              picture_buffer_desc_init_data_ptr->border,
-                                                              picture_buffer_desc_init_data_ptr->border);
-
-        initialize_samples_neighboring_reference_picture_8bit(ref_object->reference_picture->buffer_cb,
-                                                              ref_object->reference_picture->stride_cb,
-                                                              ref_object->reference_picture->width >> 1,
-                                                              ref_object->reference_picture->height >> 1,
-                                                              picture_buffer_desc_init_data_ptr->border >> 1,
-                                                              picture_buffer_desc_init_data_ptr->border >> 1);
-
-        initialize_samples_neighboring_reference_picture_8bit(ref_object->reference_picture->buffer_cr,
-                                                              ref_object->reference_picture->stride_cr,
-                                                              ref_object->reference_picture->width >> 1,
-                                                              ref_object->reference_picture->height >> 1,
-                                                              picture_buffer_desc_init_data_ptr->border >> 1,
-                                                              picture_buffer_desc_init_data_ptr->border >> 1);
-    }
-}
-#endif
 
 static void svt_reference_object_dctor(EbPtr p) {
     EbReferenceObject* obj = (EbReferenceObject*)p;
@@ -178,12 +122,7 @@ EbErrorType svt_reference_param_update(EbReferenceObject* ref_object, SequenceCo
         picture_buffer_desc_init_data_ptr.split_mode = false;
         svt_picture_buffer_desc_update(ref_object->reference_picture, (EbPtr)&picture_buffer_desc_init_data_ptr);
 
-#if CLN_BUF_OFFSETS
         initialize_samples_neighboring_reference_picture(ref_object->reference_picture);
-#else
-        initialize_samples_neighboring_reference_picture(
-            ref_object, &picture_buffer_desc_init_data_ptr, picture_buffer_desc_init_data_ptr.bit_depth);
-#endif
     }
 
     ref_object->mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
@@ -217,12 +156,7 @@ EbErrorType svt_reference_object_ctor(EbReferenceObject* ref_object, EbPtr objec
         picture_buffer_desc_init_data_ptr->split_mode = false;
         EB_NEW(ref_object->reference_picture, svt_picture_buffer_desc_ctor, (EbPtr)picture_buffer_desc_init_data_ptr);
 
-#if CLN_BUF_OFFSETS
         initialize_samples_neighboring_reference_picture(ref_object->reference_picture);
-#else
-        initialize_samples_neighboring_reference_picture(
-            ref_object, picture_buffer_desc_init_data_ptr, picture_buffer_desc_init_data_16bit_ptr.bit_depth);
-#endif
     }
     uint32_t mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
     uint32_t mi_cols = ref_object->reference_picture->width >> MI_SIZE_LOG2;

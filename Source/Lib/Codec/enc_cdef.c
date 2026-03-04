@@ -240,19 +240,9 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
     EbPictureBufferDesc* recon_pic;
     svt_aom_get_recon_pic(pcs, &recon_pic, is_16bit);
 
-#if CLN_BUF_OFFSETS // svt_av1_cdef_frame
     EbByte recon_buffer_y = recon_pic->buffer_y;
     EbByte recon_buffer_cb = recon_pic->buffer_cb;
     EbByte recon_buffer_cr = recon_pic->buffer_cr;
-#else
-    const uint32_t offset_y       = recon_pic->org_x + recon_pic->org_y * recon_pic->stride_y;
-    EbByte         recon_buffer_y = recon_pic->buffer_y + (offset_y << is_16bit);
-
-    const uint32_t offset_cb       = (recon_pic->org_x + recon_pic->org_y * recon_pic->stride_cb) >> 1;
-    EbByte         recon_buffer_cb = recon_pic->buffer_cb + (offset_cb << is_16bit);
-    const uint32_t offset_cr       = (recon_pic->org_x + recon_pic->org_y * recon_pic->stride_cr) >> 1;
-    EbByte         recon_buffer_cr = recon_pic->buffer_cr + (offset_cr << is_16bit);
-#endif
 
     const int32_t num_planes = av1_num_planes(&scs->seq_header.color_config);
     DECLARE_ALIGNED(16, uint16_t, src[CDEF_INBUF_SIZE]);

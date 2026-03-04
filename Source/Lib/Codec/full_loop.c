@@ -2076,15 +2076,9 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             ctx->hbd_md);
                 }
 
-#if CLN_BUF_OFFSETS
                 const uint32_t input_chroma_txb_origin_index =
                     ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1) * input_pic->stride_cb;
-#else
-                const uint32_t input_chroma_txb_origin_index =
-                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
-                    ((ROUND_UV(ctx->blk_org_y + txb_origin_y) + input_pic->org_y) >> 1) * input_pic->stride_cb;
-#endif
                 const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
                                                      (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cb)) >>
                     1;
@@ -2282,15 +2276,9 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             tx_height_uv,
                                             ctx->hbd_md);
                 }
-#if CLN_BUF_OFFSETS
                 const uint32_t input_chroma_txb_origin_index =
                     ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1) * input_pic->stride_cr;
-#else
-                const uint32_t input_chroma_txb_origin_index =
-                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x) + input_pic->org_x) >> 1) +
-                    ((ROUND_UV(ctx->blk_org_y + txb_origin_y) + input_pic->org_y) >> 1) * input_pic->stride_cr;
-#endif
                 const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
                                                      (ROUND_UV(txb_origin_y) * cand_bf->quant->stride_cr)) >>
                     1;

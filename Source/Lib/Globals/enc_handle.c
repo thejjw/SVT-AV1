@@ -4892,13 +4892,8 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
     EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
-#if CLN_BUF_OFFSETS
     uint32_t luma_buffer_offset   = 0;
     uint32_t chroma_buffer_offset = 0;
-#else
-    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->border + scs->border;
-    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->border >> 1) + (scs->border >> 1);
-#endif
     uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
     uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
@@ -4984,10 +4979,6 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
 
-#if !CLN_BUF_OFFSETS
-    uint32_t luma_buffer_offset   = input_pic->stride_y * scs->border + scs->border;
-    uint32_t chroma_buffer_offset = input_pic->stride_cr * (scs->border >> 1) + (scs->border >> 1);
-#endif
     uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
     uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
@@ -5000,86 +4991,50 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
     if (scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
         svt_av1_copy_wxh_8bit(input_ptr->luma,
                               input_ptr->y_stride,
-#if CLN_BUF_OFFSETS
                               y8b_input_picture_ptr->buffer_y,
-#else
-                              y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
-#endif
                               input_pic->stride_y,
                               luma_height,
                               luma_width);
         svt_av1_copy_wxh_8bit(input_ptr->cb,
                               input_ptr->cb_stride,
-#if CLN_BUF_OFFSETS
                               input_pic->buffer_cb,
-#else
-                              input_pic->buffer_cb + chroma_buffer_offset,
-#endif
                               input_pic->stride_cb,
                               chroma_height,
                               chroma_width);
         svt_av1_copy_wxh_8bit(input_ptr->cr,
                               input_ptr->cr_stride,
-#if CLN_BUF_OFFSETS
                               input_pic->buffer_cr,
-#else
-                              input_pic->buffer_cr + chroma_buffer_offset,
-#endif
                               input_pic->stride_cr,
                               chroma_height,
                               chroma_width);
     } else { // 10bit packed
         uint32_t comp_stride_y           = input_pic->stride_y / 4;
-#if !CLN_BUF_OFFSETS
-        uint32_t comp_luma_buffer_offset = comp_stride_y * input_pic->org_y + input_pic->org_x / 4;
-#endif
 
         uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
-#if !CLN_BUF_OFFSETS
-        uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
-#endif
 
         svt_unpack_and_2bcompress((uint16_t*)input_ptr->luma,
                                   input_ptr->y_stride,
-#if CLN_BUF_OFFSETS
                                   y8b_input_picture_ptr->buffer_y,
                                   y8b_input_picture_ptr->stride_y,
                                   input_pic->buffer_bit_inc_y,
-#else
-                                  y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
-                                  y8b_input_picture_ptr->stride_y,
-                                  input_pic->buffer_bit_inc_y + comp_luma_buffer_offset,
-#endif
                                   comp_stride_y,
                                   luma_width,
                                   luma_height);
         if (pass != ENCODE_FIRST_PASS) {
             svt_unpack_and_2bcompress((uint16_t*)input_ptr->cb,
                                       input_ptr->cb_stride,
-#if CLN_BUF_OFFSETS
                                       input_pic->buffer_cb,
                                       input_pic->stride_cb,
                                       input_pic->buffer_bit_inc_cb,
-#else
-                                      input_pic->buffer_cb + chroma_buffer_offset,
-                                      input_pic->stride_cb,
-                                      input_pic->buffer_bit_inc_cb + comp_chroma_buffer_offset,
-#endif
                                       comp_stride_uv,
                                       chroma_width,
                                       chroma_height);
 
             svt_unpack_and_2bcompress((uint16_t*)input_ptr->cr,
                                       input_ptr->cr_stride,
-#if CLN_BUF_OFFSETS
                                       input_pic->buffer_cr,
                                       input_pic->stride_cr,
                                       input_pic->buffer_bit_inc_cr,
-#else
-                                      input_pic->buffer_cr + chroma_buffer_offset,
-                                      input_pic->stride_cr,
-                                      input_pic->buffer_bit_inc_cr + comp_chroma_buffer_offset,
-#endif
                                       comp_stride_uv,
                                       chroma_width,
                                       chroma_height);
@@ -5210,72 +5165,16 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
         if (src->p_buffer != NULL) {
             EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
-#if CLN_BUF_OFFSETS
             memset(y8b_input_picture_ptr->buffer_alloc, 0, y8b_input_picture_ptr->buffer_alloc_sz);
             memset(input_pic->buffer_alloc, 0, input_pic->buffer_alloc_sz);
-#else
-            EbSvtAv1EncConfiguration* config                = &scs->static_config;
-            bool                      is_16bit_input        = config->encoder_bit_depth > EB_EIGHT_BIT;
-            const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
-            const uint8_t             subsampling_y =
-                ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
-            const uint32_t chroma_width  = (input_pic->width + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_height = (input_pic->height + subsampling_y) >> subsampling_y;
-            const uint32_t chroma_org_x  = (input_pic->org_x + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_org_y  = (input_pic->org_y + subsampling_y) >> subsampling_y;
-
-            uint32_t y8b_input_size = ((y8b_input_picture_ptr->width + (y8b_input_picture_ptr->org_x << 1)) *
-                                       (y8b_input_picture_ptr->height + (y8b_input_picture_ptr->org_y << 1)));
-            memset(y8b_input_picture_ptr->buffer_y, 0, (y8b_input_size * sizeof(uint8_t)));
-
-            uint32_t input_size = (input_pic->width + (input_pic->org_x << 1)) *
-                (input_pic->height + (input_pic->org_y << 1));
-            uint32_t chroma_input_size = (chroma_width + (chroma_org_x << 1)) * (chroma_height + (chroma_org_y << 1));
-
-            memset(input_pic->buffer_cb, 128, chroma_input_size * sizeof(uint8_t));
-            memset(input_pic->buffer_cr, 128, chroma_input_size * sizeof(uint8_t));
-            if (is_16bit_input) {
-                memset(input_pic->buffer_bit_inc_y, 0, ((input_size >> 2) * sizeof(uint8_t)));
-                memset(input_pic->buffer_bit_inc_cb, 0, ((chroma_input_size >> 2) * sizeof(uint8_t)));
-                memset(input_pic->buffer_bit_inc_cr, 0, ((chroma_input_size >> 2) * sizeof(uint8_t)));
-            }
-#endif
         }
     } else if (pass != ENCODE_FIRST_PASS) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
             EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
             EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
-#if CLN_BUF_OFFSETS
             memset(y8b_input_picture_ptr->buffer_alloc, 0, y8b_input_picture_ptr->buffer_alloc_sz);
             memset(input_pic->buffer_alloc, 0, input_pic->buffer_alloc_sz);
-#else
-            EbSvtAv1EncConfiguration* config                = &scs->static_config;
-            bool                      is_16bit_input        = config->encoder_bit_depth > EB_EIGHT_BIT;
-            const uint8_t             subsampling_x         = (config->encoder_color_format == EB_YUV444 ? 0 : 1);
-            const uint8_t             subsampling_y =
-                ((config->encoder_color_format == EB_YUV444 || config->encoder_color_format == EB_YUV422) ? 0 : 1);
-            const uint32_t chroma_width  = (input_pic->width + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_height = (input_pic->height + subsampling_y) >> subsampling_y;
-            const uint32_t chroma_org_x  = (input_pic->org_x + subsampling_x) >> subsampling_x;
-            const uint32_t chroma_org_y  = (input_pic->org_y + subsampling_y) >> subsampling_y;
-
-            uint32_t y8b_input_size = ((y8b_input_picture_ptr->width + (y8b_input_picture_ptr->org_x << 1)) *
-                                       (y8b_input_picture_ptr->height + (y8b_input_picture_ptr->org_y << 1)));
-            memset(y8b_input_picture_ptr->buffer_y, 0, (y8b_input_size * sizeof(uint8_t)));
-
-            uint32_t input_size        = ((input_pic->width + (input_pic->org_x << 1)) *
-                                   (input_pic->height + (input_pic->org_y << 1)));
-            uint32_t chroma_input_size = (chroma_width + (chroma_org_x << 1)) * (chroma_height + (chroma_org_y << 1));
-
-            memset(input_pic->buffer_cb, 128, chroma_input_size * sizeof(uint8_t));
-            memset(input_pic->buffer_cr, 128, chroma_input_size * sizeof(uint8_t));
-            if (is_16bit_input) {
-                memset(input_pic->buffer_bit_inc_y, 0, ((input_size >> 2) * sizeof(uint8_t)));
-                memset(input_pic->buffer_bit_inc_cb, 0, ((chroma_input_size >> 2) * sizeof(uint8_t)));
-                memset(input_pic->buffer_bit_inc_cr, 0, ((chroma_input_size >> 2) * sizeof(uint8_t)));
-            }
-#endif
             // Copy the metadata array
             if (svt_aom_copy_metadata_buffer(dst, src->metadata) != EB_ErrorNone) {
                 dst->metadata = NULL;
@@ -5880,7 +5779,6 @@ void svt_input_buffer_header_destroyer(EbPtr p) {
     EbBufferHeaderType*  obj = (EbBufferHeaderType*)p;
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
     if (buf) {
-#if CLN_BUF_OFFSETS
         EB_FREE_ALIGNED_ARRAY(buf->buffer_alloc);
         buf->buffer_alloc_sz = 0;
         buf->buffer_y = NULL;
@@ -5889,11 +5787,6 @@ void svt_input_buffer_header_destroyer(EbPtr p) {
         buf->buffer_bit_inc_y = NULL;
         buf->buffer_bit_inc_cb = NULL;
         buf->buffer_bit_inc_cr = NULL;
-#else
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_y);
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cb);
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cr);
-#endif
     }
 
     EB_DELETE(buf);

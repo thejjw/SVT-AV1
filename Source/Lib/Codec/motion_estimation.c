@@ -408,13 +408,8 @@ static void open_loop_me_get_eight_search_point_results_block(
     MeContext* me_ctx, // input parameter, ME context Ptr, used to get SB Ptr
     uint32_t   list_index, // input parameter, reference list index
     uint32_t   ref_pic_index,
-#if CLN_BUF_OFFSETS
     int32_t   search_region_index, // input parameter, search area origin, used to
     // point to reference samples
-#else
-    uint32_t   search_region_index, // input parameter, search area origin, used to
-    // point to reference samples
-#endif
     int32_t x_search_index, // input parameter, search region position in the
     // horizontal direction, used to derive xMV
     int32_t y_search_index // input parameter, search region position in the
@@ -461,11 +456,7 @@ static void open_loop_me_get_search_point_results_block(
     MeContext* me_ctx, // input parameter, ME context Ptr, used to get SB Ptr
     uint32_t   list_index, // input parameter, reference list index
     uint32_t   ref_pic_index,
-#if CLN_BUF_OFFSETS
     int32_t   search_region_index, // input parameter, search area origin, used to
-#else
-    uint32_t   search_region_index, // input parameter, search area origin, used to
-#endif
     // point to reference samples
     int32_t x_search_index, // input parameter, search region position in the
     // horizontal direction, used to derive xMV
@@ -480,17 +471,10 @@ static void open_loop_me_get_search_point_results_block(
         ((ME_FILTER_TAP >> 1) * me_ctx->interpolated_full_stride[list_index][ref_pic_index]);
     // uint32_t ref_luma_stride = ref_pic_ptr->stride_y; // NADER
     uint32_t ref_luma_stride          = me_ctx->interpolated_full_stride[list_index][ref_pic_index];
-#if CLN_BUF_OFFSETS
     int32_t search_position_tl_index = search_region_index;
     int32_t search_position_index;
     int32_t block_index;
     int32_t src_next_16x16_offset;
-#else
-    uint32_t search_position_tl_index = search_region_index;
-    uint32_t search_position_index;
-    uint32_t block_index;
-    uint32_t src_next_16x16_offset;
-#endif
     // uint32_t ref_next_16x16_offset = (ref_pic_ptr->stride_y << 4); // NADER
     uint32_t  ref_next_16x16_offset = (ref_luma_stride << 4);
     uint32_t  curr_mv_1             = (((uint32_t)y_search_index) << 16);
@@ -816,13 +800,8 @@ static void hme_level_0(MeContext*           me_ctx, // ME context Ptr, used to 
     // round up the search region width to nearest multiple of 8 because the SAD calculation performance (for
     // intrinsic functions) is the same for search region width from 1 to 8
     sa_width           = (int16_t)((sa_width + 7) & ~0x07);
-#if CLN_BUF_OFFSETS
     int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
     int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
-#else
-    int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->org_x) - 1;
-    int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->org_y) - 1;
-#endif
 
     int16_t x_search_region_distance = sa_width * sr_w;
     int16_t y_search_region_distance = sa_height * sr_h;
@@ -860,17 +839,10 @@ static void hme_level_0(MeContext*           me_ctx, // ME context Ptr, used to 
     }
 
     // Move to the top left of the search region
-#if CLN_BUF_OFFSETS
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
     int32_t search_region_index = x_top_left_search_region +
         y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
-#else
-    int16_t  x_top_left_search_region = ((int16_t)sixteenth_ref_pic_ptr->org_x + org_x) + sa_origin_x;
-    int16_t  y_top_left_search_region = ((int16_t)sixteenth_ref_pic_ptr->org_y + org_y) + sa_origin_y;
-    uint32_t search_region_index      = x_top_left_search_region +
-        y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
-#endif
 
     // Put the first search location into level0 results
     svt_sad_loop_kernel(&me_ctx->sixteenth_b64_buffer[0],
@@ -921,13 +893,8 @@ static void hme_level_1(MeContext*           me_ctx, // ME context Ptr, used to 
     // intrinsic functions) is the same for search region width from 1 to 8
     sa_width = (int16_t)((sa_width + 7) & ~0x07);
 
-#if CLN_BUF_OFFSETS
     int16_t pad_width  = (int16_t)(quarter_ref_pic_ptr->border) - 1;
     int16_t pad_height = (int16_t)(quarter_ref_pic_ptr->border) - 1;
-#else
-    int16_t pad_width  = (int16_t)(quarter_ref_pic_ptr->org_x) - 1;
-    int16_t pad_height = (int16_t)(quarter_ref_pic_ptr->org_y) - 1;
-#endif
 
     int16_t sa_origin_x = -(sa_width >> 1) + hme_l0_sc_x;
     int16_t sa_origin_y = -(sa_height >> 1) + hme_l0_sc_y;
@@ -966,15 +933,9 @@ static void hme_level_1(MeContext*           me_ctx, // ME context Ptr, used to 
     }
 
     // Move to the top left of the search region
-#if CLN_BUF_OFFSETS
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
     int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * quarter_ref_pic_ptr->stride_y;
-#else
-    int16_t  x_top_left_search_region = ((int16_t)quarter_ref_pic_ptr->org_x + org_x) + sa_origin_x;
-    int16_t  y_top_left_search_region = ((int16_t)quarter_ref_pic_ptr->org_y + org_y) + sa_origin_y;
-    uint32_t search_region_index = x_top_left_search_region + y_top_left_search_region * quarter_ref_pic_ptr->stride_y;
-#endif
 
     // Put the first search location into level1 results
     svt_sad_loop_kernel(&me_ctx->quarter_b64_buffer[0],
@@ -1065,15 +1026,9 @@ void hme_level_2(MeContext*           me_ctx, // ME context Ptr, used to get/upd
     }
 
     // Move to the top left of the search region
-#if CLN_BUF_OFFSETS
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
     int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->stride_y;
-#else
-    int16_t  x_top_left_search_region = ((int16_t)ref_pic_ptr->org_x + org_x) + sa_origin_x;
-    int16_t  y_top_left_search_region = ((int16_t)ref_pic_ptr->org_y + org_y) + sa_origin_y;
-    uint32_t search_region_index      = x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->stride_y;
-#endif
 
     // Put the first search location into level2 results
     svt_sad_loop_kernel(
@@ -1107,11 +1062,7 @@ uint32_t check_00_center(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, ui
                          int16_t* y_search_center, uint32_t zz_sad)
 
 {
-#if CLN_BUF_OFFSETS
     uint32_t zero_mv_sad, hme_mv_sad;
-#else
-    uint32_t search_region_index, zero_mv_sad, hme_mv_sad;
-#endif
     uint64_t hme_mv_cost, zero_mv_cost, search_center_cost;
     int16_t  org_x         = (int16_t)sb_origin_x;
     int16_t  org_y         = (int16_t)sb_origin_y;
@@ -1119,13 +1070,8 @@ uint32_t check_00_center(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, ui
     int16_t  pad_width     = (int16_t)BLOCK_SIZE_64 - 1;
     int16_t  pad_height    = (int16_t)BLOCK_SIZE_64 - 1;
 
-#if CLN_BUF_OFFSETS
     int32_t search_region_index = org_x +
         (org_y) * ref_pic_ptr->stride_y;
-#else
-    search_region_index = (int16_t)ref_pic_ptr->org_x + org_x +
-        ((int16_t)ref_pic_ptr->org_y + org_y) * ref_pic_ptr->stride_y;
-#endif
     if (me_ctx->me_early_exit_th) {
         zero_mv_sad = zz_sad;
     } else {
@@ -1159,13 +1105,8 @@ uint32_t check_00_center(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, ui
     ///
 
     zero_mv_cost        = zero_mv_sad << COST_PRECISION;
-#if CLN_BUF_OFFSETS
     search_region_index = (int16_t)(org_x) + *x_search_center +
         ((int16_t)(org_y) + *y_search_center) * ref_pic_ptr->stride_y;
-#else
-    search_region_index = (int16_t)(ref_pic_ptr->org_x + org_x) + *x_search_center +
-        ((int16_t)(ref_pic_ptr->org_y + org_y) + *y_search_center) * ref_pic_ptr->stride_y;
-#endif
 
     hme_mv_sad = svt_nxm_sad_kernel(me_ctx->b64_src_ptr,
                                     me_ctx->b64_src_stride << subsample_sad,
@@ -1259,11 +1200,7 @@ static void integer_search_b64(PictureParentControlSet* pcs, MeContext* me_ctx, 
     int16_t  y_search_area_origin;
     int16_t  x_top_left_search_region;
     int16_t  y_top_left_search_region;
-#if CLN_BUF_OFFSETS
     int32_t search_region_index;
-#else
-    uint32_t search_region_index;
-#endif
     uint32_t num_of_list_to_search;
     uint32_t list_index;
     uint8_t  ref_pic_index;
@@ -1379,17 +1316,10 @@ static void integer_search_b64(PictureParentControlSet* pcs, MeContext* me_ctx, 
             if (me_ctx->me_8x8_var_ctrls.enabled && (search_area_width * search_area_height > 24)) {
                 x_search_area_origin     = x_search_center;
                 y_search_area_origin     = y_search_center;
-#if CLN_BUF_OFFSETS
                 x_top_left_search_region = (int16_t)(b64_origin_x) - (ME_FILTER_TAP >> 1) +
                     x_search_area_origin;
                 y_top_left_search_region = (int16_t)(b64_origin_y) - (ME_FILTER_TAP >> 1) +
                     y_search_area_origin;
-#else
-                x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) - (ME_FILTER_TAP >> 1) +
-                    x_search_area_origin;
-                y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) - (ME_FILTER_TAP >> 1) +
-                    y_search_area_origin;
-#endif
                 search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->stride_y;
                 me_ctx->integer_buffer_ptr[list_index][ref_pic_index] = &(ref_pic_ptr->buffer_y[search_region_index]);
                 me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->stride_y;
@@ -1462,29 +1392,17 @@ static void integer_search_b64(PictureParentControlSet* pcs, MeContext* me_ctx, 
                   ? MAX(1, search_area_height - ((org_y + y_search_area_origin + search_area_height) - picture_height))
                   : search_area_height;
 
-#if CLN_BUF_OFFSETS
             x_top_left_search_region = (int16_t)(b64_origin_x) - (ME_FILTER_TAP >> 1) +
                 x_search_area_origin;
             y_top_left_search_region = (int16_t)(b64_origin_y) - (ME_FILTER_TAP >> 1) +
                 y_search_area_origin;
-#else
-            x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) - (ME_FILTER_TAP >> 1) +
-                x_search_area_origin;
-            y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) - (ME_FILTER_TAP >> 1) +
-                y_search_area_origin;
-#endif
             search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->stride_y;
             me_ctx->integer_buffer_ptr[list_index][ref_pic_index]       = &(ref_pic_ptr->buffer_y[search_region_index]);
             me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->stride_y;
 
             // Move to the top left of the search region
-#if CLN_BUF_OFFSETS
             x_top_left_search_region = (int16_t)(b64_origin_x) + x_search_area_origin;
             y_top_left_search_region = (int16_t)(b64_origin_y) + y_search_area_origin;
-#else
-            x_top_left_search_region = (int16_t)(ref_pic_ptr->org_x + b64_origin_x) + x_search_area_origin;
-            y_top_left_search_region = (int16_t)(ref_pic_ptr->org_y + b64_origin_y) + y_search_area_origin;
-#endif
             open_loop_me_fullpel_search_sblock(me_ctx,
                                                list_index,
                                                ref_pic_index,
@@ -1547,19 +1465,10 @@ static void prehme_core(MeContext* me_ctx, int16_t org_x, int16_t org_y, uint32_
                         EbPictureBufferDesc* sixteenth_ref_pic_ptr, SearchInfo* prehme_data) {
     int16_t  x_top_left_search_region;
     int16_t  y_top_left_search_region;
-#if CLN_BUF_OFFSETS
     int32_t search_region_index;
-#else
-    uint32_t search_region_index;
-#endif
 
-#if CLN_BUF_OFFSETS
     int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
     int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
-#else
-    int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->org_x) - 1;
-    int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->org_y) - 1;
-#endif
 
     int16_t search_area_width  = prehme_data->sa.width;
     int16_t search_area_height = prehme_data->sa.height;
@@ -1603,13 +1512,8 @@ static void prehme_core(MeContext* me_ctx, int16_t org_x, int16_t org_y, uint32_
                   ((org_y + y_search_area_origin + search_area_height) - (int16_t)sixteenth_ref_pic_ptr->height))
         : search_area_height;
 
-#if CLN_BUF_OFFSETS
     x_top_left_search_region = (org_x) + x_search_area_origin;
     y_top_left_search_region = (org_y) + y_search_area_origin;
-#else
-    x_top_left_search_region = ((int16_t)sixteenth_ref_pic_ptr->org_x + org_x) + x_search_area_origin;
-    y_top_left_search_region = ((int16_t)sixteenth_ref_pic_ptr->org_y + org_y) + y_search_area_origin;
-#endif
     search_region_index      = x_top_left_search_region + y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
 
     svt_sad_loop_kernel(&me_ctx->sixteenth_b64_buffer[0],
@@ -1644,21 +1548,12 @@ static uint32_t get_zz_sad(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, 
                            uint32_t sb_origin_y, uint32_t sb_width, uint32_t sb_height)
 
 {
-#if CLN_BUF_OFFSETS
     uint32_t zero_mv_sad;
-#else
-    uint32_t search_region_index, zero_mv_sad;
-#endif
     int16_t  org_x         = (int16_t)sb_origin_x;
     int16_t  org_y         = (int16_t)sb_origin_y;
     uint32_t subsample_sad = 1;
 
-#if CLN_BUF_OFFSETS
     int32_t search_region_index = org_x + (org_y) * ref_pic_ptr->stride_y;
-#else
-    search_region_index = (int16_t)ref_pic_ptr->org_x + org_x +
-        ((int16_t)ref_pic_ptr->org_y + org_y) * ref_pic_ptr->stride_y;
-#endif
 
     zero_mv_sad = svt_nxm_sad_kernel(me_ctx->b64_src_ptr,
                                      me_ctx->b64_src_stride << subsample_sad,

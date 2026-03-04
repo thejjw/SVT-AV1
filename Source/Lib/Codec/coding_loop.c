@@ -106,13 +106,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit16bit_sample_write(lumaReconSampleNeighborArray,
                                                           (uint16_t*)(recon_buffer->buffer_y),
                                                           recon_buffer->stride_y,
-#if CLN_BUF_OFFSETS // encode_pass_update_recon_sample_neighbour_arrays
                                                           org_x,
                                                           org_y,
-#else
-                                                          recon_buffer->org_x + org_x,
-                                                          recon_buffer->org_y + org_y,
-#endif
                                                           org_x,
                                                           org_y,
                                                           width,
@@ -125,13 +120,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit16bit_sample_write(cbReconSampleNeighborArray,
                                                           (uint16_t*)(recon_buffer->buffer_cb),
                                                           recon_buffer->stride_cb,
-#if CLN_BUF_OFFSETS
                                                           round_origin_x >> 1,
                                                           round_origin_y >> 1,
-#else
-                                                          (recon_buffer->org_x + round_origin_x) >> 1,
-                                                          (recon_buffer->org_y + round_origin_y) >> 1,
-#endif
                                                           round_origin_x >> 1,
                                                           round_origin_y >> 1,
                                                           bwidth_uv,
@@ -142,13 +132,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit16bit_sample_write(crReconSampleNeighborArray,
                                                           (uint16_t*)(recon_buffer->buffer_cr),
                                                           recon_buffer->stride_cr,
-#if CLN_BUF_OFFSETS
                                                           round_origin_x >> 1,
                                                           round_origin_y >> 1,
-#else
-                                                          (recon_buffer->org_x + round_origin_x) >> 1,
-                                                          (recon_buffer->org_y + round_origin_y) >> 1,
-#endif
                                                           round_origin_x >> 1,
                                                           round_origin_y >> 1,
                                                           bwidth_uv,
@@ -161,13 +146,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit_sample_write(lumaReconSampleNeighborArray,
                                                      recon_buffer->buffer_y,
                                                      recon_buffer->stride_y,
-#if CLN_BUF_OFFSETS
                                                      org_x,
                                                      org_y,
-#else
-                                                     recon_buffer->org_x + org_x,
-                                                     recon_buffer->org_y + org_y,
-#endif
                                                      org_x,
                                                      org_y,
                                                      width,
@@ -180,13 +160,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit_sample_write(cbReconSampleNeighborArray,
                                                      recon_buffer->buffer_cb,
                                                      recon_buffer->stride_cb,
-#if CLN_BUF_OFFSETS
                                                      round_origin_x >> 1,
                                                      round_origin_y >> 1,
-#else
-                                                     (recon_buffer->org_x + round_origin_x) >> 1,
-                                                     (recon_buffer->org_y + round_origin_y) >> 1,
-#endif
                                                      round_origin_x >> 1,
                                                      round_origin_y >> 1,
                                                      bwidth_uv,
@@ -197,13 +172,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
             svt_aom_neighbor_array_unit_sample_write(crReconSampleNeighborArray,
                                                      recon_buffer->buffer_cr,
                                                      recon_buffer->stride_cr,
-#if CLN_BUF_OFFSETS
                                                      round_origin_x >> 1,
                                                      round_origin_y >> 1,
-#else
-                                                     (recon_buffer->org_x + round_origin_x) >> 1,
-                                                     (recon_buffer->org_y + round_origin_y) >> 1,
-#endif
                                                      round_origin_x >> 1,
                                                      round_origin_y >> 1,
                                                      bwidth_uv,
@@ -237,12 +207,7 @@ static void av1_encode_generate_cfl_prediction(EbPictureBufferDesc* pred_samples
 
     EbPictureBufferDesc* recon_samples = pred_samples;
 
-#if CLN_BUF_OFFSETS
     uint32_t recon_luma_offset = (round_origin_y * recon_samples->stride_y) + round_origin_x;
-#else
-    uint32_t recon_luma_offset = (recon_samples->org_y + round_origin_y) * recon_samples->stride_y +
-        (recon_samples->org_x + round_origin_x);
-#endif
 
     // Down sample Luma
     if (is_16bit) {
@@ -375,19 +340,10 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
         input_luma_offset = tx_org_x + tx_org_y * input_samples->stride_y;
         input_cb_offset   = ROUND_UV(tx_org_x) / 2 + ROUND_UV(tx_org_y) / 2 * input_samples->stride_cb;
         input_cr_offset   = ROUND_UV(tx_org_x) / 2 + ROUND_UV(tx_org_y) / 2 * input_samples->stride_cr;
-#if CLN_BUF_OFFSETS // av1_encode_loop
         pred_luma_offset = (org_y * pred_samples->stride_y) + org_x;
         pred_cb_offset = (round_origin_x >> 1) + ((round_origin_y >> 1) * pred_samples->stride_cb);
         pred_cr_offset = (round_origin_x >> 1) + ((round_origin_y >> 1) * pred_samples->stride_cr);
-#else
-        pred_luma_offset  = ((pred_samples->org_y + org_y) * pred_samples->stride_y) + (pred_samples->org_x + org_x);
-        pred_cb_offset    = ((pred_samples->org_x + round_origin_x) >> 1) +
-            (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cb);
-        pred_cr_offset = ((pred_samples->org_x + round_origin_x) >> 1) +
-            (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cr);
-#endif
     } else {
-#if CLN_BUF_OFFSETS
         input_luma_offset = (org_y * input_samples->stride_y) + org_x;
         input_cb_offset = ((round_origin_y >> 1) * input_samples->stride_cb) + (round_origin_x >> 1);
         input_cr_offset = ((round_origin_y >> 1) * input_samples->stride_cr) + (round_origin_x >> 1);
@@ -395,18 +351,6 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
         pred_luma_offset = org_x + (org_y * pred_samples->stride_y);
         pred_cb_offset = (round_origin_x >> 1) + ((round_origin_y >> 1) * pred_samples->stride_cb);
         pred_cr_offset = (round_origin_x >> 1) + ((round_origin_y >> 1) * pred_samples->stride_cr);
-#else
-        input_luma_offset = ((org_y + input_samples->org_y) * input_samples->stride_y) + (org_x + input_samples->org_x);
-        input_cb_offset   = (((round_origin_y + input_samples->org_y) >> 1) * input_samples->stride_cb) +
-            ((round_origin_x + input_samples->org_x) >> 1);
-        input_cr_offset = (((round_origin_y + input_samples->org_y) >> 1) * input_samples->stride_cr) +
-            ((round_origin_x + input_samples->org_x) >> 1);
-        pred_luma_offset = (pred_samples->org_x + org_x) + ((pred_samples->org_y + org_y) * pred_samples->stride_y);
-        pred_cb_offset   = ((pred_samples->org_x + round_origin_x) >> 1) +
-            (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cb);
-        pred_cr_offset = ((pred_samples->org_x + round_origin_x) >> 1) +
-            (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cr);
-#endif
     }
 
     if (bit_depth != EB_EIGHT_BIT) {
@@ -663,12 +607,7 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
         if ((blk_ptr->y_has_coeff & (1 << ed_ctx->txb_itr)) && blk_ptr->block_mi.skip_mode == false) {
             const TxSize   tx_size          = tx_depth_to_tx_size[blk_ptr->block_mi.tx_depth][ed_ctx->blk_geom->bsize];
-#if CLN_BUF_OFFSETS // av1_encode_generate_recon
             const uint32_t pred_luma_offset = (org_y * pred_samples->stride_y) + org_x;
-#else
-            const uint32_t pred_luma_offset = (pred_samples->org_y + org_y) * pred_samples->stride_y +
-                (pred_samples->org_x + org_x);
-#endif
             svt_aom_inv_transform_recon_wrapper(pcs,
                                                 ed_ctx->md_ctx,
                                                 pred_samples->buffer_y,
@@ -699,13 +638,8 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
         // Cb
         //**********************************
         if ((blk_ptr->u_has_coeff & (1 << ed_ctx->txb_itr)) && blk_ptr->block_mi.skip_mode == false) {
-#if CLN_BUF_OFFSETS
             const uint32_t pred_offset_cb = ((round_origin_y >> 1) * pred_samples->stride_cb) +
                 (round_origin_x >> 1);
-#else
-            const uint32_t pred_offset_cb = (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cb) +
-                ((pred_samples->org_x + round_origin_x) >> 1);
-#endif
             svt_aom_inv_transform_recon_wrapper(pcs,
                                                 ed_ctx->md_ctx,
                                                 pred_samples->buffer_cb,
@@ -727,13 +661,8 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
         // Cr
         //**********************************
         if ((blk_ptr->v_has_coeff & (1 << ed_ctx->txb_itr)) && blk_ptr->block_mi.skip_mode == false) {
-#if CLN_BUF_OFFSETS
             const uint32_t pred_offset_cr = ((round_origin_y >> 1) * pred_samples->stride_cr) +
                 (round_origin_x >> 1);
-#else
-            const uint32_t pred_offset_cr = (((pred_samples->org_y + round_origin_y) >> 1) * pred_samples->stride_cr) +
-                ((pred_samples->org_x + round_origin_x) >> 1);
-#endif
             svt_aom_inv_transform_recon_wrapper(pcs,
                                                 ed_ctx->md_ctx,
                                                 pred_samples->buffer_cr,
@@ -760,12 +689,7 @@ void svt_aom_store16bit_input_src(EbPictureBufferDesc* input_sample16bit_buffer,
     uint16_t* to_ptr;
 
     from_ptr = (uint16_t*)input_sample16bit_buffer->buffer_y;
-#if CLN_BUF_OFFSETS // svt_aom_store16bit_input_src
     to_ptr = (uint16_t*)pcs->input_frame16bit->buffer_y + sb_x + (sb_y * pcs->input_frame16bit->stride_y);
-#else
-    to_ptr   = (uint16_t*)pcs->input_frame16bit->buffer_y + (sb_x + pcs->input_frame16bit->org_x) +
-        (sb_y + pcs->input_frame16bit->org_y) * pcs->input_frame16bit->stride_y;
-#endif
 
     for (row_it = 0; row_it < sb_h; row_it++) {
         svt_memcpy(to_ptr + row_it * pcs->input_frame16bit->stride_y,
@@ -779,12 +703,7 @@ void svt_aom_store16bit_input_src(EbPictureBufferDesc* input_sample16bit_buffer,
     sb_h = sb_h / 2;
 
     from_ptr = (uint16_t*)input_sample16bit_buffer->buffer_cb;
-#if CLN_BUF_OFFSETS
     to_ptr = (uint16_t*)pcs->input_frame16bit->buffer_cb + sb_x + (sb_y * pcs->input_frame16bit->stride_cb);
-#else
-    to_ptr   = (uint16_t*)pcs->input_frame16bit->buffer_cb + (sb_x + pcs->input_frame16bit->org_x / 2) +
-        (sb_y + pcs->input_frame16bit->org_y / 2) * pcs->input_frame16bit->stride_cb;
-#endif
 
     for (row_it = 0; row_it < sb_h; row_it++) {
         svt_memcpy(to_ptr + row_it * pcs->input_frame16bit->stride_cb,
@@ -793,12 +712,7 @@ void svt_aom_store16bit_input_src(EbPictureBufferDesc* input_sample16bit_buffer,
     }
 
     from_ptr = (uint16_t*)input_sample16bit_buffer->buffer_cr;
-#if CLN_BUF_OFFSETS
     to_ptr = (uint16_t*)pcs->input_frame16bit->buffer_cr + sb_x + (sb_y * pcs->input_frame16bit->stride_cr);
-#else
-    to_ptr   = (uint16_t*)pcs->input_frame16bit->buffer_cr + (sb_x + pcs->input_frame16bit->org_x / 2) +
-        (sb_y + pcs->input_frame16bit->org_y / 2) * pcs->input_frame16bit->stride_cb;
-#endif
 
     for (row_it = 0; row_it < sb_h; row_it++) {
         svt_memcpy(to_ptr + row_it * pcs->input_frame16bit->stride_cr,
@@ -1179,27 +1093,13 @@ void svt_aom_convert_recon_16bit_to_8bit(PictureControlSet* pcs, EncDecContext* 
     uint32_t pred_buf_x_offest = ctx->blk_org_x;
     uint32_t pred_buf_y_offest = ctx->blk_org_y;
 
-#if CLN_BUF_OFFSETS // svt_aom_convert_recon_16bit_to_8bit
     uint16_t* dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_y) + pred_buf_x_offest +
         (pred_buf_y_offest * recon_buffer_16bit->stride_y);
-#else
-    uint16_t* dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_y) + pred_buf_x_offest + recon_buffer_16bit->org_x +
-        (pred_buf_y_offest + recon_buffer_16bit->org_y) * recon_buffer_16bit->stride_y;
-#endif
     int32_t dst_stride_16bit = recon_buffer_16bit->stride_y;
 
-#if CLN_BUF_OFFSETS
     uint8_t* dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest +
         (pred_buf_y_offest * recon_buffer_8bit->stride_y);
     int32_t dst_stride = recon_buffer_8bit->stride_y;
-#else
-    uint8_t* dst;
-    int32_t  dst_stride;
-
-    dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest + recon_buffer_8bit->org_x +
-        (pred_buf_y_offest + recon_buffer_8bit->org_y) * recon_buffer_8bit->stride_y;
-    dst_stride = recon_buffer_8bit->stride_y;
-#endif
 
     svt_convert_16bit_to_8bit(
         dst_16bit, dst_stride_16bit, dst, dst_stride, ctx->blk_geom->bwidth, ctx->blk_geom->bheight);
@@ -1208,7 +1108,6 @@ void svt_aom_convert_recon_16bit_to_8bit(PictureControlSet* pcs, EncDecContext* 
     pred_buf_x_offest = ROUND_UV(ctx->blk_org_x) >> 1;
     pred_buf_y_offest = ROUND_UV(ctx->blk_org_y) >> 1;
 
-#if CLN_BUF_OFFSETS
     dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_cb) + pred_buf_x_offest +
         (pred_buf_y_offest * recon_buffer_16bit->stride_cb);
     dst_stride_16bit = recon_buffer_16bit->stride_cb;
@@ -1216,34 +1115,15 @@ void svt_aom_convert_recon_16bit_to_8bit(PictureControlSet* pcs, EncDecContext* 
     dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest +
         (pred_buf_y_offest * recon_buffer_8bit->stride_cb);
     dst_stride = recon_buffer_8bit->stride_cb;
-#else
-    dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_cb) + pred_buf_x_offest + recon_buffer_16bit->org_x / 2 +
-        (pred_buf_y_offest + recon_buffer_16bit->org_y / 2) * recon_buffer_16bit->stride_cb;
-    dst_stride_16bit = recon_buffer_16bit->stride_cb;
-
-    dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest + recon_buffer_8bit->org_x / 2 +
-        (pred_buf_y_offest + recon_buffer_8bit->org_y / 2) * recon_buffer_8bit->stride_cb;
-    dst_stride = recon_buffer_8bit->stride_cb;
-#endif
 
     svt_convert_16bit_to_8bit(
         dst_16bit, dst_stride_16bit, dst, dst_stride, ctx->blk_geom->bwidth_uv, ctx->blk_geom->bheight_uv);
 
-#if CLN_BUF_OFFSETS
     dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_cr) +
         (pred_buf_x_offest + (pred_buf_y_offest * recon_buffer_16bit->stride_cr));
     dst_stride_16bit = recon_buffer_16bit->stride_cr;
     dst = recon_buffer_8bit->buffer_cr + pred_buf_x_offest + (pred_buf_y_offest * recon_buffer_8bit->stride_cr);
     dst_stride = recon_buffer_8bit->stride_cr;
-#else
-    dst_16bit = (uint16_t*)(recon_buffer_16bit->buffer_cr) +
-        (pred_buf_x_offest + recon_buffer_16bit->org_x / 2 +
-         (pred_buf_y_offest + recon_buffer_16bit->org_y / 2) * recon_buffer_16bit->stride_cr);
-    dst_stride_16bit = recon_buffer_16bit->stride_cr;
-    dst              = recon_buffer_8bit->buffer_cr + pred_buf_x_offest + recon_buffer_8bit->org_x / 2 +
-        (pred_buf_y_offest + recon_buffer_8bit->org_y / 2) * recon_buffer_8bit->stride_cr;
-    dst_stride = recon_buffer_8bit->stride_cr;
-#endif
 
     svt_convert_16bit_to_8bit(
         dst_16bit, dst_stride_16bit, dst, dst_stride, ctx->blk_geom->bwidth_uv, ctx->blk_geom->bheight_uv);
@@ -1477,12 +1357,7 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
     EbPictureBufferDesc* recon_buffer;
     svt_aom_get_recon_pic(pcs, &recon_buffer, is_16bit);
     if (ctx->encoder_bit_depth > EB_EIGHT_BIT) {
-#if CLN_BUF_OFFSETS // copy_recon
         uint32_t recon_luma_offset = (ctx->blk_org_y * recon_buffer->stride_y) + ctx->blk_org_x;
-#else
-        uint32_t recon_luma_offset = (recon_buffer->org_y + ctx->blk_org_y) * recon_buffer->stride_y +
-            (recon_buffer->org_x + ctx->blk_org_x);
-#endif
         uint16_t* ep_recon = ((uint16_t*)(recon_buffer->buffer_y)) + recon_luma_offset;
         uint16_t* md_recon = (uint16_t*)(blk_ptr->recon_tmp->buffer_y);
 
@@ -1497,13 +1372,8 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
             uint32_t round_origin_y = ROUND_UV(ctx->blk_org_y); // for Chroma blocks with size of 4
 
             // Cr
-#if CLN_BUF_OFFSETS
             uint32_t recon_cr_offset = ((round_origin_y >> 1) * recon_buffer->stride_cr) +
                 (round_origin_x >> 1);
-#else
-            uint32_t recon_cr_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cr) +
-                ((recon_buffer->org_x + round_origin_x) >> 1);
-#endif
             uint16_t* ep_recon_cr = ((uint16_t*)(recon_buffer->buffer_cr)) + recon_cr_offset;
             uint16_t* md_recon_cr = (uint16_t*)(blk_ptr->recon_tmp->buffer_cr);
 
@@ -1514,13 +1384,8 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
             }
 
             // Cb
-#if CLN_BUF_OFFSETS
             uint32_t recon_cb_offset = ((round_origin_y >> 1) * recon_buffer->stride_cb) +
                 (round_origin_x >> 1);
-#else
-            uint32_t recon_cb_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cb) +
-                ((recon_buffer->org_x + round_origin_x) >> 1);
-#endif
             uint16_t* ep_recon_cb = ((uint16_t*)(recon_buffer->buffer_cb)) + recon_cb_offset;
             uint16_t* md_recon_cb = (uint16_t*)(blk_ptr->recon_tmp->buffer_cb);
 
@@ -1531,12 +1396,7 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
             }
         }
     } else {
-#if CLN_BUF_OFFSETS
         uint32_t recon_luma_offset = (ctx->blk_org_y * recon_buffer->stride_y) + ctx->blk_org_x;
-#else
-        uint32_t recon_luma_offset = (recon_buffer->org_y + ctx->blk_org_y) * recon_buffer->stride_y +
-            (recon_buffer->org_x + ctx->blk_org_x);
-#endif
         uint8_t* ep_recon = recon_buffer->buffer_y + recon_luma_offset;
         uint8_t* md_recon = blk_ptr->recon_tmp->buffer_y;
 
@@ -1551,13 +1411,8 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
             uint32_t round_origin_y = ROUND_UV(ctx->blk_org_y); // for Chroma blocks with size of 4
 
             // Cr
-#if CLN_BUF_OFFSETS
             uint32_t recon_cr_offset = ((round_origin_y >> 1) * recon_buffer->stride_cr) +
                 (round_origin_x >> 1);
-#else
-            uint32_t recon_cr_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cr) +
-                ((recon_buffer->org_x + round_origin_x) >> 1);
-#endif
             uint8_t* ep_recon_cr = recon_buffer->buffer_cr + recon_cr_offset;
             uint8_t* md_recon_cr = blk_ptr->recon_tmp->buffer_cr;
 
@@ -1568,13 +1423,8 @@ static void copy_recon(PictureControlSet* pcs, ModeDecisionContext* ctx, BlkStru
             }
 
             // Cb
-#if CLN_BUF_OFFSETS
             uint32_t recon_cb_offset = ((round_origin_y >> 1) * recon_buffer->stride_cb) +
                 (round_origin_x >> 1);
-#else
-            uint32_t recon_cb_offset = (((recon_buffer->org_y + round_origin_y) >> 1) * recon_buffer->stride_cb) +
-                ((recon_buffer->org_x + round_origin_x) >> 1);
-#endif
             uint8_t* ep_recon_cb = recon_buffer->buffer_cb + recon_cb_offset;
             uint8_t* md_recon_cb = blk_ptr->recon_tmp->buffer_cb;
 

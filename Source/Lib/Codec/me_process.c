@@ -172,12 +172,7 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
                             uint32_t b64_origin_y = y_b64_index * scs->b64_size;
 
                             // Load the 64x64 Block from the input to the intermediate block buffer
-#if CLN_BUF_OFFSETS
                             uint32_t buffer_index = (b64_origin_y) * input_pic->stride_y + b64_origin_x;
-#else
-                            uint32_t buffer_index = (input_pic->org_y + b64_origin_y) * input_pic->stride_y +
-                                input_pic->org_x + b64_origin_x;
-#endif
 #ifdef ARCH_X86_64
                             uint8_t* src_ptr    = &input_padded_pic->buffer_y[buffer_index];
                             uint32_t b64_height = (pcs->aligned_height - b64_origin_y) < BLOCK_SIZE_64
@@ -194,15 +189,9 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
 
                             // Load the 1/4 decimated SB from the 1/4 decimated input to the 1/4 intermediate SB buffer
                             if (me_context_ptr->me_ctx->enable_hme_level1_flag) {
-#if CLN_BUF_OFFSETS
                                 buffer_index = ((b64_origin_y >> 1)) *
                                     quarter_picture_ptr->stride_y +
                                     (b64_origin_x >> 1);
-#else
-                                buffer_index = (quarter_picture_ptr->org_y + (b64_origin_y >> 1)) *
-                                        quarter_picture_ptr->stride_y +
-                                    quarter_picture_ptr->org_x + (b64_origin_x >> 1);
-#endif
 
                                 me_context_ptr->me_ctx->quarter_b64_buffer =
                                     &quarter_picture_ptr->buffer_y[buffer_index];
@@ -211,15 +200,9 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
 
                             // Load the 1/16 decimated SB from the 1/16 decimated input to the 1/16 intermediate SB buffer
                             if (me_context_ptr->me_ctx->enable_hme_level0_flag) {
-#if CLN_BUF_OFFSETS
                                 buffer_index = ((b64_origin_y >> 2)) *
                                     sixteenth_picture_ptr->stride_y +
                                     (b64_origin_x >> 2);
-#else
-                                buffer_index = (sixteenth_picture_ptr->org_y + (b64_origin_y >> 2)) *
-                                        sixteenth_picture_ptr->stride_y +
-                                    sixteenth_picture_ptr->org_x + (b64_origin_x >> 2);
-#endif
 
                                 me_context_ptr->me_ctx->sixteenth_b64_buffer =
                                     &sixteenth_picture_ptr->buffer_y[buffer_index];

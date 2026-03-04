@@ -702,11 +702,7 @@ static void set_frame_coeff_lvl(PictureControlSet* pcs) {
     // Derive the input nois level
     EbPictureBufferDesc* input_pic = pcs->ppcs->enhanced_pic;
 
-#if CLN_BUF_OFFSETS
     EbByte buffer_y = input_pic->buffer_y;
-#else
-    EbByte buffer_y = input_pic->buffer_y + input_pic->org_y * input_pic->stride_y + input_pic->org_x;
-#endif
 
     int32_t noise_level_fp16 = svt_estimate_noise_fp16(buffer_y, // Y
                                                        input_pic->width,

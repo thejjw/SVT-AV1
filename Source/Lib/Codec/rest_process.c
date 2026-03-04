@@ -200,23 +200,14 @@ static EbPictureBufferDesc* get_own_recon(SequenceControlSet* scs, PictureContro
 
     EbPictureBufferDesc* org_rec = context_ptr->org_rec_frame;
 
-#if !CLN_BUF_OFFSETS
-    int org_org_x     = org_rec->org_x << is_16bit;
-    int org_org_x_c   = org_org_x >> ss_x;
-#endif
     int org_stride_y  = org_rec->stride_y << is_16bit;
     int org_stride_cb = org_rec->stride_cb << is_16bit;
     int org_stride_cr = org_rec->stride_cr << is_16bit;
 
-#if !CLN_BUF_OFFSETS
-    int rec_org_x     = recon_pic->org_x << is_16bit;
-    int rec_org_x_c   = rec_org_x >> ss_x;
-#endif
     int rec_stride_y  = recon_pic->stride_y << is_16bit;
     int rec_stride_cb = recon_pic->stride_cb << is_16bit;
     int rec_stride_cr = recon_pic->stride_cr << is_16bit;
 
-#if CLN_BUF_OFFSETS
     uint8_t* org_ptr    = org_rec->buffer_y;
     uint8_t* org_ptr_cb = org_rec->buffer_cb;
     uint8_t* org_ptr_cr = org_rec->buffer_cr;
@@ -224,15 +215,6 @@ static EbPictureBufferDesc* get_own_recon(SequenceControlSet* scs, PictureContro
     uint8_t* rec_ptr    = recon_pic->buffer_y;
     uint8_t* rec_ptr_cb = recon_pic->buffer_cb;
     uint8_t* rec_ptr_cr = recon_pic->buffer_cr;
-#else
-    uint8_t* org_ptr    = org_rec->buffer_y + org_org_x + org_rec->org_y * org_stride_y;
-    uint8_t* org_ptr_cb = org_rec->buffer_cb + org_org_x_c + (org_rec->org_y >> ss_y) * org_stride_cb;
-    uint8_t* org_ptr_cr = org_rec->buffer_cr + org_org_x_c + (org_rec->org_y >> ss_y) * org_stride_cr;
-
-    uint8_t* rec_ptr    = recon_pic->buffer_y + rec_org_x + recon_pic->org_y * rec_stride_y;
-    uint8_t* rec_ptr_cb = recon_pic->buffer_cb + rec_org_x_c + (recon_pic->org_y >> ss_y) * rec_stride_cb;
-    uint8_t* rec_ptr_cr = recon_pic->buffer_cr + rec_org_x_c + (recon_pic->org_y >> ss_y) * rec_stride_cr;
-#endif
 
     int rec_width = recon_pic->width << is_16bit;
 
@@ -430,66 +412,36 @@ void* svt_aom_rest_kernel(void* input_ptr) {
                         EbPictureBufferDesc* ref_pic_ptr       = ppcs->enc_dec_ptr->recon_pic;
                         EbPictureBufferDesc* ref_pic_16bit_ptr = ppcs->enc_dec_ptr->recon_pic_16bit;
                         // Y
-#if CLN_BUF_OFFSETS
                         uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_y) - (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->stride_y));
                         uint8_t* buf_8bit = ref_pic_ptr->buffer_y - (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->stride_y));
-#else
-                        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_y);
-                        uint8_t*  buf_8bit  = ref_pic_ptr->buffer_y;
-#endif
                         svt_convert_16bit_to_8bit(buf_16bit,
                                                   ref_pic_16bit_ptr->stride_y,
                                                   buf_8bit,
                                                   ref_pic_ptr->stride_y,
-#if CLN_BUF_OFFSETS
                                                   ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1),
                                                   ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
-#else
-                                                  ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1),
-                                                  ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1));
-#endif
 
                         //CB
-#if CLN_BUF_OFFSETS
                         buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cb) - ((ref_pic_16bit_ptr->border >> scs->subsampling_x) + ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->stride_cb));
                         buf_8bit = ref_pic_ptr->buffer_cb - ((ref_pic_ptr->border >> scs->subsampling_x) + ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->stride_cb));
-#else
-                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cb);
-                        buf_8bit  = ref_pic_ptr->buffer_cb;
-#endif
                         svt_convert_16bit_to_8bit(
                             buf_16bit,
                             ref_pic_16bit_ptr->stride_cb,
                             buf_8bit,
                             ref_pic_ptr->stride_cb,
-#if CLN_BUF_OFFSETS
                             (ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1)) >> scs->subsampling_x,
                             (ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1)) >> scs->subsampling_y);
-#else
-                            (ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1)) >> scs->subsampling_x,
-                            (ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1)) >> scs->subsampling_y);
-#endif
 
                         //CR
-#if CLN_BUF_OFFSETS
                         buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cr) - ((ref_pic_16bit_ptr->border >> scs->subsampling_x) + ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->stride_cr));
                         buf_8bit = ref_pic_ptr->buffer_cr - ((ref_pic_ptr->border >> scs->subsampling_x) + ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->stride_cr));
-#else
-                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cr);
-                        buf_8bit  = ref_pic_ptr->buffer_cr;
-#endif
                         svt_convert_16bit_to_8bit(
                             buf_16bit,
                             ref_pic_16bit_ptr->stride_cr,
                             buf_8bit,
                             ref_pic_ptr->stride_cr,
-#if CLN_BUF_OFFSETS
                             (ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1)) >> scs->subsampling_x,
                             (ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1)) >> scs->subsampling_y);
-#else
-                            (ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1)) >> scs->subsampling_x,
-                            (ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1)) >> scs->subsampling_y);
-#endif
                     }
                 }
             }

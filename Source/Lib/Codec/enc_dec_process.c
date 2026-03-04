@@ -369,7 +369,6 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
         chroma_subsamp_y   = 1;
     }
 
-#if CLN_BUF_OFFSETS
     svt_aom_fgn_copy_rect(src->buffer_y,
                           src->stride_y,
                           dst->buffer_y,
@@ -377,20 +376,10 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
                           dst->width,
                           dst->height,
                           use_high_bit_depth);
-#else
-    svt_aom_fgn_copy_rect(src->buffer_y + ((src->org_y * src->stride_y + src->org_x) << use_high_bit_depth),
-                          src->stride_y,
-                          dst->buffer_y + ((dst->org_y * dst->stride_y + dst->org_x) << use_high_bit_depth),
-                          dst->stride_y,
-                          dst->width,
-                          dst->height,
-                          use_high_bit_depth);
-#endif
 
     const int32_t chroma_width  = (dst->width + chroma_subsamp_x) >> chroma_subsamp_x;
     const int32_t chroma_height = (dst->height + chroma_subsamp_y) >> chroma_subsamp_y;
 
-#if CLN_BUF_OFFSETS
     svt_aom_fgn_copy_rect(src->buffer_cb,
                           src->stride_cb,
                           dst->buffer_cb,
@@ -410,37 +399,6 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
     luma = dst->buffer_y;
     cb   = dst->buffer_cb;
     cr   = dst->buffer_cr;
-#else
-    svt_aom_fgn_copy_rect(src->buffer_cb +
-                              ((src->stride_cb * (src->org_y >> chroma_subsamp_y) + (src->org_x >> chroma_subsamp_x))
-                               << use_high_bit_depth),
-                          src->stride_cb,
-                          dst->buffer_cb +
-                              ((dst->stride_cb * (dst->org_y >> chroma_subsamp_y) + (dst->org_x >> chroma_subsamp_x))
-                               << use_high_bit_depth),
-                          dst->stride_cb,
-                          chroma_width,
-                          chroma_height,
-                          use_high_bit_depth);
-
-    svt_aom_fgn_copy_rect(src->buffer_cr +
-                              ((src->stride_cr * (src->org_y >> chroma_subsamp_y) + (src->org_x >> chroma_subsamp_x))
-                               << use_high_bit_depth),
-                          src->stride_cr,
-                          dst->buffer_cr +
-                              ((dst->stride_cr * (dst->org_y >> chroma_subsamp_y) + (dst->org_x >> chroma_subsamp_x))
-                               << use_high_bit_depth),
-                          dst->stride_cr,
-                          chroma_width,
-                          chroma_height,
-                          use_high_bit_depth);
-
-    luma = dst->buffer_y + ((dst->org_y * dst->stride_y + dst->org_x) << use_high_bit_depth);
-    cb   = dst->buffer_cb +
-        ((dst->stride_cb * (dst->org_y >> chroma_subsamp_y) + (dst->org_x >> chroma_subsamp_x)) << use_high_bit_depth);
-    cr = dst->buffer_cr +
-        ((dst->stride_cr * (dst->org_y >> chroma_subsamp_y) + (dst->org_x >> chroma_subsamp_x)) << use_high_bit_depth);
-#endif
 
     luma_stride   = dst->stride_y;
     chroma_stride = dst->stride_cb;
@@ -491,9 +449,6 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
         // Copy the Reconstructed Picture to the Output Recon Buffer
         {
             uint32_t sample_total_count;
-#if !CLN_BUF_OFFSETS // svt_aom_recon_output
-            uint8_t* recon_read_ptr;
-#endif
             uint8_t* recon_write_ptr;
 
             EbPictureBufferDesc* recon_ptr;
@@ -554,10 +509,6 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
             sample_total_count = ((pcs->scs->max_initial_input_luma_width - scs->max_initial_input_pad_right) *
                                   (pcs->scs->max_initial_input_luma_height - scs->max_initial_input_pad_bottom))
                 << is_16bit;
-#if !CLN_BUF_OFFSETS
-            recon_read_ptr = recon_ptr->buffer_y + (recon_ptr->org_y << is_16bit) * recon_ptr->stride_y +
-                (recon_ptr->org_x << is_16bit);
-#endif
             recon_write_ptr = &(output_recon_ptr->p_buffer[output_recon_ptr->n_filled_len]);
             // Reset the Luma buffer for the case on changing the resolution on the fly
             memset(recon_write_ptr, 0, sample_total_count);
@@ -567,11 +518,7 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
 
             // Initialize Y recon buffer
             svt_aom_picture_copy_kernel(
-#if CLN_BUF_OFFSETS
                 recon_ptr->buffer_y,
-#else
-                recon_read_ptr,
-#endif
                 recon_ptr->stride_y,
                 recon_write_ptr,
                 pcs->scs->max_initial_input_luma_width - scs->pad_right, // use the full res stride
@@ -587,10 +534,6 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                 (((pcs->scs->max_initial_input_luma_width + ss_x - scs->max_initial_input_pad_right) >> ss_x) *
                  ((pcs->scs->max_initial_input_luma_height + ss_y - scs->max_initial_input_pad_bottom) >> ss_y))
                 << is_16bit;
-#if !CLN_BUF_OFFSETS
-            recon_read_ptr = recon_ptr->buffer_cb + ((recon_ptr->org_y << is_16bit) >> ss_y) * recon_ptr->stride_cb +
-                ((recon_ptr->org_x << is_16bit) >> ss_x);
-#endif
             recon_write_ptr = &(output_recon_ptr->p_buffer[output_recon_ptr->n_filled_len]);
 
             // Reset the Chroma buffer for the case on changing the resolution on the fly
@@ -601,11 +544,7 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                                EB_ENC_ROB_OF_ERROR);
 
             // Initialize U recon buffer
-#if CLN_BUF_OFFSETS
             svt_aom_picture_copy_kernel(recon_ptr->buffer_cb,
-#else
-            svt_aom_picture_copy_kernel(recon_read_ptr,
-#endif
                                         recon_ptr->stride_cb,
                                         recon_write_ptr,
                                         (pcs->scs->max_initial_input_luma_width + ss_x - scs->pad_right) >> ss_x,
@@ -619,10 +558,6 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                 (((pcs->scs->max_initial_input_luma_width + ss_x - scs->max_initial_input_pad_right) >> ss_x) *
                  ((pcs->scs->max_initial_input_luma_height + ss_y - scs->max_initial_input_pad_bottom) >> ss_y))
                 << is_16bit;
-#if !CLN_BUF_OFFSETS
-            recon_read_ptr = recon_ptr->buffer_cr + ((recon_ptr->org_y << is_16bit) >> ss_y) * recon_ptr->stride_cr +
-                ((recon_ptr->org_x << is_16bit) >> ss_x);
-#endif
             recon_write_ptr = &(output_recon_ptr->p_buffer[output_recon_ptr->n_filled_len]);
             // Reset the Chroma buffer for the case on changing the resolution on the fly
             memset(recon_write_ptr, 0, sample_total_count);
@@ -631,11 +566,7 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                                EB_ENC_ROB_OF_ERROR);
 
             // Initialize V recon buffer
-#if CLN_BUF_OFFSETS
             svt_aom_picture_copy_kernel(recon_ptr->buffer_cr,
-#else
-            svt_aom_picture_copy_kernel(recon_read_ptr,
-#endif
                                         recon_ptr->stride_cr,
                                         recon_write_ptr,
                                         (pcs->scs->max_initial_input_luma_width + ss_x - scs->pad_right) >> ss_x,
@@ -818,30 +749,13 @@ static double aom_highbd_ssim2(const uint8_t* img1, int stride_img1, const uint8
     return ssim_total;
 }
 
-#if CLN_BUF_OFFSETS
 void free_temporal_filtering_buffer(PictureControlSet* pcs) {
-#else
-void free_temporal_filtering_buffer(PictureControlSet* pcs, SequenceControlSet* scs) {
-#endif
     // save_source_picture_ptr will be allocated only if do_tf is true in svt_av1_init_temporal_filtering().
     if (!pcs->ppcs->do_tf) {
         return;
     }
 
-#if CLN_BUF_OFFSETS
     EB_DELETE(pcs->ppcs->saved_src_pic);
-#else
-    EB_FREE_ARRAY(pcs->ppcs->save_source_picture_ptr[0]);
-    EB_FREE_ARRAY(pcs->ppcs->save_source_picture_ptr[1]);
-    EB_FREE_ARRAY(pcs->ppcs->save_source_picture_ptr[2]);
-
-    bool is_16bit = (scs->static_config.encoder_bit_depth > EB_EIGHT_BIT);
-    if (is_16bit) {
-        EB_FREE_ARRAY(pcs->ppcs->save_source_picture_bit_inc_ptr[0]);
-        EB_FREE_ARRAY(pcs->ppcs->save_source_picture_bit_inc_ptr[1]);
-        EB_FREE_ARRAY(pcs->ppcs->save_source_picture_bit_inc_ptr[2]);
-    }
-#endif
 }
 
 EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet* scs, bool free_memory) {
@@ -872,15 +786,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
         recon_ptr = upscaled_recon;
     }
 
-#if !CLN_BUF_OFFSETS
-    const int32_t input_org_x_c = input_pic->org_x >> ss_x;
-    const int32_t input_org_y_c = input_pic->org_y >> ss_y;
-    const int32_t recon_org_x_c = recon_ptr->org_x >> ss_x;
-    const int32_t recon_org_y_c = recon_ptr->org_y >> ss_y;
-#endif
-
     if (!is_16bit) {
-#if CLN_BUF_OFFSETS
         EbPictureBufferDesc* src_pic = pcs->ppcs->do_tf == true ? pcs->ppcs->saved_src_pic : input_pic;
 
         pcs->ppcs->luma_ssim = aom_ssim2(src_pic->buffer_y,
@@ -903,87 +809,11 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
             recon_ptr->stride_cr,
             scs->chroma_width,
             scs->chroma_height);
-#else
-        EbByte input_buffer;
-        EbByte recon_buffer;
-        EbByte buffer_y;
-        EbByte buffer_cb;
-        EbByte buffer_cr;
-
-        // if current source picture was temporally filtered, use an alternative buffer which stores
-        // the original source picture
-        if (pcs->ppcs->do_tf == true) {
-#if CLN_BUF_OFFSETS
-            buffer_y = pcs->ppcs->saved_src_pic->buffer_y;
-            buffer_cb = pcs->ppcs->saved_src_pic->buffer_cb;
-            buffer_cr = pcs->ppcs->saved_src_pic->buffer_cr;
-#else
-            assert(pcs->ppcs->save_source_picture_width == input_pic->width &&
-                   pcs->ppcs->save_source_picture_height == input_pic->height);
-            buffer_y  = pcs->ppcs->save_source_picture_ptr[0];
-            buffer_cb = pcs->ppcs->save_source_picture_ptr[1];
-            buffer_cr = pcs->ppcs->save_source_picture_ptr[2];
-#endif
-        } else {
-            buffer_y  = input_pic->buffer_y;
-            buffer_cb = input_pic->buffer_cb;
-            buffer_cr = input_pic->buffer_cr;
-        }
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_y;
-        input_buffer = buffer_y;
-#else
-        recon_buffer         = &recon_ptr->buffer_y[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
-        input_buffer         = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
-#endif
-        pcs->ppcs->luma_ssim = aom_ssim2(input_buffer,
-                                         input_pic->stride_y,
-                                         recon_buffer,
-                                         recon_ptr->stride_y,
-                                         scs->max_input_luma_width,
-                                         scs->max_input_luma_height);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_cb;
-        input_buffer = buffer_cb;
-#else
-        recon_buffer       = &recon_ptr->buffer_cb[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer       = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
-#endif
-        pcs->ppcs->cb_ssim = aom_ssim2(input_buffer,
-                                       input_pic->stride_cb,
-                                       recon_buffer,
-                                       recon_ptr->stride_cb,
-                                       scs->chroma_width,
-                                       scs->chroma_height);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_cr;
-        input_buffer = buffer_cr;
-#else
-        recon_buffer       = &recon_ptr->buffer_cr[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer       = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
-#endif
-        pcs->ppcs->cr_ssim = aom_ssim2(input_buffer,
-                                       input_pic->stride_cr,
-                                       recon_buffer,
-                                       recon_ptr->stride_cr,
-                                       scs->chroma_width,
-                                       scs->chroma_height);
-#endif
 
         if (free_memory && pcs->ppcs->do_tf == true) {
-#if CLN_BUF_OFFSETS
             EB_DELETE(pcs->ppcs->saved_src_pic);
-#else
-            EB_FREE_ARRAY(buffer_y);
-            EB_FREE_ARRAY(buffer_cb);
-            EB_FREE_ARRAY(buffer_cr);
-#endif
         }
     } else {
-#if CLN_BUF_OFFSETS
         EbPictureBufferDesc* src_pic = pcs->ppcs->do_tf == true ? pcs->ppcs->saved_src_pic : input_pic;
 
         // If current source picture was temporally filtered, use an alternative buffer which stores
@@ -996,109 +826,46 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
         uint16_t stride_bit_inc_y = src_pic->stride_bit_inc_y;
         uint16_t stride_bit_inc_cb= src_pic->stride_bit_inc_cb;
         uint16_t stride_bit_inc_cr= src_pic->stride_bit_inc_cr;
-#else
-        EbByte    input_buffer;
-        EbByte    input_buffer_bit_inc;
-        uint16_t* recon_buffer;
-
-        // if current source picture was temporally filtered, use an alternative buffer which stores
-        // the original source picture
-        EbByte buffer_y, buffer_bit_inc_y;
-        EbByte buffer_cb, buffer_bit_inc_cb;
-        EbByte buffer_cr, buffer_bit_inc_cr;
-#endif
 
         if (pcs->ppcs->do_tf == true) {
-#if CLN_BUF_OFFSETS
             buffer_bit_inc_y = pcs->ppcs->saved_src_pic->buffer_bit_inc_y;
             buffer_bit_inc_cb = pcs->ppcs->saved_src_pic->buffer_bit_inc_cb;
             buffer_bit_inc_cr = pcs->ppcs->saved_src_pic->buffer_bit_inc_cr;
-#else
-            assert(pcs->ppcs->save_source_picture_width == input_pic->width &&
-                   pcs->ppcs->save_source_picture_height == input_pic->height);
-            buffer_y          = pcs->ppcs->save_source_picture_ptr[0];
-            buffer_bit_inc_y  = pcs->ppcs->save_source_picture_bit_inc_ptr[0];
-            buffer_cb         = pcs->ppcs->save_source_picture_ptr[1];
-            buffer_bit_inc_cb = pcs->ppcs->save_source_picture_bit_inc_ptr[1];
-            buffer_cr         = pcs->ppcs->save_source_picture_ptr[2];
-            buffer_bit_inc_cr = pcs->ppcs->save_source_picture_bit_inc_ptr[2];
-#endif
         } else {
-#if CLN_BUF_OFFSETS // svt_aom_ssim_calculations -- TODO: check that padding doesn't need to be unpacked
             // no need to uncompress padding
             uint32_t height_y = input_pic->height;
             uint32_t width_y = input_pic->width;
-#else
-            uint32_t height_y = input_pic->height + (2 * input_pic->border);
-
-            buffer_y  = input_pic->buffer_y;
-            buffer_cb = input_pic->buffer_cb;
-            buffer_cr = input_pic->buffer_cr;
-#endif
 
             EB_MALLOC_ARRAY(buffer_bit_inc_y, pcs->ppcs->enhanced_unscaled_pic->luma_size);
             EB_MALLOC_ARRAY(buffer_bit_inc_cb, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
             EB_MALLOC_ARRAY(buffer_bit_inc_cr, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
 
-#if CLN_BUF_OFFSETS
             // Y
             svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_y,
-#else
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_y,
-#endif
                                           input_pic->stride_bit_inc_y / 4,
                                           buffer_bit_inc_y,
-#if CLN_BUF_OFFSETS
                                           stride_bit_inc_y,
-#else
-                                          input_pic->stride_bit_inc_y,
-#endif
-#if CLN_BUF_OFFSETS
                                           width_y,
-#endif
                                           height_y);
-#if CLN_BUF_OFFSETS
             // U
             svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cb,
-#else
-            // U
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cb,
-#endif
                                           input_pic->stride_bit_inc_cb / 4,
                                           buffer_bit_inc_cb,
-#if CLN_BUF_OFFSETS
                                           stride_bit_inc_cb,
-#else
-                                          input_pic->stride_bit_inc_cb,
-#endif
-#if CLN_BUF_OFFSETS
                                           width_y >> ss_x,
-#endif
                                           height_y >> ss_y);
-#if CLN_BUF_OFFSETS
             // V
             svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cr,
-#else
-            // V
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cr,
-#endif
                                           input_pic->stride_bit_inc_cr / 4,
                                           buffer_bit_inc_cr,
-#if CLN_BUF_OFFSETS
                                           stride_bit_inc_cr,
-#else
-                                          input_pic->stride_bit_inc_cr,
-#endif
-#if CLN_BUF_OFFSETS
                                           width_y >> ss_x,
-#endif
                                           height_y >> ss_y);
         }
 
         int bd    = 10;
         int shift = 0; // both input and output are 10 bit (bitdepth - input_bd)
 
-#if CLN_BUF_OFFSETS
         pcs->ppcs->luma_ssim = aom_highbd_ssim2(src_pic->buffer_y,
                                                 src_pic->stride_y,
                                                 buffer_bit_inc_y,
@@ -1131,69 +898,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
                                               scs->chroma_height,
                                               bd,
                                               shift);
-#else
-#if CLN_BUF_OFFSETS
-        recon_buffer = (uint16_t*)recon_ptr->buffer_y;
-        input_buffer = buffer_y;
-        input_buffer_bit_inc = buffer_bit_inc_y;
-#else
-        recon_buffer = &((uint16_t*)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
-        input_buffer = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
-        input_buffer_bit_inc = &buffer_bit_inc_y[input_pic->org_x + input_pic->org_y * input_pic->stride_bit_inc_y];
-#endif
-        pcs->ppcs->luma_ssim = aom_highbd_ssim2(input_buffer,
-                                                input_pic->stride_y,
-                                                input_buffer_bit_inc,
-                                                input_pic->stride_bit_inc_y,
-                                                recon_buffer,
-                                                recon_ptr->stride_y,
-                                                scs->max_input_luma_width,
-                                                scs->max_input_luma_height,
-                                                bd,
-                                                shift);
 
-#if CLN_BUF_OFFSETS
-        recon_buffer         = (uint16_t*)recon_ptr->buffer_cb;
-        input_buffer         = buffer_cb;
-        input_buffer_bit_inc = buffer_bit_inc_cb;
-#else
-        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer         = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
-        input_buffer_bit_inc = &buffer_bit_inc_cb[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cb];
-#endif
-        pcs->ppcs->cb_ssim   = aom_highbd_ssim2(input_buffer,
-                                              input_pic->stride_cb,
-                                              input_buffer_bit_inc,
-                                              input_pic->stride_bit_inc_cb,
-                                              recon_buffer,
-                                              recon_ptr->stride_cb,
-                                              scs->chroma_width,
-                                              scs->chroma_height,
-                                              bd,
-                                              shift);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer         = (uint16_t*)recon_ptr->buffer_cr;
-        input_buffer         = buffer_cr;
-        input_buffer_bit_inc = buffer_bit_inc_cr;
-#else
-        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer         = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
-        input_buffer_bit_inc = &buffer_bit_inc_cr[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cr];
-#endif
-        pcs->ppcs->cr_ssim   = aom_highbd_ssim2(input_buffer,
-                                              input_pic->stride_cr,
-                                              input_buffer_bit_inc,
-                                              input_pic->stride_bit_inc_cr,
-                                              recon_buffer,
-                                              recon_ptr->stride_cr,
-                                              scs->chroma_width,
-                                              scs->chroma_height,
-                                              bd,
-                                              shift);
-#endif
-
-#if CLN_BUF_OFFSETS
         if (free_memory && pcs->ppcs->do_tf == true) {
             EB_DELETE(pcs->ppcs->saved_src_pic);
         }
@@ -1202,21 +907,6 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
             EB_FREE_ARRAY(buffer_bit_inc_cb);
             EB_FREE_ARRAY(buffer_bit_inc_cr);
         }
-#else
-        if (free_memory && pcs->ppcs->do_tf == true) {
-            EB_FREE_ARRAY(buffer_y);
-            EB_FREE_ARRAY(buffer_cb);
-            EB_FREE_ARRAY(buffer_cr);
-            EB_FREE_ARRAY(buffer_bit_inc_y);
-            EB_FREE_ARRAY(buffer_bit_inc_cb);
-            EB_FREE_ARRAY(buffer_bit_inc_cr);
-        }
-        if (pcs->ppcs->do_tf == false) {
-            EB_FREE_ARRAY(buffer_bit_inc_y);
-            EB_FREE_ARRAY(buffer_bit_inc_cb);
-            EB_FREE_ARRAY(buffer_bit_inc_cr);
-        }
-#endif
     }
     EB_DELETE(upscaled_recon);
     return EB_ErrorNone;
@@ -1270,15 +960,7 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
     const int32_t pic_w = input_pic->width - scs->max_input_pad_right;
     const int32_t pic_h = input_pic->height - scs->max_input_pad_bottom;
 
-#if !CLN_BUF_OFFSETS // psnr_calculations
-    const int32_t input_org_x_c = input_pic->org_x >> ss_x;
-    const int32_t input_org_y_c = input_pic->org_y >> ss_y;
-    const int32_t recon_org_x_c = recon_ptr->org_x >> ss_x;
-    const int32_t recon_org_y_c = recon_ptr->org_y >> ss_y;
-#endif
-
     if (!is_16bit) {
-#if CLN_BUF_OFFSETS
         EbPictureBufferDesc* src_pic = pcs->ppcs->do_tf == true ? pcs->ppcs->saved_src_pic : input_pic;
 
         pcs->ppcs->luma_sse = svt_aom_get_sse(
@@ -1289,75 +971,11 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
 
         pcs->ppcs->cr_sse = svt_aom_get_sse(
             src_pic->buffer_cr, src_pic->stride_cr, recon_ptr->buffer_cr, recon_ptr->stride_cr, pic_w >> ss_x, pic_h >> ss_y);
-#else
-        EbByte input_buffer;
-        EbByte recon_buffer;
-        EbByte buffer_y;
-        EbByte buffer_cb;
-        EbByte buffer_cr;
-
-        // if current source picture was temporally filtered, use an alternative buffer which stores
-        // the original source picture
-        if (pcs->ppcs->do_tf == true) {
-            assert(pcs->ppcs->save_source_picture_width == input_pic->width &&
-                   pcs->ppcs->save_source_picture_height == input_pic->height);
-#if CLN_BUF_OFFSETS
-            buffer_y = pcs->ppcs->save_source_picture_ptr[0] + input_pic->org_x + input_pic->org_y * input_pic->stride_y;
-            buffer_cb = pcs->ppcs->save_source_picture_ptr[1] + (input_pic->org_x >> ss_x) + input_pic->org_y * (input_pic->stride_cb >> ss_y);
-            buffer_cr = pcs->ppcs->save_source_picture_ptr[2] + (input_pic->org_x >> ss_x) + input_pic->org_y * (input_pic->stride_cr >> ss_y);
-#else
-            buffer_y  = pcs->ppcs->save_source_picture_ptr[0];
-            buffer_cb = pcs->ppcs->save_source_picture_ptr[1];
-            buffer_cr = pcs->ppcs->save_source_picture_ptr[2];
-#endif
-        } else {
-            buffer_y  = input_pic->buffer_y;
-            buffer_cb = input_pic->buffer_cb;
-            buffer_cr = input_pic->buffer_cr;
-        }
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_y;
-        input_buffer = buffer_y;
-#else
-        recon_buffer        = &recon_ptr->buffer_y[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
-        input_buffer        = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
-#endif
-        pcs->ppcs->luma_sse = svt_aom_get_sse(
-            input_buffer, input_pic->stride_y, recon_buffer, recon_ptr->stride_y, pic_w, pic_h);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_cb;
-        input_buffer = buffer_cb;
-#else
-        recon_buffer      = &recon_ptr->buffer_cb[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer      = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
-#endif
-        pcs->ppcs->cb_sse = svt_aom_get_sse(
-            input_buffer, input_pic->stride_cb, recon_buffer, recon_ptr->stride_cb, pic_w >> ss_x, pic_h >> ss_y);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = recon_ptr->buffer_cr;
-        input_buffer = buffer_cr;
-#else
-        recon_buffer      = &recon_ptr->buffer_cr[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer      = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
-#endif
-        pcs->ppcs->cr_sse = svt_aom_get_sse(
-            input_buffer, input_pic->stride_cr, recon_buffer, recon_ptr->stride_cr, pic_w >> ss_x, pic_h >> ss_y);
-#endif
 
         if (free_memory && pcs->ppcs->do_tf == true) {
-#if CLN_BUF_OFFSETS
             EB_DELETE(pcs->ppcs->saved_src_pic);
-#else
-            EB_FREE_ARRAY(buffer_y);
-            EB_FREE_ARRAY(buffer_cb);
-            EB_FREE_ARRAY(buffer_cr);
-#endif
         }
     } else {
-#if CLN_BUF_OFFSETS
         EbPictureBufferDesc* src_pic = pcs->ppcs->do_tf == true ? pcs->ppcs->saved_src_pic : input_pic;
 
         // If current source picture was temporally filtered, use an alternative buffer which stores
@@ -1436,163 +1054,9 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
             recon_ptr->stride_cr,
             pic_w >> ss_x,
             pic_h >> ss_y);
-#else
-        EbByte    input_buffer;
-        EbByte    input_buffer_bit_inc;
-        uint16_t* recon_buffer;
-
-        // if current source picture was temporally filtered, use an alternative buffer which stores
-        // the original source picture
-        EbByte buffer_y, buffer_bit_inc_y;
-        EbByte buffer_cb, buffer_bit_inc_cb;
-        EbByte buffer_cr, buffer_bit_inc_cr;
-
-        if (pcs->ppcs->do_tf == true) {
-            assert(pcs->ppcs->save_source_picture_width == input_pic->width &&
-                   pcs->ppcs->save_source_picture_height == input_pic->height);
-#if CLN_BUF_OFFSETS
-            buffer_y = pcs->ppcs->save_source_picture_ptr[0] + input_pic->org_x + input_pic->org_y * input_pic->stride_y;
-            buffer_bit_inc_y = pcs->ppcs->save_source_picture_bit_inc_ptr[0] + input_pic->org_x + input_pic->org_y * input_pic->stride_bit_inc_y;
-            buffer_cb = pcs->ppcs->save_source_picture_ptr[1] + (input_pic->org_x >> ss_x) + (input_pic->org_y >> ss_y) * input_pic->stride_cb;
-            buffer_bit_inc_cb = pcs->ppcs->save_source_picture_bit_inc_ptr[1] + (input_pic->org_x >> ss_x) + (input_pic->org_y >> ss_y) * input_pic->stride_bit_inc_cb;
-            buffer_cr = pcs->ppcs->save_source_picture_ptr[2] + (input_pic->org_x >> ss_x) + (input_pic->org_y >> ss_y) * input_pic->stride_cr;
-            buffer_bit_inc_cr = pcs->ppcs->save_source_picture_bit_inc_ptr[2] + (input_pic->org_x >> ss_x) + (input_pic->org_y >> ss_y) * input_pic->stride_bit_inc_cr;
-#else
-            buffer_y          = pcs->ppcs->save_source_picture_ptr[0];
-            buffer_bit_inc_y  = pcs->ppcs->save_source_picture_bit_inc_ptr[0];
-            buffer_cb         = pcs->ppcs->save_source_picture_ptr[1];
-            buffer_bit_inc_cb = pcs->ppcs->save_source_picture_bit_inc_ptr[1];
-            buffer_cr         = pcs->ppcs->save_source_picture_ptr[2];
-            buffer_bit_inc_cr = pcs->ppcs->save_source_picture_bit_inc_ptr[2];
-#endif
-        } else {
-#if CLN_BUF_OFFSETS // --TODO: check that padding doesn't need to be unpacked
-            uint32_t height_y = input_pic->height;
-            uint32_t width_y = input_pic->width;
-#else
-            uint32_t height_y = input_pic->height + (2 * input_pic->border);
-#endif
-
-            buffer_y  = input_pic->buffer_y;
-            buffer_cb = input_pic->buffer_cb;
-            buffer_cr = input_pic->buffer_cr;
-
-            EB_MALLOC_ARRAY(buffer_bit_inc_y, pcs->ppcs->enhanced_unscaled_pic->luma_size);
-            EB_MALLOC_ARRAY(buffer_bit_inc_cb, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
-            EB_MALLOC_ARRAY(buffer_bit_inc_cr, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
-
-#if CLN_BUF_OFFSETS
-            // Y
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_y,
-#else
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_y,
-#endif
-                                          input_pic->stride_bit_inc_y / 4,
-                                          buffer_bit_inc_y,
-                                          input_pic->stride_bit_inc_y,
-#if CLN_BUF_OFFSETS
-                                          width_y,
-#endif
-                                          height_y);
-#if CLN_BUF_OFFSETS
-            // U
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cb,
-#else
-            // U
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cb,
-#endif
-                                          input_pic->stride_bit_inc_cb / 4,
-                                          buffer_bit_inc_cb,
-                                          input_pic->stride_bit_inc_cb,
-#if CLN_BUF_OFFSETS
-                                          width_y >> ss_x,
-#endif
-                                          height_y >> ss_y);
-#if CLN_BUF_OFFSETS
-            // V
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cr,
-#else
-            // V
-            svt_c_unpack_compressed_10bit(input_pic->buffer_bit_inc_cr,
-#endif
-                                          input_pic->stride_bit_inc_cr / 4,
-                                          buffer_bit_inc_cr,
-                                          input_pic->stride_bit_inc_cr,
-#if CLN_BUF_OFFSETS
-                                          width_y >> ss_x,
-#endif
-                                          height_y >> ss_y);
-        }
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = (uint16_t*)recon_ptr->buffer_y;
-        input_buffer = buffer_y;
-        input_buffer_bit_inc = buffer_bit_inc_y;
-#else
-        recon_buffer = &((uint16_t*)recon_ptr->buffer_y)[recon_ptr->org_x + recon_ptr->org_y * recon_ptr->stride_y];
-        input_buffer = &buffer_y[input_pic->org_x + input_pic->org_y * input_pic->stride_y];
-        input_buffer_bit_inc = &buffer_bit_inc_y[input_pic->org_x + input_pic->org_y * input_pic->stride_bit_inc_y];
-#endif
-
-        pcs->ppcs->luma_sse = get_sse_10bit(input_buffer,
-                                            input_pic->stride_y,
-                                            input_buffer_bit_inc,
-                                            input_pic->stride_bit_inc_y,
-                                            recon_buffer,
-                                            recon_ptr->stride_y,
-                                            pic_w,
-                                            pic_h);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = (uint16_t*)recon_ptr->buffer_cb;
-        input_buffer = buffer_cb;
-        input_buffer_bit_inc = buffer_bit_inc_cb;
-#else
-        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cb)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cb];
-        input_buffer         = &buffer_cb[input_org_x_c + input_org_y_c * input_pic->stride_cb];
-        input_buffer_bit_inc = &buffer_bit_inc_cb[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cb];
-#endif
-
-        pcs->ppcs->cb_sse = get_sse_10bit(input_buffer,
-                                          input_pic->stride_cb,
-                                          input_buffer_bit_inc,
-                                          input_pic->stride_bit_inc_cb,
-                                          recon_buffer,
-                                          recon_ptr->stride_cb,
-                                          pic_w >> ss_x,
-                                          pic_h >> ss_y);
-
-#if CLN_BUF_OFFSETS
-        recon_buffer = (uint16_t*)recon_ptr->buffer_cr;
-        input_buffer = buffer_cr;
-        input_buffer_bit_inc = buffer_bit_inc_cr;
-#else
-        recon_buffer         = &((uint16_t*)recon_ptr->buffer_cr)[recon_org_x_c + recon_org_y_c * recon_ptr->stride_cr];
-        input_buffer         = &buffer_cr[input_org_x_c + input_org_y_c * input_pic->stride_cr];
-        input_buffer_bit_inc = &buffer_bit_inc_cr[input_org_x_c + input_org_y_c * input_pic->stride_bit_inc_cr];
-#endif
-
-        pcs->ppcs->cr_sse = get_sse_10bit(input_buffer,
-                                          input_pic->stride_cr,
-                                          input_buffer_bit_inc,
-                                          input_pic->stride_bit_inc_cr,
-                                          recon_buffer,
-                                          recon_ptr->stride_cr,
-                                          pic_w >> ss_x,
-                                          pic_h >> ss_y);
-#endif
 
         if (free_memory && pcs->ppcs->do_tf == true) {
-#if CLN_BUF_OFFSETS
             EB_DELETE(pcs->ppcs->saved_src_pic);
-#else
-            EB_FREE_ARRAY(buffer_y);
-            EB_FREE_ARRAY(buffer_cb);
-            EB_FREE_ARRAY(buffer_cr);
-            EB_FREE_ARRAY(buffer_bit_inc_y);
-            EB_FREE_ARRAY(buffer_bit_inc_cb);
-            EB_FREE_ARRAY(buffer_bit_inc_cr);
-#endif
         }
         if (pcs->ppcs->do_tf == false) {
             EB_FREE_ARRAY(buffer_bit_inc_y);
@@ -1626,39 +1090,24 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                  ref_pic_ptr->stride_y,
                                  ref_pic_ptr->width,
                                  ref_pic_ptr->height,
-#if CLN_BUF_OFFSETS
                                  ref_pic_ptr->border,
                                  ref_pic_ptr->border);
-#else
-                                 ref_pic_ptr->org_x,
-                                 ref_pic_ptr->org_y);
-#endif
 
         // Cb samples
         svt_aom_generate_padding(ref_pic_ptr->buffer_cb,
                                  ref_pic_ptr->stride_cb,
                                  (ref_pic_ptr->width + ss_x) >> ss_x,
                                  (ref_pic_ptr->height + ss_y) >> ss_y,
-#if CLN_BUF_OFFSETS
                                  (ref_pic_ptr->border + ss_x) >> ss_x,
                                  (ref_pic_ptr->border + ss_y) >> ss_y);
-#else
-                                 (ref_pic_ptr->org_x + ss_x) >> ss_x,
-                                 (ref_pic_ptr->org_y + ss_y) >> ss_y);
-#endif
 
         // Cr samples
         svt_aom_generate_padding(ref_pic_ptr->buffer_cr,
                                  ref_pic_ptr->stride_cr,
                                  (ref_pic_ptr->width + ss_x) >> ss_x,
                                  (ref_pic_ptr->height + ss_y) >> ss_y,
-#if CLN_BUF_OFFSETS
                                  (ref_pic_ptr->border + ss_x) >> ss_x,
                                  (ref_pic_ptr->border + ss_y) >> ss_y);
-#else
-                                 (ref_pic_ptr->org_x + ss_x) >> ss_x,
-                                 (ref_pic_ptr->org_y + ss_y) >> ss_y);
-#endif
     }
 
     //We need this for MCP
@@ -1671,41 +1120,25 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                        ref_pic_16bit_ptr->stride_y,
                                        ref_pic_16bit_ptr->width,
                                        ref_pic_16bit_ptr->height,
-#if CLN_BUF_OFFSETS
                                        ref_pic_16bit_ptr->border,
                                        ref_pic_16bit_ptr->border);
-#else
-                                       ref_pic_16bit_ptr->org_x,
-                                       ref_pic_16bit_ptr->org_y);
-#endif
 
         // Cb samples
         svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
                                        ref_pic_16bit_ptr->stride_cb,
                                        (ref_pic_16bit_ptr->width + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y) >> ss_y,
-#if CLN_BUF_OFFSETS
                                        (ref_pic_16bit_ptr->border + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->border + ss_y) >> ss_y);
-#else
-                                       (ref_pic_16bit_ptr->org_x + ss_x) >> ss_x,
-                                       (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
-#endif
 
         // Cr samples
         svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
                                        ref_pic_16bit_ptr->stride_cr,
                                        (ref_pic_16bit_ptr->width + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y) >> ss_y,
-#if CLN_BUF_OFFSETS
                                        (ref_pic_16bit_ptr->border + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->border + ss_y) >> ss_y);
-#else
-                                       (ref_pic_16bit_ptr->org_x + ss_x) >> ss_x,
-                                       (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
-#endif
 
-#if CLN_BUF_OFFSETS // pad_ref_and_set_flags
         // Unpack ref samples (to be used @ MD)
         svt_aom_un_pack2d(((uint16_t*)ref_pic_16bit_ptr->buffer_y) - (ref_pic_16bit_ptr->border + ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->stride_y),
                           ref_pic_16bit_ptr->stride_y,
@@ -1731,33 +1164,6 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                           ref_pic_ptr->stride_bit_inc_cr,
                           (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
                           (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
-#else
-        // Hsan: unpack ref samples (to be used @ MD)
-        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_y,
-                          ref_pic_16bit_ptr->stride_y,
-                          ref_pic_ptr->buffer_y,
-                          ref_pic_ptr->stride_y,
-                          ref_pic_ptr->buffer_bit_inc_y,
-                          ref_pic_ptr->stride_bit_inc_y,
-                          ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1),
-                          ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1));
-        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
-                          ref_pic_16bit_ptr->stride_cb,
-                          ref_pic_ptr->buffer_cb,
-                          ref_pic_ptr->stride_cb,
-                          ref_pic_ptr->buffer_bit_inc_cb,
-                          ref_pic_ptr->stride_bit_inc_cb,
-                          (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->org_x << 1)) >> ss_x,
-                          (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
-        svt_aom_un_pack2d((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
-                          ref_pic_16bit_ptr->stride_cr,
-                          ref_pic_ptr->buffer_cr,
-                          ref_pic_ptr->stride_cr,
-                          ref_pic_ptr->buffer_bit_inc_cr,
-                          ref_pic_ptr->stride_bit_inc_cr,
-                          (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->org_x << 1)) >> ss_x,
-                          (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
-#endif
     }
     if ((scs->is_16bit_pipeline) && (!is_16bit)) {
         // Y samples
@@ -1765,101 +1171,56 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                        ref_pic_16bit_ptr->stride_y,
                                        ref_pic_16bit_ptr->width - scs->max_input_pad_right,
                                        ref_pic_16bit_ptr->height - scs->max_input_pad_bottom,
-#if CLN_BUF_OFFSETS
                                        ref_pic_16bit_ptr->border,
                                        ref_pic_16bit_ptr->border);
-#else
-                                       ref_pic_16bit_ptr->org_x,
-                                       ref_pic_16bit_ptr->org_y);
-#endif
 
         // Cb samples
         svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cb,
                                        ref_pic_16bit_ptr->stride_cb,
                                        (ref_pic_16bit_ptr->width + ss_x - scs->max_input_pad_right) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y - scs->max_input_pad_bottom) >> ss_y,
-#if CLN_BUF_OFFSETS
                                        (ref_pic_16bit_ptr->border + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->border + ss_y) >> ss_y);
-#else
-                                       (ref_pic_16bit_ptr->org_x + ss_x) >> ss_x,
-                                       (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
-#endif
 
         // Cr samples
         svt_aom_generate_padding16_bit((uint16_t*)ref_pic_16bit_ptr->buffer_cr,
                                        ref_pic_16bit_ptr->stride_cr,
                                        (ref_pic_16bit_ptr->width + ss_x - scs->max_input_pad_right) >> ss_x,
                                        (ref_pic_16bit_ptr->height + ss_y - scs->max_input_pad_bottom) >> ss_y,
-#if CLN_BUF_OFFSETS
                                        (ref_pic_16bit_ptr->border + ss_x) >> ss_x,
                                        (ref_pic_16bit_ptr->border + ss_y) >> ss_y);
-#else
-                                       (ref_pic_16bit_ptr->org_x + ss_x) >> ss_x,
-                                       (ref_pic_16bit_ptr->org_y + ss_y) >> ss_y);
-#endif
 
         // Hsan: unpack ref samples (to be used @ MD)
 
         //Y
-#if CLN_BUF_OFFSETS
         uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_y) - (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->stride_y));
         uint8_t*  buf_8bit  = ref_pic_ptr->buffer_y - (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->stride_y));
-#else
-        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_y);
-        uint8_t*  buf_8bit  = ref_pic_ptr->buffer_y;
-#endif
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_y,
                                   buf_8bit,
                                   ref_pic_ptr->stride_y,
-#if CLN_BUF_OFFSETS
                                   ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1),
                                   ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
-#else
-                                  ref_pic_16bit_ptr->width + (ref_pic_ptr->org_x << 1),
-                                  ref_pic_16bit_ptr->height + (ref_pic_ptr->org_y << 1));
-#endif
 
         //CB
-#if CLN_BUF_OFFSETS
         buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cb) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->stride_cb));
         buf_8bit  = ref_pic_ptr->buffer_cb - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->stride_cb));
-#else
-        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cb);
-        buf_8bit  = ref_pic_ptr->buffer_cb;
-#endif
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_cb,
                                   buf_8bit,
                                   ref_pic_ptr->stride_cb,
-#if CLN_BUF_OFFSETS
                                   (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
                                   (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
-#else
-                                  (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->org_x << 1)) >> ss_x,
-                                  (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
-#endif
 
         //CR
-#if CLN_BUF_OFFSETS
         buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cr) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->stride_cr));
         buf_8bit = ref_pic_ptr->buffer_cr - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->stride_cr));
-#else
-        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->buffer_cr);
-        buf_8bit  = ref_pic_ptr->buffer_cr;
-#endif
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->stride_cr,
                                   buf_8bit,
                                   ref_pic_ptr->stride_cr,
-#if CLN_BUF_OFFSETS
                                   (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
                                   (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
-#else
-                                  (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->org_x << 1)) >> ss_x,
-                                  (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->org_y << 1)) >> ss_y);
-#endif
     }
     // set up the ref POC
     ref_object->ref_poc = pcs->ppcs->picture_number;
@@ -1885,27 +1246,13 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
     if (is_16bit && scs->static_config.encoder_bit_depth > EB_EIGHT_BIT) {
         //SB128_TODO change 10bit SB creation
 
-#if CLN_BUF_OFFSETS // prepare_input_picture
         const uint32_t input_luma_offset = (sb_org_y * input_pic->stride_y) + sb_org_x;
         const uint32_t input_cb_offset = ((sb_org_y >> 1) * input_pic->stride_cb) + (sb_org_x >> 1);
         const uint32_t input_cr_offset = ((sb_org_y >> 1) * input_pic->stride_cr) + (sb_org_x >> 1);
-#else
-        const uint32_t input_luma_offset = ((sb_org_y + input_pic->org_y) * input_pic->stride_y) +
-            (sb_org_x + input_pic->org_x);
-        const uint32_t input_cb_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cb) +
-            ((sb_org_x + input_pic->org_x) >> 1);
-        const uint32_t input_cr_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cr) +
-            ((sb_org_x + input_pic->org_x) >> 1);
-#endif
 
         //sb_width is n*8 so the 2bit-decompression kernel works properly
         uint32_t comp_stride_y           = input_pic->stride_y / 4;
-#if CLN_BUF_OFFSETS
         uint32_t comp_luma_buffer_offset = sb_org_x / 4 + sb_org_y * comp_stride_y;
-#else
-        uint32_t comp_luma_buffer_offset = comp_stride_y * input_pic->org_y + input_pic->org_x / 4;
-        comp_luma_buffer_offset += sb_org_x / 4 + sb_org_y * comp_stride_y;
-#endif
 
         svt_aom_compressed_pack_sb(input_pic->buffer_y + input_luma_offset,
                                    input_pic->stride_y,
@@ -1917,12 +1264,7 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
                                    sb_height);
 
         uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
-#if CLN_BUF_OFFSETS
         uint32_t comp_chroma_buffer_offset = sb_org_x / 4 / 2 + sb_org_y / 2 * comp_stride_uv;
-#else
-        uint32_t comp_chroma_buffer_offset = comp_stride_uv * (input_pic->org_y / 2) + input_pic->org_x / 2 / 4;
-        comp_chroma_buffer_offset += sb_org_x / 4 / 2 + sb_org_y / 2 * comp_stride_uv;
-#endif
 
         svt_aom_compressed_pack_sb(input_pic->buffer_cb + input_cb_offset,
                                    input_pic->stride_cb,
@@ -1972,21 +1314,12 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
     }
 
     if (is_16bit && scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
-#if CLN_BUF_OFFSETS
         const uint32_t input_luma_offset = ((sb_org_y) * input_pic->stride_y) +
             (sb_org_x);
         const uint32_t input_cb_offset = (((sb_org_y) >> 1) * input_pic->stride_cb) +
             ((sb_org_x) >> 1);
         const uint32_t input_cr_offset = (((sb_org_y) >> 1) * input_pic->stride_cr) +
             ((sb_org_x) >> 1);
-#else
-        const uint32_t input_luma_offset = ((sb_org_y + input_pic->org_y) * input_pic->stride_y) +
-            (sb_org_x + input_pic->org_x);
-        const uint32_t input_cb_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cb) +
-            ((sb_org_x + input_pic->org_x) >> 1);
-        const uint32_t input_cr_offset = (((sb_org_y + input_pic->org_y) >> 1) * input_pic->stride_cr) +
-            ((sb_org_x + input_pic->org_x) >> 1);
-#endif
 
         sb_width  = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
              ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->border) - sb_org_x)
