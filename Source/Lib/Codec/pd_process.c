@@ -3376,7 +3376,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
         svt_aom_pack_highbd_pic(central_picture_ptr, centre_pcs->altref_buffer_highbd, ss_x, ss_y);
         // Estimate source noise level
         uint16_t* altref_buffer_highbd_start[COLOR_CHANNELS];
-#if CLN_BUF_OFFSETS // TODO: does this need to be changed?
+#if CLN_BUF_OFFSETS
         altref_buffer_highbd_start[C_Y] = centre_pcs->altref_buffer_highbd[C_Y] +
             central_picture_ptr->org_y * central_picture_ptr->stride_y + central_picture_ptr->org_x;
         if (pcs->tf_ctrls.chroma_lvl) {

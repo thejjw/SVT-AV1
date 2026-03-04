@@ -97,8 +97,8 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
     NeighborArrayUnit* lumaReconSampleNeighborArray, NeighborArrayUnit* cbReconSampleNeighborArray,
     NeighborArrayUnit* crReconSampleNeighborArray, EbPictureBufferDesc* recon_buffer, uint32_t org_x, uint32_t org_y,
     uint32_t width, uint32_t height, uint32_t bwidth_uv, uint32_t bheight_uv, uint32_t component_mask, bool is_16bit) {
-    uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
-    uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
+    uint32_t round_origin_x = ROUND_UV(org_x); // for Chroma blocks with size of 4
+    uint32_t round_origin_y = ROUND_UV(org_y); // for Chroma blocks with size of 4
 
     if (is_16bit == true) {
         if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {

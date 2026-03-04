@@ -45,7 +45,11 @@ typedef struct PacketizationContext {
     uint64_t disp_order_continuity_count;
 } PacketizationContext;
 
+#if CLN_BUF_OFFSETS
+void        free_temporal_filtering_buffer(PictureControlSet* pcs);
+#else
 void        free_temporal_filtering_buffer(PictureControlSet* pcs, SequenceControlSet* scs);
+#endif
 void        svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs);
 void        svt_aom_init_resize_picture(SequenceControlSet* scs, PictureParentControlSet* pcs);
 void        pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs);
@@ -633,7 +637,11 @@ void* svt_aom_packetization_kernel(void* input_ptr) {
                     svt_aom_ssim_calculations(pcs, scs, true);
                 } else {
                     // free memory used by psnr_calculations
+#if CLN_BUF_OFFSETS
+                    free_temporal_filtering_buffer(pcs);
+#else
                     free_temporal_filtering_buffer(pcs, scs);
+#endif
                 }
 
                 if (scs->static_config.recon_enabled) {
@@ -675,7 +683,11 @@ void* svt_aom_packetization_kernel(void* input_ptr) {
                 }
             }
         } else if (!(pcs->ppcs->compute_psnr || pcs->ppcs->compute_ssim)) {
+#if CLN_BUF_OFFSETS
+            free_temporal_filtering_buffer(pcs);
+#else
             free_temporal_filtering_buffer(pcs, scs);
+#endif
         }
         //****************************************************
         // Input Entropy Results into Reordering Queue

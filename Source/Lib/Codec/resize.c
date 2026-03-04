@@ -933,8 +933,8 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
         src_buffer_highbd_start[1] = src_buffer_highbd[1] + (src->org_y >> ss_y) * src->stride_cb + (src->org_x >> ss_x);
         src_buffer_highbd_start[2] = src_buffer_highbd[2] + (src->org_y >> ss_y) * src->stride_cr + (src->org_x >> ss_x);
         dst_buffer_highbd_start[0] = dst_buffer_highbd[0] + dst->org_y * dst->stride_y + dst->org_x;
-        dst_buffer_highbd_start[1] = dst_buffer_highbd[1] + + (dst->org_y >> ss_y) * dst->stride_cb + (dst->org_x >> ss_x);
-        dst_buffer_highbd_start[2] = dst_buffer_highbd[2] + + (dst->org_y >> ss_y) * dst->stride_cr + (dst->org_x >> ss_x);
+        dst_buffer_highbd_start[1] = dst_buffer_highbd[1] + (dst->org_y >> ss_y) * dst->stride_cb + (dst->org_x >> ss_x);
+        dst_buffer_highbd_start[2] = dst_buffer_highbd[2] + (dst->org_y >> ss_y) * dst->stride_cr + (dst->org_x >> ss_x);
 #endif
     } else {
 #if CLN_BUF_OFFSETS

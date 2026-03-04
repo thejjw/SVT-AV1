@@ -1918,7 +1918,7 @@ static void md_full_pel_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     svt_init_mv_cost_params(
         &mv_cost_params, ctx, &ctx->ref_mv, frm_hdr->quantization_params.base_q_idx, rdmult, hbd_md);
     uint32_t cost;
-#if CLN_BUF_OFFSETS // TODO: does this need adjustment?
+#if CLN_BUF_OFFSETS
     // Search area adjustment
     if ((ctx->blk_org_x + (mvx >> 3) + search_position_start_x) < (-ref_pic->border + 1)) {
         search_position_start_x = (-ref_pic->border + 1) - (ctx->blk_org_x + (mvx >> 3));
@@ -6052,7 +6052,74 @@ static COMPONENT_TYPE chroma_complexity_check(PictureControlSet* pcs, ModeDecisi
         if (ctx->hbd_md) {
             uint16_t* src_10b;
             DECLARE_ALIGNED(16, uint16_t, packed_buf[PACKED_BUFFER_SIZE]);
-//#if CLN_BUF_OFFSETS // TODO: Remove offset - always 0
+#if CLN_BUF_OFFSETS // remove offset (always 0)
+            // pack the reference into temp 16bit buffer
+            int32_t stride;
+
+            svt_aom_pack_block(
+                ref_pic->buffer_y + src_y_offset,
+                ref_pic->stride_y << shift,
+                ref_pic->buffer_bit_inc_y + src_y_offset,
+                ref_pic->stride_bit_inc_y << shift,
+                (uint16_t*)packed_buf,
+                MAX_SB_SIZE,
+                ctx->blk_geom->bwidth_uv,
+                ctx->blk_geom->bheight_uv >> shift);
+
+            src_10b = (uint16_t*)packed_buf;
+            stride = MAX_SB_SIZE;
+
+            // Y dist only computed over UV size so SADs are comparable
+            y_dist = sad_16b_kernel(((uint16_t*)input_pic->buffer_y) + loc->input_origin_index,
+                input_pic->stride_y << shift,
+                src_10b,
+                stride,
+                ctx->blk_geom->bheight_uv >> shift,
+                ctx->blk_geom->bwidth_uv);
+
+            // pack the reference into temp 16bit buffer
+
+            svt_aom_pack_block(
+                ref_pic->buffer_cb + src_cb_offset,
+                ref_pic->stride_cb << shift,
+                ref_pic->buffer_bit_inc_cb + src_cb_offset,
+                ref_pic->stride_bit_inc_cb << shift,
+                (uint16_t*)packed_buf,
+                MAX_SB_SIZE,
+                ctx->blk_geom->bwidth_uv,
+                ctx->blk_geom->bheight_uv >> shift);
+
+            src_10b = (uint16_t*)packed_buf;
+            stride = MAX_SB_SIZE;
+
+            cb_dist = sad_16b_kernel(((uint16_t*)input_pic->buffer_cb) + loc->input_cb_origin_in_index,
+                input_pic->stride_cb << shift,
+                src_10b,
+                stride,
+                ctx->blk_geom->bheight_uv >> shift,
+                ctx->blk_geom->bwidth_uv);
+
+            // pack the reference into temp 16bit buffer
+            svt_aom_pack_block(
+                ref_pic->buffer_cr + src_cr_offset,
+                ref_pic->stride_cr << shift,
+                ref_pic->buffer_bit_inc_cr + src_cr_offset,
+                ref_pic->stride_bit_inc_cr << shift,
+                (uint16_t*)packed_buf,
+                MAX_SB_SIZE,
+                ctx->blk_geom->bwidth_uv,
+                ctx->blk_geom->bheight_uv >> shift);
+
+            src_10b = (uint16_t*)packed_buf;
+            stride = MAX_SB_SIZE;
+
+            cr_dist = sad_16b_kernel(((uint16_t*)input_pic->buffer_cr) + loc->input_cb_origin_in_index,
+                input_pic->stride_cr << shift,
+                src_10b,
+                stride,
+                ctx->blk_geom->bheight_uv >> shift,
+                ctx->blk_geom->bwidth_uv);
+#else
             // pack the reference into temp 16bit buffer
             uint8_t offset = 0;
             int32_t stride;
@@ -6120,6 +6187,7 @@ static COMPONENT_TYPE chroma_complexity_check(PictureControlSet* pcs, ModeDecisi
                                      stride,
                                      ctx->blk_geom->bheight_uv >> shift,
                                      ctx->blk_geom->bwidth_uv);
+#endif
         } else {
             // Y dist only computed over UV size so SADs are comparable
             y_dist = svt_nxm_sad_kernel(input_pic->buffer_y + loc->input_origin_index,

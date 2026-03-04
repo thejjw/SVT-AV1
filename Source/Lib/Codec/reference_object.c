@@ -18,9 +18,14 @@
 #include "utility.h"
 #include "enc_mode_config.h"
 
+#if CLN_BUF_OFFSETS
+static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
+                                                           uint16_t recon_width, uint16_t recon_height) {
+#else
 void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
                                                            uint16_t recon_width, uint16_t recon_height,
                                                            uint16_t left_padding, uint16_t top_padding) {
+#endif
     uint8_t* recon_samples_ptr;
     uint16_t sample_count;
 
@@ -64,6 +69,24 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_
 #endif
 }
 
+#if CLN_BUF_OFFSETS
+static void initialize_samples_neighboring_reference_picture(EbPictureBufferDesc* ref_pic) {
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_y,
+        ref_pic->stride_y,
+        ref_pic->width,
+        ref_pic->height);
+
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_cb,
+        ref_pic->stride_cb,
+        ref_pic->width >> 1,
+        ref_pic->height >> 1);
+
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_cr,
+        ref_pic->stride_cr,
+        ref_pic->width >> 1,
+        ref_pic->height >> 1);
+}
+#else
 static void initialize_samples_neighboring_reference_picture(
     EbReferenceObject* ref_object, EbPictureBufferDescInitData* picture_buffer_desc_init_data_ptr,
     EbBitDepth bit_depth) {
@@ -91,6 +114,7 @@ static void initialize_samples_neighboring_reference_picture(
                                                               picture_buffer_desc_init_data_ptr->border >> 1);
     }
 }
+#endif
 
 static void svt_reference_object_dctor(EbPtr p) {
     EbReferenceObject* obj = (EbReferenceObject*)p;
@@ -154,8 +178,12 @@ EbErrorType svt_reference_param_update(EbReferenceObject* ref_object, SequenceCo
         picture_buffer_desc_init_data_ptr.split_mode = false;
         svt_picture_buffer_desc_update(ref_object->reference_picture, (EbPtr)&picture_buffer_desc_init_data_ptr);
 
+#if CLN_BUF_OFFSETS
+        initialize_samples_neighboring_reference_picture(ref_object->reference_picture);
+#else
         initialize_samples_neighboring_reference_picture(
             ref_object, &picture_buffer_desc_init_data_ptr, picture_buffer_desc_init_data_ptr.bit_depth);
+#endif
     }
 
     ref_object->mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
@@ -189,8 +217,12 @@ EbErrorType svt_reference_object_ctor(EbReferenceObject* ref_object, EbPtr objec
         picture_buffer_desc_init_data_ptr->split_mode = false;
         EB_NEW(ref_object->reference_picture, svt_picture_buffer_desc_ctor, (EbPtr)picture_buffer_desc_init_data_ptr);
 
+#if CLN_BUF_OFFSETS
+        initialize_samples_neighboring_reference_picture(ref_object->reference_picture);
+#else
         initialize_samples_neighboring_reference_picture(
             ref_object, picture_buffer_desc_init_data_ptr, picture_buffer_desc_init_data_16bit_ptr.bit_depth);
+#endif
     }
     uint32_t mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
     uint32_t mi_cols = ref_object->reference_picture->width >> MI_SIZE_LOG2;
