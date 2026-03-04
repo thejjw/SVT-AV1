@@ -161,7 +161,7 @@ EbErrorType svt_reference_object_ctor(EbReferenceObject* ref_object, EbPtr objec
     uint32_t mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
     uint32_t mi_cols = ref_object->reference_picture->width >> MI_SIZE_LOG2;
     // there should be one unit info per plane and per rest unit
-    EB_MALLOC_2D(ref_object->unit_info, MAX_MB_PLANE, picture_buffer_desc_init_data_ptr->rest_units_per_tile);
+    EB_MALLOC_2D(ref_object->unit_info, MAX_PLANES, picture_buffer_desc_init_data_ptr->rest_units_per_tile);
 
     if (picture_buffer_desc_init_data_ptr->mfmv) {
         //MFMV map is 8x8 based.

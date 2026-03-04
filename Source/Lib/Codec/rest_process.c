@@ -279,7 +279,7 @@ static void copy_statistics_to_ref_obj_ect(PictureControlSet* pcs, SequenceContr
     }
     // Copy the prev frame wn filter coeffs
     if (cm->wn_filter_ctrls.enabled && cm->wn_filter_ctrls.use_prev_frame_coeffs) {
-        for (int32_t plane = 0; plane < MAX_MB_PLANE; ++plane) {
+        for (int32_t plane = 0; plane < MAX_PLANES; ++plane) {
             int32_t ntiles = pcs->rst_info[plane].units_per_tile;
             for (int32_t u = 0; u < ntiles; ++u) {
                 obj->unit_info[plane][u].restoration_type = pcs->rst_info[plane].unit_info[u].restoration_type;
@@ -354,7 +354,7 @@ void* svt_aom_rest_kernel(void* input_ptr) {
             if (ppcs->slice_type != I_SLICE && cm->wn_filter_ctrls.enabled &&
                 cm->wn_filter_ctrls.use_prev_frame_coeffs) {
                 EbReferenceObject* ref_obj_l0 = (EbReferenceObject*)pcs->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
-                for (int32_t plane = 0; plane < MAX_MB_PLANE; ++plane) {
+                for (int32_t plane = 0; plane < MAX_PLANES; ++plane) {
                     int32_t ntiles = pcs->rst_info[plane].units_per_tile;
                     for (int32_t u = 0; u < ntiles; ++u) {
                         pcs->rst_info[plane].unit_info[u].restoration_type =

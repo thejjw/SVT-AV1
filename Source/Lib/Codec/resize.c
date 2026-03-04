@@ -874,10 +874,10 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
                                  const uint32_t ss_x, const uint32_t ss_y, uint8_t is_packed,
                                  uint32_t buffer_enable_mask, uint8_t is_2bcompress) {
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-    uint16_t* src_buffer_highbd[MAX_MB_PLANE];
-    uint16_t* dst_buffer_highbd[MAX_MB_PLANE];
-    uint16_t* src_buffer_highbd_start[MAX_MB_PLANE];
-    uint16_t* dst_buffer_highbd_start[MAX_MB_PLANE];
+    uint16_t* src_buffer_highbd[MAX_PLANES];
+    uint16_t* dst_buffer_highbd[MAX_PLANES];
+    uint16_t* src_buffer_highbd_start[MAX_PLANES];
+    uint16_t* dst_buffer_highbd_start[MAX_PLANES];
     if (bd > 8 && !is_packed) {
         EB_MALLOC_ARRAY(src_buffer_highbd[0], src->luma_size);
         EB_MALLOC_ARRAY(src_buffer_highbd[1], src->chroma_size);
@@ -941,7 +941,7 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
     UNUSED(is_2bcompress);
 #endif
 
-    for (int plane = 0; plane <= AOMMIN(num_planes, MAX_MB_PLANE - 1); ++plane) {
+    for (int plane = 0; plane <= AOMMIN(num_planes, MAX_PLANES - 1); ++plane) {
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
         if (bd > 8) {
             Av1HighbdResizePlane resize_plane_func = (src->height == dst->height)

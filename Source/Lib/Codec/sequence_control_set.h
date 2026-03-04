@@ -138,7 +138,7 @@ typedef struct SequenceControlSet {
     uint16_t          border; // Padding to be applied to picture buffers
     double            frame_rate;
     uint32_t          encoder_bit_depth;
-    EbInputResolution input_resolution;
+    ResolutionRange input_resolution;
 
     /*!< Super block parameters set for the stream */
     uint8_t  b64_size;
@@ -329,7 +329,7 @@ typedef struct EbSequenceControlSetInstance {
      **************************************/
 EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance* object_ptr);
 
-EbErrorType svt_aom_derive_input_resolution(EbInputResolution* input_resolution, uint32_t input_size);
+EbErrorType svt_aom_derive_input_resolution(ResolutionRange* input_resolution, uint32_t input_size);
 EbErrorType copy_sequence_control_set(SequenceControlSet* dst, SequenceControlSet* src);
 EbErrorType svt_aom_scs_set_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 

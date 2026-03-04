@@ -230,7 +230,7 @@ static INLINE int svt_av1_still_get_qmlevel(int qindex, int min, int max) {
 }
 
 static void svt_av1_qm_init(PictureParentControlSet* pcs) {
-    const uint8_t num_planes = 3; // MAX_MB_PLANE;// NM- No monochroma
+    const uint8_t num_planes = 3; // MAX_PLANES;// NM- No monochroma
     uint8_t       q, c, t;
 #if CONFIG_ENABLE_QUANT_MATRIX
     int32_t current;
@@ -276,25 +276,25 @@ static void svt_av1_qm_init(PictureParentControlSet* pcs) {
         switch (pcs->scs->static_config.tune) {
         case TUNE_IQ:
         case TUNE_MS_SSIM:
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = svt_av1_still_get_qmlevel(
+            pcs->frm_hdr.quantization_params.qm[PLANE_Y] = svt_av1_still_get_qmlevel(
                 base_qindex, min_qmlevel, max_qmlevel);
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = svt_av1_still_get_qmlevel(
-                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U],
+            pcs->frm_hdr.quantization_params.qm[PLANE_U] = svt_av1_still_get_qmlevel(
+                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[PLANE_U],
                 min_chroma_qmlevel,
                 max_chroma_qmlevel);
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = svt_av1_still_get_qmlevel(
-                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V],
+            pcs->frm_hdr.quantization_params.qm[PLANE_V] = svt_av1_still_get_qmlevel(
+                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[PLANE_V],
                 min_chroma_qmlevel,
                 max_chroma_qmlevel);
             break;
         default:
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y] = aom_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U] = aom_get_qmlevel(
-                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_U],
+            pcs->frm_hdr.quantization_params.qm[PLANE_Y] = aom_get_qmlevel(base_qindex, min_qmlevel, max_qmlevel);
+            pcs->frm_hdr.quantization_params.qm[PLANE_U] = aom_get_qmlevel(
+                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[PLANE_U],
                 min_chroma_qmlevel,
                 max_chroma_qmlevel);
-            pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V] = aom_get_qmlevel(
-                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[AOM_PLANE_V],
+            pcs->frm_hdr.quantization_params.qm[PLANE_V] = aom_get_qmlevel(
+                base_qindex + pcs->frm_hdr.quantization_params.delta_q_ac[PLANE_V],
                 min_chroma_qmlevel,
                 max_chroma_qmlevel);
             break;
@@ -303,9 +303,9 @@ static void svt_av1_qm_init(PictureParentControlSet* pcs) {
         SVT_LOG("\n[svt_av1_qm_init] Frame %d - qindex %d, qmlevel %d %d %d\n",
                 (int)pcs->picture_number,
                 base_qindex,
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y],
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_U],
-                pcs->frm_hdr.quantization_params.qm[AOM_PLANE_V]);
+                pcs->frm_hdr.quantization_params.qm[PLANE_Y],
+                pcs->frm_hdr.quantization_params.qm[PLANE_U],
+                pcs->frm_hdr.quantization_params.qm[PLANE_V]);
 #endif
     }
 }
@@ -1079,11 +1079,11 @@ void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
 
         if (frm_hdr->coded_lossless) {
             pcs->ppcs->frm_hdr.delta_q_params.delta_q_present    = 0;
-            frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y] = 0;
-            frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U] = 0;
-            frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U] = 0;
-            frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V] = 0;
-            frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V] = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_Y] = 0;
+            frm_hdr->quantization_params.delta_q_ac[PLANE_U] = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_U] = 0;
+            frm_hdr->quantization_params.delta_q_ac[PLANE_V] = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_V] = 0;
             pcs->ppcs->dlf_ctrls.enabled                         = 0;
             pcs->ppcs->cdef_level                                = 0;
         }

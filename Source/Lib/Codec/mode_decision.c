@@ -2098,7 +2098,7 @@ static INLINE void setup_pred_plane(Buf2D* dst, BlockSize bsize, uint8_t* src, i
     dst->stride = stride;
 }
 
-void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_MB_PLANE], const Yv12BufferConfig* src, int mi_row,
+void svt_av1_setup_pred_block(BlockSize bsize, Buf2D dst[MAX_PLANES], const Yv12BufferConfig* src, int mi_row,
                               int mi_col) {
     dst[0].buf    = src->y_buffer;
     dst[0].stride = src->y_stride;
@@ -2260,9 +2260,9 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet* pcs, ModeDecisionConte
         int mi_row = ctx->blk_org_y >> 2;
         int mi_col = ctx->blk_org_x >> 2;
 
-        DECLARE_ALIGNED(16, uint8_t, dst_buf1_8b[4 * MAX_MB_PLANE * MAX_SB_SQUARE]);
+        DECLARE_ALIGNED(16, uint8_t, dst_buf1_8b[4 * MAX_PLANES * MAX_SB_SQUARE]);
 
-        uint8_t* dst_buf2_8b = dst_buf1_8b + 2 * MAX_MB_PLANE * MAX_SB_SQUARE;
+        uint8_t* dst_buf2_8b = dst_buf1_8b + 2 * MAX_PLANES * MAX_SB_SQUARE;
         if (ctx->obmc_is_luma_neigh_10bit) {
             svt_aom_un_pack2d((uint16_t*)ctx->obmc_buff_0,
                               ctx->blk_geom->bwidth,
@@ -2322,7 +2322,7 @@ uint8_t svt_aom_obmc_motion_refinement(PictureControlSet* pcs, ModeDecisionConte
         Yv12BufferConfig ref_buf;
         svt_aom_link_eb_to_aom_buffer_desc_8bit(reference_picture, &ref_buf);
 
-        Buf2D yv12_mb[MAX_MB_PLANE];
+        Buf2D yv12_mb[MAX_PLANES];
         svt_av1_setup_pred_block(ctx->blk_geom->bsize, yv12_mb, &ref_buf, mi_row, mi_col);
         for (int i = 0; i < 1; ++i) {
             x->xdplane[i].pre[0] = yv12_mb[i]; //ref in ME
@@ -3106,7 +3106,7 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     /* pointer to current frame */
     Yv12BufferConfig cur_buf;
     svt_aom_link_eb_to_aom_buffer_desc_8bit(pcs->ppcs->enhanced_pic, &cur_buf);
-    struct Buf2D yv12_mb[MAX_MB_PLANE];
+    struct Buf2D yv12_mb[MAX_PLANES];
     svt_av1_setup_pred_block(bsize, yv12_mb, &cur_buf, mi_row, mi_col);
     for (int i = 0; i < num_planes; ++i) {
         x->xdplane[i].pre[0] = yv12_mb[i]; // ref in ME

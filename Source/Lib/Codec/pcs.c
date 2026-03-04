@@ -101,7 +101,7 @@ EbErrorType svt_aom_me_sb_results_ctor(MeSbResults* obj_ptr, PictureControlSetIn
                                       init_data_ptr->ref_count_used_list1,
                                       &max_ref_to_alloc,
                                       &max_cand_to_alloc);
-    EbInputResolution resolution;
+    ResolutionRange resolution;
     svt_aom_derive_input_resolution(&resolution, init_data_ptr->picture_width * init_data_ptr->picture_height);
     uint8_t number_of_pus = svt_aom_get_enable_me_16x16(init_data_ptr->enc_mode)
         ? svt_aom_get_enable_me_8x8(
@@ -1475,7 +1475,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
     object_ptr->undershoot_seen = 0;
     object_ptr->low_cr_seen     = 0;
     EB_CREATE_MUTEX(object_ptr->pcs_total_rate_mutex);
-    EbInputResolution resolution;
+    ResolutionRange resolution;
     svt_aom_derive_input_resolution(&resolution, init_data_ptr->picture_width * init_data_ptr->picture_height);
     object_ptr->enable_me_16x16 = svt_aom_get_enable_me_16x16(init_data_ptr->enc_mode);
 

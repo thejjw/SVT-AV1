@@ -821,7 +821,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                                     recon_buffer,
                                     (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].x) >> 2,
                                     (tx_org[ed_ctx->blk_geom->bsize][is_inter][tx_depth][ed_ctx->txb_itr].y) >> 2,
-                                    AOM_PLANE_Y,
+                                    PLANE_Y,
                                     ed_ctx->md_ctx->shape,
                                     txb_origin_x,
                                     txb_origin_y,
@@ -914,7 +914,7 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
                             &ed_ctx->md_ctx->cr_dc_sign_context);
 
         // Generate prediction for both chroma planes
-        for (Plane plane = AOM_PLANE_U; plane <= AOM_PLANE_V; ++plane) {
+        for (Plane plane = PLANE_U; plane <= PLANE_V; ++plane) {
             uint8_t top_neigh_array[(64 * 2 + 1) << 1];
             uint8_t left_neigh_array[(64 * 2 + 1) << 1];
 

@@ -2405,28 +2405,28 @@ static void write_delta_q(AomWriteBitBuffer* wb, int32_t delta_q) {
 static void encode_quantization(const PictureParentControlSet* const pcs, AomWriteBitBuffer* wb) {
     const FrameHeader* frm_hdr = &pcs->frm_hdr;
     svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.base_q_idx, QINDEX_BITS);
-    write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y]);
-    int32_t diff_uv_delta = (frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U] !=
-                             frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V]) ||
-        (frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U] != frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V]);
+    write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[PLANE_Y]);
+    int32_t diff_uv_delta = (frm_hdr->quantization_params.delta_q_dc[PLANE_U] !=
+                             frm_hdr->quantization_params.delta_q_dc[PLANE_V]) ||
+        (frm_hdr->quantization_params.delta_q_ac[PLANE_U] != frm_hdr->quantization_params.delta_q_ac[PLANE_V]);
 
     if (diff_uv_delta) {
         svt_aom_wb_write_bit(wb, diff_uv_delta);
     }
-    write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U]);
-    write_delta_q(wb, frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U]);
+    write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[PLANE_U]);
+    write_delta_q(wb, frm_hdr->quantization_params.delta_q_ac[PLANE_U]);
     if (diff_uv_delta) {
-        write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V]);
-        write_delta_q(wb, frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V]);
+        write_delta_q(wb, frm_hdr->quantization_params.delta_q_dc[PLANE_V]);
+        write_delta_q(wb, frm_hdr->quantization_params.delta_q_ac[PLANE_V]);
     }
     svt_aom_wb_write_bit(wb, frm_hdr->quantization_params.using_qmatrix);
     if (frm_hdr->quantization_params.using_qmatrix) {
-        svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[AOM_PLANE_Y], QM_LEVEL_BITS);
-        svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[AOM_PLANE_U], QM_LEVEL_BITS);
+        svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[PLANE_Y], QM_LEVEL_BITS);
+        svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[PLANE_U], QM_LEVEL_BITS);
         if (!diff_uv_delta) {
-            assert(frm_hdr->quantization_params.qm[AOM_PLANE_U] == frm_hdr->quantization_params.qm[AOM_PLANE_V]);
+            assert(frm_hdr->quantization_params.qm[PLANE_U] == frm_hdr->quantization_params.qm[PLANE_V]);
         } else {
-            svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[AOM_PLANE_V], QM_LEVEL_BITS);
+            svt_aom_wb_write_literal(wb, frm_hdr->quantization_params.qm[PLANE_V], QM_LEVEL_BITS);
         }
     }
 }
@@ -4032,7 +4032,7 @@ static void write_cdef(SequenceControlSet* scs, PictureControlSet* pcs, EntropyC
 }
 
 void svt_av1_reset_loop_restoration(EntropyCodingContext* ctx) {
-    for (int32_t p = 0; p < MAX_MB_PLANE; ++p) {
+    for (int32_t p = 0; p < MAX_PLANES; ++p) {
         set_default_wiener(ctx->wiener_info + p);
         set_default_sgrproj(ctx->sgrproj_info + p);
     }

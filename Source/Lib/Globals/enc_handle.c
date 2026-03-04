@@ -4263,7 +4263,7 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
         scs->static_config.enc_mode = ENC_M11;
     }
 
-    EbInputResolution input_resolution;
+    ResolutionRange input_resolution;
     svt_aom_derive_input_resolution(&input_resolution, scs->max_input_luma_width * scs->max_input_luma_height);
     if (!scs->allintra && scs->static_config.pred_structure == RANDOM_ACCESS && scs->static_config.enc_mode > ENC_M9 &&
         input_resolution >= INPUT_SIZE_4K_RANGE) {

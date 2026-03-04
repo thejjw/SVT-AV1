@@ -3343,54 +3343,54 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
     uint32_t encoder_bit_depth = centre_pcs->scs->static_config.encoder_bit_depth;
     bool     is_highbd         = (encoder_bit_depth == 8) ? (uint8_t)false : (uint8_t)true;
     if (is_highbd) {
-        EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[C_Y], central_picture_ptr->luma_size);
+        EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[PLANE_Y], central_picture_ptr->luma_size);
         if (pcs->tf_ctrls.chroma_lvl) {
-            EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[C_U], central_picture_ptr->chroma_size);
-            EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[C_V], central_picture_ptr->chroma_size);
+            EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[PLANE_U], central_picture_ptr->chroma_size);
+            EB_MALLOC_ARRAY(centre_pcs->altref_buffer_highbd[PLANE_V], central_picture_ptr->chroma_size);
         }
 
         // pack byte buffers to 16 bit buffer
         svt_aom_pack_highbd_pic(central_picture_ptr, centre_pcs->altref_buffer_highbd, ss_x, ss_y);
         // Estimate source noise level
-        uint16_t* altref_buffer_highbd_start[COLOR_CHANNELS];
-        altref_buffer_highbd_start[C_Y] = centre_pcs->altref_buffer_highbd[C_Y] +
+        uint16_t* altref_buffer_highbd_start[MAX_PLANES];
+        altref_buffer_highbd_start[PLANE_Y] = centre_pcs->altref_buffer_highbd[PLANE_Y] +
             central_picture_ptr->border * central_picture_ptr->stride_y + central_picture_ptr->border;
         if (pcs->tf_ctrls.chroma_lvl) {
-            altref_buffer_highbd_start[C_U] = centre_pcs->altref_buffer_highbd[C_U] +
+            altref_buffer_highbd_start[PLANE_U] = centre_pcs->altref_buffer_highbd[PLANE_U] +
                 (central_picture_ptr->border >> ss_y) * central_picture_ptr->stride_cb +
                 (central_picture_ptr->border >> ss_x);
 
-            altref_buffer_highbd_start[C_V] = centre_pcs->altref_buffer_highbd[C_V] +
+            altref_buffer_highbd_start[PLANE_V] = centre_pcs->altref_buffer_highbd[PLANE_V] +
                 (central_picture_ptr->border >> ss_y) * central_picture_ptr->stride_cr +
                 (central_picture_ptr->border >> ss_x);
         }
         else {
-            altref_buffer_highbd_start[C_U] = NOT_USED_VALUE;
-            altref_buffer_highbd_start[C_V] = NOT_USED_VALUE;
+            altref_buffer_highbd_start[PLANE_U] = NOT_USED_VALUE;
+            altref_buffer_highbd_start[PLANE_V] = NOT_USED_VALUE;
         }
 
         if (do_noise_est) {
-            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[C_Y], // Y only
+            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[PLANE_Y], // Y only
                                                               central_picture_ptr->width,
                                                               central_picture_ptr->height,
                                                               central_picture_ptr->stride_y,
                                                               encoder_bit_depth);
-            noise_levels_log1p_fp16[C_Y] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_Y] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
         if (pcs->tf_ctrls.chroma_lvl) {
-            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[C_U], // U only
+            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[PLANE_U], // U only
                                                               (central_picture_ptr->width >> 1),
                                                               (central_picture_ptr->height >> 1),
                                                               central_picture_ptr->stride_cb,
                                                               encoder_bit_depth);
-            noise_levels_log1p_fp16[C_U] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_U] = svt_aom_noise_log1p_fp16(noise_level_fp16);
 
-            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[C_V], // V only
+            noise_level_fp16             = svt_estimate_noise_highbd_fp16(altref_buffer_highbd_start[PLANE_V], // V only
                                                               (central_picture_ptr->width >> 1),
                                                               (central_picture_ptr->height >> 1),
                                                               central_picture_ptr->stride_cb,
                                                               encoder_bit_depth);
-            noise_levels_log1p_fp16[C_V] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_V] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
     } else
 #endif
@@ -3404,20 +3404,20 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
                                                        central_picture_ptr->width,
                                                        central_picture_ptr->height,
                                                        central_picture_ptr->stride_y);
-            noise_levels_log1p_fp16[C_Y] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_Y] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
         if (pcs->tf_ctrls.chroma_lvl) {
             noise_level_fp16             = svt_estimate_noise_fp16(buffer_u, // U
                                                        (central_picture_ptr->width >> ss_x),
                                                        (central_picture_ptr->height >> ss_y),
                                                        central_picture_ptr->stride_cb);
-            noise_levels_log1p_fp16[C_U] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_U] = svt_aom_noise_log1p_fp16(noise_level_fp16);
 
             noise_level_fp16             = svt_estimate_noise_fp16(buffer_v, // V
                                                        (central_picture_ptr->width >> ss_x),
                                                        (central_picture_ptr->height >> ss_y),
                                                        central_picture_ptr->stride_cr);
-            noise_levels_log1p_fp16[C_V] = svt_aom_noise_log1p_fp16(noise_level_fp16);
+            noise_levels_log1p_fp16[PLANE_V] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
     }
     if (do_noise_est) {

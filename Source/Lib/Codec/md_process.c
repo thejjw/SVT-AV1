@@ -214,7 +214,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
                                                EbFifo* mode_decision_output_fifo_ptr, uint8_t enable_hbd_mode_decision,
                                                uint8_t seq_qp_mod) {
 #if !TUNE_STILL_IMAGE
-    const EbInputResolution input_resolution = scs->input_resolution;
+    const ResolutionRange input_resolution = scs->input_resolution;
 #endif
     const bool allintra = scs->allintra;
 #if TUNE_STILL_IMAGE
@@ -424,8 +424,8 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     }
     if (obmc_allowed) {
         const uint8_t bits = ctx->hbd_md > EB_8_BIT_MD ? 2 : 1;
-        EB_MALLOC(ctx->obmc_buff_0, sb_size * sb_size * bits * MAX_MB_PLANE * sizeof(ctx->obmc_buff_0[0]));
-        EB_MALLOC(ctx->obmc_buff_1, sb_size * sb_size * bits * MAX_MB_PLANE * sizeof(ctx->obmc_buff_1[0]));
+        EB_MALLOC(ctx->obmc_buff_0, sb_size * sb_size * bits * MAX_PLANES * sizeof(ctx->obmc_buff_0[0]));
+        EB_MALLOC(ctx->obmc_buff_1, sb_size * sb_size * bits * MAX_PLANES * sizeof(ctx->obmc_buff_1[0]));
         EB_MALLOC(ctx->wsrc_buf, sb_size * sb_size * sizeof(ctx->wsrc_buf[0]));
         EB_MALLOC(ctx->mask_buf, sb_size * sb_size * sizeof(ctx->mask_buf[0]));
     }

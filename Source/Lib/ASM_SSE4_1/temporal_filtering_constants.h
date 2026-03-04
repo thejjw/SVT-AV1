@@ -379,5 +379,3 @@ static const uint32_t* const highbd_chroma_double_ss_middle_column_neighbors[2] 
 
 static const uint32_t* const highbd_chroma_double_ss_right_column_neighbors[2] = {highbd_right_corner_neighbors_plus_4,
                                                                                   highbd_right_edge_neighbors_plus_4};
-
-#define DIST_STRIDE ((BW) + 2)

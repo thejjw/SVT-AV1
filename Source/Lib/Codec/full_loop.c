@@ -1330,15 +1330,15 @@ void svt_aom_quantize_inv_quantize_light(PictureControlSet* pcs, int32_t* coeff,
 
     int32_t qmatrix_level = (IS_2D_TRANSFORM(tx_type) && pcs->ppcs->frm_hdr.quantization_params.using_qmatrix)
 
-        ? pcs->ppcs->frm_hdr.quantization_params.qm[AOM_PLANE_Y]
+        ? pcs->ppcs->frm_hdr.quantization_params.qm[PLANE_Y]
 
         : NUM_QM_LEVELS - 1;
 
     TxSize adjusted_tx_size = aom_av1_get_adjusted_tx_size(txsize);
 
-    const QmVal* q_matrix = pcs->ppcs->gqmatrix[qmatrix_level][AOM_PLANE_Y][adjusted_tx_size];
+    const QmVal* q_matrix = pcs->ppcs->gqmatrix[qmatrix_level][PLANE_Y][adjusted_tx_size];
 
-    const QmVal* iq_matrix = pcs->ppcs->giqmatrix[qmatrix_level][AOM_PLANE_Y][adjusted_tx_size];
+    const QmVal* iq_matrix = pcs->ppcs->giqmatrix[qmatrix_level][PLANE_Y][adjusted_tx_size];
 
     if (q_matrix == NULL && iq_matrix == NULL) {
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
@@ -1448,8 +1448,8 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet* pcs, ModeDecisionContex
     SequenceControlSet* scs     = pcs->scs;
     EncodeContext*      enc_ctx = scs->enc_ctx;
     int32_t             plane   = component_type == COMPONENT_LUMA
-                      ? AOM_PLANE_Y
-                      : (component_type == COMPONENT_CHROMA_CB ? AOM_PLANE_U : AOM_PLANE_V);
+                      ? PLANE_Y
+                      : (component_type == COMPONENT_CHROMA_CB ? PLANE_U : PLANE_V);
 
     int32_t qmatrix_level = (IS_2D_TRANSFORM(tx_type) && pcs->ppcs->frm_hdr.quantization_params.using_qmatrix)
         ? pcs->ppcs->frm_hdr.quantization_params.qm[plane]
@@ -1735,7 +1735,7 @@ void svt_aom_full_loop_chroma_light_pd1(PictureControlSet* pcs, ModeDecisionCont
     const int    tx_width_uv  = tx_size_wide[tx_size_uv];
     const int    tx_height_uv = tx_size_high[tx_size_uv];
 
-    EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+    TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
     // If Cb component not detected as complex, can use TX shortcuts
     if (ctx->use_tx_shortcuts_mds3 &&
         (ctx->chroma_complexity == COMPONENT_LUMA || ctx->chroma_complexity == COMPONENT_CHROMA_CR)) {
@@ -1973,7 +1973,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
         uint32_t tu_cr_origin_index = (ROUND_UV(txb_origin_x) +
                                        (ROUND_UV(txb_origin_y) * cand_bf->residual->stride_cr)) >>
             1;
-        EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+        TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
         if (ctx->md_stage == MD_STAGE_3 && ctx->use_tx_shortcuts_mds3 && ctx->chroma_complexity == COMPONENT_LUMA) {
             pf_shape = N4_SHAPE;
         }

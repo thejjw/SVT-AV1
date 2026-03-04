@@ -131,9 +131,9 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
                               //const Yv12BufferConfig *src,
                               const EbPictureBufferDesc* src, int32_t mi_row, int32_t mi_col, const int32_t plane_start,
                               const int32_t plane_end) {
-    // We use AOMMIN(num_planes, MAX_MB_PLANE) instead of num_planes to quiet
+    // We use AOMMIN(num_planes, MAX_PLANES) instead of num_planes to quiet
     // the static analysis warnings.
-    //for (int32_t i = plane_start; i < AOMMIN(plane_end, MAX_MB_PLANE); ++i) {
+    //for (int32_t i = plane_start; i < AOMMIN(plane_end, MAX_PLANES); ++i) {
     //    MacroblockdPlane *const pd = &planes[i];
     //    const int32_t is_uv = i > 0;
     //    setup_pred_plane(&pd->dst, bsize, src->buffers[i], src->crop_widths[is_uv],

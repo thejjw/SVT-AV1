@@ -598,7 +598,7 @@ EbErrorType svt_av1_intra_prediction(uint8_t hbd_md, ModeDecisionContext* ctx, P
     PredictionMode mode;
     // Hsan: plane should be derived @ an earlier stage (e.g. @ the call of perform_fast_loop())
     int32_t start_plane = (ctx->uv_intra_comp_only) ? 1 : 0;
-    int32_t end_plane   = ctx->mds_do_chroma ? MAX_MB_PLANE : 1;
+    int32_t end_plane   = ctx->mds_do_chroma ? MAX_PLANES : 1;
     for (int32_t plane = start_plane; plane < end_plane; ++plane) {
         if (plane) {
             mode = (cand_bf->cand->block_mi.uv_mode == UV_CFL_PRED) ? (PredictionMode)UV_DC_PRED
@@ -726,7 +726,7 @@ static void intra_luma_prediction_for_interintra(ModeDecisionContext* ctx, Pictu
                                 prediction_ptr,
                                 (tx_org[ctx->blk_geom->bsize][is_inter][0][0].x) >> 2,
                                 (tx_org[ctx->blk_geom->bsize][is_inter][0][0].y) >> 2,
-                                AOM_PLANE_Y,
+                                PLANE_Y,
                                 ctx->shape,
                                 0,
                                 0,

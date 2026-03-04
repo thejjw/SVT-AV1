@@ -356,7 +356,7 @@ typedef struct PictureControlSet {
 
     RestUnitSearchInfo* rusi_picture[3]; // for 3 planes
 
-    RestorationInfo rst_info[MAX_MB_PLANE];
+    RestorationInfo rst_info[MAX_PLANES];
     // rst_end_stripe[i] is one more than the index of the bottom stripe
     // for tile row i.
     int32_t  rst_end_stripe[MAX_TILE_ROWS];
@@ -440,7 +440,7 @@ typedef struct TplControls {
     uint8_t              enable_tpl_qps; // 0:OFF 1:ON - QPS in TPL
     uint8_t              disable_intra_pred_nref; // 0:OFF 1:ON - Disable intra prediction in NREF
     PredictionMode       intra_mode_end; // The MAX intra mode to be tested in TPL
-    EB_TRANS_COEFF_SHAPE pf_shape;
+    TxCoeffShape pf_shape;
     // Use SAD as a distortion metric when searching the best mode (based on src pic). If false, will use SATD
     uint8_t use_sad_in_src_search;
     int8_t  reduced_tpl_group;
@@ -947,7 +947,7 @@ typedef struct PictureParentControlSet {
     struct PictureParentControlSet* overlay_ppcs_ptr;
 
     struct PictureParentControlSet* alt_ref_ppcs_ptr;
-    int32_t                         noise_levels_log1p_fp16[MAX_MB_PLANE];
+    int32_t                         noise_levels_log1p_fp16[MAX_PLANES];
     int32_t                         pic_decision_reorder_queue_idx;
     struct PictureParentControlSet* temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
     // Buffer that can be allocated in TF to store the original source picture in, if
@@ -978,7 +978,7 @@ typedef struct PictureParentControlSet {
     B64Geom* b64_geom;
     // Contains SB info (adapts automatically when SB 128x128 is used). This should be used in MD.
     SbGeom*           sb_geom;
-    EbInputResolution input_resolution;
+    ResolutionRange input_resolution;
     uint16_t          picture_sb_width;
     uint16_t          picture_sb_height;
 

@@ -285,7 +285,7 @@ typedef struct SubresCtrls {
 } SubresCtrls;
 
 typedef struct PfCtrls {
-    EB_TRANS_COEFF_SHAPE pf_shape;
+    TxCoeffShape pf_shape;
 } PfCtrls;
 
 typedef struct MdNsqMotionSearchCtrls {

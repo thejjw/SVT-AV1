@@ -726,7 +726,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                                                    predictor,
                                                    size << tpl_ctrls->subsample_tx);
 
-                            EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
+                            TxCoeffShape pf_shape = pcs->tpl_ctrls.pf_shape;
                             svt_av1_wht_fwd_txfm(
                                 src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
@@ -861,7 +861,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                                            input_pic->stride_y << tpl_ctrls->subsample_tx,
                                            subpel_mv ? compensated_blk : ref_pic_ptr->buffer_y + ref_origin_index,
                                            (subpel_mv ? size : ref_pic_ptr->stride_y) << tpl_ctrls->subsample_tx);
-                    EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
+                    TxCoeffShape pf_shape = pcs->tpl_ctrls.pf_shape;
                     svt_av1_wht_fwd_txfm(src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
                     inter_cost = svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
@@ -943,7 +943,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                                            input_pic->stride_y << tpl_ctrls->subsample_tx,
                                            subpel_mv ? compensated_blk : ref_pic_ptr->buffer_y + ref_origin_index,
                                            (subpel_mv ? size : ref_pic_ptr->stride_y) << tpl_ctrls->subsample_tx);
-                    EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
+                    TxCoeffShape pf_shape = pcs->tpl_ctrls.pf_shape;
 
                     svt_av1_wht_fwd_txfm(
                         src_diff, size << tpl_ctrls->subsample_tx, best_coeff, tx_size, pf_shape, 8, 0);
@@ -1142,7 +1142,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                                input_pic->stride_y << tpl_ctrls->subsample_tx,
                                dst_buffer,
                                dst_buffer_stride << tpl_ctrls->subsample_tx);
-        EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
+        TxCoeffShape pf_shape = pcs->tpl_ctrls.pf_shape;
         svt_av1_wht_fwd_txfm(src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
         uint16_t eob = 0;

@@ -1338,8 +1338,8 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD* x
 }
 
 static void build_prediction_by_above_preds(uint32_t component_mask, BlockSize bsize, PictureControlSet* pcs,
-                                            MacroBlockD* xd, int mi_row, int mi_col, uint8_t* tmp_buf[MAX_MB_PLANE],
-                                            int tmp_stride[MAX_MB_PLANE], uint8_t is16bit) {
+                                            MacroBlockD* xd, int mi_row, int mi_col, uint8_t* tmp_buf[MAX_PLANES],
+                                            int tmp_stride[MAX_PLANES], uint8_t is16bit) {
     if (!xd->up_available) {
         return;
     }
@@ -1382,8 +1382,8 @@ static void build_prediction_by_above_preds(uint32_t component_mask, BlockSize b
 }
 
 static void build_prediction_by_left_preds(uint32_t component_mask, BlockSize bsize, PictureControlSet* pcs,
-                                           MacroBlockD* xd, int mi_row, int mi_col, uint8_t* tmp_buf[MAX_MB_PLANE],
-                                           int tmp_stride[MAX_MB_PLANE], uint8_t is16bit) {
+                                           MacroBlockD* xd, int mi_row, int mi_col, uint8_t* tmp_buf[MAX_PLANES],
+                                           int tmp_stride[MAX_PLANES], uint8_t is16bit) {
     if (!xd->left_available) {
         return;
     }
@@ -1529,9 +1529,9 @@ static void av1_build_obmc_inter_prediction(uint8_t* final_dst_ptr_y, uint16_t f
                                             uint8_t* final_dst_ptr_u, uint16_t final_dst_stride_u,
                                             uint8_t* final_dst_ptr_v, uint16_t final_dst_stride_v,
                                             uint32_t component_mask, BlockSize bsize, PictureControlSet* pcs,
-                                            MacroBlockD* xd, int mi_row, int mi_col, uint8_t* above[MAX_MB_PLANE],
-                                            int above_stride[MAX_MB_PLANE], uint8_t* left[MAX_MB_PLANE],
-                                            int left_stride[MAX_MB_PLANE], uint8_t is16bit) {
+                                            MacroBlockD* xd, int mi_row, int mi_col, uint8_t* above[MAX_PLANES],
+                                            int above_stride[MAX_PLANES], uint8_t* left[MAX_PLANES],
+                                            int left_stride[MAX_PLANES], uint8_t is16bit) {
     // handle above row
     struct obmc_inter_pred_ctxt ctxt_above;
 
@@ -1823,9 +1823,9 @@ void svt_aom_precompute_obmc_data(PictureControlSet* pcs, ModeDecisionContext* c
         ctx->obmc_buff_0,
         ctx->obmc_buff_1,
     };
-    uint8_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
-    int      dst_stride1[MAX_MB_PLANE] = {ctx->blk_geom->bwidth, ctx->blk_geom->bwidth, ctx->blk_geom->bwidth};
-    int      dst_stride2[MAX_MB_PLANE] = {ctx->blk_geom->bwidth, ctx->blk_geom->bwidth, ctx->blk_geom->bwidth};
+    uint8_t *dst_buf1[MAX_PLANES], *dst_buf2[MAX_PLANES];
+    int      dst_stride1[MAX_PLANES] = {ctx->blk_geom->bwidth, ctx->blk_geom->bwidth, ctx->blk_geom->bwidth};
+    int      dst_stride2[MAX_PLANES] = {ctx->blk_geom->bwidth, ctx->blk_geom->bwidth, ctx->blk_geom->bwidth};
 
     if (ctx->hbd_md) {
         if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
@@ -2269,8 +2269,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                                    int16_t pu_origin_x, uint16_t pu_origin_y, uint16_t dst_origin_x,
                                    uint16_t dst_origin_y, uint32_t component_mask, uint8_t bit_depth, bool is16bit) {
     int32_t start_plane = (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) ? 0 : 1;
-    int32_t end_plane   = (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) ? MAX_MB_PLANE : 1;
-    assert(IMPLIES(ctx && end_plane == MAX_MB_PLANE, ctx->has_uv));
+    int32_t end_plane   = (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) ? MAX_PLANES : 1;
+    assert(IMPLIES(ctx && end_plane == MAX_PLANES, ctx->has_uv));
 
     // temp buffer for intra pred (luma/chroma computed separately, so can re-use buffer)
     DECLARE_ALIGNED(16, uint8_t, intra_pred[MAX_SB_SQUARE]);
@@ -2991,12 +2991,12 @@ static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr
     const int bheight = block_size_high[bsize];
 
     // cppcheck-suppress unassignedVariable
-    DECLARE_ALIGNED(16, uint8_t, obmc_buff_0[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
+    DECLARE_ALIGNED(16, uint8_t, obmc_buff_0[2 * MAX_PLANES * MAX_SB_SQUARE]);
     // cppcheck-suppress unassignedVariable
-    DECLARE_ALIGNED(16, uint8_t, obmc_buff_1[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
-    uint8_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
-    int      dst_stride1[MAX_MB_PLANE] = {bwidth, bwidth, bwidth};
-    int      dst_stride2[MAX_MB_PLANE] = {bwidth, bwidth, bwidth};
+    DECLARE_ALIGNED(16, uint8_t, obmc_buff_1[2 * MAX_PLANES * MAX_SB_SQUARE]);
+    uint8_t *dst_buf1[MAX_PLANES], *dst_buf2[MAX_PLANES];
+    int      dst_stride1[MAX_PLANES] = {bwidth, bwidth, bwidth};
+    int      dst_stride2[MAX_PLANES] = {bwidth, bwidth, bwidth};
 
     int mi_row = pu_origin_y >> 2;
     int mi_col = pu_origin_x >> 2;

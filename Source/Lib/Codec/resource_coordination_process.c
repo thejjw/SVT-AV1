@@ -341,18 +341,18 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet* pcs) {
 #endif
 
     frm_hdr->quantization_params.base_q_idx              = 31;
-    frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_Y] = 0;
-    frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y] = pcs->scs->static_config.luma_y_dc_qindex_offset;
-    frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U] = pcs->scs->static_config.chroma_u_ac_qindex_offset;
-    frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U] = pcs->scs->static_config.chroma_u_dc_qindex_offset;
-    frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V] = pcs->scs->static_config.chroma_v_ac_qindex_offset;
-    frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V] = pcs->scs->static_config.chroma_v_dc_qindex_offset;
+    frm_hdr->quantization_params.delta_q_ac[PLANE_Y] = 0;
+    frm_hdr->quantization_params.delta_q_dc[PLANE_Y] = pcs->scs->static_config.luma_y_dc_qindex_offset;
+    frm_hdr->quantization_params.delta_q_ac[PLANE_U] = pcs->scs->static_config.chroma_u_ac_qindex_offset;
+    frm_hdr->quantization_params.delta_q_dc[PLANE_U] = pcs->scs->static_config.chroma_u_dc_qindex_offset;
+    frm_hdr->quantization_params.delta_q_ac[PLANE_V] = pcs->scs->static_config.chroma_v_ac_qindex_offset;
+    frm_hdr->quantization_params.delta_q_dc[PLANE_V] = pcs->scs->static_config.chroma_v_dc_qindex_offset;
 
     // Encoder
     frm_hdr->quantization_params.using_qmatrix   = pcs->scs->static_config.enable_qm;
-    frm_hdr->quantization_params.qm[AOM_PLANE_Y] = 5;
-    frm_hdr->quantization_params.qm[AOM_PLANE_U] = 5;
-    frm_hdr->quantization_params.qm[AOM_PLANE_V] = 5;
+    frm_hdr->quantization_params.qm[PLANE_Y] = 5;
+    frm_hdr->quantization_params.qm[PLANE_U] = 5;
+    frm_hdr->quantization_params.qm[PLANE_V] = 5;
     frm_hdr->is_motion_mode_switchable           = 0;
     // Flag signaling how frame contexts should be updated at the end of
     // a frame decode

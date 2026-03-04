@@ -156,7 +156,7 @@ static void svt_av1_superres_upscale_frame(struct Av1Common* cm, PictureControlS
 
     uint16_t  ss_x       = scs->subsampling_x;
     uint16_t  ss_y       = scs->subsampling_y;
-    const int num_planes = scs->seq_header.color_config.mono_chrome ? 1 : MAX_MB_PLANE;
+    const int num_planes = scs->seq_header.color_config.mono_chrome ? 1 : MAX_PLANES;
 
     EbPictureBufferDesc  recon_pic_temp;
     EbPictureBufferDesc* ps_recon_pic_temp;

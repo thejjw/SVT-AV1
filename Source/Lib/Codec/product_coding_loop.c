@@ -3916,7 +3916,7 @@ static void av1_intra_luma_prediction(ModeDecisionContext* ctx, PictureControlSe
                                 cand_bf->pred,
                                 (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x) >> 2,
                                 (tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y) >> 2,
-                                AOM_PLANE_Y,
+                                PLANE_Y,
                                 ctx->shape,
                                 tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].x,
                                 tx_org[ctx->blk_geom->bsize][is_inter][ctx->tx_depth][ctx->txb_itr].y,
@@ -4208,7 +4208,7 @@ static void perform_tx_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ct
     int32_t* const transf_coeff = &(((int32_t*)ctx->tx_coeffs->buffer_y)[0]);
     int32_t* const recon_coeff  = &(((int32_t*)cand_bf->rec_coeff->buffer_y)[0]);
 
-    EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+    TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
 
     // Y: T Q i_q
     svt_aom_estimate_transform(pcs,
@@ -4383,7 +4383,7 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
             assert(0);
         }
     }
-    EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+    TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
     if (ctx->md_stage == MD_STAGE_3 && ctx->use_tx_shortcuts_mds3) {
         pf_shape = N4_SHAPE;
     }
@@ -5203,7 +5203,7 @@ static void perform_dct_dct_tx_light_pd1(PictureControlSet* pcs, ModeDecisionCon
     const int    txbwidth  = tx_size_wide[tx_size];
     const int    txbheight = tx_size_high[tx_size];
     assert(tx_size < TX_SIZES_ALL);
-    EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+    TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
     if (ctx->use_tx_shortcuts_mds3 && ctx->rtc_use_N4_dct_dct_shortcut) {
         pf_shape = N4_SHAPE;
     } else if (ctx->lpd1_tx_ctrls.use_neighbour_info) {
@@ -5400,7 +5400,7 @@ static void perform_dct_dct_tx(PictureControlSet* pcs, ModeDecisionContext* ctx,
         }
     }
     assert(tx_size < TX_SIZES_ALL);
-    EB_TRANS_COEFF_SHAPE pf_shape = ctx->pf_ctrls.pf_shape;
+    TxCoeffShape pf_shape = ctx->pf_ctrls.pf_shape;
     if (ctx->md_stage == MD_STAGE_3 && ctx->use_tx_shortcuts_mds3 && ctx->rtc_use_N4_dct_dct_shortcut) {
         pf_shape = N4_SHAPE;
     }
