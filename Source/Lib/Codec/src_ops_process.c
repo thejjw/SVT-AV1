@@ -1389,7 +1389,7 @@ static void tpl_mc_flow_dispenser(EncodeContext* enc_ctx, SequenceControlSet* sc
 }
 
 static int get_overlap_area(int grid_pos_row, int grid_pos_col, int ref_pos_row, int ref_pos_col, int block,
-                            int /*BLOCK_SIZE*/ bsize) {
+                            BlockSize bsize) {
     int width = 0, height = 0;
     int bw = 4 << mi_size_wide_log2[bsize];
     int bh = 4 << mi_size_high_log2[bsize];
@@ -1462,8 +1462,7 @@ static int64_t delta_rate_cost(int64_t delta_rate, int64_t recrf_dist, int64_t s
 ************************************************/
 
 static AOM_INLINE void tpl_model_update_b(PictureParentControlSet* ref_pcs_ptr, PictureParentControlSet* pcs,
-                                          TplStats* tpl_stats_ptr, int mi_row, int mi_col,
-                                          const int /*BLOCK_SIZE*/ bsize) {
+                                          TplStats* tpl_stats_ptr, int mi_row, int mi_col, const BlockSize bsize) {
     Av1Common* ref_cm = ref_pcs_ptr->av1_cm;
     TplStats*  ref_tpl_stats_ptr;
 
@@ -1522,18 +1521,18 @@ static AOM_INLINE void tpl_model_update_b(PictureParentControlSet* ref_pcs_ptr, 
 ************************************************/
 
 static AOM_INLINE void tpl_model_update(PictureParentControlSet* pcs_array[MAX_TPL_LA_SW], int32_t frame_idx,
-                                        int mi_row, int mi_col, const int /*BLOCK_SIZE*/ bsize, uint8_t frames_in_sw) {
+                                        int mi_row, int mi_col, const BlockSize bsize, uint8_t frames_in_sw) {
     const int                mi_height = mi_size_high[bsize];
     const int                mi_width  = mi_size_wide[bsize];
     PictureParentControlSet* pcs       = pcs_array[frame_idx];
 
-    const int /*BLOCK_SIZE*/ block_size = pcs->tpl_ctrls.synth_blk_size == 8 ? BLOCK_8X8
-        : pcs->tpl_ctrls.synth_blk_size == 16                                ? BLOCK_16X16
-                                                                             : BLOCK_32X32;
-    const int shift      = pcs->tpl_ctrls.synth_blk_size == 8 ? 1 : pcs->tpl_ctrls.synth_blk_size == 16 ? 2 : 3;
-    const int step       = 1 << (shift);
-    const int mi_cols_sr = ((pcs->aligned_width + 15) / 16) << 2;
-    int       i          = 0;
+    const BlockSize block_size = pcs->tpl_ctrls.synth_blk_size == 8 ? BLOCK_8X8
+        : pcs->tpl_ctrls.synth_blk_size == 16                       ? BLOCK_16X16
+                                                                    : BLOCK_32X32;
+    const int       shift      = pcs->tpl_ctrls.synth_blk_size == 8 ? 1 : pcs->tpl_ctrls.synth_blk_size == 16 ? 2 : 3;
+    const int       step       = 1 << (shift);
+    const int       mi_cols_sr = ((pcs->aligned_width + 15) / 16) << 2;
+    int             i          = 0;
 
     for (int idy = 0; idy < mi_height; idy += step) {
         for (int idx = 0; idx < mi_width; idx += step) {
@@ -1557,10 +1556,10 @@ static AOM_INLINE void tpl_model_update(PictureParentControlSet* pcs_array[MAX_T
 
 void tpl_mc_flow_synthesizer(PictureParentControlSet* pcs_array[MAX_TPL_LA_SW], int32_t frame_idx,
                              uint8_t frames_in_sw) {
-    Av1Common*               cm    = pcs_array[frame_idx]->av1_cm;
-    const int /*BLOCK_SIZE*/ bsize = pcs_array[frame_idx]->tpl_ctrls.synth_blk_size == 32 ? BLOCK_32X32 : BLOCK_16X16;
-    const int                mi_height = mi_size_high[bsize];
-    const int                mi_width  = mi_size_wide[bsize];
+    Av1Common*      cm        = pcs_array[frame_idx]->av1_cm;
+    const BlockSize bsize     = pcs_array[frame_idx]->tpl_ctrls.synth_blk_size == 32 ? BLOCK_32X32 : BLOCK_16X16;
+    const int       mi_height = mi_size_high[bsize];
+    const int       mi_width  = mi_size_wide[bsize];
 
     for (int mi_row = 0; mi_row < cm->mi_rows; mi_row += mi_height) {
         for (int mi_col = 0; mi_col < cm->mi_cols; mi_col += mi_width) {

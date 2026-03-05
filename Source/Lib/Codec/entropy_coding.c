@@ -3329,7 +3329,7 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
             //const int32_t frame_to_show = cm->ref_frame_map[cpi->show_existing_frame];
 
             //if (frame_to_show < 0 || frame_bufs[frame_to_show].ref_count < 1) {
-            //    aom_internal_error(&cm->error, AOM_CODEC_UNSUP_BITSTREAM,
+            //    aom_internal_error(&cm->error, SVT_AOM_CODEC_UNSUP_BITSTREAM,
             //        "Buffer %d does not contain a reconstructed frame",
             //        frame_to_show);
             //}
@@ -3347,7 +3347,7 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
             //        if (cm->reset_decoder_state &&
             //            frame_bufs[frame_to_show].frame_type != KEY_FRAME) {
             //            aom_internal_error(
-            //                &cm->error, AOM_CODEC_UNSUP_BITSTREAM,
+            //                &cm->error, SVT_AOM_CODEC_UNSUP_BITSTREAM,
             //                "show_existing_frame to reset state on KEY_FRAME only");
             //        }
 
@@ -3401,7 +3401,7 @@ static void write_uncompressed_header_obu(SequenceControlSet* scs /*Av1Comp *cpi
 
         //if (cm->width > cm->seq_params.max_frame_width ||
         //    cm->height > cm->seq_params.max_frame_height) {
-        //    aom_internal_error(&cm->error, AOM_CODEC_UNSUP_BITSTREAM,
+        //    aom_internal_error(&cm->error, SVT_AOM_CODEC_UNSUP_BITSTREAM,
         //        "Frame dimensions are larger than the maximum values");
         //}
 
@@ -3682,10 +3682,10 @@ static int32_t write_uleb_obu_size(uint32_t obu_header_size, uint32_t obu_payloa
     size_t         coded_obu_size = 0;
 
     if (svt_aom_uleb_encode(obu_size, sizeof(obu_size), dest + offset, &coded_obu_size) != 0) {
-        return AOM_CODEC_ERROR;
+        return SVT_AOM_CODEC_ERROR;
     }
 
-    return AOM_CODEC_OK;
+    return SVT_AOM_CODEC_OK;
 }
 
 static size_t obu_mem_move(uint32_t obu_header_size, uint32_t obu_payload_size, uint8_t* data) {
@@ -3860,7 +3860,7 @@ EbErrorType svt_aom_write_metadata_av1(Bitstream* bitstream_ptr, SvtMetadataArra
             curr_data_size += write_obu_metadata(current_metadata, data + curr_data_size);
             const uint32_t obu_payload_size  = curr_data_size - obu_header_size;
             const size_t   length_field_size = obu_mem_move(obu_header_size, obu_payload_size, data);
-            if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != AOM_CODEC_OK) {
+            if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != SVT_AOM_CODEC_OK) {
                 assert(0);
             }
             curr_data_size += (int32_t)length_field_size;
@@ -3931,7 +3931,7 @@ EbErrorType svt_aom_write_frame_header_av1(Bitstream* bitstream_ptr, SequenceCon
     }
     const uint32_t obu_payload_size  = curr_data_size - obu_header_size;
     const size_t   length_field_size = obu_mem_move(obu_header_size, obu_payload_size, data);
-    if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != AOM_CODEC_OK) {
+    if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != SVT_AOM_CODEC_OK) {
         assert(0);
     }
     curr_data_size += (int32_t)length_field_size;
@@ -3958,8 +3958,8 @@ EbErrorType svt_aom_encode_sps_av1(Bitstream* bitstream_ptr, SequenceControlSet*
     obu_payload_size = write_sequence_header_obu(scs, /*cpi,*/ data + obu_header_size, enhancement_layers_count);
 
     const size_t length_field_size = obu_mem_move(obu_header_size, obu_payload_size, data);
-    if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != AOM_CODEC_OK) {
-        // return AOM_CODEC_ERROR;
+    if (write_uleb_obu_size(obu_header_size, obu_payload_size, data) != SVT_AOM_CODEC_OK) {
+        // return SVT_AOM_CODEC_ERROR;
     }
 
     data += obu_header_size + obu_payload_size + length_field_size;

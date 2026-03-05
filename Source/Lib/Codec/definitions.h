@@ -1426,21 +1426,21 @@ typedef enum RefreshFrameContextMode {
 /*!\brief Algorithm return codes */
 typedef enum AomCodecErr {
     /*!\brief Operation completed without error */
-    AOM_CODEC_OK,
+    SVT_AOM_CODEC_OK,
     /*!\brief Unspecified error */
-    AOM_CODEC_ERROR,
+    SVT_AOM_CODEC_ERROR,
     /*!\brief Memory operation failed */
-    AOM_CODEC_MEM_ERROR,
+    SVT_AOM_CODEC_MEM_ERROR,
     /*!\brief ABI version mismatch */
-    AOM_CODEC_ABI_MISMATCH,
+    SVT_AOM_CODEC_ABI_MISMATCH,
     /*!\brief Algorithm does not have required capability */
-    AOM_CODEC_INCAPABLE,
+    SVT_AOM_CODEC_INCAPABLE,
     /*!\brief The given Bitstream is not supported.
     *
     * The Bitstream was unable to be parsed at the highest level. The decoder
     * is unable to proceed. This error \ref SHOULD be treated as fatal to the
     * stream. */
-    AOM_CODEC_UNSUP_BITSTREAM,
+    SVT_AOM_CODEC_UNSUP_BITSTREAM,
     /*!\brief Encoded Bitstream uses an unsupported feature
     *
     * The decoder does not implement a feature required by the encoder. This
@@ -1448,7 +1448,7 @@ typedef enum AomCodecErr {
     * pictures from being properly decoded. This error \ref MAY be treated as
     * fatal to the stream or \ref MAY be treated as fatal to the current GOP.
     */
-    AOM_CODEC_UNSUP_FEATURE,
+    SVT_AOM_CODEC_UNSUP_FEATURE,
     /*!\brief The coded data for this stream is corrupt or incomplete
     *
     * There was a problem decoding the current frame.  This return code
@@ -1457,15 +1457,15 @@ typedef enum AomCodecErr {
     * stream or \ref MAY be treated as fatal to the current GOP. If decoding
     * is continued for the current GOP, artifacts may be present.
     */
-    AOM_CODEC_CORRUPT_FRAME,
+    SVT_AOM_CODEC_CORRUPT_FRAME,
     /*!\brief An application-supplied parameter is not valid.
     *
     */
-    AOM_CODEC_INVALID_PARAM,
+    SVT_AOM_CODEC_INVALID_PARAM,
     /*!\brief An iterator reached the end of list.
     *
     */
-    AOM_CODEC_LIST_END
+    SVT_AOM_CODEC_LIST_END
 } AomCodecErr;
 
 // above and left partition
@@ -1720,8 +1720,6 @@ static const WarpedMotionParams default_warp_params = {
 #define SC_FRAMES_INTERVAL_T1         60 // The speed control Interval Threshold1
 #define SC_FRAMES_INTERVAL_T2        180 // The speed control Interval Threshold2
 #define SC_FRAMES_INTERVAL_T3        120 // The speed control Interval Threshold3
-
-#define MAX_NUM_TOKENS          200
 
 /** Redefine ASSERT() to avoid warnings
 */
