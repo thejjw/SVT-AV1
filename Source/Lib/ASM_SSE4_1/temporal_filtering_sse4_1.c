@@ -14,7 +14,7 @@
 #include <emmintrin.h>
 
 #include "definitions.h"
-#include "temporal_filtering_constants.h"
+#include "temporal_filtering.h"
 #include "utility.h"
 
 /*value [i:0-15] (sqrt((float)i)*65536.0*/
