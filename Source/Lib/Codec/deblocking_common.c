@@ -16,8 +16,8 @@
 static const int delta_lf_id_lut[MAX_PLANES][2] = {{0, 1}, {2, 2}, {3, 3}};
 
 static const SEG_LVL_FEATURES seg_lvl_lf_lut[MAX_PLANES][2] = {{SEG_LVL_ALT_LF_Y_V, SEG_LVL_ALT_LF_Y_H},
-                                                                 {SEG_LVL_ALT_LF_U, SEG_LVL_ALT_LF_U},
-                                                                 {SEG_LVL_ALT_LF_V, SEG_LVL_ALT_LF_V}};
+                                                               {SEG_LVL_ALT_LF_U, SEG_LVL_ALT_LF_U},
+                                                               {SEG_LVL_ALT_LF_V, SEG_LVL_ALT_LF_V}};
 
 static INLINE int svt_aom_seg_feature_active(SegmentationParams* seg, int segment_id, SEG_LVL_FEATURES feature_id) {
     return seg->segmentation_enabled && seg->feature_enabled[segment_id][feature_id];

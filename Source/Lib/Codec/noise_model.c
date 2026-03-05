@@ -2181,7 +2181,7 @@ EbErrorType svt_aom_denoise_and_model_ctor(AomDenoiseAndModel* object_ptr, EbPtr
     DenoiseAndModelInitData* init_data_ptr = (DenoiseAndModelInitData*)object_init_data_ptr;
     EbErrorType              return_error  = EB_ErrorNone;
     uint32_t                 use_highbd    = init_data_ptr->encoder_bit_depth > EB_EIGHT_BIT ? 1 : 0;
-    ResolutionRange        input_resolution;
+    ResolutionRange          input_resolution;
 
     int32_t chroma_sub_log2[2] = {1, 1}; //todo: send chroma subsampling
     chroma_sub_log2[0]         = (init_data_ptr->encoder_color_format == EB_YUV444 ? 0 : 1);
@@ -2264,14 +2264,14 @@ static int32_t denoise_and_model_realloc_if_necessary(struct AomDenoiseAndModel*
 }
 
 static void unpack_2d_pic(uint8_t* packed[3], EbPictureBufferDesc* outputPicturePtr) {
-    uint32_t luma_buffer_offset = 0;
-    uint32_t chroma_buffer_offset = 0;
-    uint32_t bit_inc_luma_offset = 0;
+    uint32_t luma_buffer_offset    = 0;
+    uint32_t chroma_buffer_offset  = 0;
+    uint32_t bit_inc_luma_offset   = 0;
     uint32_t bit_inc_chroma_offset = 0;
-    uint16_t luma_width    = (uint16_t)(outputPicturePtr->width);
-    uint16_t chroma_width  = luma_width >> 1;
-    uint16_t luma_height   = (uint16_t)(outputPicturePtr->height);
-    uint16_t chroma_height = luma_height >> 1;
+    uint16_t luma_width            = (uint16_t)(outputPicturePtr->width);
+    uint16_t chroma_width          = luma_width >> 1;
+    uint16_t luma_height           = (uint16_t)(outputPicturePtr->height);
+    uint16_t chroma_height         = luma_height >> 1;
 
     svt_unpack_and_2bcompress((uint16_t*)(packed[0]),
                               outputPicturePtr->y_stride,

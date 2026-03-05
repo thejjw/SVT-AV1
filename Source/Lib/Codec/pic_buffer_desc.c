@@ -17,10 +17,10 @@
 static void svt_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc* obj = (EbPictureBufferDesc*)p;
     EB_FREE_ALIGNED_ARRAY(obj->buffer_alloc);
-    obj->buffer_alloc_sz = 0;
-    obj->y_buffer = NULL;
-    obj->u_buffer = NULL;
-    obj->v_buffer = NULL;
+    obj->buffer_alloc_sz  = 0;
+    obj->y_buffer         = NULL;
+    obj->u_buffer         = NULL;
+    obj->v_buffer         = NULL;
     obj->y_buffer_bit_inc = NULL;
     obj->u_buffer_bit_inc = NULL;
     obj->v_buffer_bit_inc = NULL;
@@ -32,40 +32,36 @@ static void svt_picture_buffer_desc_dctor(EbPtr p) {
  *  values that are fixed for the life of
  *  the descriptor.
  *****************************************/
-EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf,
-                                               const EbPtr          object_init_data_ptr) {
-    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)
-        object_init_data_ptr;
+EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf, const EbPtr object_init_data_ptr) {
+    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     //for 10bit we force split mode + 2b-compressed
     uint32_t       bytes_per_pixel = 1;
-    const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+    const uint16_t ss_x            = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
+    const uint16_t ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     pic_buf->dctor = svt_picture_buffer_desc_dctor;
 
     // Set the Picture Buffer Static variables
-    pic_buf->width             = pic_buf_init_data->max_width;
-    pic_buf->height            = pic_buf_init_data->max_height;
-    pic_buf->bit_depth         = pic_buf_init_data->bit_depth;
-    pic_buf->is_16bit_pipeline = pic_buf_init_data->is_16bit_pipeline;
-    pic_buf->color_format      = pic_buf_init_data->color_format;
-    pic_buf->y_stride          = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
+    pic_buf->width        = pic_buf_init_data->max_width;
+    pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
+    pic_buf->color_format = pic_buf_init_data->color_format;
+    pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
 
-    svt_aom_assert_err(pic_buf->y_stride % 8 == 0,
-                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
+    svt_aom_assert_err(pic_buf->y_stride % 8 == 0, "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
+    pic_buf->border                       = pic_buf_init_data->border;
 
-    pic_buf->luma_size = pic_buf->y_stride *
-        (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
     pic_buf->packed_flag = false;
 
     if (pic_buf_init_data->split_mode) {
-        pic_buf->y_stride_bit_inc  = pic_buf->y_stride;
+        pic_buf->y_stride_bit_inc = pic_buf->y_stride;
         pic_buf->u_stride_bit_inc = pic_buf->u_stride;
         pic_buf->v_stride_bit_inc = pic_buf->v_stride;
     }
@@ -73,9 +69,9 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf,
 
     pic_buf->y_buffer = NULL;
     // Get frame size to alloc
-    uint32_t alloc_sz = 0;
-    uint32_t buffer_size[3] = { 0 };
-    uint32_t buffer_bit_inc_size[3] = { 0 };
+    uint32_t alloc_sz               = 0;
+    uint32_t buffer_size[3]         = {0};
+    uint32_t buffer_bit_inc_size[3] = {0};
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         //alloc_sz += buffer_size[0] = pic_buf->luma_size * bytes_per_pixel;
         if (pic_buf_init_data->split_mode) {
@@ -100,33 +96,40 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf,
     // Allocate the Picture Buffers (luma & chroma)
     EB_MALLOC_ALIGNED_ARRAY(pic_buf->buffer_alloc, alloc_sz);
     pic_buf->buffer_alloc_sz = alloc_sz;
-    uint32_t assigned_space = 0;
+    uint32_t assigned_space  = 0;
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         //pic_buf->y_buffer = pic_buf->buffer_alloc + pic_buf->border + (pic_buf->y_stride * pic_buf->border);
         //assigned_space += buffer_size[0];
         pic_buf->y_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->y_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border + (pic_buf->y_stride_bit_inc * pic_buf->border)) / 4) * bytes_per_pixel;
+            pic_buf->y_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                ((pic_buf->border + (pic_buf->y_stride_bit_inc * pic_buf->border)) / 4) * bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[0];
         }
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[1];
         pic_buf->u_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->u_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + (((pic_buf->border >> ss_x) + (pic_buf->u_stride_bit_inc * (pic_buf->border >> ss_y))) / 4) * bytes_per_pixel;
+            pic_buf->u_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                (((pic_buf->border >> ss_x) + (pic_buf->u_stride_bit_inc * (pic_buf->border >> ss_y))) / 4) *
+                    bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[1];
         }
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
-        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[2];
         pic_buf->v_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->v_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + (((pic_buf->border >> ss_x) + (pic_buf->v_stride_bit_inc * (pic_buf->border >> ss_y))) / 4) * bytes_per_pixel;
+            pic_buf->v_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                (((pic_buf->border >> ss_x) + (pic_buf->v_stride_bit_inc * (pic_buf->border >> ss_y))) / 4) *
+                    bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[2];
         }
     }
@@ -140,36 +143,32 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf,
  * update the parameters in EbPictureBufferDesc for changing the resolution
  * on the fly similar to svt_picture_buffer_desc_ctor_noy8b, but no allocation is done.
  *****************************************/
-EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc* pic_buf,
-                                                 const EbPtr          object_init_data_ptr) {
-    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)
-        object_init_data_ptr;
+EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc* pic_buf, const EbPtr object_init_data_ptr) {
+    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+    const uint16_t ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     // Set the Picture Buffer Static variables
-    pic_buf->width             = pic_buf_init_data->max_width;
-    pic_buf->height            = pic_buf_init_data->max_height;
-    pic_buf->bit_depth         = pic_buf_init_data->bit_depth;
-    pic_buf->is_16bit_pipeline = pic_buf_init_data->is_16bit_pipeline;
-    pic_buf->color_format      = pic_buf_init_data->color_format;
-    pic_buf->y_stride          = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
+    pic_buf->width        = pic_buf_init_data->max_width;
+    pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
+    pic_buf->color_format = pic_buf_init_data->color_format;
+    pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
 
-    svt_aom_assert_err(pic_buf->y_stride % 8 == 0,
-                       "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
+    svt_aom_assert_err(pic_buf->y_stride % 8 == 0, "Luma Stride should be n*8 to accommodate 2b-compression flow \n");
 
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
+    pic_buf->border                       = pic_buf_init_data->border;
 
-    pic_buf->luma_size = pic_buf->y_stride *
-        (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
     pic_buf->packed_flag = false;
 
     if (pic_buf_init_data->split_mode == true) {
-        pic_buf->y_stride_bit_inc  = pic_buf->y_stride;
+        pic_buf->y_stride_bit_inc = pic_buf->y_stride;
         pic_buf->u_stride_bit_inc = pic_buf->u_stride;
         pic_buf->v_stride_bit_inc = pic_buf->v_stride;
     }
@@ -182,28 +181,26 @@ EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc* pic_buf,
 svt_picture_buffer_desc_update: update the parameters in EbPictureBufferDesc for changing the resolution on the fly
 similar to svt_picture_buffer_desc_ctor, but no allocation is done.
 */
-EbErrorType svt_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf,
-                                           const EbPtr          object_init_data_ptr) {
-    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)
-        object_init_data_ptr;
+EbErrorType svt_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf, const EbPtr object_init_data_ptr) {
+    const EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+    const uint16_t ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     // Set the Picture Buffer Static variables
-    pic_buf->width      = pic_buf_init_data->max_width;
-    pic_buf->height     = pic_buf_init_data->max_height;
-    pic_buf->y_stride   = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
+    pic_buf->width    = pic_buf_init_data->max_width;
+    pic_buf->height   = pic_buf_init_data->max_height;
+    pic_buf->y_stride = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
+    pic_buf->border                       = pic_buf_init_data->border;
 
-    pic_buf->luma_size = pic_buf->y_stride *
-        (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
 
     if (pic_buf_init_data->split_mode) {
-        pic_buf->y_stride_bit_inc  = pic_buf->y_stride;
+        pic_buf->y_stride_bit_inc = pic_buf->y_stride;
         pic_buf->u_stride_bit_inc = pic_buf->u_stride;
         pic_buf->v_stride_bit_inc = pic_buf->v_stride;
     }
@@ -216,44 +213,43 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, const EbP
 
     uint32_t       bytes_per_pixel = (pic_buf_init_data->bit_depth == EB_EIGHT_BIT) ? 1
               : (pic_buf_init_data->bit_depth <= EB_SIXTEEN_BIT)                    ? 2
-                                                                                                    : 4;
-    const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+                                                                                    : 4;
+    const uint16_t ss_x            = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
+    const uint16_t ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     pic_buf->dctor = svt_picture_buffer_desc_dctor;
 
-    if (pic_buf_init_data->bit_depth > EB_EIGHT_BIT &&
-        pic_buf_init_data->bit_depth <= EB_SIXTEEN_BIT &&
+    if (pic_buf_init_data->bit_depth > EB_EIGHT_BIT && pic_buf_init_data->bit_depth <= EB_SIXTEEN_BIT &&
         pic_buf_init_data->split_mode) {
         bytes_per_pixel = 1;
     }
 
     // Set the Picture Buffer Static variables
-    pic_buf->width             = pic_buf_init_data->max_width;
-    pic_buf->height            = pic_buf_init_data->max_height;
-    pic_buf->bit_depth         = pic_buf_init_data->bit_depth;
-    pic_buf->is_16bit_pipeline = pic_buf_init_data->is_16bit_pipeline;
-    pic_buf->color_format      = pic_buf_init_data->color_format;
-    pic_buf->y_stride          = pic_buf_init_data->max_width + 2 * pic_buf_init_data->border /*left + right border*/;
+    pic_buf->width        = pic_buf_init_data->max_width;
+    pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
+    pic_buf->color_format = pic_buf_init_data->color_format;
+    pic_buf->y_stride     = pic_buf_init_data->max_width + 2 * pic_buf_init_data->border /*left + right border*/;
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
-    pic_buf->luma_size = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->border                       = pic_buf_init_data->border;
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
 
     pic_buf->packed_flag = bytes_per_pixel > 1 ? true : false;
 
     if (pic_buf_init_data->split_mode) {
-        pic_buf->y_stride_bit_inc  = pic_buf->y_stride;
+        pic_buf->y_stride_bit_inc = pic_buf->y_stride;
         pic_buf->u_stride_bit_inc = pic_buf->u_stride;
         pic_buf->v_stride_bit_inc = pic_buf->v_stride;
     }
     pic_buf->buffer_enable_mask = pic_buf_init_data->buffer_enable_mask;
 
     // Get frame size to alloc
-    uint32_t alloc_sz = 0;
-    uint32_t buffer_size[3] = { 0 };
-    uint32_t buffer_bit_inc_size[3] = { 0 };
+    uint32_t alloc_sz               = 0;
+    uint32_t buffer_size[3]         = {0};
+    uint32_t buffer_bit_inc_size[3] = {0};
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         alloc_sz += buffer_size[0] = pic_buf->luma_size * bytes_per_pixel;
         if (pic_buf_init_data->split_mode) {
@@ -278,33 +274,39 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, const EbP
     // Allocate the Picture Buffers (luma & chroma)
     EB_MALLOC_ALIGNED_ARRAY(pic_buf->buffer_alloc, alloc_sz);
     pic_buf->buffer_alloc_sz = alloc_sz;
-    uint32_t assigned_space = 0;
+    uint32_t assigned_space  = 0;
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
-        pic_buf->y_buffer = pic_buf->buffer_alloc + (pic_buf->border + (pic_buf->y_stride * pic_buf->border)) * bytes_per_pixel;
+        pic_buf->y_buffer = pic_buf->buffer_alloc +
+            (pic_buf->border + (pic_buf->y_stride * pic_buf->border)) * bytes_per_pixel;
         assigned_space += buffer_size[0];
         pic_buf->y_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->y_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + (pic_buf->border + (pic_buf->y_stride_bit_inc * pic_buf->border)) * bytes_per_pixel;
+            pic_buf->y_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                (pic_buf->border + (pic_buf->y_stride_bit_inc * pic_buf->border)) * bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[0];
         }
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[1];
         pic_buf->u_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->u_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->u_stride_bit_inc * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+            pic_buf->u_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                ((pic_buf->border >> ss_x) + (pic_buf->u_stride_bit_inc * (pic_buf->border >> ss_y))) * bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[1];
         }
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
-        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[2];
         pic_buf->v_buffer_bit_inc = NULL;
         if (pic_buf_init_data->split_mode) {
-            pic_buf->v_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->v_stride_bit_inc * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+            pic_buf->v_buffer_bit_inc = pic_buf->buffer_alloc + assigned_space +
+                ((pic_buf->border >> ss_x) + (pic_buf->v_stride_bit_inc * (pic_buf->border >> ss_y))) * bytes_per_pixel;
             assigned_space += buffer_bit_inc_size[2];
         }
     }
@@ -317,31 +319,31 @@ static void svt_recon_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc* obj = (EbPictureBufferDesc*)p;
     EB_FREE_ALIGNED_ARRAY(obj->buffer_alloc);
     obj->buffer_alloc_sz = 0;
-    obj->y_buffer = NULL;
-    obj->u_buffer = NULL;
-    obj->v_buffer = NULL;
+    obj->y_buffer        = NULL;
+    obj->u_buffer        = NULL;
+    obj->v_buffer        = NULL;
 }
 
 /*****************************************
 Update the parameters in pic_buf for changing the resolution on the fly
 similar to svt_recon_picture_buffer_desc_ctor, but no allocation is done.
  *****************************************/
-EbErrorType svt_recon_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf,
-                                                 EbPtr                object_init_data_ptr) {
+EbErrorType svt_recon_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf, EbPtr object_init_data_ptr) {
     EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)object_init_data_ptr;
-    const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+    const uint16_t               ss_x              = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
+    const uint16_t               ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
-    pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border)  /*left + right borders*/;
+    pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right borders*/;
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
+    pic_buf->border                       = pic_buf_init_data->border;
 
-    pic_buf->luma_size = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
     pic_buf->packed_flag = (pic_buf_init_data->bit_depth > EB_EIGHT_BIT) ? true : false;
@@ -359,8 +361,9 @@ EbErrorType svt_recon_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf,
  *****************************************/
 EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, EbPtr object_init_data_ptr) {
     EbPictureBufferDescInitData* pic_buf_init_data = (EbPictureBufferDescInitData*)object_init_data_ptr;
-    const uint16_t ss_x = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
-    const uint16_t ss_y = ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
+    const uint16_t               ss_x              = (pic_buf_init_data->color_format == EB_YUV444 ? 0 : 1);
+    const uint16_t               ss_y =
+        ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     uint32_t bytes_per_pixel = (pic_buf_init_data->bit_depth == EB_EIGHT_BIT) ? 1 : 2;
 
@@ -370,11 +373,11 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, EbP
     pic_buf->height       = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
-    pic_buf->y_stride = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
+    pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
-    pic_buf->border = pic_buf_init_data->border;
+    pic_buf->border                       = pic_buf_init_data->border;
 
-    pic_buf->luma_size = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
+    pic_buf->luma_size   = pic_buf->y_stride * (pic_buf_init_data->max_height + (2 * pic_buf_init_data->border));
     pic_buf->chroma_size = pic_buf->u_stride *
         ((pic_buf_init_data->max_height + ss_y + (2 * pic_buf_init_data->border)) >> ss_y);
     pic_buf->packed_flag = (pic_buf_init_data->bit_depth > EB_EIGHT_BIT) ? true : false;
@@ -382,8 +385,8 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, EbP
     pic_buf->buffer_enable_mask = pic_buf_init_data->buffer_enable_mask;
 
     // Get frame size to alloc
-    uint32_t alloc_sz = 0;
-    uint32_t buffer_size[3] = { 0 };
+    uint32_t alloc_sz       = 0;
+    uint32_t buffer_size[3] = {0};
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         alloc_sz += buffer_size[0] = pic_buf->luma_size * bytes_per_pixel;
     }
@@ -399,19 +402,22 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, EbP
     // Allocate the Picture Buffers (luma & chroma)
     EB_CALLOC_ALIGNED_ARRAY(pic_buf->buffer_alloc, alloc_sz);
     pic_buf->buffer_alloc_sz = alloc_sz;
-    uint32_t assigned_space = 0;
+    uint32_t assigned_space  = 0;
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
-        pic_buf->y_buffer = pic_buf->buffer_alloc + (pic_buf->border + (pic_buf->y_stride * pic_buf->border)) * bytes_per_pixel;
+        pic_buf->y_buffer = pic_buf->buffer_alloc +
+            (pic_buf->border + (pic_buf->y_stride * pic_buf->border)) * bytes_per_pixel;
         assigned_space += buffer_size[0];
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->u_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->u_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[1];
     }
 
     if (pic_buf_init_data->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
-        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space + ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
+        pic_buf->v_buffer = pic_buf->buffer_alloc + assigned_space +
+            ((pic_buf->border >> ss_x) + (pic_buf->v_stride * (pic_buf->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[2];
     }
     assert(assigned_space == alloc_sz);
@@ -456,7 +462,7 @@ void svt_aom_link_eb_to_aom_buffer_desc(EbPictureBufferDesc* picBuffDsc, Yv12Buf
 
     const int32_t ss_x = 1, ss_y = 1;
     //NOTe:  Not all fileds are connected. add more connections as needed.
-    if ((picBuffDsc->bit_depth == EB_EIGHT_BIT) && (picBuffDsc->is_16bit_pipeline != 1)) {
+    if (picBuffDsc->bit_depth == EB_EIGHT_BIT) {
         aomBuffDsc->y_buffer = picBuffDsc->y_buffer;
         aomBuffDsc->u_buffer = picBuffDsc->u_buffer;
         aomBuffDsc->v_buffer = picBuffDsc->v_buffer;

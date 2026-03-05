@@ -748,8 +748,8 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
     dstBuffer->chroma_size  = srcBuffer->chroma_size;
     dstBuffer->packed_flag  = srcBuffer->packed_flag;
 
-    uint16_t luma_width         = ALIGN_POWER_OF_TWO(srcBuffer->width, 3) << is_16bit;
-    uint16_t luma_height        = ALIGN_POWER_OF_TWO(srcBuffer->height, 3);
+    uint16_t luma_width  = ALIGN_POWER_OF_TWO(srcBuffer->width, 3) << is_16bit;
+    uint16_t luma_height = ALIGN_POWER_OF_TWO(srcBuffer->height, 3);
 
     uint16_t chroma_width = (luma_width >> 1);
     if (plane == 0) {
@@ -1248,10 +1248,10 @@ EbErrorType svt_av1_pick_filter_level(EbPictureBufferDesc* srcBuffer, // source 
         temp_lf_recon_desc_init_data.max_height         = (uint16_t)scs->max_input_luma_height;
         temp_lf_recon_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
-        temp_lf_recon_desc_init_data.border  = padding;
-        temp_lf_recon_desc_init_data.split_mode    = false;
-        temp_lf_recon_desc_init_data.color_format  = scs->static_config.encoder_color_format;
-        bool is_16bit                              = scs->static_config.encoder_bit_depth > 8 ? true : false;
+        temp_lf_recon_desc_init_data.border       = padding;
+        temp_lf_recon_desc_init_data.split_mode   = false;
+        temp_lf_recon_desc_init_data.color_format = scs->static_config.encoder_color_format;
+        bool is_16bit                             = scs->static_config.encoder_bit_depth > 8 ? true : false;
         if (scs->is_16bit_pipeline || is_16bit) {
             temp_lf_recon_desc_init_data.bit_depth = EB_SIXTEEN_BIT;
             EB_NEW(

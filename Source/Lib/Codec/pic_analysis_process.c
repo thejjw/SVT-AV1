@@ -85,11 +85,11 @@ void svt_aom_down_sample_chroma(EbPictureBufferDesc* input_pic, EbPictureBufferD
     {
         stride_in          = input_pic->u_stride;
         input_origin_index = 0;
-        ptr_in = &(input_pic->u_buffer[input_origin_index]);
+        ptr_in             = &(input_pic->u_buffer[input_origin_index]);
 
         stride_out          = outputPicturePtr->u_stride;
         output_origin_index = 0;
-        ptr_out = &(outputPicturePtr->u_buffer[output_origin_index]);
+        ptr_out             = &(outputPicturePtr->u_buffer[output_origin_index]);
 
         for (jj = 0; jj < (uint32_t)(outputPicturePtr->height >> output_subsampling_y); jj++) {
             for (ii = 0; ii < (uint32_t)(outputPicturePtr->width >> output_subsampling_x); ii++) {
@@ -103,11 +103,11 @@ void svt_aom_down_sample_chroma(EbPictureBufferDesc* input_pic, EbPictureBufferD
     {
         stride_in          = input_pic->v_stride;
         input_origin_index = 0;
-        ptr_in = &(input_pic->v_buffer[input_origin_index]);
+        ptr_in             = &(input_pic->v_buffer[input_origin_index]);
 
         stride_out          = outputPicturePtr->v_stride;
         output_origin_index = 0;
-        ptr_out = &(outputPicturePtr->v_buffer[output_origin_index]);
+        ptr_out             = &(outputPicturePtr->v_buffer[output_origin_index]);
 
         for (jj = 0; jj < (uint32_t)(outputPicturePtr->height >> output_subsampling_y); jj++) {
             for (ii = 0; ii < (uint32_t)(outputPicturePtr->width >> output_subsampling_x); ii++) {
@@ -447,8 +447,8 @@ static int32_t apply_denoise_2d(SequenceControlSet* scs, PictureParentControlSet
     fg_init_data.width                = pcs->enhanced_pic->width;
     fg_init_data.height               = pcs->enhanced_pic->height;
     fg_init_data.y_stride             = pcs->enhanced_pic->y_stride;
-    fg_init_data.u_stride            = pcs->enhanced_pic->u_stride;
-    fg_init_data.v_stride            = pcs->enhanced_pic->v_stride;
+    fg_init_data.u_stride             = pcs->enhanced_pic->u_stride;
+    fg_init_data.v_stride             = pcs->enhanced_pic->v_stride;
     fg_init_data.denoise_apply        = scs->static_config.film_grain_denoise_apply;
     fg_init_data.adaptive_film_grain  = scs->static_config.adaptive_film_grain;
     EB_NEW(denoise_and_model, svt_aom_denoise_and_model_ctor, (EbPtr)&fg_init_data);
@@ -558,8 +558,7 @@ static void sub_sample_luma_generate_pixel_intensity_histogram_bins(SequenceCont
             // Y Histogram
             calculate_histogram(
                 &input_pic->y_buffer[(region_in_picture_width_index * region_width) +
-                                     ((region_in_picture_height_index * region_height) *
-                                      input_pic->y_stride)],
+                                     ((region_in_picture_height_index * region_height) * input_pic->y_stride)],
                 region_width + region_width_offset,
                 region_height + region_height_offset,
                 input_pic->y_stride,
@@ -605,7 +604,7 @@ static void compute_picture_spatial_statistics(SequenceControlSet* scs, PictureP
 
         uint16_t b64_origin_x            = b64_geom->org_x; // to avoid using child PCS
         uint16_t b64_origin_y            = b64_geom->org_y;
-        uint32_t input_luma_origin_index = (b64_origin_y) * input_padded_pic->y_stride + b64_origin_x;
+        uint32_t input_luma_origin_index = (b64_origin_y)*input_padded_pic->y_stride + b64_origin_x;
 
         compute_b64_variance(scs, pcs, input_padded_pic, b64_idx, input_luma_origin_index);
         pic_tot_variance += (pcs->variance[b64_idx][RASTER_SCAN_CU_INDEX_64x64]);
@@ -777,9 +776,9 @@ void svt_aom_pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlS
     }
 
     if (is16_bit_input) {
-        uint32_t comp_stride_y           = input_pic->y_stride / 4;
+        uint32_t comp_stride_y = input_pic->y_stride / 4;
 
-        uint32_t comp_stride_uv            = input_pic->u_stride / 4;
+        uint32_t comp_stride_uv = input_pic->u_stride / 4;
 
         if (input_pic->y_buffer_bit_inc) {
             pad_2b_compressed_input_picture(input_pic->y_buffer_bit_inc,
@@ -1108,7 +1107,7 @@ static Sc_AA_Counts svt_aom_sc_AA_collect_counts(EbPictureBufferDesc* input_pic,
             const int h2        = input_pic->height >> 1;
             const int region_id = ((r >= h2) ? 2 : 0) + ((c >= w2) ? 1 : 0);
 
-            uint8_t* src = input_pic->y_buffer + (r) * input_pic->y_stride + c;
+            uint8_t* src = input_pic->y_buffer + (r)*input_pic->y_stride + c;
 
             int  number_of_colors;
             bool is_palette = false;
@@ -1421,7 +1420,7 @@ void svt_aom_is_screen_content_antialiasing_aware(PictureParentControlSet* pcs) 
         const int initial_col = (fast_detection && (r / blk_h) % 2) ? blk_w : 0;
 
         for (int c = initial_col; c + blk_w <= input_pic->width; c += blk_w * multiplier) {
-            uint8_t* src = input_pic->y_buffer + (r) * input_pic->y_stride + c;
+            uint8_t* src = input_pic->y_buffer + (r)*input_pic->y_stride + c;
             int      number_of_colors;
 
             // First, find if the block could be palletized
@@ -1563,8 +1562,7 @@ void svt_aom_is_screen_content(PictureParentControlSet* pcs) {
     for (int r = 0; r + blk_h <= input_pic->height; r += blk_h) {
         for (int c = 0; c + blk_w <= input_pic->width; c += blk_w) {
             {
-                uint8_t* src = input_pic->y_buffer + (r) * input_pic->y_stride +
-                    c;
+                uint8_t* src = input_pic->y_buffer + (r)*input_pic->y_stride + c;
 
                 if (is_valid_palette_nb_colors(src, input_pic->y_stride, blk_w, blk_h, color_thresh)) {
                     ++counts_1;
@@ -1605,8 +1603,7 @@ void svt_aom_is_screen_content(PictureParentControlSet* pcs) {
     for (int r = 0; r + blk_h <= input_pic->height; r += blk_h) {
         for (int c = 0; c + blk_w <= input_pic->width; c += blk_w) {
             {
-                uint8_t* src = input_pic->y_buffer + (r) * input_pic->y_stride +
-                    c;
+                uint8_t* src = input_pic->y_buffer + (r)*input_pic->y_stride + c;
 
                 if (is_valid_palette_nb_colors(src, input_pic->y_stride, blk_w, blk_h, color_thresh)) {
                     ++counts_1;
@@ -1633,14 +1630,13 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet* pcs, Eb
     // Downsample input picture for HME L0 and L1
     if (pcs->enable_hme_flag || pcs->tf_enable_hme_flag) {
         if (pcs->enable_hme_level1_flag || pcs->tf_enable_hme_level1_flag) {
-            downsample_2d(
-                input_padded_pic->y_buffer,
-                input_padded_pic->y_stride,
-                input_padded_pic->width,
-                input_padded_pic->height,
-                quarter_picture_ptr->y_buffer,
-                quarter_picture_ptr->y_stride,
-                2);
+            downsample_2d(input_padded_pic->y_buffer,
+                          input_padded_pic->y_stride,
+                          input_padded_pic->width,
+                          input_padded_pic->height,
+                          quarter_picture_ptr->y_buffer,
+                          quarter_picture_ptr->y_stride,
+                          2);
             svt_aom_generate_padding(quarter_picture_ptr->y_buffer,
                                      quarter_picture_ptr->y_stride,
                                      quarter_picture_ptr->width,
@@ -1652,23 +1648,21 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet* pcs, Eb
         if (pcs->enable_hme_level0_flag || pcs->tf_enable_hme_level0_flag) {
             // Sixteenth Input Picture Downsampling
             if (pcs->enable_hme_level1_flag || pcs->tf_enable_hme_level1_flag) {
-                downsample_2d(
-                    quarter_picture_ptr->y_buffer,
-                    quarter_picture_ptr->y_stride,
-                    quarter_picture_ptr->width,
-                    quarter_picture_ptr->height,
-                    sixteenth_picture_ptr->y_buffer,
-                    sixteenth_picture_ptr->y_stride,
-                    2);
+                downsample_2d(quarter_picture_ptr->y_buffer,
+                              quarter_picture_ptr->y_stride,
+                              quarter_picture_ptr->width,
+                              quarter_picture_ptr->height,
+                              sixteenth_picture_ptr->y_buffer,
+                              sixteenth_picture_ptr->y_stride,
+                              2);
             } else {
-                downsample_2d(
-                    input_padded_pic->y_buffer,
-                    input_padded_pic->y_stride,
-                    input_padded_pic->width,
-                    input_padded_pic->height,
-                    sixteenth_picture_ptr->y_buffer,
-                    sixteenth_picture_ptr->y_stride,
-                    4);
+                downsample_2d(input_padded_pic->y_buffer,
+                              input_padded_pic->y_stride,
+                              input_padded_pic->width,
+                              input_padded_pic->height,
+                              sixteenth_picture_ptr->y_buffer,
+                              sixteenth_picture_ptr->y_stride,
+                              4);
             }
 
             svt_aom_generate_padding(sixteenth_picture_ptr->y_buffer,
@@ -1779,7 +1773,6 @@ void* svt_aom_picture_analysis_kernel(void* input_ptr) {
     EbThreadContext*         thread_ctx = (EbThreadContext*)input_ptr;
     PictureAnalysisContext*  pa_ctx     = (PictureAnalysisContext*)thread_ctx->priv;
     PictureParentControlSet* pcs;
-    SequenceControlSet*      scs;
 
     EbObjectWrapper*             in_results_wrapper_ptr;
     ResourceCoordinationResults* in_results_ptr;
@@ -1795,16 +1788,15 @@ void* svt_aom_picture_analysis_kernel(void* input_ptr) {
 
         in_results_ptr = (ResourceCoordinationResults*)in_results_wrapper_ptr->object_ptr;
         pcs            = (PictureParentControlSet*)in_results_ptr->pcs_wrapper->object_ptr;
-        scs            = pcs->scs;
 
         // Mariana : save enhanced picture ptr, move this from here
-        pcs->enhanced_unscaled_pic                    = pcs->enhanced_pic;
-        pcs->enhanced_unscaled_pic->is_16bit_pipeline = scs->is_16bit_pipeline;
+        pcs->enhanced_unscaled_pic = pcs->enhanced_pic;
 
         // There is no need to do processing for overlay picture. Overlay and AltRef share the same
         // results.
         if (!pcs->is_overlay) {
-            input_pic = pcs->enhanced_pic;
+            SequenceControlSet* scs = pcs->scs;
+            input_pic               = pcs->enhanced_pic;
             {
                 // Padding for input pictures
                 svt_aom_pad_input_pictures(scs, input_pic);

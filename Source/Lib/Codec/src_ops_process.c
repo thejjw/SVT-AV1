@@ -464,7 +464,7 @@ static void tpl_subpel_search(SequenceControlSet* scs, PictureParentControlSet* 
 
     // Ref and src buffers
     MSBuffers* ms_buffers       = &ms_params->var_params.ms_buffers;
-    int32_t    ref_origin_index = mb_origin_x + (mb_origin_y) * ref_pic->y_stride;
+    int32_t    ref_origin_index = mb_origin_x + (mb_origin_y)*ref_pic->y_stride;
 
     // Ref buffer
     struct svt_buf_2d ref_struct;
@@ -475,8 +475,7 @@ static void tpl_subpel_search(SequenceControlSet* scs, PictureParentControlSet* 
     ms_buffers->ref   = &ref_struct;
 
     // Src buffer
-    uint32_t input_origin_index = (mb_origin_x) +
-        (mb_origin_y) * input_pic->y_stride;
+    uint32_t          input_origin_index = (mb_origin_x) + (mb_origin_y)*input_pic->y_stride;
     struct svt_buf_2d src_struct;
     src_struct.buf    = input_pic->y_buffer + input_origin_index;
     src_struct.width  = input_pic->width;
@@ -588,7 +587,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
         const int dst_buffer_stride = recon_pic->y_stride;
         const int dst_mb_offset     = mb_origin_y * dst_buffer_stride + mb_origin_x;
         uint8_t*  dst_buffer        = recon_pic->y_buffer + dst_mb_offset;
-        uint8_t*  src_mb            = input_pic->y_buffer + mb_origin_x + (mb_origin_y) * src_stride;
+        uint8_t*  src_mb            = input_pic->y_buffer + mb_origin_x + (mb_origin_y)*src_stride;
 
         int64_t  recon_error = 1, sse = 1;
         uint64_t best_ref_poc = 0;
@@ -790,8 +789,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     y_curr_mv = (-TPL_PAD - mb_origin_y) << 3;
                 }
 
-                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) >
-                    (TPL_PAD + (int)ref_pic_ptr->height - 1)) {
+                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) > (TPL_PAD + (int)ref_pic_ptr->height - 1)) {
                     y_curr_mv = ((TPL_PAD + ref_pic_ptr->height - 1) - (mb_origin_y + bsize)) << 3;
                 }
 
@@ -801,8 +799,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     tpl_subpel_search(scs, pcs, ref_pic_ptr, input_pic, &xd, mb_origin_x, mb_origin_y, bsize, &best_mv);
                 }
                 int32_t ref_origin_index = ((int32_t)mb_origin_x + (best_mv.x / 8)) +
-                    ((int32_t)mb_origin_y + (best_mv.y / 8)) *
-                    (int32_t)ref_pic_ptr->y_stride;
+                    ((int32_t)mb_origin_y + (best_mv.y / 8)) * (int32_t)ref_pic_ptr->y_stride;
 
                 // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
                 uint8_t subpel_mv = (best_mv.x & 0x7 || best_mv.y & 0x7);
@@ -812,36 +809,35 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     ConvolveParams conv_params_y = get_conv_params_no_round(
                         0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
 
-                    svt_aom_enc_make_inter_predictor(
-                        scs,
-                        ref_pic_ptr->y_buffer,
-                        NULL, // src_ptr_2b,
-                        compensated_blk,
-                        (int16_t)mb_origin_y,
-                        (int16_t)mb_origin_x,
-                        best_mv,
-                        &scs->sf_identity,
-                        &conv_params_y,
-                        0, // interp_filters
-                        0, // interinter_comp
-                        seg_mask,
-                        ref_pic_ptr->width,
-                        ref_pic_ptr->height,
-                        bsize, // bwidth
-                        bsize, // bheight
-                        block_size,
-                        &xd,
-                        ref_pic_ptr->y_stride,
-                        size,
-                        0,
-                        0, // ss_y,
-                        0, // ss_x,
-                        8, // Always use 8bit for now
-                        0, // use_intrabc,
-                        0,
-                        false, // is16bit
-                        false, // is_wm
-                        NULL); // wm_params
+                    svt_aom_enc_make_inter_predictor(scs,
+                                                     ref_pic_ptr->y_buffer,
+                                                     NULL, // src_ptr_2b,
+                                                     compensated_blk,
+                                                     (int16_t)mb_origin_y,
+                                                     (int16_t)mb_origin_x,
+                                                     best_mv,
+                                                     &scs->sf_identity,
+                                                     &conv_params_y,
+                                                     0, // interp_filters
+                                                     0, // interinter_comp
+                                                     seg_mask,
+                                                     ref_pic_ptr->width,
+                                                     ref_pic_ptr->height,
+                                                     bsize, // bwidth
+                                                     bsize, // bheight
+                                                     block_size,
+                                                     &xd,
+                                                     ref_pic_ptr->y_stride,
+                                                     size,
+                                                     0,
+                                                     0, // ss_y,
+                                                     0, // ss_x,
+                                                     8, // Always use 8bit for now
+                                                     0, // use_intrabc,
+                                                     0,
+                                                     false, // is16bit
+                                                     false, // is_wm
+                                                     NULL); // wm_params
                 }
 
                 if (pcs->tpl_ctrls.use_sad_in_src_search) {
@@ -891,10 +887,8 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     uint32_t list_index    = best_rf_idx < 4 ? 0 : 1;
                     uint32_t ref_pic_index = best_rf_idx >= 4 ? (best_rf_idx - 4) : best_rf_idx;
                     ref_pic_ptr            = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
-                    int32_t ref_origin_index =
-                        ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
-                        ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) *
-                        (int32_t)ref_pic_ptr->y_stride;
+                    int32_t ref_origin_index = ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
+                        ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) * (int32_t)ref_pic_ptr->y_stride;
                     // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
                     uint8_t subpel_mv = (final_best_mv.x & 0x7 || final_best_mv.y & 0x7);
                     if (subpel_mv) {
@@ -903,36 +897,35 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                         ConvolveParams conv_params_y = get_conv_params_no_round(
                             0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
 
-                        svt_aom_enc_make_inter_predictor(
-                            scs,
-                            ref_pic_ptr->y_buffer,
-                            NULL, // src_ptr_2b,
-                            compensated_blk,
-                            (int16_t)mb_origin_y,
-                            (int16_t)mb_origin_x,
-                            final_best_mv, //best_mv,
-                            &scs->sf_identity,
-                            &conv_params_y,
-                            0, // interp_filters
-                            0, // interinter_comp
-                            seg_mask,
-                            ref_pic_ptr->width,
-                            ref_pic_ptr->height,
-                            bsize, // bwidth
-                            bsize, // bheight
-                            block_size,
-                            &xd,
-                            ref_pic_ptr->y_stride,
-                            size,
-                            0,
-                            0, // ss_y,
-                            0, // ss_x,
-                            8, // Always use 8bit for now
-                            0, // use_intrabc,
-                            0,
-                            false, // is16bit
-                            false, // is_wm
-                            NULL); // wm_params
+                        svt_aom_enc_make_inter_predictor(scs,
+                                                         ref_pic_ptr->y_buffer,
+                                                         NULL, // src_ptr_2b,
+                                                         compensated_blk,
+                                                         (int16_t)mb_origin_y,
+                                                         (int16_t)mb_origin_x,
+                                                         final_best_mv, //best_mv,
+                                                         &scs->sf_identity,
+                                                         &conv_params_y,
+                                                         0, // interp_filters
+                                                         0, // interinter_comp
+                                                         seg_mask,
+                                                         ref_pic_ptr->width,
+                                                         ref_pic_ptr->height,
+                                                         bsize, // bwidth
+                                                         bsize, // bheight
+                                                         block_size,
+                                                         &xd,
+                                                         ref_pic_ptr->y_stride,
+                                                         size,
+                                                         0,
+                                                         0, // ss_y,
+                                                         0, // ss_x,
+                                                         8, // Always use 8bit for now
+                                                         0, // use_intrabc,
+                                                         0,
+                                                         false, // is16bit
+                                                         false, // is_wm
+                                                         NULL); // wm_params
                     }
 
                     svt_aom_subtract_block(size >> tpl_ctrls->subsample_tx,
@@ -996,8 +989,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
             }
 
             int32_t ref_origin_index = ((int32_t)mb_origin_x + (final_best_mv.x >> 3)) +
-                ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) *
-                (int32_t)ref_pic_ptr->y_stride;
+                ((int32_t)mb_origin_y + (final_best_mv.y >> 3)) * (int32_t)ref_pic_ptr->y_stride;
             // REDO COMPENSATION WITH REF PIC (INSTEAD OF REF BEING THE SRC PIC)
             // Need to do compensation for subpel, otherwise, can get pixels directly from RECON picture
             uint8_t subpel_mv = (final_best_mv.x & 0x7 || final_best_mv.y & 0x7);
@@ -1007,36 +999,35 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                 ConvolveParams conv_params_y = get_conv_params_no_round(
                     0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
 
-                svt_aom_enc_make_inter_predictor(
-                    scs,
-                    ref_pic_ptr->y_buffer,
-                    NULL, // src_ptr_2b,
-                    dst_buffer,
-                    (int16_t)mb_origin_y,
-                    (int16_t)mb_origin_x,
-                    final_best_mv,
-                    &scs->sf_identity,
-                    &conv_params_y,
-                    0, // interp_filters
-                    0, // interinter_comp
-                    seg_mask,
-                    ref_pic_ptr->width,
-                    ref_pic_ptr->height,
-                    bsize, // bwidth
-                    bsize, // bheight
-                    block_size,
-                    &xd,
-                    ref_pic_ptr->y_stride,
-                    dst_buffer_stride,
-                    0,
-                    0, // ss_y,
-                    0, // ss_x,
-                    8, // Always 8bit,
-                    0, // use_intrabc,
-                    0,
-                    false, // is16bit
-                    false, // is_wm
-                    NULL); // wm_params
+                svt_aom_enc_make_inter_predictor(scs,
+                                                 ref_pic_ptr->y_buffer,
+                                                 NULL, // src_ptr_2b,
+                                                 dst_buffer,
+                                                 (int16_t)mb_origin_y,
+                                                 (int16_t)mb_origin_x,
+                                                 final_best_mv,
+                                                 &scs->sf_identity,
+                                                 &conv_params_y,
+                                                 0, // interp_filters
+                                                 0, // interinter_comp
+                                                 seg_mask,
+                                                 ref_pic_ptr->width,
+                                                 ref_pic_ptr->height,
+                                                 bsize, // bwidth
+                                                 bsize, // bheight
+                                                 block_size,
+                                                 &xd,
+                                                 ref_pic_ptr->y_stride,
+                                                 dst_buffer_stride,
+                                                 0,
+                                                 0, // ss_y,
+                                                 0, // ss_x,
+                                                 8, // Always 8bit,
+                                                 0, // use_intrabc,
+                                                 0,
+                                                 false, // is16bit
+                                                 false, // is_wm
+                                                 NULL); // wm_params
             } else {
                 for (int i = 0; i < (int)size; ++i) {
                     svt_memcpy(dst_buffer + i * dst_buffer_stride,

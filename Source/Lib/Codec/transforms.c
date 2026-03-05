@@ -3938,8 +3938,7 @@ void svt_av1_fwht4x4_c(int16_t* input, int32_t* output, uint32_t stride) {
 EbErrorType svt_aom_estimate_transform(PictureControlSet* pcs, ModeDecisionContext* ctx, int16_t* residual_buffer,
                                        uint32_t residual_stride, int32_t* coeff_buffer, uint32_t coeff_stride,
                                        TxSize transform_size, uint64_t* three_quad_energy, uint32_t bit_depth,
-                                       TxType transform_type, PlaneType component_type,
-                                       TxCoeffShape trans_coeff_shape)
+                                       TxType transform_type, PlaneType component_type, TxCoeffShape trans_coeff_shape)
 
 {
     (void)trans_coeff_shape;

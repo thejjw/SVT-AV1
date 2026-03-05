@@ -802,24 +802,28 @@ static void pack_highbd_pic_2d(const EbPictureBufferDesc* pic_ptr, uint16_t* buf
                        height);
 
     if (buffer_16bit[1]) {
-        svt_aom_pack2d_src(pic_ptr->u_buffer - ((pic_ptr->border >> ss_x)+ (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
-                           pic_ptr->u_stride,
-                           pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride_bit_inc * (pic_ptr->border >> ss_y))),
-                           pic_ptr->u_stride_bit_inc,
-                           buffer_16bit[1],
-                           pic_ptr->u_stride,
-                           (width + ss_x) >> ss_x,
-                           (height + ss_y) >> ss_y);
+        svt_aom_pack2d_src(
+            pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer_bit_inc -
+                ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride_bit_inc * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride_bit_inc,
+            buffer_16bit[1],
+            pic_ptr->u_stride,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
     if (buffer_16bit[2]) {
-        svt_aom_pack2d_src(pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
-                           pic_ptr->v_stride,
-                           pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride_bit_inc * (pic_ptr->border >> ss_y))),
-                           pic_ptr->v_stride_bit_inc,
-                           buffer_16bit[2],
-                           pic_ptr->v_stride,
-                           (width + ss_x) >> ss_x,
-                           (height + ss_y) >> ss_y);
+        svt_aom_pack2d_src(
+            pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer_bit_inc -
+                ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride_bit_inc * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride_bit_inc,
+            buffer_16bit[2],
+            pic_ptr->v_stride,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 }
 
@@ -838,25 +842,29 @@ static void svt_aom_unpack_highbd_pic_2d(uint16_t* buffer_highbd[3], EbPictureBu
                       height);
 
     if (buffer_highbd[1]) {
-        svt_aom_un_pack2d(buffer_highbd[1],
-                          pic_ptr->u_stride,
-                          pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
-                          pic_ptr->u_stride,
-                          pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride_bit_inc * (pic_ptr->border >> ss_y))),
-                          pic_ptr->u_stride_bit_inc,
-                          (width + ss_x) >> ss_x,
-                          (height + ss_y) >> ss_y);
+        svt_aom_un_pack2d(
+            buffer_highbd[1],
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer_bit_inc -
+                ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride_bit_inc * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride_bit_inc,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 
     if (buffer_highbd[2]) {
-        svt_aom_un_pack2d(buffer_highbd[2],
-                          pic_ptr->v_stride,
-                          pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
-                          pic_ptr->v_stride,
-                          pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride_bit_inc * (pic_ptr->border >> ss_y))),
-                          pic_ptr->v_stride_bit_inc,
-                          (width + ss_x) >> ss_x,
-                          (height + ss_y) >> ss_y);
+        svt_aom_un_pack2d(
+            buffer_highbd[2],
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer_bit_inc -
+                ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride_bit_inc * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride_bit_inc,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 }
 #endif // CONFIG_ENABLE_HIGH_BIT_DEPTH
@@ -891,11 +899,15 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
             pack_highbd_pic_2d(src, src_buffer_highbd, ss_x, ss_y);
         }
         src_buffer_highbd_start[0] = src_buffer_highbd[0] + src->border * src->y_stride + src->border;
-        src_buffer_highbd_start[1] = src_buffer_highbd[1] + (src->border >> ss_y) * src->u_stride + (src->border >> ss_x);
-        src_buffer_highbd_start[2] = src_buffer_highbd[2] + (src->border >> ss_y) * src->v_stride + (src->border >> ss_x);
+        src_buffer_highbd_start[1] = src_buffer_highbd[1] + (src->border >> ss_y) * src->u_stride +
+            (src->border >> ss_x);
+        src_buffer_highbd_start[2] = src_buffer_highbd[2] + (src->border >> ss_y) * src->v_stride +
+            (src->border >> ss_x);
         dst_buffer_highbd_start[0] = dst_buffer_highbd[0] + dst->border * dst->y_stride + dst->border;
-        dst_buffer_highbd_start[1] = dst_buffer_highbd[1] + (dst->border >> ss_y) * dst->u_stride + (dst->border >> ss_x);
-        dst_buffer_highbd_start[2] = dst_buffer_highbd[2] + (dst->border >> ss_y) * dst->v_stride + (dst->border >> ss_x);
+        dst_buffer_highbd_start[1] = dst_buffer_highbd[1] + (dst->border >> ss_y) * dst->u_stride +
+            (dst->border >> ss_x);
+        dst_buffer_highbd_start[2] = dst_buffer_highbd[2] + (dst->border >> ss_y) * dst->v_stride +
+            (dst->border >> ss_x);
     } else {
         src_buffer_highbd_start[0] = (uint16_t*)src->y_buffer;
         src_buffer_highbd_start[1] = (uint16_t*)src->u_buffer;
@@ -949,46 +961,45 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
                 : svt_av1_highbd_resize_plane;
             switch (plane) {
             case 0:
-                if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) && src_buffer_highbd_start[0] && dst_buffer_highbd_start[0]) {
+                if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) && src_buffer_highbd_start[0] &&
+                    dst_buffer_highbd_start[0]) {
                     resize_plane_func(src_buffer_highbd_start[0],
-                        src->height,
-                        src->width,
-                        src->y_stride,
-                        dst_buffer_highbd_start[0],
-                        dst->height,
-                        dst->width,
-                        dst->y_stride,
-                        bd);
+                                      src->height,
+                                      src->width,
+                                      src->y_stride,
+                                      dst_buffer_highbd_start[0],
+                                      dst->height,
+                                      dst->width,
+                                      dst->y_stride,
+                                      bd);
                 }
                 break;
             case 1:
                 if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) && src_buffer_highbd_start[1] &&
                     dst_buffer_highbd_start[1]) {
-                    resize_plane_func(
-                        src_buffer_highbd_start[1],
-                        (src->height + ss_y) >> ss_y,
-                        (src->width + ss_x) >> ss_x,
-                        src->u_stride,
-                        dst_buffer_highbd_start[1],
-                        (dst->height + ss_y) >> ss_y,
-                        (dst->width + ss_x) >> ss_x,
-                        dst->u_stride,
-                        bd);
+                    resize_plane_func(src_buffer_highbd_start[1],
+                                      (src->height + ss_y) >> ss_y,
+                                      (src->width + ss_x) >> ss_x,
+                                      src->u_stride,
+                                      dst_buffer_highbd_start[1],
+                                      (dst->height + ss_y) >> ss_y,
+                                      (dst->width + ss_x) >> ss_x,
+                                      dst->u_stride,
+                                      bd);
                 }
                 break;
             case 2:
                 if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) && src_buffer_highbd_start[2] &&
                     dst_buffer_highbd_start[2]) {
-                    resize_plane_func(
-                        src_buffer_highbd_start[2],
-                        (src->height + ss_y) >> ss_y,
-                        (src->width + ss_x) >> ss_x,
-                        src->v_stride,
-                        dst_buffer_highbd_start[2],
-                        (dst->height + ss_y) >> ss_y,
-                        (dst->width + ss_x) >> ss_x,
-                        dst->v_stride,
-                        bd);
+                    resize_plane_func(src_buffer_highbd_start[2],
+                                      (src->height + ss_y) >> ss_y,
+                                      (src->width + ss_x) >> ss_x,
+                                      src->v_stride,
+                                      dst_buffer_highbd_start[2],
+                                      (dst->height + ss_y) >> ss_y,
+                                      (dst->width + ss_x) >> ss_x,
+                                      dst->v_stride,
+                                      bd);
                 }
                 break;
             default:
@@ -1051,19 +1062,19 @@ EbErrorType svt_aom_resize_frame(const EbPictureBufferDesc* src, EbPictureBuffer
         }
         if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) && dst_buffer_highbd_start[1]) {
             svt_aom_generate_padding16_bit(dst_buffer_highbd_start[1],
-                dst->u_stride,
-                (dst->width + ss_x) >> ss_x,
-                (dst->height + ss_y) >> ss_y,
-                (dst->border + ss_x) >> ss_x,
-                (dst->border + ss_y) >> ss_y);
+                                           dst->u_stride,
+                                           (dst->width + ss_x) >> ss_x,
+                                           (dst->height + ss_y) >> ss_y,
+                                           (dst->border + ss_x) >> ss_x,
+                                           (dst->border + ss_y) >> ss_y);
         }
         if ((buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) && dst_buffer_highbd_start[2]) {
             svt_aom_generate_padding16_bit(dst_buffer_highbd_start[2],
-                dst->u_stride,
-                (dst->width + ss_x) >> ss_x,
-                (dst->height + ss_y) >> ss_y,
-                (dst->border + ss_x) >> ss_x,
-                (dst->border + ss_y) >> ss_y);
+                                           dst->u_stride,
+                                           (dst->width + ss_x) >> ss_x,
+                                           (dst->height + ss_y) >> ss_y,
+                                           (dst->border + ss_x) >> ss_x,
+                                           (dst->border + ss_y) >> ss_y);
         }
     } else
 #endif
@@ -1399,8 +1410,7 @@ EbErrorType svt_aom_downscaled_source_buffer_desc_ctor(EbPictureBufferDesc** pic
                            picture_ptr_for_reference->packed_flag == false)
                 ? true
                 : false;
-    initData.border = picture_ptr_for_reference->border;
-    initData.is_16bit_pipeline  = picture_ptr_for_reference->is_16bit_pipeline;
+    initData.border             = picture_ptr_for_reference->border;
 
     EB_NEW(*picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
 
@@ -1503,7 +1513,7 @@ static EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc**    d
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
     ref_pic_buf_desc_init_data.border = picture_ptr_for_reference->border;
-    ref_pic_buf_desc_init_data.mfmv          = pcs->scs->mfmv_enabled;
+    ref_pic_buf_desc_init_data.mfmv   = pcs->scs->mfmv_enabled;
 
     //TODO:12bit
     if (ref_pic_buf_desc_init_data.bit_depth == EB_TEN_BIT) {
@@ -1540,7 +1550,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.border = picture_ptr_for_reference->border;
+    initData.border             = picture_ptr_for_reference->border;
 
     EB_NEW(*input_padded_pic, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
 
@@ -1551,7 +1561,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.border = picture_ptr_for_reference->border >> 1;
+    initData.border             = picture_ptr_for_reference->border >> 1;
 
     EB_NEW(*quarter_downsampled_picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
 
@@ -1562,7 +1572,7 @@ static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc
     initData.color_format       = picture_ptr_for_reference->color_format;
     initData.split_mode         = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
     initData.is_16bit_pipeline  = (picture_ptr_for_reference->bit_depth > EB_EIGHT_BIT) ? true : false;
-    initData.border = picture_ptr_for_reference->border >> 2;
+    initData.border             = picture_ptr_for_reference->border >> 2;
 
     EB_NEW(*sixteenth_downsampled_picture_ptr, svt_picture_buffer_desc_ctor, (EbPtr)&initData);
     return EB_ErrorNone;
@@ -1683,7 +1693,8 @@ static void scale_input_references(PictureParentControlSet* pcs, superres_params
         padded_pic_ptr = src_object->downscaled_input_padded_picture_ptr[sr_denom_idx][resize_denom_idx];
         EbPictureBufferDesc* input_pic = pcs->enhanced_pic;
 
-        EbByte padded_pic_org = padded_pic_ptr->y_buffer - padded_pic_ptr->border - padded_pic_ptr->border * padded_pic_ptr->y_stride;
+        EbByte padded_pic_org = padded_pic_ptr->y_buffer - padded_pic_ptr->border -
+            padded_pic_ptr->border * padded_pic_ptr->y_stride;
         EbByte input_pic_org = input_pic->y_buffer - input_pic->border - input_pic->border * input_pic->y_stride;
         for (uint32_t row = 0; row < (uint32_t)(input_pic->height + 2 * input_pic->border); row++) {
             svt_memcpy(padded_pic_org + row * padded_pic_ptr->y_stride,

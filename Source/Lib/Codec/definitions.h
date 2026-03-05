@@ -1324,7 +1324,7 @@ enum {
 #define REF_FRAMES_LOG2 3
 #define REFS_PER_FRAME 7
 
-#define LAST_BWD_FRAME     8
+#define LAST_BWD_FRAME 8
 
 #define FWD_RF_OFFSET(ref) (ref - LAST_FRAME)
 #define BWD_RF_OFFSET(ref) (ref - BWDREF_FRAME)

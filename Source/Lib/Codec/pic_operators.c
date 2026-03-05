@@ -555,17 +555,17 @@ void svt_aom_convert_pic_8bit_to_16bit(EbPictureBufferDesc* src_8bit, EbPictureB
 }
 
 void svt_aom_copy_buffer_info(EbPictureBufferDesc* src_ptr, EbPictureBufferDesc* dst_ptr) {
-    dst_ptr->width             = src_ptr->width;
-    dst_ptr->height            = src_ptr->height;
-    dst_ptr->y_stride          = src_ptr->y_stride;
+    dst_ptr->width            = src_ptr->width;
+    dst_ptr->height           = src_ptr->height;
+    dst_ptr->y_stride         = src_ptr->y_stride;
     dst_ptr->u_stride         = src_ptr->u_stride;
     dst_ptr->v_stride         = src_ptr->v_stride;
-    dst_ptr->border            = src_ptr->border;
-    dst_ptr->y_stride_bit_inc  = src_ptr->y_stride_bit_inc;
+    dst_ptr->border           = src_ptr->border;
+    dst_ptr->y_stride_bit_inc = src_ptr->y_stride_bit_inc;
     dst_ptr->u_stride_bit_inc = src_ptr->u_stride_bit_inc;
     dst_ptr->v_stride_bit_inc = src_ptr->v_stride_bit_inc;
-    dst_ptr->luma_size         = src_ptr->luma_size;
-    dst_ptr->chroma_size       = src_ptr->chroma_size;
+    dst_ptr->luma_size        = src_ptr->luma_size;
+    dst_ptr->chroma_size      = src_ptr->chroma_size;
 }
 
 void svt_aom_pack_highbd_pic(const EbPictureBufferDesc* pic_ptr, uint16_t* buffer_16bit[3], uint32_t ss_x,
@@ -586,25 +586,27 @@ void svt_aom_pack_highbd_pic(const EbPictureBufferDesc* pic_ptr, uint16_t* buffe
 
     if (buffer_16bit[1 /*U*/]) {
         uint32_t comp_stride_cb = pic_ptr->u_stride / 4;
-        svt_aom_compressed_pack_sb(pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
-                                   pic_ptr->u_stride,
-                                   pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cb * (pic_ptr->border >> ss_y))),
-                                   comp_stride_cb,
-                                   buffer_16bit[1 /*U*/],
-                                   pic_ptr->u_stride,
-                                   (width + ss_x) >> ss_x,
-                                   (height + ss_y) >> ss_y);
+        svt_aom_compressed_pack_sb(
+            pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cb * (pic_ptr->border >> ss_y))),
+            comp_stride_cb,
+            buffer_16bit[1 /*U*/],
+            pic_ptr->u_stride,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
     if (buffer_16bit[2 /*V*/]) {
         uint32_t comp_stride_cr = pic_ptr->v_stride / 4;
-        svt_aom_compressed_pack_sb(pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
-                                   pic_ptr->v_stride,
-                                   pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cr * (pic_ptr->border >> ss_y))),
-                                   comp_stride_cr,
-                                   buffer_16bit[2 /*V*/],
-                                   pic_ptr->v_stride,
-                                   (width + ss_x) >> ss_x,
-                                   (height + ss_y) >> ss_y);
+        svt_aom_compressed_pack_sb(
+            pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cr * (pic_ptr->border >> ss_y))),
+            comp_stride_cr,
+            buffer_16bit[2 /*V*/],
+            pic_ptr->v_stride,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 }
 
@@ -626,24 +628,26 @@ void svt_aom_unpack_highbd_pic(uint16_t* buffer_highbd[3], EbPictureBufferDesc* 
                               height);
 
     if (buffer_highbd[1 /*U*/]) {
-        svt_unpack_and_2bcompress(buffer_highbd[1 /*U*/],
-                                  pic_ptr->u_stride,
-                                  pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
-                                  pic_ptr->u_stride,
-                                  pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cb * (pic_ptr->border >> ss_y))),
-                                  comp_stride_cb,
-                                  (width + ss_x) >> ss_x,
-                                  (height + ss_y) >> ss_y);
+        svt_unpack_and_2bcompress(
+            buffer_highbd[1 /*U*/],
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->u_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->u_stride,
+            pic_ptr->u_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cb * (pic_ptr->border >> ss_y))),
+            comp_stride_cb,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 
     if (buffer_highbd[2 /*V*/]) {
-        svt_unpack_and_2bcompress(buffer_highbd[2 /*V*/],
-                                  pic_ptr->v_stride,
-                                  pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
-                                  pic_ptr->v_stride,
-                                  pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cr * (pic_ptr->border >> ss_y))),
-                                  comp_stride_cr,
-                                  (width + ss_x) >> ss_x,
-                                  (height + ss_y) >> ss_y);
+        svt_unpack_and_2bcompress(
+            buffer_highbd[2 /*V*/],
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer - ((pic_ptr->border >> ss_x) + (pic_ptr->v_stride * (pic_ptr->border >> ss_y))),
+            pic_ptr->v_stride,
+            pic_ptr->v_buffer_bit_inc - ((pic_ptr->border >> ss_x) / 4 + (comp_stride_cr * (pic_ptr->border >> ss_y))),
+            comp_stride_cr,
+            (width + ss_x) >> ss_x,
+            (height + ss_y) >> ss_y);
     }
 }

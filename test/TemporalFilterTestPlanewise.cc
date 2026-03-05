@@ -218,12 +218,12 @@ class TemporalFilterTestPlanewiseMediumBase
                 }
 
                 if (mode && !zz) {
-                    int val1 =
-                        -16 + src_ptr[PLANE_Y][ii * strd + jj] + rnd_.Rand8() % 32;
-                    int val2 =
-                        -16 + src_ptr[PLANE_U][ii * strd + jj] + rnd_.Rand8() % 32;
-                    int val3 =
-                        -16 + src_ptr[PLANE_V][ii * strd + jj] + rnd_.Rand8() % 32;
+                    int val1 = -16 + src_ptr[PLANE_Y][ii * strd + jj] +
+                               rnd_.Rand8() % 32;
+                    int val2 = -16 + src_ptr[PLANE_U][ii * strd + jj] +
+                               rnd_.Rand8() % 32;
+                    int val3 = -16 + src_ptr[PLANE_V][ii * strd + jj] +
+                               rnd_.Rand8() % 32;
                     pred_ptr[PLANE_Y][ii * stride2 + jj] = MAX(0, val1);
                     pred_ptr[PLANE_U][ii * stride2 + jj] = MAX(0, val2);
                     pred_ptr[PLANE_V][ii * stride2 + jj] = MAX(0, val3);
@@ -1774,10 +1774,14 @@ class TemporalFilterTestApplyFilteringCentral
                 (uint16_t *)malloc(TF_BW * TF_BH * sizeof(uint16_t));
             test_count[color_channel] =
                 (uint16_t *)malloc(TF_BW * TF_BH * sizeof(uint16_t));
-            memset(ref_accum[color_channel], 1, TF_BW * TF_BH * sizeof(uint32_t));
-            memset(test_accum[color_channel], 1, TF_BW * TF_BH * sizeof(uint32_t));
-            memset(ref_count[color_channel], 1, TF_BW * TF_BH * sizeof(uint16_t));
-            memset(test_count[color_channel], 1, TF_BW * TF_BH * sizeof(uint16_t));
+            memset(
+                ref_accum[color_channel], 1, TF_BW * TF_BH * sizeof(uint32_t));
+            memset(
+                test_accum[color_channel], 1, TF_BW * TF_BH * sizeof(uint32_t));
+            memset(
+                ref_count[color_channel], 1, TF_BW * TF_BH * sizeof(uint16_t));
+            memset(
+                test_count[color_channel], 1, TF_BW * TF_BH * sizeof(uint16_t));
         }
     }
 

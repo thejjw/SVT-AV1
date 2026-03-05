@@ -144,9 +144,9 @@ void* svt_aom_dlf_kernel(void* input_ptr) {
                 pcs->cdef_input_recon[2] = recon_pic->v_buffer;
 
                 EbPictureBufferDesc* input_pic = is_16bit ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-                pcs->cdef_input_source[0] = input_pic->y_buffer;
-                pcs->cdef_input_source[1] = input_pic->u_buffer;
-                pcs->cdef_input_source[2] = input_pic->v_buffer;
+                pcs->cdef_input_source[0]      = input_pic->y_buffer;
+                pcs->cdef_input_source[1]      = input_pic->u_buffer;
+                pcs->cdef_input_source[2]      = input_pic->v_buffer;
             }
         }
 

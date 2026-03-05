@@ -111,7 +111,7 @@ EbErrorType svt_aom_rest_context_ctor(EbThreadContext* thread_ctx, const EbEncHa
         init_data.max_height         = (uint16_t)scs->max_input_luma_height;
         init_data.bit_depth          = is_16bit ? EB_SIXTEEN_BIT : EB_EIGHT_BIT;
         init_data.color_format       = config->encoder_color_format;
-        init_data.border = AOM_RESTORATION_FRAME_BORDER;
+        init_data.border             = AOM_RESTORATION_FRAME_BORDER;
         init_data.split_mode         = false;
         init_data.is_16bit_pipeline  = is_16bit;
 
@@ -412,8 +412,10 @@ void* svt_aom_rest_kernel(void* input_ptr) {
                         EbPictureBufferDesc* ref_pic_ptr       = ppcs->enc_dec_ptr->recon_pic;
                         EbPictureBufferDesc* ref_pic_16bit_ptr = ppcs->enc_dec_ptr->recon_pic_16bit;
                         // Y
-                        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->y_buffer) - (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride));
-                        uint8_t* buf_8bit = ref_pic_ptr->y_buffer - (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->y_stride));
+                        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->y_buffer) -
+                            (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride));
+                        uint8_t* buf_8bit = ref_pic_ptr->y_buffer -
+                            (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->y_stride));
                         svt_convert_16bit_to_8bit(buf_16bit,
                                                   ref_pic_16bit_ptr->y_stride,
                                                   buf_8bit,
@@ -422,8 +424,12 @@ void* svt_aom_rest_kernel(void* input_ptr) {
                                                   ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
 
                         //CB
-                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->u_buffer) - ((ref_pic_16bit_ptr->border >> scs->subsampling_x) + ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->u_stride));
-                        buf_8bit = ref_pic_ptr->u_buffer - ((ref_pic_ptr->border >> scs->subsampling_x) + ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->u_stride));
+                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->u_buffer) -
+                            ((ref_pic_16bit_ptr->border >> scs->subsampling_x) +
+                             ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->u_stride));
+                        buf_8bit = ref_pic_ptr->u_buffer -
+                            ((ref_pic_ptr->border >> scs->subsampling_x) +
+                             ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->u_stride));
                         svt_convert_16bit_to_8bit(
                             buf_16bit,
                             ref_pic_16bit_ptr->u_stride,
@@ -433,8 +439,12 @@ void* svt_aom_rest_kernel(void* input_ptr) {
                             (ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1)) >> scs->subsampling_y);
 
                         //CR
-                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->v_buffer) - ((ref_pic_16bit_ptr->border >> scs->subsampling_x) + ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->v_stride));
-                        buf_8bit = ref_pic_ptr->v_buffer - ((ref_pic_ptr->border >> scs->subsampling_x) + ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->v_stride));
+                        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->v_buffer) -
+                            ((ref_pic_16bit_ptr->border >> scs->subsampling_x) +
+                             ((ref_pic_16bit_ptr->border >> scs->subsampling_y) * ref_pic_16bit_ptr->v_stride));
+                        buf_8bit = ref_pic_ptr->v_buffer -
+                            ((ref_pic_ptr->border >> scs->subsampling_x) +
+                             ((ref_pic_ptr->border >> scs->subsampling_y) * ref_pic_ptr->v_stride));
                         svt_convert_16bit_to_8bit(
                             buf_16bit,
                             ref_pic_16bit_ptr->v_stride,

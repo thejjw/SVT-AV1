@@ -365,10 +365,7 @@ class DenoiseModelRunTest : public ::testing::Test {
         pbd_init_data.bit_depth = EB_EIGHT_BIT;
         // allocate all the components
         pbd_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-        pbd_init_data.left_padding = 0;
-        pbd_init_data.right_padding = 0;
-        pbd_init_data.top_padding = 0;
-        pbd_init_data.bot_padding = 0;
+        pbd_init_data.border = 0;
         pbd_init_data.color_format = EB_YUV420;
         pbd_init_data.split_mode = false;
         pbd_init_data.is_16bit_pipeline = false;

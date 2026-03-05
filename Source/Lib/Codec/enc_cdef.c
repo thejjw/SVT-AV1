@@ -240,7 +240,7 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
     EbPictureBufferDesc* recon_pic;
     svt_aom_get_recon_pic(pcs, &recon_pic, is_16bit);
 
-    EbByte recon_buffer_y = recon_pic->y_buffer;
+    EbByte recon_buffer_y  = recon_pic->y_buffer;
     EbByte recon_buffer_cb = recon_pic->u_buffer;
     EbByte recon_buffer_cr = recon_pic->v_buffer;
 

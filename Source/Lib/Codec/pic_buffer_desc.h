@@ -33,6 +33,7 @@ extern "C" {
      ************************************/
 typedef struct EbPictureBufferDesc {
     EbDctor dctor;
+
     // Buffer Ptrs point to the start of the picture. If there are borders, the left and above borders
     // will be accessed using a negative offset.
     union {
@@ -41,8 +42,10 @@ typedef struct EbPictureBufferDesc {
             uint8_t* u_buffer; // pointer to the U (Cb) chroma buffer
             uint8_t* v_buffer; // pointer to the V (Cr) chroma buffer
         };
-        uint8_t* buffers[MAX_PLANES];
+
+        uint8_t* buffer[MAX_PLANES];
     };
+
     // Bit increment buffers point to the start of the picture. If there are borders, the left and above borders
     // will be accessed using a negative offset.
     union {
@@ -51,7 +54,8 @@ typedef struct EbPictureBufferDesc {
             uint8_t* u_buffer_bit_inc; // pointer to the U (Cb) chroma buffer bit increment
             uint8_t* v_buffer_bit_inc; // pointer to the V (Cr) chroma buffer bit increment
         };
-        uint8_t* buffers_bit_inc[MAX_PLANES];
+
+        uint8_t* buffer_bit_inc[MAX_PLANES];
     };
 
     // Strides
@@ -61,7 +65,8 @@ typedef struct EbPictureBufferDesc {
             uint16_t u_stride; // stride for the U (Cb) luma buffer
             uint16_t v_stride; // stride for the V (Cr) luma buffer
         };
-        uint16_t strides[MAX_PLANES];
+
+        uint16_t stride[MAX_PLANES];
     };
 
     // Bit increment strides
@@ -71,7 +76,8 @@ typedef struct EbPictureBufferDesc {
             uint16_t u_stride_bit_inc; // stride for the U (Cb) luma buffer bit increment
             uint16_t v_stride_bit_inc; // stride for the V (Cr) luma buffer bit increment
         };
-        uint16_t strides_bit_inc[MAX_PLANES];
+
+        uint16_t stride_bit_inc[MAX_PLANES];
     };
 
     // Buffer Parameters
@@ -90,10 +96,6 @@ typedef struct EbPictureBufferDesc {
     EbColorFormat color_format; // Chroma Subsumpling
 
     uint32_t buffer_enable_mask;
-
-    // internal bit-depth: when equals 1 internal bit-depth is 16bits regardless of the input
-    // bit-depth
-    bool is_16bit_pipeline;
 } EbPictureBufferDesc;
 
 #define YV12_FLAG_HIGHBITDEPTH 8

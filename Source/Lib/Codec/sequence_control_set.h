@@ -138,7 +138,7 @@ typedef struct SequenceControlSet {
     uint16_t          border; // Padding to be applied to picture buffers
     double            frame_rate;
     uint32_t          encoder_bit_depth;
-    ResolutionRange input_resolution;
+    ResolutionRange   input_resolution;
 
     /*!< Super block parameters set for the stream */
     uint8_t  b64_size;

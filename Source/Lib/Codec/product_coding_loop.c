@@ -783,10 +783,10 @@ static void av1_perform_inverse_transform_recon(PictureControlSet* pcs, ModeDeci
                 assert(0);
             }
         }
-        uint32_t rec_luma_offset = txb_origin_x + txb_origin_y * cand_bf->recon->y_stride;
-        uint32_t rec_cb_offset   = ((ROUND_UV(txb_origin_x) + ROUND_UV(txb_origin_y) * cand_bf->recon->u_stride) >> 1);
-        uint32_t rec_cr_offset   = ((ROUND_UV(txb_origin_x) + ROUND_UV(txb_origin_y) * cand_bf->recon->v_stride) >> 1);
-        uint32_t txb_origin_index         = txb_origin_x + txb_origin_y * cand_bf->pred->y_stride;
+        uint32_t rec_luma_offset  = txb_origin_x + txb_origin_y * cand_bf->recon->y_stride;
+        uint32_t rec_cb_offset    = ((ROUND_UV(txb_origin_x) + ROUND_UV(txb_origin_y) * cand_bf->recon->u_stride) >> 1);
+        uint32_t rec_cr_offset    = ((ROUND_UV(txb_origin_x) + ROUND_UV(txb_origin_y) * cand_bf->recon->v_stride) >> 1);
+        uint32_t txb_origin_index = txb_origin_x + txb_origin_y * cand_bf->pred->y_stride;
         EbPictureBufferDesc* recon_buffer = cand_bf->recon;
 
         // If bypassing encdec, update the recon pointer to copy the recon directly
@@ -797,12 +797,11 @@ static void av1_perform_inverse_transform_recon(PictureControlSet* pcs, ModeDeci
                 svt_aom_get_recon_pic(pcs, &recon_buffer, ctx->hbd_md);
                 uint16_t org_x  = ctx->blk_org_x + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].x;
                 uint16_t org_y  = ctx->blk_org_y + tx_org[blk_geom->bsize][is_inter][tx_depth][txb_itr].y;
-                rec_luma_offset = (org_y) * recon_buffer->y_stride + (org_x);
+                rec_luma_offset = (org_y)*recon_buffer->y_stride + (org_x);
 
                 uint32_t round_origin_x = ROUND_UV(org_x); // for Chroma blocks with size of 4
                 uint32_t round_origin_y = ROUND_UV(org_y); // for Chroma blocks with size of 4
-                rec_cb_offset = rec_cr_offset = (((round_origin_y) >> 1) *
-                    recon_buffer->u_stride) +
+                rec_cb_offset = rec_cr_offset = (((round_origin_y) >> 1) * recon_buffer->u_stride) +
                     ((round_origin_x) >> 1);
             } else {
                 recon_buffer    = ctx->blk_ptr->recon_tmp;
@@ -982,8 +981,7 @@ static void fast_loop_core_light_pd0(ModeDecisionCandidateBuffer* cand_bf, Pictu
         // Use scaled references if resolution of the reference is different from that of the input
         // -------
         svt_aom_use_scaled_rec_refs_if_needed(pcs, input_pic, ref_obj, &ref_pic, 0);
-        const int32_t ref_origin_index = (ctx->blk_org_x + mv_x) +
-            (ctx->blk_org_y + mv_y) * ref_pic->y_stride;
+        const int32_t ref_origin_index = (ctx->blk_org_x + mv_x) + (ctx->blk_org_y + mv_y) * ref_pic->y_stride;
         const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
         unsigned int            sse;
         uint8_t*                pred_y = ref_pic->y_buffer + ref_origin_index;
@@ -2559,8 +2557,7 @@ static int md_subpel_search(SUBPEL_STAGE       search_stage, //ME or PME
     ref_struct.stride = ref_pic->y_stride;
     ms_buffers->ref   = &ref_struct;
     // Src buffer
-    uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-        (ctx->blk_org_x);
+    uint32_t          input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
     struct svt_buf_2d src_struct;
     src_struct.buf    = input_pic->y_buffer + input_origin_index;
     src_struct.width  = input_pic->width;
@@ -2686,10 +2683,9 @@ static void read_refine_me_mvs(PictureControlSet* pcs, ModeDecisionContext* ctx,
     const BlockGeom*     blk_geom  = ctx->blk_geom;
 
     // Update input origin
-    const uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-        (ctx->blk_org_x);
-    const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
-    const uint8_t      max_l0     = pcs->ppcs->pa_me_data->max_l0;
+    const uint32_t     input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
+    const MeSbResults* me_results         = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
+    const uint8_t      max_l0             = pcs->ppcs->pa_me_data->max_l0;
 
     const bool          blk_avail_sqi      = pc_tree->tested_blk[PART_N][0];
     const bool          b_w_ne_h           = blk_geom->bwidth != blk_geom->bheight;
@@ -3026,14 +3022,11 @@ static void build_single_ref_mvp_array(PictureControlSet* pcs, ModeDecisionConte
 
             // Compute the best distortion and save the best MVP index (results used in subpel, PME, and ref pruning)
             uint32_t best_mvp_cost      = (int32_t)~0;
-            uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-                (ctx->blk_org_x);
+            uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
 
             for (int8_t mvp_index = 0; mvp_index < ctx->mvp_count[list][ref]; mvp_index++) {
-                int32_t ref_origin_index =
-                    (ctx->blk_org_x + (ctx->mvp_array[list][ref][mvp_index].x >> 3)) +
-                    (ctx->blk_org_y + (ctx->mvp_array[list][ref][mvp_index].y >> 3)) *
-                    ref_pic->y_stride;
+                int32_t ref_origin_index = (ctx->blk_org_x + (ctx->mvp_array[list][ref][mvp_index].x >> 3)) +
+                    (ctx->blk_org_y + (ctx->mvp_array[list][ref][mvp_index].y >> 3)) * ref_pic->y_stride;
                 const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
                 unsigned int            sse;
                 uint8_t*                pred_y = ref_pic->y_buffer + ref_origin_index;
@@ -3074,8 +3067,7 @@ static void pme_search(PictureControlSet* pcs, ModeDecisionContext* ctx, EbPictu
     }
     input_pic = pcs->ppcs->enhanced_pic;
 
-    uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-        (ctx->blk_org_x);
+    uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
 
     ctx->enable_psad = 0;
     for (uint32_t ref_it = 0; ref_it < ctx->tot_ref_frame_types; ++ref_it) {
@@ -5892,13 +5884,10 @@ static COMPONENT_TYPE chroma_complexity_check(PictureControlSet* pcs, ModeDecisi
         // -------
         svt_aom_use_scaled_rec_refs_if_needed(pcs, input_pic, ref_obj, &ref_pic, ctx->hbd_md);
 
-        int32_t src_y_offset = ctx->blk_org_x + mv_x +
-            (ctx->blk_org_y + mv_y) * ref_pic->y_stride;
-        int32_t src_cb_offset = ((ctx->blk_org_x + mv_x) >> 1) +
-            (((ctx->blk_org_y + mv_y) >> 1)) * ref_pic->u_stride;
-        int32_t src_cr_offset = ((ctx->blk_org_x + mv_x) >> 1) +
-            (((ctx->blk_org_y + mv_y) >> 1)) * ref_pic->v_stride;
-        uint8_t shift = 0;
+        int32_t src_y_offset  = ctx->blk_org_x + mv_x + (ctx->blk_org_y + mv_y) * ref_pic->y_stride;
+        int32_t src_cb_offset = ((ctx->blk_org_x + mv_x) >> 1) + (((ctx->blk_org_y + mv_y) >> 1)) * ref_pic->u_stride;
+        int32_t src_cr_offset = ((ctx->blk_org_x + mv_x) >> 1) + (((ctx->blk_org_y + mv_y) >> 1)) * ref_pic->v_stride;
+        uint8_t shift         = 0;
         if (ctx->lpd1_tx_ctrls.chroma_detector_level >= 2) {
             shift = ctx->blk_geom->bheight_uv > 8 ? 2 : ctx->blk_geom->bheight_uv > 4 ? 1 : 0; // no shift for 4x4
         } else {
@@ -5913,69 +5902,66 @@ static COMPONENT_TYPE chroma_complexity_check(PictureControlSet* pcs, ModeDecisi
             // pack the reference into temp 16bit buffer
             int32_t stride;
 
-            svt_aom_pack_block(
-                ref_pic->y_buffer + src_y_offset,
-                ref_pic->y_stride << shift,
-                ref_pic->y_buffer_bit_inc + src_y_offset,
-                ref_pic->y_stride_bit_inc << shift,
-                (uint16_t*)packed_buf,
-                MAX_SB_SIZE,
-                ctx->blk_geom->bwidth_uv,
-                ctx->blk_geom->bheight_uv >> shift);
+            svt_aom_pack_block(ref_pic->y_buffer + src_y_offset,
+                               ref_pic->y_stride << shift,
+                               ref_pic->y_buffer_bit_inc + src_y_offset,
+                               ref_pic->y_stride_bit_inc << shift,
+                               (uint16_t*)packed_buf,
+                               MAX_SB_SIZE,
+                               ctx->blk_geom->bwidth_uv,
+                               ctx->blk_geom->bheight_uv >> shift);
 
             src_10b = (uint16_t*)packed_buf;
-            stride = MAX_SB_SIZE;
+            stride  = MAX_SB_SIZE;
 
             // Y dist only computed over UV size so SADs are comparable
             y_dist = sad_16b_kernel(((uint16_t*)input_pic->y_buffer) + loc->input_origin_index,
-                input_pic->y_stride << shift,
-                src_10b,
-                stride,
-                ctx->blk_geom->bheight_uv >> shift,
-                ctx->blk_geom->bwidth_uv);
+                                    input_pic->y_stride << shift,
+                                    src_10b,
+                                    stride,
+                                    ctx->blk_geom->bheight_uv >> shift,
+                                    ctx->blk_geom->bwidth_uv);
 
             // pack the reference into temp 16bit buffer
 
-            svt_aom_pack_block(
-                ref_pic->u_buffer + src_cb_offset,
-                ref_pic->u_stride << shift,
-                ref_pic->u_buffer_bit_inc + src_cb_offset,
-                ref_pic->u_stride_bit_inc << shift,
-                (uint16_t*)packed_buf,
-                MAX_SB_SIZE,
-                ctx->blk_geom->bwidth_uv,
-                ctx->blk_geom->bheight_uv >> shift);
+            svt_aom_pack_block(ref_pic->u_buffer + src_cb_offset,
+                               ref_pic->u_stride << shift,
+                               ref_pic->u_buffer_bit_inc + src_cb_offset,
+                               ref_pic->u_stride_bit_inc << shift,
+                               (uint16_t*)packed_buf,
+                               MAX_SB_SIZE,
+                               ctx->blk_geom->bwidth_uv,
+                               ctx->blk_geom->bheight_uv >> shift);
 
             src_10b = (uint16_t*)packed_buf;
-            stride = MAX_SB_SIZE;
+            stride  = MAX_SB_SIZE;
 
             cb_dist = sad_16b_kernel(((uint16_t*)input_pic->u_buffer) + loc->input_cb_origin_in_index,
-                input_pic->u_stride << shift,
-                src_10b,
-                stride,
-                ctx->blk_geom->bheight_uv >> shift,
-                ctx->blk_geom->bwidth_uv);
+                                     input_pic->u_stride << shift,
+                                     src_10b,
+                                     stride,
+                                     ctx->blk_geom->bheight_uv >> shift,
+                                     ctx->blk_geom->bwidth_uv);
 
             // pack the reference into temp 16bit buffer
-            svt_aom_pack_block(
-                ref_pic->v_buffer + src_cr_offset,
-                ref_pic->v_stride << shift,
-                ref_pic->v_buffer_bit_inc + src_cr_offset,
-                ref_pic->v_stride_bit_inc << shift,
-                (uint16_t*)packed_buf,
-                MAX_SB_SIZE,
-                ctx->blk_geom->bwidth_uv,
-                ctx->blk_geom->bheight_uv >> shift);
+            svt_aom_pack_block(ref_pic->v_buffer + src_cr_offset,
+                               ref_pic->v_stride << shift,
+                               ref_pic->v_buffer_bit_inc + src_cr_offset,
+                               ref_pic->v_stride_bit_inc << shift,
+                               (uint16_t*)packed_buf,
+                               MAX_SB_SIZE,
+                               ctx->blk_geom->bwidth_uv,
+                               ctx->blk_geom->bheight_uv >> shift);
 
             src_10b = (uint16_t*)packed_buf;
-            stride = MAX_SB_SIZE;
+            stride  = MAX_SB_SIZE;
 
             cr_dist = sad_16b_kernel(((uint16_t*)input_pic->v_buffer) + loc->input_cb_origin_in_index,
-                input_pic->v_stride << shift,
-                src_10b,
-                stride,
-                ctx->blk_geom->bheight_uv >> shift,
-                ctx->blk_geom->bwidth_uv);
+                                     input_pic->v_stride << shift,
+                                     src_10b,
+                                     stride,
+                                     ctx->blk_geom->bheight_uv >> shift,
+                                     ctx->blk_geom->bwidth_uv);
         } else {
             // Y dist only computed over UV size so SADs are comparable
             y_dist = svt_nxm_sad_kernel(input_pic->y_buffer + loc->input_origin_index,
@@ -7767,7 +7753,7 @@ static void md_encode_block_light_pd0(PictureControlSet* pcs, ModeDecisionContex
 #endif
     uint32_t       fast_candidate_total_count;
     const uint32_t input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
-    const uint32_t blk_origin_index = 0;
+    const uint32_t blk_origin_index   = 0;
 #if !FTR_VLPD0
     BlkStruct* blk_ptr = ctx->blk_ptr;
 #endif
@@ -7892,8 +7878,7 @@ static void copy_recon_md(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
             // b/c no d1 or d2 decision
             if (ctx->fixed_partition) {
                 svt_aom_get_recon_pic(pcs, &recon_ptr, ctx->hbd_md);
-                rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride +
-                    (ctx->blk_org_x);
+                rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride + (ctx->blk_org_x);
             } else {
                 recon_ptr       = ctx->blk_ptr->recon_tmp;
                 rec_luma_offset = 0;
@@ -7917,8 +7902,7 @@ static void copy_recon_md(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
             // Copy 8bit
             // 8bit recon must be stored in the pic buffers, because the blk_ptr->recon_tmp contains the 10bit recon
             svt_aom_get_recon_pic(pcs, &recon_ptr, 0);
-            rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride +
-                (ctx->blk_org_x);
+            rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride + (ctx->blk_org_x);
 
             for (uint32_t j = 0; j < blk_geom->bheight; ++j) {
                 svt_memcpy(&ctx->cfl_temp_luma_recon[dst_offset + j * dst_stride],
@@ -7951,13 +7935,11 @@ static void copy_recon_md(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
         // b/c no d1 or d2 decision
         if (ctx->fixed_partition) {
             svt_aom_get_recon_pic(pcs, &recon_ptr, ctx->hbd_md);
-            rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride +
-                (ctx->blk_org_x);
+            rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride + (ctx->blk_org_x);
 
             uint32_t round_origin_x = ROUND_UV(ctx->blk_org_x); // for Chroma blocks with size of 4
             uint32_t round_origin_y = ROUND_UV(ctx->blk_org_y); // for Chroma blocks with size of 4
-            rec_cb_offset = rec_cr_offset =
-                ((round_origin_x + (round_origin_y) * recon_ptr->u_stride) >> 1);
+            rec_cb_offset = rec_cr_offset = ((round_origin_x + (round_origin_y)*recon_ptr->u_stride) >> 1);
         } else {
             recon_ptr       = ctx->blk_ptr->recon_tmp;
             rec_luma_offset = rec_cb_offset = rec_cr_offset = 0;
@@ -7996,23 +7978,19 @@ static void copy_recon_md(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
         if (ctx->has_uv && ctx->uv_ctrls.uv_mode <= CHROMA_MODE_1) {
             for (uint32_t j = 0; j < blk_geom->bheight_uv; ++j) {
                 ctx->blk_ptr->neigh_left_recon_16bit[1][j] =
-                    ((uint16_t*)
-                         recon_ptr->u_buffer)[rec_cb_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->u_stride];
+                    ((uint16_t*)recon_ptr->u_buffer)[rec_cb_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->u_stride];
                 ctx->blk_ptr->neigh_left_recon_16bit[2][j] =
-                    ((uint16_t*)
-                         recon_ptr->v_buffer)[rec_cr_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->v_stride];
+                    ((uint16_t*)recon_ptr->v_buffer)[rec_cr_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->v_stride];
             }
         }
 
         // Copy 8bit recon
         // 8bit recon must be stored in the pic buffers, because the blk_ptr->recon_tmp contains the 10bit recon
         svt_aom_get_recon_pic(pcs, &recon_ptr, 0);
-        rec_luma_offset = (ctx->blk_org_y) * recon_ptr->y_stride +
-            (ctx->blk_org_x);
+        rec_luma_offset         = (ctx->blk_org_y) * recon_ptr->y_stride + (ctx->blk_org_x);
         uint32_t round_origin_x = (ctx->blk_org_x >> 3) << 3; // for Chroma blocks with size of 4
         uint32_t round_origin_y = (ctx->blk_org_y >> 3) << 3; // for Chroma blocks with size of 4
-        rec_cb_offset = rec_cr_offset =
-            ((round_origin_x + (round_origin_y) * recon_ptr->u_stride) >> 1);
+        rec_cb_offset = rec_cr_offset = ((round_origin_x + (round_origin_y)*recon_ptr->u_stride) >> 1);
 
         // Copy bottom row (used for intra pred of the below block)
         svt_memcpy(ctx->blk_ptr->neigh_top_recon[0],
@@ -8099,11 +8077,9 @@ static void copy_recon_md(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
         if (ctx->has_uv && ctx->uv_ctrls.uv_mode <= CHROMA_MODE_1) {
             for (uint32_t j = 0; j < blk_geom->bheight_uv; ++j) {
                 ctx->blk_ptr->neigh_left_recon_16bit[1][j] =
-                    ((uint16_t*)
-                         recon_ptr->u_buffer)[rec_cb_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->u_stride];
+                    ((uint16_t*)recon_ptr->u_buffer)[rec_cb_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->u_stride];
                 ctx->blk_ptr->neigh_left_recon_16bit[2][j] =
-                    ((uint16_t*)
-                         recon_ptr->v_buffer)[rec_cr_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->v_stride];
+                    ((uint16_t*)recon_ptr->v_buffer)[rec_cr_offset + blk_geom->bwidth_uv - 1 + j * recon_ptr->v_stride];
             }
         }
     } // END RECON COPIES
@@ -8136,9 +8112,8 @@ static void copy_recon_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ct
         recon_ptr       = (pcs->ppcs->is_ref)
                   ? ((EbReferenceObject*)pcs->ppcs->ref_pic_wrapper->object_ptr)->reference_picture
                   : pcs->ppcs->enc_dec_ptr->recon_pic;
-        rec_luma_offset = (blk_org_y) * recon_ptr->y_stride + (blk_org_x);
-        rec_cb_offset = rec_cr_offset =
-            ((blk_org_x + (blk_org_y) * recon_ptr->u_stride) >> 1);
+        rec_luma_offset = (blk_org_y)*recon_ptr->y_stride + (blk_org_x);
+        rec_cb_offset = rec_cr_offset = ((blk_org_x + (blk_org_y)*recon_ptr->u_stride) >> 1);
     } else {
         recon_ptr       = cand_bf->recon;
         rec_luma_offset = 0;
@@ -8351,21 +8326,19 @@ static void convert_md_recon_16bit_to_8bit(PictureControlSet* pcs, ModeDecisionC
 
     // Y
     uint16_t* dst_16bit = (uint16_t*)(recon_buffer_16bit->y_buffer) + pred_buf_x_offest_16bit +
-        (pred_buf_y_offest_16bit) * recon_buffer_16bit->y_stride;
+        (pred_buf_y_offest_16bit)*recon_buffer_16bit->y_stride;
 
     int32_t dst_stride_16bit = recon_buffer_16bit->y_stride;
 
     uint8_t* dst;
     int32_t  dst_stride;
 
-    dst = recon_buffer_8bit->y_buffer + pred_buf_x_offest_8bit +
-        (pred_buf_y_offest_8bit) * recon_buffer_8bit->y_stride;
+    dst = recon_buffer_8bit->y_buffer + pred_buf_x_offest_8bit + (pred_buf_y_offest_8bit)*recon_buffer_8bit->y_stride;
     dst_stride = recon_buffer_8bit->y_stride;
 
-    uint8_t* dst_nbit        = recon_buffer_8bit->y_buffer_bit_inc
-               ? recon_buffer_8bit->y_buffer_bit_inc + pred_buf_x_offest_8bit +
-            (pred_buf_y_offest_8bit) * recon_buffer_8bit->y_stride
-               : recon_buffer_8bit->y_buffer_bit_inc;
+    uint8_t* dst_nbit        = recon_buffer_8bit->y_buffer_bit_inc ? recon_buffer_8bit->y_buffer_bit_inc +
+            pred_buf_x_offest_8bit + (pred_buf_y_offest_8bit)*recon_buffer_8bit->y_stride
+                                                                   : recon_buffer_8bit->y_buffer_bit_inc;
     int32_t  dst_nbit_stride = recon_buffer_8bit->y_stride_bit_inc;
 
     svt_aom_un_pack2d(dst_16bit,
@@ -8378,17 +8351,16 @@ static void convert_md_recon_16bit_to_8bit(PictureControlSet* pcs, ModeDecisionC
                       ctx->blk_geom->bheight);
     // CB
     dst_16bit = (uint16_t*)(recon_buffer_16bit->u_buffer) + pred_buf_x_offest_16bit_uv +
-        (pred_buf_y_offest_16bit_uv) * recon_buffer_16bit->u_stride;
+        (pred_buf_y_offest_16bit_uv)*recon_buffer_16bit->u_stride;
     dst_stride_16bit = recon_buffer_16bit->u_stride;
 
     dst = recon_buffer_8bit->u_buffer + pred_buf_x_offest_8bit_uv +
-        (pred_buf_y_offest_8bit_uv) * recon_buffer_8bit->u_stride;
+        (pred_buf_y_offest_8bit_uv)*recon_buffer_8bit->u_stride;
     dst_stride = recon_buffer_8bit->u_stride;
 
-    dst_nbit        = recon_buffer_8bit->u_buffer_bit_inc
-               ? recon_buffer_8bit->u_buffer_bit_inc + pred_buf_x_offest_8bit_uv +
-            (pred_buf_y_offest_8bit_uv) * recon_buffer_8bit->u_stride
-               : recon_buffer_8bit->u_buffer_bit_inc;
+    dst_nbit = recon_buffer_8bit->u_buffer_bit_inc ? recon_buffer_8bit->u_buffer_bit_inc + pred_buf_x_offest_8bit_uv +
+            (pred_buf_y_offest_8bit_uv)*recon_buffer_8bit->u_stride
+                                                   : recon_buffer_8bit->u_buffer_bit_inc;
     dst_nbit_stride = recon_buffer_8bit->u_stride_bit_inc;
 
     svt_aom_un_pack2d(dst_16bit,
@@ -8402,18 +8374,16 @@ static void convert_md_recon_16bit_to_8bit(PictureControlSet* pcs, ModeDecisionC
 
     // CR
     dst_16bit = (uint16_t*)(recon_buffer_16bit->v_buffer) +
-        (pred_buf_x_offest_16bit_uv +
-         (pred_buf_y_offest_16bit_uv) * recon_buffer_16bit->v_stride);
+        (pred_buf_x_offest_16bit_uv + (pred_buf_y_offest_16bit_uv)*recon_buffer_16bit->v_stride);
     dst_stride_16bit = recon_buffer_16bit->v_stride;
 
     dst = recon_buffer_8bit->v_buffer + pred_buf_x_offest_8bit_uv +
-        (pred_buf_y_offest_8bit_uv) * recon_buffer_8bit->v_stride;
+        (pred_buf_y_offest_8bit_uv)*recon_buffer_8bit->v_stride;
     dst_stride = recon_buffer_8bit->v_stride;
 
-    dst_nbit        = recon_buffer_8bit->v_buffer_bit_inc
-               ? recon_buffer_8bit->v_buffer_bit_inc + pred_buf_x_offest_8bit_uv +
-            (pred_buf_y_offest_8bit_uv) * recon_buffer_8bit->v_stride
-               : recon_buffer_8bit->v_buffer_bit_inc;
+    dst_nbit = recon_buffer_8bit->v_buffer_bit_inc ? recon_buffer_8bit->v_buffer_bit_inc + pred_buf_x_offest_8bit_uv +
+            (pred_buf_y_offest_8bit_uv)*recon_buffer_8bit->v_stride
+                                                   : recon_buffer_8bit->v_buffer_bit_inc;
     dst_nbit_stride = recon_buffer_8bit->v_stride_bit_inc;
 
     svt_aom_un_pack2d(dst_16bit,
@@ -8507,10 +8477,8 @@ static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContex
     uint32_t                      fast_candidate_total_count;
 
     BlockLocation loc;
-    loc.input_origin_index = ctx->blk_org_x +
-        (ctx->blk_org_y) * input_pic->y_stride;
-    loc.input_cb_origin_in_index = ((ctx->blk_org_x) >> 1) +
-        ((ctx->blk_org_y) >> 1) * input_pic->u_stride;
+    loc.input_origin_index       = ctx->blk_org_x + (ctx->blk_org_y) * input_pic->y_stride;
+    loc.input_cb_origin_in_index = ((ctx->blk_org_x) >> 1) + ((ctx->blk_org_y) >> 1) * input_pic->u_stride;
 
     BlkStruct* blk_ptr     = ctx->blk_ptr;
     cand_bf_ptr_array      = &(cand_bf_ptr_array_base[0]);
@@ -8625,11 +8593,9 @@ static void md_encode_block_light_pd1(PictureControlSet* pcs, ModeDecisionContex
         ctx->hbd_md = 2;
 
         // Update input pic and offsets
-        input_pic              = pcs->input_frame16bit;
-        loc.input_origin_index = ctx->blk_org_x +
-            (ctx->blk_org_y) * input_pic->y_stride;
-        loc.input_cb_origin_in_index = ((ctx->blk_org_x) >> 1) +
-            ((ctx->blk_org_y) >> 1) * input_pic->u_stride;
+        input_pic                    = pcs->input_frame16bit;
+        loc.input_origin_index       = ctx->blk_org_x + (ctx->blk_org_y) * input_pic->y_stride;
+        loc.input_cb_origin_in_index = ((ctx->blk_org_x) >> 1) + ((ctx->blk_org_y) >> 1) * input_pic->u_stride;
     }
     ctx->md_stage = MD_STAGE_3;
     md_stage_3_light_pd1(pcs, ctx, input_pic, &loc);
@@ -8831,15 +8797,13 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     ModeDecisionCandidateBuffer** cand_bf_ptr_array;
     const BlockGeom*              blk_geom = ctx->blk_geom;
     BlockLocation                 loc;
-    loc.input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-        (ctx->blk_org_x);
-    loc.input_cb_origin_in_index = ((ctx->round_origin_y >> 1)) * input_pic->u_stride +
-        ((ctx->round_origin_x >> 1));
-    BlkStruct* blk_ptr                   = ctx->blk_ptr;
-    cand_bf_ptr_array                    = &(cand_bf_ptr_array_base[0]);
-    ctx->blk_lambda_tuning               = pcs->ppcs->blk_lambda_tuning;
-    ctx->tune_ssim_level                 = SSIM_LVL_0;
-    ctx->obmc_weighted_pred_ready        = false;
+    loc.input_origin_index        = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
+    loc.input_cb_origin_in_index  = ((ctx->round_origin_y >> 1)) * input_pic->u_stride + ((ctx->round_origin_x >> 1));
+    BlkStruct* blk_ptr            = ctx->blk_ptr;
+    cand_bf_ptr_array             = &(cand_bf_ptr_array_base[0]);
+    ctx->blk_lambda_tuning        = pcs->ppcs->blk_lambda_tuning;
+    ctx->tune_ssim_level          = SSIM_LVL_0;
+    ctx->obmc_weighted_pred_ready = false;
     ctx->obmc_neighbor_luma_pred_ready   = false;
     ctx->obmc_neighbor_chroma_pred_ready = false;
     ctx->obmc_is_luma_neigh_10bit        = false;
@@ -9182,8 +9146,7 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         input_pic                    = pcs->input_frame16bit;
         loc.input_cb_origin_in_index = ((ctx->round_origin_y >> 1)) * input_pic->u_stride +
             ((ctx->round_origin_x >> 1));
-        loc.input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-            (ctx->blk_org_x);
+        loc.input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
     }
     // 3rd Full-Loop
     ctx->md_stage        = MD_STAGE_3;
@@ -9630,11 +9593,9 @@ static EbPictureBufferDesc* pad_hbd_pictures(SequenceControlSet* scs, PictureCon
     uint32_t sb_org_y = ctx->sb_origin_y;
     //perform the packing of 10bit if not done in previous PD passes
     if (!ctx->hbd_pack_done) {
-        const uint32_t input_luma_offset = ((sb_org_y) * in_pic->y_stride) + (sb_org_x);
-        const uint32_t input_cb_offset = (((sb_org_y) >> 1) * in_pic->u_stride) +
-            ((sb_org_x) >> 1);
-        const uint32_t input_cr_offset = (((sb_org_y) >> 1) * in_pic->v_stride) +
-            ((sb_org_x) >> 1);
+        const uint32_t input_luma_offset = ((sb_org_y)*in_pic->y_stride) + (sb_org_x);
+        const uint32_t input_cb_offset   = (((sb_org_y) >> 1) * in_pic->u_stride) + ((sb_org_x) >> 1);
+        const uint32_t input_cr_offset   = (((sb_org_y) >> 1) * in_pic->v_stride) + ((sb_org_x) >> 1);
 
         uint32_t sb_width  = MIN(scs->sb_size, pcs->ppcs->aligned_width - sb_org_x);
         uint32_t sb_height = MIN(scs->sb_size, pcs->ppcs->aligned_height - sb_org_y);

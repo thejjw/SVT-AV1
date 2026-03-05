@@ -1447,9 +1447,8 @@ uint8_t svt_aom_quantize_inv_quantize(PictureControlSet* pcs, ModeDecisionContex
                                       uint32_t lambda, bool is_encode_pass) {
     SequenceControlSet* scs     = pcs->scs;
     EncodeContext*      enc_ctx = scs->enc_ctx;
-    int32_t             plane   = component_type == COMPONENT_LUMA
-                      ? PLANE_Y
-                      : (component_type == COMPONENT_CHROMA_CB ? PLANE_U : PLANE_V);
+    int32_t             plane   = component_type == COMPONENT_LUMA ? PLANE_Y
+                                                                   : (component_type == COMPONENT_CHROMA_CB ? PLANE_U : PLANE_V);
 
     int32_t qmatrix_level = (IS_2D_TRANSFORM(tx_type) && pcs->ppcs->frm_hdr.quantization_params.using_qmatrix)
         ? pcs->ppcs->frm_hdr.quantization_params.qm[plane]
@@ -2076,8 +2075,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             ctx->hbd_md);
                 }
 
-                const uint32_t input_chroma_txb_origin_index =
-                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
+                const uint32_t input_chroma_txb_origin_index = ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1) * input_pic->u_stride;
                 const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
                                                      (ROUND_UV(txb_origin_y) * cand_bf->quant->u_stride)) >>
@@ -2276,8 +2274,7 @@ void svt_aom_full_loop_uv(PictureControlSet* pcs, ModeDecisionContext* ctx, Mode
                                             tx_height_uv,
                                             ctx->hbd_md);
                 }
-                const uint32_t input_chroma_txb_origin_index =
-                    ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
+                const uint32_t input_chroma_txb_origin_index = ((ROUND_UV(ctx->blk_org_x + txb_origin_x)) >> 1) +
                     ((ROUND_UV(ctx->blk_org_y + txb_origin_y)) >> 1) * input_pic->v_stride;
                 const int32_t txb_uv_origin_index = (ROUND_UV(txb_origin_x) +
                                                      (ROUND_UV(txb_origin_y) * cand_bf->quant->v_stride)) >>

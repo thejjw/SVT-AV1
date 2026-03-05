@@ -172,7 +172,7 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
                             uint32_t b64_origin_y = y_b64_index * scs->b64_size;
 
                             // Load the 64x64 Block from the input to the intermediate block buffer
-                            uint32_t buffer_index = (b64_origin_y) * input_pic->y_stride + b64_origin_x;
+                            uint32_t buffer_index = (b64_origin_y)*input_pic->y_stride + b64_origin_x;
 #ifdef ARCH_X86_64
                             uint8_t* src_ptr    = &input_padded_pic->y_buffer[buffer_index];
                             uint32_t b64_height = (pcs->aligned_height - b64_origin_y) < BLOCK_SIZE_64
@@ -189,8 +189,7 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
 
                             // Load the 1/4 decimated SB from the 1/4 decimated input to the 1/4 intermediate SB buffer
                             if (me_context_ptr->me_ctx->enable_hme_level1_flag) {
-                                buffer_index = ((b64_origin_y >> 1)) *
-                                    quarter_picture_ptr->y_stride +
+                                buffer_index = ((b64_origin_y >> 1)) * quarter_picture_ptr->y_stride +
                                     (b64_origin_x >> 1);
 
                                 me_context_ptr->me_ctx->quarter_b64_buffer =
@@ -200,8 +199,7 @@ void* svt_aom_motion_estimation_kernel(void* input_ptr) {
 
                             // Load the 1/16 decimated SB from the 1/16 decimated input to the 1/16 intermediate SB buffer
                             if (me_context_ptr->me_ctx->enable_hme_level0_flag) {
-                                buffer_index = ((b64_origin_y >> 2)) *
-                                    sixteenth_picture_ptr->y_stride +
+                                buffer_index = ((b64_origin_y >> 2)) * sixteenth_picture_ptr->y_stride +
                                     (b64_origin_x >> 2);
 
                                 me_context_ptr->me_ctx->sixteenth_b64_buffer =

@@ -340,7 +340,7 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet* pcs) {
     int32_t coef_cdf_category;
 #endif
 
-    frm_hdr->quantization_params.base_q_idx              = 31;
+    frm_hdr->quantization_params.base_q_idx          = 31;
     frm_hdr->quantization_params.delta_q_ac[PLANE_Y] = 0;
     frm_hdr->quantization_params.delta_q_dc[PLANE_Y] = pcs->scs->static_config.luma_y_dc_qindex_offset;
     frm_hdr->quantization_params.delta_q_ac[PLANE_U] = pcs->scs->static_config.chroma_u_ac_qindex_offset;
@@ -349,11 +349,11 @@ static EbErrorType reset_pcs_av1(PictureParentControlSet* pcs) {
     frm_hdr->quantization_params.delta_q_dc[PLANE_V] = pcs->scs->static_config.chroma_v_dc_qindex_offset;
 
     // Encoder
-    frm_hdr->quantization_params.using_qmatrix   = pcs->scs->static_config.enable_qm;
-    frm_hdr->quantization_params.qm[PLANE_Y] = 5;
-    frm_hdr->quantization_params.qm[PLANE_U] = 5;
-    frm_hdr->quantization_params.qm[PLANE_V] = 5;
-    frm_hdr->is_motion_mode_switchable           = 0;
+    frm_hdr->quantization_params.using_qmatrix = pcs->scs->static_config.enable_qm;
+    frm_hdr->quantization_params.qm[PLANE_Y]   = 5;
+    frm_hdr->quantization_params.qm[PLANE_U]   = 5;
+    frm_hdr->quantization_params.qm[PLANE_V]   = 5;
+    frm_hdr->is_motion_mode_switchable         = 0;
     // Flag signaling how frame contexts should be updated at the end of
     // a frame decode
     pcs->refresh_frame_context = REFRESH_FRAME_CONTEXT_DISABLED;
@@ -466,13 +466,13 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
 
     if (!is_16bit_input) {
         uint16_t input_row_index;
-        uint32_t luma_buffer_offset = 0;
+        uint32_t luma_buffer_offset   = 0;
         uint32_t chroma_buffer_offset = 0;
-        uint16_t luma_stride   = dst_picture_ptr->y_stride << is_16bit_input;
-        uint16_t chroma_stride = dst_picture_ptr->u_stride << is_16bit_input;
-        uint16_t luma_width    = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
-        uint16_t chroma_width  = (luma_width >> 1) << is_16bit_input;
-        uint16_t luma_height   = (uint16_t)(dst_picture_ptr->height - scs->max_input_pad_bottom);
+        uint16_t luma_stride          = dst_picture_ptr->y_stride << is_16bit_input;
+        uint16_t chroma_stride        = dst_picture_ptr->u_stride << is_16bit_input;
+        uint16_t luma_width           = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
+        uint16_t chroma_width         = (luma_width >> 1) << is_16bit_input;
+        uint16_t luma_height          = (uint16_t)(dst_picture_ptr->height - scs->max_input_pad_bottom);
 
         //uint16_t     luma_height  = input_pic->max_height;
         // Y

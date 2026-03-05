@@ -1078,14 +1078,14 @@ void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
         frm_hdr->all_lossless = frm_hdr->coded_lossless && av1_superres_unscaled(&(pcs->ppcs->av1_cm->frm_size));
 
         if (frm_hdr->coded_lossless) {
-            pcs->ppcs->frm_hdr.delta_q_params.delta_q_present    = 0;
-            frm_hdr->quantization_params.delta_q_dc[PLANE_Y] = 0;
-            frm_hdr->quantization_params.delta_q_ac[PLANE_U] = 0;
-            frm_hdr->quantization_params.delta_q_dc[PLANE_U] = 0;
-            frm_hdr->quantization_params.delta_q_ac[PLANE_V] = 0;
-            frm_hdr->quantization_params.delta_q_dc[PLANE_V] = 0;
-            pcs->ppcs->dlf_ctrls.enabled                         = 0;
-            pcs->ppcs->cdef_level                                = 0;
+            pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_Y]  = 0;
+            frm_hdr->quantization_params.delta_q_ac[PLANE_U]  = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_U]  = 0;
+            frm_hdr->quantization_params.delta_q_ac[PLANE_V]  = 0;
+            frm_hdr->quantization_params.delta_q_dc[PLANE_V]  = 0;
+            pcs->ppcs->dlf_ctrls.enabled                      = 0;
+            pcs->ppcs->cdef_level                             = 0;
         }
 
         if (frm_hdr->all_lossless) {

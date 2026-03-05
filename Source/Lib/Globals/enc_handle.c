@@ -1076,7 +1076,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     // it points directly to the Luma input samples of the app data
     ref_pic_buf_desc_init_data.buffer_enable_mask = 0;
 
-    ref_pic_buf_desc_init_data.border = scs->border;
+    ref_pic_buf_desc_init_data.border              = scs->border;
     ref_pic_buf_desc_init_data.split_mode          = false;
     ref_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     ref_pic_buf_desc_init_data.mfmv                = 0;
@@ -1088,7 +1088,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     quart_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     quart_pic_buf_desc_init_data.color_format        = EB_YUV420;
     quart_pic_buf_desc_init_data.buffer_enable_mask  = allintra ? 0 : PICTURE_BUFFER_DESC_LUMA_MASK;
-    quart_pic_buf_desc_init_data.border = scs->b64_size >> 1;
+    quart_pic_buf_desc_init_data.border              = scs->b64_size >> 1;
     quart_pic_buf_desc_init_data.split_mode          = false;
     quart_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     quart_pic_buf_desc_init_data.mfmv                = 0;
@@ -1100,7 +1100,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     sixteenth_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     sixteenth_pic_buf_desc_init_data.color_format        = EB_YUV420;
     sixteenth_pic_buf_desc_init_data.buffer_enable_mask  = allintra ? 0 : PICTURE_BUFFER_DESC_LUMA_MASK;
-    sixteenth_pic_buf_desc_init_data.border = scs->b64_size >> 2;
+    sixteenth_pic_buf_desc_init_data.border              = scs->b64_size >> 2;
     sixteenth_pic_buf_desc_init_data.split_mode          = false;
     sixteenth_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     sixteenth_pic_buf_desc_init_data.mfmv                = 0;
@@ -1142,7 +1142,7 @@ static int create_tpl_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     // Allocate one ref pic to be used in TPL
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_Y_FLAG;
 
-    ref_pic_buf_desc_init_data.border = TPL_PAD;
+    ref_pic_buf_desc_init_data.border            = TPL_PAD;
     ref_pic_buf_desc_init_data.split_mode        = false;
     ref_pic_buf_desc_init_data.mfmv              = 0;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = false;
@@ -1188,7 +1188,7 @@ static int create_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
         padding += scs->super_block_size;
     }
 
-    ref_pic_buf_desc_init_data.border = padding;
+    ref_pic_buf_desc_init_data.border            = padding;
     ref_pic_buf_desc_init_data.mfmv              = scs->mfmv_enabled;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = scs->is_16bit_pipeline;
     // Hsan: split_mode is set @ eb_reference_object_ctor() as both unpacked reference and packed reference are needed for a 10BIT input; unpacked reference @ MD, and packed reference @ EP
@@ -1290,7 +1290,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
         PictureControlSetInitData input_data;
         input_data.picture_width        = scs->max_input_luma_width;
         input_data.picture_height       = scs->max_input_luma_height;
-        input_data.border         = scs->border;
+        input_data.border               = scs->border;
         input_data.color_format         = color_format;
         input_data.b64_size             = scs->b64_size;
         input_data.enc_mode             = scs->static_config.enc_mode;
@@ -1372,7 +1372,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
 
         input_data.picture_width  = scs->max_input_luma_width;
         input_data.picture_height = scs->max_input_luma_height;
-        input_data.border   = scs->border;
+        input_data.border         = scs->border;
         input_data.bit_depth      = scs->encoder_bit_depth;
         input_data.color_format   = color_format;
         input_data.b64_size       = scs->b64_size;
@@ -1416,7 +1416,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
         input_data.enc_dec_segment_row = (uint16_t)scs->enc_dec_segment_row_count_array;
         input_data.picture_width       = scs->max_input_luma_width;
         input_data.picture_height      = scs->max_input_luma_height;
-        input_data.border = scs->border;
+        input_data.border              = scs->border;
         input_data.bit_depth           = scs->encoder_bit_depth;
         input_data.color_format        = color_format;
         input_data.b64_size            = scs->b64_size;
@@ -4104,9 +4104,7 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     //for 10bit,  increase the pad of source from 68 to 72 (mutliple of 8) to accomodate 2bit-compression flow
     //we actually need to change the horizontal dimension only, but for simplicity/uniformity we do all directions
     // if (scs->static_config.encoder_bit_depth != EB_EIGHT_BIT)
-    {
-        scs->border += 4;
-    }
+    { scs->border += 4; }
 
     scs->static_config.enable_overlays = !scs->static_config.enable_tf ||
             (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CQP_OR_CRF)
@@ -4979,8 +4977,8 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
 
     // Need to include for Interlacing on the fly with pictureScanType = 1
 
-    uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
-    uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
+    uint32_t luma_width  = (uint32_t)(input_pic->width - scs->max_input_pad_right);
+    uint32_t luma_height = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
     const uint8_t  subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
     const uint8_t  subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0
@@ -4995,22 +4993,14 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
                               input_pic->y_stride,
                               luma_height,
                               luma_width);
-        svt_av1_copy_wxh_8bit(input_ptr->cb,
-                              input_ptr->cb_stride,
-                              input_pic->u_buffer,
-                              input_pic->u_stride,
-                              chroma_height,
-                              chroma_width);
-        svt_av1_copy_wxh_8bit(input_ptr->cr,
-                              input_ptr->cr_stride,
-                              input_pic->v_buffer,
-                              input_pic->v_stride,
-                              chroma_height,
-                              chroma_width);
+        svt_av1_copy_wxh_8bit(
+            input_ptr->cb, input_ptr->cb_stride, input_pic->u_buffer, input_pic->u_stride, chroma_height, chroma_width);
+        svt_av1_copy_wxh_8bit(
+            input_ptr->cr, input_ptr->cr_stride, input_pic->v_buffer, input_pic->v_stride, chroma_height, chroma_width);
     } else { // 10bit packed
-        uint32_t comp_stride_y           = input_pic->y_stride / 4;
+        uint32_t comp_stride_y = input_pic->y_stride / 4;
 
-        uint32_t comp_stride_uv            = input_pic->u_stride / 4;
+        uint32_t comp_stride_uv = input_pic->u_stride / 4;
 
         svt_unpack_and_2bcompress((uint16_t*)input_ptr->luma,
                                   input_ptr->y_stride,
@@ -5163,16 +5153,16 @@ static void memset_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst
     if (scs->first_pass_downsample) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
-            EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
-            EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
+            EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
+            EbPictureBufferDesc* input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
             memset(y8b_input_picture_ptr->buffer_alloc, 0, y8b_input_picture_ptr->buffer_alloc_sz);
             memset(input_pic->buffer_alloc, 0, input_pic->buffer_alloc_sz);
         }
     } else if (pass != ENCODE_FIRST_PASS) {
         // memset the picture buffer
         if (src->p_buffer != NULL) {
-            EbPictureBufferDesc*      y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
-            EbPictureBufferDesc*      input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
+            EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)dst_y8b->p_buffer;
+            EbPictureBufferDesc* input_pic             = (EbPictureBufferDesc*)dst->p_buffer;
             memset(y8b_input_picture_ptr->buffer_alloc, 0, y8b_input_picture_ptr->buffer_alloc_sz);
             memset(input_pic->buffer_alloc, 0, input_pic->buffer_alloc_sz);
             // Copy the metadata array
@@ -5780,10 +5770,10 @@ void svt_input_buffer_header_destroyer(EbPtr p) {
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
     if (buf) {
         EB_FREE_ALIGNED_ARRAY(buf->buffer_alloc);
-        buf->buffer_alloc_sz = 0;
-        buf->y_buffer = NULL;
-        buf->u_buffer = NULL;
-        buf->v_buffer = NULL;
+        buf->buffer_alloc_sz  = 0;
+        buf->y_buffer         = NULL;
+        buf->u_buffer         = NULL;
+        buf->v_buffer         = NULL;
         buf->y_buffer_bit_inc = NULL;
         buf->u_buffer_bit_inc = NULL;
         buf->v_buffer_bit_inc = NULL;

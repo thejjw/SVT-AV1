@@ -760,13 +760,13 @@ static void tf_set_me_hme_params_oq(MeContext* me_ctx, PictureParentControlSet* 
   Output  : ME Kernel signal(s)
 ******************************************************/
 void svt_aom_sig_deriv_me(SequenceControlSet* scs, PictureParentControlSet* pcs, MeContext* me_ctx) {
-    EncMode           enc_mode         = pcs->enc_mode;
-    const uint8_t     sc_class1        = pcs->sc_class1;
-    const uint8_t     sc_class4        = pcs->sc_class4;
+    EncMode         enc_mode         = pcs->enc_mode;
+    const uint8_t   sc_class1        = pcs->sc_class1;
+    const uint8_t   sc_class4        = pcs->sc_class4;
     ResolutionRange input_resolution = scs->input_resolution;
-    const bool        rtc_tune         = scs->static_config.rtc;
-    const bool        is_base          = pcs->temporal_layer_index == 0;
-    const bool        flat_rtc         = rtc_tune && scs->use_flat_ipp;
+    const bool      rtc_tune         = scs->static_config.rtc;
+    const bool      is_base          = pcs->temporal_layer_index == 0;
+    const bool      flat_rtc         = rtc_tune && scs->use_flat_ipp;
     // Set ME search area
     set_me_search_params(scs, pcs, me_ctx, input_resolution);
 
@@ -2111,7 +2111,7 @@ void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureP
     EncMode                 enc_mode          = pcs->enc_mode;
     const uint8_t           is_islice         = pcs->slice_type == I_SLICE;
     const uint8_t           is_base           = pcs->temporal_layer_index == 0;
-    const ResolutionRange input_resolution  = pcs->input_resolution;
+    const ResolutionRange   input_resolution  = pcs->input_resolution;
     const uint8_t           fast_decode       = scs->static_config.fast_decode;
     const uint8_t           sc_class1         = pcs->sc_class1;
     const uint8_t           is_not_last_layer = !pcs->is_highest_layer;
@@ -2455,10 +2455,10 @@ void svt_aom_sig_deriv_multi_processes_rtc(SequenceControlSet* scs, PictureParen
 }
 
 void svt_aom_sig_deriv_multi_processes_allintra(SequenceControlSet* scs, PictureParentControlSet* pcs) {
-    FrameHeader*            frm_hdr          = &pcs->frm_hdr;
-    EncMode                 enc_mode         = pcs->enc_mode;
+    FrameHeader*          frm_hdr          = &pcs->frm_hdr;
+    EncMode               enc_mode         = pcs->enc_mode;
     const ResolutionRange input_resolution = pcs->input_resolution;
-    const uint8_t           fast_decode      = scs->static_config.fast_decode;
+    const uint8_t         fast_decode      = scs->static_config.fast_decode;
 
     // Set the Multi-Pass PD level
     pcs->multi_pass_pd_level = MULTI_PASS_PD_ON;
@@ -2581,7 +2581,7 @@ void svt_aom_sig_deriv_multi_processes(SequenceControlSet* scs, PictureParentCon
     EncMode                 enc_mode          = pcs->enc_mode;
     const uint8_t           is_islice         = pcs->slice_type == I_SLICE;
     const uint8_t           is_base           = pcs->temporal_layer_index == 0;
-    const ResolutionRange input_resolution  = pcs->input_resolution;
+    const ResolutionRange   input_resolution  = pcs->input_resolution;
     const uint8_t           fast_decode       = scs->static_config.fast_decode;
     const bool              rtc_tune          = scs->static_config.rtc;
     const uint8_t           sc_class1         = pcs->sc_class1;
@@ -8327,7 +8327,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd0(SequenceControlSet* scs, PictureControl
 void svt_aom_sig_deriv_enc_dec_light_pd1(PictureControlSet* pcs, ModeDecisionContext* ctx) {
     Pd1Level                 lpd1_level        = ctx->lpd1_ctrls.pd1_level;
     PictureParentControlSet* ppcs              = pcs->ppcs;
-    const ResolutionRange  input_resolution  = ppcs->input_resolution;
+    const ResolutionRange    input_resolution  = ppcs->input_resolution;
     const uint8_t            is_islice         = pcs->slice_type == I_SLICE;
     const SliceType          slice_type        = pcs->slice_type;
     const bool               is_not_last_layer = !ppcs->is_highest_layer;
@@ -10265,7 +10265,7 @@ static void set_pic_lpd0_lvl_default(PictureControlSet* pcs, EncMode enc_mode) {
     const uint8_t            is_islice          = pcs->slice_type == I_SLICE;
     const bool               transition_present = (ppcs->transition_present == 1);
     InputCoeffLvl            coeff_lvl          = pcs->coeff_lvl;
-    const ResolutionRange  input_resolution   = ppcs->input_resolution;
+    const ResolutionRange    input_resolution   = ppcs->input_resolution;
     uint8_t                  ldp0_lvl_offset[4] = {2, 2, 1, 0};
     uint8_t                  qp_band_idx        = 0;
     const uint8_t            seq_qp_mod         = pcs->scs->seq_qp_mod;
@@ -10384,7 +10384,7 @@ static void set_pic_lpd0_lvl_rtc(PictureControlSet* pcs, EncMode enc_mode) {
     const uint8_t            is_islice          = pcs->slice_type == I_SLICE;
     const bool               transition_present = (ppcs->transition_present == 1);
     const uint8_t            sc_class1          = ppcs->sc_class1;
-    const ResolutionRange  input_resolution   = ppcs->input_resolution;
+    const ResolutionRange    input_resolution   = ppcs->input_resolution;
 
     if (sc_class1) {
         if (enc_mode <= ENC_M9) {
@@ -10439,7 +10439,7 @@ static void set_pic_lpd0_lvl(PictureControlSet* pcs, EncMode enc_mode) {
     const uint8_t           sc_class1          = ppcs->sc_class1;
     const bool              rtc_tune           = pcs->scs->static_config.rtc;
     InputCoeffLvl           coeff_lvl          = pcs->coeff_lvl;
-    const ResolutionRange input_resolution   = ppcs->input_resolution;
+    const ResolutionRange   input_resolution   = ppcs->input_resolution;
     uint8_t                 ldp0_lvl_offset[4] = {2, 2, 1, 0};
     uint8_t                 qp_band_idx        = 0;
     const uint8_t           seq_qp_mod         = pcs->scs->seq_qp_mod;
@@ -10768,7 +10768,7 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
     const uint8_t            is_ref              = ppcs->is_ref;
     const uint8_t            is_base             = ppcs->temporal_layer_index == 0;
     const uint8_t            is_layer1           = ppcs->temporal_layer_index == 1;
-    const ResolutionRange  input_resolution    = ppcs->input_resolution;
+    const ResolutionRange    input_resolution    = ppcs->input_resolution;
     const uint8_t            is_islice           = pcs->slice_type == I_SLICE;
     const uint8_t            sc_class1           = ppcs->sc_class1;
     const uint8_t            fast_decode         = scs->static_config.fast_decode;
@@ -11361,7 +11361,7 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
     EncMode                  enc_mode            = pcs->enc_mode;
     const uint8_t            is_ref              = ppcs->is_ref;
     const uint8_t            is_base             = ppcs->temporal_layer_index == 0;
-    const ResolutionRange  input_resolution    = ppcs->input_resolution;
+    const ResolutionRange    input_resolution    = ppcs->input_resolution;
     const uint8_t            is_islice           = pcs->slice_type == I_SLICE;
     const uint8_t            sc_class1           = ppcs->sc_class1;
     const uint8_t            fast_decode         = scs->static_config.fast_decode;
@@ -11846,7 +11846,7 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
 void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, PictureControlSet* pcs) {
     PictureParentControlSet* ppcs             = pcs->ppcs;
     EncMode                  enc_mode         = pcs->enc_mode;
-    const ResolutionRange  input_resolution = ppcs->input_resolution;
+    const ResolutionRange    input_resolution = ppcs->input_resolution;
     const uint8_t            fast_decode      = scs->static_config.fast_decode;
     const uint32_t           sq_qp            = scs->static_config.qp;
     FrameHeader*             frm_hdr          = &ppcs->frm_hdr;
@@ -12099,7 +12099,7 @@ void svt_aom_sig_deriv_mode_decision_config(SequenceControlSet* scs, PictureCont
     const uint8_t            is_ref              = ppcs->is_ref;
     const uint8_t            is_base             = ppcs->temporal_layer_index == 0;
     const uint8_t            is_layer1           = ppcs->temporal_layer_index == 1;
-    const ResolutionRange  input_resolution    = ppcs->input_resolution;
+    const ResolutionRange    input_resolution    = ppcs->input_resolution;
     const uint8_t            is_islice           = pcs->slice_type == I_SLICE;
     const uint8_t            sc_class1           = ppcs->sc_class1;
     const uint8_t            fast_decode         = scs->static_config.fast_decode;

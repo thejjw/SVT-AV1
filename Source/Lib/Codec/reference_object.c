@@ -19,7 +19,7 @@
 #include "enc_mode_config.h"
 
 static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_samples_buffer_ptr, uint16_t stride,
-                                                           uint16_t recon_width, uint16_t recon_height) {
+                                                                  uint16_t recon_width, uint16_t recon_height) {
     uint8_t* recon_samples_ptr;
     uint16_t sample_count;
 
@@ -28,7 +28,7 @@ static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_s
     svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
 
     // 2. zero out the bottom row
-    recon_samples_ptr = recon_samples_buffer_ptr + (recon_height) * stride - 1;
+    recon_samples_ptr = recon_samples_buffer_ptr + (recon_height)*stride - 1;
     svt_memset(recon_samples_ptr, 0, sizeof(uint8_t) * (1 + recon_width + 1));
 
     // 3. zero out the left column
@@ -44,20 +44,14 @@ static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_s
 }
 
 static void initialize_samples_neighboring_reference_picture(EbPictureBufferDesc* ref_pic) {
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->y_buffer,
-        ref_pic->y_stride,
-        ref_pic->width,
-        ref_pic->height);
+    initialize_samples_neighboring_reference_picture_8bit(
+        ref_pic->y_buffer, ref_pic->y_stride, ref_pic->width, ref_pic->height);
 
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->u_buffer,
-        ref_pic->u_stride,
-        ref_pic->width >> 1,
-        ref_pic->height >> 1);
+    initialize_samples_neighboring_reference_picture_8bit(
+        ref_pic->u_buffer, ref_pic->u_stride, ref_pic->width >> 1, ref_pic->height >> 1);
 
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->v_buffer,
-        ref_pic->v_stride,
-        ref_pic->width >> 1,
-        ref_pic->height >> 1);
+    initialize_samples_neighboring_reference_picture_8bit(
+        ref_pic->v_buffer, ref_pic->v_stride, ref_pic->width >> 1, ref_pic->height >> 1);
 }
 
 static void svt_reference_object_dctor(EbPtr p) {
@@ -103,7 +97,7 @@ EbErrorType svt_reference_param_update(EbReferenceObject* ref_object, SequenceCo
         padding += scs->super_block_size;
     }
 
-    picture_buffer_desc_init_data_ptr.border = padding;
+    picture_buffer_desc_init_data_ptr.border            = padding;
     picture_buffer_desc_init_data_ptr.mfmv              = scs->mfmv_enabled;
     picture_buffer_desc_init_data_ptr.is_16bit_pipeline = scs->is_16bit_pipeline;
 
@@ -249,7 +243,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     // it points directly to the Luma input samples of the app data
     ref_pic_buf_desc_init_data.buffer_enable_mask = 0;
 
-    ref_pic_buf_desc_init_data.border = scs->border;
+    ref_pic_buf_desc_init_data.border              = scs->border;
     ref_pic_buf_desc_init_data.split_mode          = false;
     ref_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     ref_pic_buf_desc_init_data.mfmv                = 0;
@@ -260,7 +254,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     quart_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     quart_pic_buf_desc_init_data.color_format        = EB_YUV420;
     quart_pic_buf_desc_init_data.buffer_enable_mask  = PICTURE_BUFFER_DESC_LUMA_MASK;
-    quart_pic_buf_desc_init_data.border = scs->b64_size >> 1;
+    quart_pic_buf_desc_init_data.border              = scs->b64_size >> 1;
     quart_pic_buf_desc_init_data.split_mode          = false;
     quart_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     quart_pic_buf_desc_init_data.mfmv                = 0;
@@ -271,7 +265,7 @@ EbErrorType svt_pa_reference_param_update(EbPaReferenceObject* pa_ref_obj, Seque
     sixteenth_pic_buf_desc_init_data.bit_depth           = EB_EIGHT_BIT;
     sixteenth_pic_buf_desc_init_data.color_format        = EB_YUV420;
     sixteenth_pic_buf_desc_init_data.buffer_enable_mask  = PICTURE_BUFFER_DESC_LUMA_MASK;
-    sixteenth_pic_buf_desc_init_data.border = scs->b64_size >> 2;
+    sixteenth_pic_buf_desc_init_data.border              = scs->b64_size >> 2;
     sixteenth_pic_buf_desc_init_data.split_mode          = false;
     sixteenth_pic_buf_desc_init_data.rest_units_per_tile = scs->rest_units_per_tile;
     sixteenth_pic_buf_desc_init_data.mfmv                = 0;
@@ -349,7 +343,7 @@ EbErrorType svt_tpl_reference_param_update(EbTplReferenceObject* tpl_ref_obj, Se
     // Allocate one ref pic to be used in TPL
     ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_Y_FLAG;
 
-    ref_pic_buf_desc_init_data.border = TPL_PAD;
+    ref_pic_buf_desc_init_data.border            = TPL_PAD;
     ref_pic_buf_desc_init_data.split_mode        = false;
     ref_pic_buf_desc_init_data.mfmv              = 0;
     ref_pic_buf_desc_init_data.is_16bit_pipeline = false;

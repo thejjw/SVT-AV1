@@ -326,11 +326,9 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     DECLARE_ALIGNED(16, uint8_t, tmp_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     DECLARE_ALIGNED(16, uint8_t, ii_pred_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     // get inter pred for ref0
-    EbPictureBufferDesc* src_pic     = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    uint16_t* src_buf_hbd = (uint16_t*)src_pic->y_buffer + (ctx->blk_org_x) +
-        (ctx->blk_org_y) * src_pic->y_stride;
-    uint8_t* src_buf = src_pic->y_buffer + (ctx->blk_org_x) +
-        (ctx->blk_org_y) * src_pic->y_stride;
+    EbPictureBufferDesc* src_pic = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+    uint16_t* src_buf_hbd = (uint16_t*)src_pic->y_buffer + (ctx->blk_org_x) + (ctx->blk_org_y) * src_pic->y_stride;
+    uint8_t*  src_buf     = src_pic->y_buffer + (ctx->blk_org_x) + (ctx->blk_org_y) * src_pic->y_stride;
 
     uint8_t  bit_depth   = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
     uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
@@ -338,7 +336,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     uint32_t            bwidth  = ctx->blk_geom->bwidth;
     uint32_t            bheight = ctx->blk_geom->bheight;
     EbPictureBufferDesc pred_desc;
-    pred_desc.border = 0;
+    pred_desc.border   = 0;
     pred_desc.y_stride = bwidth;
 
     EbPictureBufferDesc* ref_pic_list0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
@@ -652,7 +650,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer* buff
     picture_buffer_desc_init_data.bit_depth          = max_bitdepth;
     picture_buffer_desc_init_data.color_format       = EB_YUV420;
     picture_buffer_desc_init_data.buffer_enable_mask = buffer_desc_mask;
-    picture_buffer_desc_init_data.border = 0;
+    picture_buffer_desc_init_data.border             = 0;
     picture_buffer_desc_init_data.split_mode         = false;
     picture_buffer_desc_init_data.is_16bit_pipeline  = max_bitdepth > EB_EIGHT_BIT;
 
@@ -661,7 +659,7 @@ EbErrorType svt_aom_mode_decision_cand_bf_ctor(ModeDecisionCandidateBuffer* buff
     thirty_two_width_picture_buffer_desc_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask = buffer_desc_mask;
-    thirty_two_width_picture_buffer_desc_init_data.border = 0;
+    thirty_two_width_picture_buffer_desc_init_data.border             = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode         = false;
     thirty_two_width_picture_buffer_desc_init_data.is_16bit_pipeline  = true;
 
@@ -698,7 +696,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     picture_buffer_desc_init_data.bit_depth                           = max_bitdepth;
     picture_buffer_desc_init_data.color_format                        = EB_YUV420;
     picture_buffer_desc_init_data.buffer_enable_mask                  = PICTURE_BUFFER_DESC_FULL_MASK;
-    picture_buffer_desc_init_data.border = 0;
+    picture_buffer_desc_init_data.border                              = 0;
     picture_buffer_desc_init_data.split_mode                          = false;
     picture_buffer_desc_init_data.is_16bit_pipeline                   = max_bitdepth > EB_EIGHT_BIT;
     double_width_picture_buffer_desc_init_data.max_width              = sb_size;
@@ -706,7 +704,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     double_width_picture_buffer_desc_init_data.bit_depth              = EB_SIXTEEN_BIT;
     double_width_picture_buffer_desc_init_data.color_format           = EB_YUV420;
     double_width_picture_buffer_desc_init_data.buffer_enable_mask     = PICTURE_BUFFER_DESC_FULL_MASK;
-    double_width_picture_buffer_desc_init_data.border = 0;
+    double_width_picture_buffer_desc_init_data.border                 = 0;
     double_width_picture_buffer_desc_init_data.split_mode             = false;
     double_width_picture_buffer_desc_init_data.is_16bit_pipeline      = true;
     thirty_two_width_picture_buffer_desc_init_data.max_width          = sb_size;
@@ -714,7 +712,7 @@ EbErrorType svt_aom_mode_decision_scratch_cand_bf_ctor(ModeDecisionCandidateBuff
     thirty_two_width_picture_buffer_desc_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-    thirty_two_width_picture_buffer_desc_init_data.border = 0;
+    thirty_two_width_picture_buffer_desc_init_data.border             = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode         = false;
     thirty_two_width_picture_buffer_desc_init_data.is_16bit_pipeline  = true;
 
@@ -1949,11 +1947,10 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
     uint32_t    full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
     int         error_per_bit = full_lambda >> RD_EPB_SHIFT;
     error_per_bit += (error_per_bit == 0);
-    uint32_t             blk_origin_index   = 0;
-    EbPictureBufferDesc* input_pic          = ppcs->enhanced_pic; // 10BIT not supported
-    uint32_t             input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
-        (ctx->blk_org_x);
-    const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
+    uint32_t                blk_origin_index   = 0;
+    EbPictureBufferDesc*    input_pic          = ppcs->enhanced_pic; // 10BIT not supported
+    uint32_t                input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
+    const AomVarianceFnPtr* fn_ptr             = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
     unsigned int            sse;
     uint8_t*                src_y = input_pic->y_buffer + input_origin_index;
 

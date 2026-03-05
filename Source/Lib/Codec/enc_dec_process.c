@@ -98,7 +98,7 @@ EbErrorType svt_aom_enc_dec_context_ctor(EbThreadContext* thread_ctx, const EbEn
                    .max_width          = scs->super_block_size,
                    .max_height         = scs->super_block_size,
                    .bit_depth          = EB_SIXTEEN_BIT,
-                   .border       = 0,
+                   .border             = 0,
                    .split_mode         = false,
                    .color_format       = color_format,
                });
@@ -369,32 +369,17 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
         chroma_subsamp_y   = 1;
     }
 
-    svt_aom_fgn_copy_rect(src->y_buffer,
-                          src->y_stride,
-                          dst->y_buffer,
-                          dst->y_stride,
-                          dst->width,
-                          dst->height,
-                          use_high_bit_depth);
+    svt_aom_fgn_copy_rect(
+        src->y_buffer, src->y_stride, dst->y_buffer, dst->y_stride, dst->width, dst->height, use_high_bit_depth);
 
     const int32_t chroma_width  = (dst->width + chroma_subsamp_x) >> chroma_subsamp_x;
     const int32_t chroma_height = (dst->height + chroma_subsamp_y) >> chroma_subsamp_y;
 
-    svt_aom_fgn_copy_rect(src->u_buffer,
-                          src->u_stride,
-                          dst->u_buffer,
-                          dst->u_stride,
-                          chroma_width,
-                          chroma_height,
-                          use_high_bit_depth);
+    svt_aom_fgn_copy_rect(
+        src->u_buffer, src->u_stride, dst->u_buffer, dst->u_stride, chroma_width, chroma_height, use_high_bit_depth);
 
-    svt_aom_fgn_copy_rect(src->v_buffer,
-                          src->v_stride,
-                          dst->v_buffer,
-                          dst->v_stride,
-                          chroma_width,
-                          chroma_height,
-                          use_high_bit_depth);
+    svt_aom_fgn_copy_rect(
+        src->v_buffer, src->v_stride, dst->v_buffer, dst->v_stride, chroma_width, chroma_height, use_high_bit_depth);
 
     luma = dst->y_buffer;
     cb   = dst->u_buffer;
@@ -469,9 +454,9 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
                 temp_recon_desc_init_data.max_height         = (uint16_t)scs->max_input_luma_height;
                 temp_recon_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
 
-                temp_recon_desc_init_data.border  = padding;
-                temp_recon_desc_init_data.split_mode    = false;
-                temp_recon_desc_init_data.color_format  = scs->static_config.encoder_color_format;
+                temp_recon_desc_init_data.border       = padding;
+                temp_recon_desc_init_data.split_mode   = false;
+                temp_recon_desc_init_data.color_format = scs->static_config.encoder_color_format;
 
                 if (is_16bit) {
                     temp_recon_desc_init_data.bit_depth = EB_SIXTEEN_BIT;
@@ -790,25 +775,25 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
         EbPictureBufferDesc* src_pic = pcs->ppcs->do_tf == true ? pcs->ppcs->saved_src_pic : input_pic;
 
         pcs->ppcs->luma_ssim = aom_ssim2(src_pic->y_buffer,
-            src_pic->y_stride,
-            recon_ptr->y_buffer,
-            recon_ptr->y_stride,
-            scs->max_input_luma_width,
-            scs->max_input_luma_height);
+                                         src_pic->y_stride,
+                                         recon_ptr->y_buffer,
+                                         recon_ptr->y_stride,
+                                         scs->max_input_luma_width,
+                                         scs->max_input_luma_height);
 
         pcs->ppcs->cb_ssim = aom_ssim2(src_pic->u_buffer,
-            src_pic->u_stride,
-            recon_ptr->u_buffer,
-            recon_ptr->u_stride,
-            scs->chroma_width,
-            scs->chroma_height);
+                                       src_pic->u_stride,
+                                       recon_ptr->u_buffer,
+                                       recon_ptr->u_stride,
+                                       scs->chroma_width,
+                                       scs->chroma_height);
 
         pcs->ppcs->cr_ssim = aom_ssim2(src_pic->v_buffer,
-            src_pic->v_stride,
-            recon_ptr->v_buffer,
-            recon_ptr->v_stride,
-            scs->chroma_width,
-            scs->chroma_height);
+                                       src_pic->v_stride,
+                                       recon_ptr->v_buffer,
+                                       recon_ptr->v_stride,
+                                       scs->chroma_width,
+                                       scs->chroma_height);
 
         if (free_memory && pcs->ppcs->do_tf == true) {
             EB_DELETE(pcs->ppcs->saved_src_pic);
@@ -820,12 +805,12 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
         // the original source picture. If the picture was not temporally filtered, the source picture
         // must be unpacked. We can use the MSB 8bits from the picture buffer directly, but will generate
         // temporary buffers for the LSB 2bits.
-        EbByte y_buffer_bit_inc;
-        EbByte u_buffer_bit_inc;
-        EbByte v_buffer_bit_inc;
+        EbByte   y_buffer_bit_inc;
+        EbByte   u_buffer_bit_inc;
+        EbByte   v_buffer_bit_inc;
         uint16_t y_stride_bit_inc = src_pic->y_stride_bit_inc;
-        uint16_t u_stride_bit_inc= src_pic->u_stride_bit_inc;
-        uint16_t v_stride_bit_inc= src_pic->v_stride_bit_inc;
+        uint16_t u_stride_bit_inc = src_pic->u_stride_bit_inc;
+        uint16_t v_stride_bit_inc = src_pic->v_stride_bit_inc;
 
         if (pcs->ppcs->do_tf == true) {
             y_buffer_bit_inc = pcs->ppcs->saved_src_pic->y_buffer_bit_inc;
@@ -834,7 +819,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
         } else {
             // no need to uncompress padding
             uint32_t height_y = input_pic->height;
-            uint32_t width_y = input_pic->width;
+            uint32_t width_y  = input_pic->width;
 
             EB_MALLOC_ARRAY(y_buffer_bit_inc, pcs->ppcs->enhanced_unscaled_pic->luma_size);
             EB_MALLOC_ARRAY(u_buffer_bit_inc, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
@@ -877,7 +862,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
                                                 bd,
                                                 shift);
 
-        pcs->ppcs->cb_ssim   = aom_highbd_ssim2(src_pic->u_buffer,
+        pcs->ppcs->cb_ssim = aom_highbd_ssim2(src_pic->u_buffer,
                                               src_pic->u_stride,
                                               u_buffer_bit_inc,
                                               u_stride_bit_inc,
@@ -888,7 +873,7 @@ EbErrorType svt_aom_ssim_calculations(PictureControlSet* pcs, SequenceControlSet
                                               bd,
                                               shift);
 
-        pcs->ppcs->cr_ssim   = aom_highbd_ssim2(src_pic->v_buffer,
+        pcs->ppcs->cr_ssim = aom_highbd_ssim2(src_pic->v_buffer,
                                               src_pic->v_stride,
                                               v_buffer_bit_inc,
                                               v_stride_bit_inc,
@@ -966,11 +951,19 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
         pcs->ppcs->luma_sse = svt_aom_get_sse(
             src_pic->y_buffer, src_pic->y_stride, recon_ptr->y_buffer, recon_ptr->y_stride, pic_w, pic_h);
 
-        pcs->ppcs->cb_sse = svt_aom_get_sse(
-            src_pic->u_buffer, src_pic->u_stride, recon_ptr->u_buffer, recon_ptr->u_stride, pic_w >> ss_x, pic_h >> ss_y);
+        pcs->ppcs->cb_sse = svt_aom_get_sse(src_pic->u_buffer,
+                                            src_pic->u_stride,
+                                            recon_ptr->u_buffer,
+                                            recon_ptr->u_stride,
+                                            pic_w >> ss_x,
+                                            pic_h >> ss_y);
 
-        pcs->ppcs->cr_sse = svt_aom_get_sse(
-            src_pic->v_buffer, src_pic->v_stride, recon_ptr->v_buffer, recon_ptr->v_stride, pic_w >> ss_x, pic_h >> ss_y);
+        pcs->ppcs->cr_sse = svt_aom_get_sse(src_pic->v_buffer,
+                                            src_pic->v_stride,
+                                            recon_ptr->v_buffer,
+                                            recon_ptr->v_stride,
+                                            pic_w >> ss_x,
+                                            pic_h >> ss_y);
 
         if (free_memory && pcs->ppcs->do_tf == true) {
             EB_DELETE(pcs->ppcs->saved_src_pic);
@@ -982,9 +975,9 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
         // the original source picture. If the picture was not temporally filtered, the source picture
         // must be unpacked. We can use the MSB 8bits from the picture buffer directly, but will generate
         // temporary buffers for the LSB 2bits.
-        EbByte y_buffer_bit_inc;
-        EbByte u_buffer_bit_inc;
-        EbByte v_buffer_bit_inc;
+        EbByte   y_buffer_bit_inc;
+        EbByte   u_buffer_bit_inc;
+        EbByte   v_buffer_bit_inc;
         uint16_t y_stride_bit_inc = src_pic->y_stride_bit_inc;
         uint16_t u_stride_bit_inc = src_pic->u_stride_bit_inc;
         uint16_t v_stride_bit_inc = src_pic->v_stride_bit_inc;
@@ -993,11 +986,10 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
             y_buffer_bit_inc = pcs->ppcs->saved_src_pic->y_buffer_bit_inc;
             u_buffer_bit_inc = pcs->ppcs->saved_src_pic->u_buffer_bit_inc;
             v_buffer_bit_inc = pcs->ppcs->saved_src_pic->v_buffer_bit_inc;
-        }
-        else {
+        } else {
             // no need to uncompress padding
             uint32_t height_y = input_pic->height;
-            uint32_t width_y = input_pic->width;
+            uint32_t width_y  = input_pic->width;
 
             EB_MALLOC_ARRAY(y_buffer_bit_inc, pcs->ppcs->enhanced_unscaled_pic->luma_size);
             EB_MALLOC_ARRAY(u_buffer_bit_inc, pcs->ppcs->enhanced_unscaled_pic->chroma_size);
@@ -1005,55 +997,55 @@ EbErrorType psnr_calculations(PictureControlSet* pcs, SequenceControlSet* scs, b
 
             // Y
             svt_c_unpack_compressed_10bit(input_pic->y_buffer_bit_inc,
-                input_pic->y_stride_bit_inc / 4,
-                y_buffer_bit_inc,
-                y_stride_bit_inc,
-                width_y,
-                height_y);
+                                          input_pic->y_stride_bit_inc / 4,
+                                          y_buffer_bit_inc,
+                                          y_stride_bit_inc,
+                                          width_y,
+                                          height_y);
 
             // U
             svt_c_unpack_compressed_10bit(input_pic->u_buffer_bit_inc,
-                input_pic->u_stride_bit_inc / 4,
-                u_buffer_bit_inc,
-                u_stride_bit_inc,
-                width_y >> ss_x,
-                height_y >> ss_y);
+                                          input_pic->u_stride_bit_inc / 4,
+                                          u_buffer_bit_inc,
+                                          u_stride_bit_inc,
+                                          width_y >> ss_x,
+                                          height_y >> ss_y);
 
             // V
             svt_c_unpack_compressed_10bit(input_pic->v_buffer_bit_inc,
-                input_pic->v_stride_bit_inc / 4,
-                v_buffer_bit_inc,
-                v_stride_bit_inc,
-                width_y >> ss_x,
-                height_y >> ss_y);
+                                          input_pic->v_stride_bit_inc / 4,
+                                          v_buffer_bit_inc,
+                                          v_stride_bit_inc,
+                                          width_y >> ss_x,
+                                          height_y >> ss_y);
         }
 
         pcs->ppcs->luma_sse = get_sse_10bit(src_pic->y_buffer,
-            src_pic->y_stride,
-            y_buffer_bit_inc,
-            y_stride_bit_inc,
-            (uint16_t*)recon_ptr->y_buffer,
-            recon_ptr->y_stride,
-            pic_w,
-            pic_h);
+                                            src_pic->y_stride,
+                                            y_buffer_bit_inc,
+                                            y_stride_bit_inc,
+                                            (uint16_t*)recon_ptr->y_buffer,
+                                            recon_ptr->y_stride,
+                                            pic_w,
+                                            pic_h);
 
         pcs->ppcs->cb_sse = get_sse_10bit(src_pic->u_buffer,
-            src_pic->u_stride,
-            u_buffer_bit_inc,
-            u_stride_bit_inc,
-            (uint16_t*)recon_ptr->u_buffer,
-            recon_ptr->u_stride,
-            pic_w >> ss_x,
-            pic_h >> ss_y);
+                                          src_pic->u_stride,
+                                          u_buffer_bit_inc,
+                                          u_stride_bit_inc,
+                                          (uint16_t*)recon_ptr->u_buffer,
+                                          recon_ptr->u_stride,
+                                          pic_w >> ss_x,
+                                          pic_h >> ss_y);
 
         pcs->ppcs->cr_sse = get_sse_10bit(src_pic->v_buffer,
-            src_pic->v_stride,
-            v_buffer_bit_inc,
-            v_stride_bit_inc,
-            (uint16_t*)recon_ptr->v_buffer,
-            recon_ptr->v_stride,
-            pic_w >> ss_x,
-            pic_h >> ss_y);
+                                          src_pic->v_stride,
+                                          v_buffer_bit_inc,
+                                          v_stride_bit_inc,
+                                          (uint16_t*)recon_ptr->v_buffer,
+                                          recon_ptr->v_stride,
+                                          pic_w >> ss_x,
+                                          pic_h >> ss_y);
 
         if (free_memory && pcs->ppcs->do_tf == true) {
             EB_DELETE(pcs->ppcs->saved_src_pic);
@@ -1140,30 +1132,42 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                        (ref_pic_16bit_ptr->border + ss_y) >> ss_y);
 
         // Unpack ref samples (to be used @ MD)
-        svt_aom_un_pack2d(((uint16_t*)ref_pic_16bit_ptr->y_buffer) - (ref_pic_16bit_ptr->border + ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride),
-                          ref_pic_16bit_ptr->y_stride,
-                          ref_pic_ptr->y_buffer - (ref_pic_ptr->border + ref_pic_ptr->border * ref_pic_ptr->y_stride),
-                          ref_pic_ptr->y_stride,
-                          ref_pic_ptr->y_buffer_bit_inc - (ref_pic_ptr->border + ref_pic_ptr->border * ref_pic_ptr->y_stride_bit_inc),
-                          ref_pic_ptr->y_stride_bit_inc,
-                          ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1),
-                          ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
-        svt_aom_un_pack2d(((uint16_t*)ref_pic_16bit_ptr->u_buffer) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->u_stride)),
-                          ref_pic_16bit_ptr->u_stride,
-                          ref_pic_ptr->u_buffer - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride)),
-                          ref_pic_ptr->u_stride,
-                          ref_pic_ptr->u_buffer_bit_inc - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride_bit_inc)),
-                          ref_pic_ptr->u_stride_bit_inc,
-                          (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
-                          (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
-        svt_aom_un_pack2d(((uint16_t*)ref_pic_16bit_ptr->v_buffer) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->v_stride)),
-                          ref_pic_16bit_ptr->v_stride,
-                          ref_pic_ptr->v_buffer - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride)),
-                          ref_pic_ptr->v_stride,
-                          ref_pic_ptr->v_buffer_bit_inc - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride_bit_inc)),
-                          ref_pic_ptr->v_stride_bit_inc,
-                          (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
-                          (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
+        svt_aom_un_pack2d(
+            ((uint16_t*)ref_pic_16bit_ptr->y_buffer) -
+                (ref_pic_16bit_ptr->border + ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride),
+            ref_pic_16bit_ptr->y_stride,
+            ref_pic_ptr->y_buffer - (ref_pic_ptr->border + ref_pic_ptr->border * ref_pic_ptr->y_stride),
+            ref_pic_ptr->y_stride,
+            ref_pic_ptr->y_buffer_bit_inc - (ref_pic_ptr->border + ref_pic_ptr->border * ref_pic_ptr->y_stride_bit_inc),
+            ref_pic_ptr->y_stride_bit_inc,
+            ref_pic_16bit_ptr->width + (ref_pic_ptr->border << 1),
+            ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
+        svt_aom_un_pack2d(
+            ((uint16_t*)ref_pic_16bit_ptr->u_buffer) -
+                ((ref_pic_16bit_ptr->border >> ss_x) +
+                 ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->u_stride)),
+            ref_pic_16bit_ptr->u_stride,
+            ref_pic_ptr->u_buffer -
+                ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride)),
+            ref_pic_ptr->u_stride,
+            ref_pic_ptr->u_buffer_bit_inc -
+                ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride_bit_inc)),
+            ref_pic_ptr->u_stride_bit_inc,
+            (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
+            (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
+        svt_aom_un_pack2d(
+            ((uint16_t*)ref_pic_16bit_ptr->v_buffer) -
+                ((ref_pic_16bit_ptr->border >> ss_x) +
+                 ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->v_stride)),
+            ref_pic_16bit_ptr->v_stride,
+            ref_pic_ptr->v_buffer -
+                ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride)),
+            ref_pic_ptr->v_stride,
+            ref_pic_ptr->v_buffer_bit_inc -
+                ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride_bit_inc)),
+            ref_pic_ptr->v_stride_bit_inc,
+            (ref_pic_16bit_ptr->width + ss_x + (ref_pic_ptr->border << 1)) >> ss_x,
+            (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
     }
     if ((scs->is_16bit_pipeline) && (!is_16bit)) {
         // Y samples
@@ -1193,8 +1197,10 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
         // Hsan: unpack ref samples (to be used @ MD)
 
         //Y
-        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->y_buffer) - (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride));
-        uint8_t*  buf_8bit  = ref_pic_ptr->y_buffer - (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->y_stride));
+        uint16_t* buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->y_buffer) -
+            (ref_pic_16bit_ptr->border + (ref_pic_16bit_ptr->border * ref_pic_16bit_ptr->y_stride));
+        uint8_t* buf_8bit = ref_pic_ptr->y_buffer -
+            (ref_pic_ptr->border + (ref_pic_ptr->border * ref_pic_ptr->y_stride));
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->y_stride,
                                   buf_8bit,
@@ -1203,8 +1209,10 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                   ref_pic_16bit_ptr->height + (ref_pic_ptr->border << 1));
 
         //CB
-        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->u_buffer) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->u_stride));
-        buf_8bit  = ref_pic_ptr->u_buffer - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride));
+        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->u_buffer) -
+            ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->u_stride));
+        buf_8bit = ref_pic_ptr->u_buffer -
+            ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->u_stride));
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->u_stride,
                                   buf_8bit,
@@ -1213,8 +1221,10 @@ void pad_ref_and_set_flags(PictureControlSet* pcs, SequenceControlSet* scs) {
                                   (ref_pic_16bit_ptr->height + ss_y + (ref_pic_ptr->border << 1)) >> ss_y);
 
         //CR
-        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->v_buffer) - ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->v_stride));
-        buf_8bit = ref_pic_ptr->v_buffer - ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride));
+        buf_16bit = (uint16_t*)(ref_pic_16bit_ptr->v_buffer) -
+            ((ref_pic_16bit_ptr->border >> ss_x) + ((ref_pic_16bit_ptr->border >> ss_y) * ref_pic_16bit_ptr->v_stride));
+        buf_8bit = ref_pic_ptr->v_buffer -
+            ((ref_pic_ptr->border >> ss_x) + ((ref_pic_ptr->border >> ss_y) * ref_pic_ptr->v_stride));
         svt_convert_16bit_to_8bit(buf_16bit,
                                   ref_pic_16bit_ptr->v_stride,
                                   buf_8bit,
@@ -1247,8 +1257,8 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
         //SB128_TODO change 10bit SB creation
 
         const uint32_t input_luma_offset = (sb_org_y * input_pic->y_stride) + sb_org_x;
-        const uint32_t input_cb_offset = ((sb_org_y >> 1) * input_pic->u_stride) + (sb_org_x >> 1);
-        const uint32_t input_cr_offset = ((sb_org_y >> 1) * input_pic->v_stride) + (sb_org_x >> 1);
+        const uint32_t input_cb_offset   = ((sb_org_y >> 1) * input_pic->u_stride) + (sb_org_x >> 1);
+        const uint32_t input_cr_offset   = ((sb_org_y >> 1) * input_pic->v_stride) + (sb_org_x >> 1);
 
         //sb_width is n*8 so the 2bit-decompression kernel works properly
         uint32_t comp_stride_y           = input_pic->y_stride / 4;
@@ -1314,12 +1324,9 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
     }
 
     if (is_16bit && scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
-        const uint32_t input_luma_offset = ((sb_org_y) * input_pic->y_stride) +
-            (sb_org_x);
-        const uint32_t input_cb_offset = (((sb_org_y) >> 1) * input_pic->u_stride) +
-            ((sb_org_x) >> 1);
-        const uint32_t input_cr_offset = (((sb_org_y) >> 1) * input_pic->v_stride) +
-            ((sb_org_x) >> 1);
+        const uint32_t input_luma_offset = ((sb_org_y)*input_pic->y_stride) + (sb_org_x);
+        const uint32_t input_cb_offset   = (((sb_org_y) >> 1) * input_pic->u_stride) + ((sb_org_x) >> 1);
+        const uint32_t input_cr_offset   = (((sb_org_y) >> 1) * input_pic->v_stride) + ((sb_org_x) >> 1);
 
         sb_width  = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
              ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->border) - sb_org_x)

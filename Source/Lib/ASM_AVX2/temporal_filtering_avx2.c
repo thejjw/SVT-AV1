@@ -774,8 +774,12 @@ void svt_aom_get_final_filtered_pixels_avx2(MeContext* me_ctx, EbByte* src_cente
 
     if (!is_highbd) {
         //Process luma
-        process_block_lbd_avx2(
-            TF_BH, TF_BW, &src_center_ptr_start[PLANE_Y][blk_y_src_offset], accum[PLANE_Y], count[PLANE_Y], stride[PLANE_Y] - TF_BW);
+        process_block_lbd_avx2(TF_BH,
+                               TF_BW,
+                               &src_center_ptr_start[PLANE_Y][blk_y_src_offset],
+                               accum[PLANE_Y],
+                               count[PLANE_Y],
+                               stride[PLANE_Y] - TF_BW);
         // Process chroma
         if (me_ctx->tf_chroma) {
             process_block_lbd_avx2(blk_height_ch,
@@ -793,8 +797,12 @@ void svt_aom_get_final_filtered_pixels_avx2(MeContext* me_ctx, EbByte* src_cente
         }
     } else {
         // Process luma
-        process_block_hbd_avx2(
-            TF_BH, TF_BW, &altref_buffer_highbd_start[PLANE_Y][blk_y_src_offset], accum[PLANE_Y], count[PLANE_Y], stride[PLANE_Y] - TF_BW);
+        process_block_hbd_avx2(TF_BH,
+                               TF_BW,
+                               &altref_buffer_highbd_start[PLANE_Y][blk_y_src_offset],
+                               accum[PLANE_Y],
+                               count[PLANE_Y],
+                               stride[PLANE_Y] - TF_BW);
         // Process chroma
         if (me_ctx->tf_chroma) {
             process_block_hbd_avx2(blk_height_ch,
@@ -862,8 +870,10 @@ void svt_aom_apply_filtering_central_avx2(MeContext* me_ctx, EbPictureBufferDesc
         uint16_t blk_height_ch = blk_height >> ss_y;
         uint16_t blk_width_ch  = blk_width >> ss_x;
         uint16_t src_stride_ch = src_stride_y >> ss_x;
-        apply_filtering_central_loop_lbd(blk_width_ch, blk_height_ch, src[PLANE_U], src_stride_ch, accum[PLANE_U], count[PLANE_U]);
-        apply_filtering_central_loop_lbd(blk_width_ch, blk_height_ch, src[PLANE_V], src_stride_ch, accum[PLANE_V], count[PLANE_V]);
+        apply_filtering_central_loop_lbd(
+            blk_width_ch, blk_height_ch, src[PLANE_U], src_stride_ch, accum[PLANE_U], count[PLANE_U]);
+        apply_filtering_central_loop_lbd(
+            blk_width_ch, blk_height_ch, src[PLANE_V], src_stride_ch, accum[PLANE_V], count[PLANE_V]);
     }
 }
 
@@ -875,7 +885,8 @@ void svt_aom_apply_filtering_central_highbd_avx2(MeContext* me_ctx, EbPictureBuf
     uint16_t src_stride_y = input_picture_ptr_central->y_stride;
 
     // Luma
-    apply_filtering_central_loop_hbd(blk_width, blk_height, src_16bit[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);
+    apply_filtering_central_loop_hbd(
+        blk_width, blk_height, src_16bit[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);
 
     // Chroma
     if (me_ctx->tf_chroma) {

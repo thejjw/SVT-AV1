@@ -575,7 +575,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
             init_data.color_format       = (blk_geom->bwidth > 4 && blk_geom->bheight > 4)
                       ? EB_YUV420
                       : EB_YUV444; // PW - must have at least 4x4 for chroma coeffs
-            init_data.border       = 0;
+            init_data.border             = 0;
             init_data.split_mode         = false;
 
             EB_NEW(ctx->md_blk_arr_nsq[coded_leaf_index].coeff_tmp, svt_picture_buffer_desc_ctor, (EbPtr)&init_data);
@@ -585,9 +585,9 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
             init_data.max_height         = blk_geom->bheight;
             init_data.bit_depth          = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
             ;
-            init_data.color_format  = (blk_geom->bwidth > 4 && blk_geom->bheight > 4) ? EB_YUV420 : EB_YUV444;
-            init_data.border = 0;
-            init_data.split_mode    = false;
+            init_data.color_format = (blk_geom->bwidth > 4 && blk_geom->bheight > 4) ? EB_YUV420 : EB_YUV444;
+            init_data.border       = 0;
+            init_data.split_mode   = false;
 
             EB_NEW(ctx->md_blk_arr_nsq[coded_leaf_index].recon_tmp, svt_picture_buffer_desc_ctor, (EbPtr)&init_data);
         } else {
@@ -610,7 +610,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     picture_buffer_desc_init_data.bit_depth          = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
     picture_buffer_desc_init_data.color_format       = EB_YUV420;
     picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-    picture_buffer_desc_init_data.border = 0;
+    picture_buffer_desc_init_data.border             = 0;
     picture_buffer_desc_init_data.split_mode         = false;
     picture_buffer_desc_init_data.is_16bit_pipeline  = false;
 
@@ -619,7 +619,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     thirty_two_width_picture_buffer_desc_init_data.bit_depth          = EB_THIRTYTWO_BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-    thirty_two_width_picture_buffer_desc_init_data.border = 0;
+    thirty_two_width_picture_buffer_desc_init_data.border             = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode         = false;
     thirty_two_width_picture_buffer_desc_init_data.is_16bit_pipeline  = false;
     for (uint32_t txt_itr = 0; txt_itr < TX_TYPES; ++txt_itr) {
@@ -639,7 +639,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     double_width_picture_buffer_desc_init_data.bit_depth          = EB_SIXTEEN_BIT;
     double_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
     double_width_picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-    double_width_picture_buffer_desc_init_data.border = 0;
+    double_width_picture_buffer_desc_init_data.border             = 0;
     double_width_picture_buffer_desc_init_data.split_mode         = false;
     double_width_picture_buffer_desc_init_data.is_16bit_pipeline  = false;
 
