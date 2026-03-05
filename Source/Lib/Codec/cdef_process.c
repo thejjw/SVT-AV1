@@ -37,9 +37,9 @@ static void set_unscaled_input_16bit(PictureControlSet* pcs) {
         svt_aom_convert_pic_8bit_to_16bit(input_pic, output_pic, ss_x, ss_y);
     } else {
         uint16_t* planes[3] = {
-            (uint16_t*)output_pic->buffer_y,
-            (uint16_t*)output_pic->buffer_cb,
-            (uint16_t*)output_pic->buffer_cr };
+            (uint16_t*)output_pic->y_buffer,
+            (uint16_t*)output_pic->u_buffer,
+            (uint16_t*)output_pic->v_buffer };
         svt_aom_pack_2d_pic(input_pic, planes);
     }
 }
@@ -52,17 +52,17 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
     recon_picture_dst->bit_depth    = recon_picture_src->bit_depth;
     recon_picture_dst->color_format = recon_picture_src->color_format;
 
-    recon_picture_dst->stride_y  = recon_picture_src->stride_y;
-    recon_picture_dst->stride_cb = recon_picture_src->stride_cb;
-    recon_picture_dst->stride_cr = recon_picture_src->stride_cr;
+    recon_picture_dst->y_stride  = recon_picture_src->y_stride;
+    recon_picture_dst->u_stride = recon_picture_src->u_stride;
+    recon_picture_dst->v_stride = recon_picture_src->v_stride;
 
     recon_picture_dst->luma_size   = recon_picture_src->luma_size;
     recon_picture_dst->chroma_size = recon_picture_src->chroma_size;
     recon_picture_dst->packed_flag = recon_picture_src->packed_flag;
 
-    recon_picture_dst->stride_bit_inc_y  = recon_picture_src->stride_bit_inc_y;
-    recon_picture_dst->stride_bit_inc_cb = recon_picture_src->stride_bit_inc_cb;
-    recon_picture_dst->stride_bit_inc_cr = recon_picture_src->stride_bit_inc_cr;
+    recon_picture_dst->y_stride_bit_inc  = recon_picture_src->y_stride_bit_inc;
+    recon_picture_dst->u_stride_bit_inc = recon_picture_src->u_stride_bit_inc;
+    recon_picture_dst->v_stride_bit_inc = recon_picture_src->v_stride_bit_inc;
 
     recon_picture_dst->buffer_enable_mask = scs->seq_header.color_config.mono_chrome ? PICTURE_BUFFER_DESC_LUMA_MASK
                                                                                      : PICTURE_BUFFER_DESC_FULL_MASK;
@@ -91,30 +91,30 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
     recon_picture_dst->buffer_alloc_sz = alloc_sz;
     uint32_t assigned_space = 0;
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
-        recon_picture_dst->buffer_y = recon_picture_dst->buffer_alloc +
-            (recon_picture_dst->border + (recon_picture_dst->stride_y * recon_picture_dst->border)) * bytes_per_pixel;
+        recon_picture_dst->y_buffer = recon_picture_dst->buffer_alloc +
+            (recon_picture_dst->border + (recon_picture_dst->y_stride * recon_picture_dst->border)) * bytes_per_pixel;
         assigned_space += buffer_size[0];
     }
     else {
-        recon_picture_dst->buffer_y = NULL;
+        recon_picture_dst->y_buffer = NULL;
     }
 
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        recon_picture_dst->buffer_cb = recon_picture_dst->buffer_alloc + assigned_space +
-            ((recon_picture_dst->border >> ss_x) + (recon_picture_dst->stride_cb * (recon_picture_dst->border >> ss_y))) * bytes_per_pixel;
+        recon_picture_dst->u_buffer = recon_picture_dst->buffer_alloc + assigned_space +
+            ((recon_picture_dst->border >> ss_x) + (recon_picture_dst->u_stride * (recon_picture_dst->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[1];
     }
     else {
-        recon_picture_dst->buffer_cb = NULL;
+        recon_picture_dst->u_buffer = NULL;
     }
 
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
-        recon_picture_dst->buffer_cr = recon_picture_dst->buffer_alloc + assigned_space +
-            ((recon_picture_dst->border >> ss_x) + (recon_picture_dst->stride_cr * (recon_picture_dst->border >> ss_y))) * bytes_per_pixel;
+        recon_picture_dst->v_buffer = recon_picture_dst->buffer_alloc + assigned_space +
+            ((recon_picture_dst->border >> ss_x) + (recon_picture_dst->v_stride * (recon_picture_dst->border >> ss_y))) * bytes_per_pixel;
         assigned_space += buffer_size[2];
     }
     else {
-        recon_picture_dst->buffer_cr = NULL;
+        recon_picture_dst->v_buffer = NULL;
     }
     assert(assigned_space == alloc_sz);
 
@@ -128,10 +128,10 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
             int sub_x = plane ? scs->subsampling_x : 0;
             int sub_y = plane ? scs->subsampling_y : 0;
 
-            src_buf = plane == 0 ? recon_picture_src->buffer_y : plane == 1 ? recon_picture_src->buffer_cb : recon_picture_src->buffer_cr;
-            src_stride = plane == 0 ? recon_picture_src->stride_y : plane == 1 ? recon_picture_src->stride_cb : recon_picture_src->stride_cr;
-            dst_buf = plane == 0 ? recon_picture_dst->buffer_y : plane == 1 ? recon_picture_dst->buffer_cb : recon_picture_dst->buffer_cr;
-            dst_stride = plane == 0 ? recon_picture_dst->stride_y : plane == 1 ? recon_picture_dst->stride_cb : recon_picture_dst->stride_cr;
+            src_buf = plane == 0 ? recon_picture_src->y_buffer : plane == 1 ? recon_picture_src->u_buffer : recon_picture_src->v_buffer;
+            src_stride = plane == 0 ? recon_picture_src->y_stride : plane == 1 ? recon_picture_src->u_stride : recon_picture_src->v_stride;
+            dst_buf = plane == 0 ? recon_picture_dst->y_buffer : plane == 1 ? recon_picture_dst->u_buffer : recon_picture_dst->v_buffer;
+            dst_stride = plane == 0 ? recon_picture_dst->y_stride : plane == 1 ? recon_picture_dst->u_stride : recon_picture_dst->v_stride;
 
             int height = ((recon_picture_src->height + sub_y) >> sub_y);
             for (int row = 0; row < height; ++row) {
@@ -181,10 +181,10 @@ static void svt_av1_superres_upscale_frame(struct Av1Common* cm, PictureControlS
 
         int sub_x = plane ? ss_x : 0;
         int sub_y = plane ? ss_y : 0;
-        src_buf = plane == 0 ? src->buffer_y : plane == 1 ? src->buffer_cb : src->buffer_cr;
-        src_stride = plane == 0 ? src->stride_y : plane == 1 ? src->stride_cb : src->stride_cr;
-        dst_buf = plane == 0 ? dst->buffer_y : plane == 1 ? dst->buffer_cb : dst->buffer_cr;
-        dst_stride = plane == 0 ? dst->stride_y : plane == 1 ? dst->stride_cb : dst->stride_cr;
+        src_buf = plane == 0 ? src->y_buffer : plane == 1 ? src->u_buffer : src->v_buffer;
+        src_stride = plane == 0 ? src->y_stride : plane == 1 ? src->u_stride : src->v_stride;
+        dst_buf = plane == 0 ? dst->y_buffer : plane == 1 ? dst->u_buffer : dst->v_buffer;
+        dst_stride = plane == 0 ? dst->y_stride : plane == 1 ? dst->u_stride : dst->v_stride;
 
         svt_av1_upscale_normative_rows(cm,
                                        (const uint8_t*)src_buf,
@@ -326,8 +326,8 @@ static void cdef_seg_search(PictureControlSet* pcs, SequenceControlSet* scs, uin
         mi_high_l2[pli]  = MI_SIZE_LOG2 - subsampling_y;
         src[pli]         = pcs->cdef_input_recon[pli];
         ref[pli]         = pcs->cdef_input_source[pli];
-        stride_src[pli]  = pli == 0 ? recon_pic->stride_y : (pli == 1 ? recon_pic->stride_cb : recon_pic->stride_cr);
-        stride_ref[pli]  = pli == 0 ? input_pic->stride_y : (pli == 1 ? input_pic->stride_cb : input_pic->stride_cr);
+        stride_src[pli]  = pli == 0 ? recon_pic->y_stride : (pli == 1 ? recon_pic->u_stride : recon_pic->v_stride);
+        stride_ref[pli]  = pli == 0 ? input_pic->y_stride : (pli == 1 ? input_pic->u_stride : input_pic->v_stride);
     }
 
     // Loop over all filter blocks (64x64)

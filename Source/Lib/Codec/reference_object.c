@@ -44,18 +44,18 @@ static void initialize_samples_neighboring_reference_picture_8bit(EbByte recon_s
 }
 
 static void initialize_samples_neighboring_reference_picture(EbPictureBufferDesc* ref_pic) {
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_y,
-        ref_pic->stride_y,
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->y_buffer,
+        ref_pic->y_stride,
         ref_pic->width,
         ref_pic->height);
 
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_cb,
-        ref_pic->stride_cb,
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->u_buffer,
+        ref_pic->u_stride,
         ref_pic->width >> 1,
         ref_pic->height >> 1);
 
-    initialize_samples_neighboring_reference_picture_8bit(ref_pic->buffer_cr,
-        ref_pic->stride_cr,
+    initialize_samples_neighboring_reference_picture_8bit(ref_pic->v_buffer,
+        ref_pic->v_stride,
         ref_pic->width >> 1,
         ref_pic->height >> 1);
 }

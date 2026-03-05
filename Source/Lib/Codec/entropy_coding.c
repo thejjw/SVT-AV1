@@ -600,7 +600,7 @@ static EbErrorType av1_encode_tx_coef_y(PictureControlSet* pcs, EntropyCodingCon
 
         const uint32_t coeff1d_offset = ec_ctx->coded_area_sb;
 
-        int32_t* coeff_buffer = (int32_t*)coeff_ptr->buffer_y + coeff1d_offset;
+        int32_t* coeff_buffer = (int32_t*)coeff_ptr->y_buffer + coeff1d_offset;
 
         int16_t txb_skip_ctx = 0;
         int16_t dc_sign_ctx  = 0;
@@ -625,7 +625,7 @@ static EbErrorType av1_encode_tx_coef_y(PictureControlSet* pcs, EntropyCodingCon
                                                       txb_itr,
                                                       intraLumaDir,
                                                       coeff_buffer,
-                                                      coeff_ptr->stride_y,
+                                                      coeff_ptr->y_stride,
                                                       COMPONENT_LUMA,
                                                       txb_skip_ctx,
                                                       dc_sign_ctx,
@@ -668,7 +668,7 @@ static void av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingContext* 
 
     for (unsigned tx_index = 0; tx_index < txb_count; ++tx_index) {
         // cb
-        int32_t* coeff_buffer = (int32_t*)coeff_ptr->buffer_cb + ec_ctx->coded_area_sb_uv;
+        int32_t* coeff_buffer = (int32_t*)coeff_ptr->u_buffer + ec_ctx->coded_area_sb_uv;
         int16_t  txb_skip_ctx = 0;
         int16_t  dc_sign_ctx  = 0;
 
@@ -692,14 +692,14 @@ static void av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingContext* 
                                                        tx_index,
                                                        intraLumaDir,
                                                        coeff_buffer,
-                                                       coeff_ptr->stride_cb,
+                                                       coeff_ptr->u_stride,
                                                        COMPONENT_CHROMA,
                                                        txb_skip_ctx,
                                                        dc_sign_ctx,
                                                        blk_ptr->eob.u[tx_index]);
 
         // cr
-        coeff_buffer = (int32_t*)coeff_ptr->buffer_cr + ec_ctx->coded_area_sb_uv;
+        coeff_buffer = (int32_t*)coeff_ptr->v_buffer + ec_ctx->coded_area_sb_uv;
         txb_skip_ctx = 0;
         dc_sign_ctx  = 0;
 
@@ -723,7 +723,7 @@ static void av1_encode_tx_coef_uv(PictureControlSet* pcs, EntropyCodingContext* 
                                                        tx_index,
                                                        intraLumaDir,
                                                        coeff_buffer,
-                                                       coeff_ptr->stride_cr,
+                                                       coeff_ptr->v_stride,
                                                        COMPONENT_CHROMA,
                                                        txb_skip_ctx,
                                                        dc_sign_ctx,
@@ -806,7 +806,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
 
             const uint32_t coeff1d_offset = ec_ctx->coded_area_sb;
 
-            coeff_buffer = (int32_t*)coeff_ptr->buffer_y + coeff1d_offset;
+            coeff_buffer = (int32_t*)coeff_ptr->y_buffer + coeff1d_offset;
 
             {
                 int16_t txb_skip_ctx = 0;
@@ -832,7 +832,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                                                       txb_itr,
                                                       intraLumaDir,
                                                       coeff_buffer,
-                                                      coeff_ptr->stride_y,
+                                                      coeff_ptr->y_stride,
                                                       COMPONENT_LUMA,
                                                       txb_skip_ctx,
                                                       dc_sign_ctx,
@@ -842,7 +842,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
             if (has_uv) {
                 const BlockSize bsize_uv = get_plane_block_size(luma_bsize, 1, 1);
                 // cb
-                coeff_buffer = (int32_t*)coeff_ptr->buffer_cb + ec_ctx->coded_area_sb_uv;
+                coeff_buffer = (int32_t*)coeff_ptr->u_buffer + ec_ctx->coded_area_sb_uv;
                 {
                     int16_t txb_skip_ctx = 0;
                     int16_t dc_sign_ctx  = 0;
@@ -867,7 +867,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                                                            txb_itr,
                                                            intraLumaDir,
                                                            coeff_buffer,
-                                                           coeff_ptr->stride_cb,
+                                                           coeff_ptr->u_stride,
                                                            COMPONENT_CHROMA,
                                                            txb_skip_ctx,
                                                            dc_sign_ctx,
@@ -875,7 +875,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                 }
 
                 // cr
-                coeff_buffer = (int32_t*)coeff_ptr->buffer_cr + ec_ctx->coded_area_sb_uv;
+                coeff_buffer = (int32_t*)coeff_ptr->v_buffer + ec_ctx->coded_area_sb_uv;
                 {
                     int16_t txb_skip_ctx = 0;
                     int16_t dc_sign_ctx  = 0;
@@ -900,7 +900,7 @@ static EbErrorType av1_encode_coeff_1d(PictureControlSet* pcs, EntropyCodingCont
                                                            txb_itr,
                                                            intraLumaDir,
                                                            coeff_buffer,
-                                                           coeff_ptr->stride_cr,
+                                                           coeff_ptr->v_stride,
                                                            COMPONENT_CHROMA,
                                                            txb_skip_ctx,
                                                            dc_sign_ctx,

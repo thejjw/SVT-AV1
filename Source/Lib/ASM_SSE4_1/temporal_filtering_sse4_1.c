@@ -889,7 +889,7 @@ static void apply_filtering_central_loop_hbd(uint16_t w, uint16_t h, uint16_t* s
 void svt_aom_apply_filtering_central_sse4_1(MeContext* me_ctx, EbPictureBufferDesc* input_picture_ptr_central,
                                             EbByte* src, uint32_t** accum, uint16_t** count, uint16_t blk_width,
                                             uint16_t blk_height, uint32_t ss_x, uint32_t ss_y) {
-    uint16_t src_stride_y = input_picture_ptr_central->stride_y;
+    uint16_t src_stride_y = input_picture_ptr_central->y_stride;
 
     // Luma
     apply_filtering_central_loop_lbd(blk_width, blk_height, src[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);
@@ -909,7 +909,7 @@ void svt_aom_apply_filtering_central_highbd_sse4_1(MeContext* me_ctx, EbPictureB
                                                    uint16_t** src_16bit, uint32_t** accum, uint16_t** count,
                                                    uint16_t blk_width, uint16_t blk_height, uint32_t ss_x,
                                                    uint32_t ss_y) {
-    uint16_t src_stride_y = input_picture_ptr_central->stride_y;
+    uint16_t src_stride_y = input_picture_ptr_central->y_stride;
 
     // Luma
     apply_filtering_central_loop_hbd(blk_width, blk_height, src_16bit[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);

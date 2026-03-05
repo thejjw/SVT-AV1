@@ -439,23 +439,23 @@ static void pick_wedge(PictureControlSet* pcs, ModeDecisionContext* ctx, const B
     DECLARE_ALIGNED(32, int16_t, residual0[MAX_SB_SQUARE]); // src - pred0
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
     if (hbd_md) {
-        uint16_t* src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x) +
-            (ctx->blk_org_y) * src_pic->stride_y;
+        uint16_t* src_buf_hbd = (uint16_t*)src_pic->y_buffer + (ctx->blk_org_x) +
+            (ctx->blk_org_y) * src_pic->y_stride;
         svt_aom_highbd_subtract_block(bh,
                                       bw,
                                       residual0,
                                       bw,
                                       (uint8_t*)src_buf_hbd /*src->buf*/,
-                                      src_pic->stride_y /*src->stride*/,
+                                      src_pic->y_stride /*src->stride*/,
                                       (uint8_t*)p0,
                                       bw,
                                       EB_TEN_BIT);
     } else
 #endif
     {
-        uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x) +
-            (ctx->blk_org_y) * src_pic->stride_y;
-        svt_aom_subtract_block(bh, bw, residual0, bw, src_buf /*src->buf*/, src_pic->stride_y /*src->stride*/, p0, bw);
+        uint8_t* src_buf = src_pic->y_buffer + (ctx->blk_org_x) +
+            (ctx->blk_org_y) * src_pic->y_stride;
+        svt_aom_subtract_block(bh, bw, residual0, bw, src_buf /*src->buf*/, src_pic->y_stride /*src->stride*/, p0, bw);
     }
     int64_t sign_limit = ((int64_t)svt_aom_sum_squares_i16(residual0, N) -
                           (int64_t)svt_aom_sum_squares_i16(residual1, N)) *
@@ -812,17 +812,17 @@ static EbErrorType get_single_prediction_for_obmc_luma_hbd(SequenceControlSet* s
 
     //List0-Y
     assert(ref_pic_list0 != NULL);
-    src_stride  = ref_pic_list0->stride_y;
-    dst_stride  = prediction_ptr->stride_y;
+    src_stride  = ref_pic_list0->y_stride;
+    dst_stride  = prediction_ptr->y_stride;
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstY, 128, is_compound, bit_depth);
 
     ScaleFactors sf;
     svt_av1_setup_scale_factors_for_frame(
         &sf, ref_pic_list0->width, ref_pic_list0->height, prediction_ptr->width, prediction_ptr->height);
-    src_ptr_8b = ref_pic_list0->buffer_y;
-    src_ptr_2b = ref_pic_list0->buffer_bit_inc_y;
-    dst_ptr = (uint16_t*)prediction_ptr->buffer_y + dst_origin_x +
-        (dst_origin_y) * prediction_ptr->stride_y;
+    src_ptr_8b = ref_pic_list0->y_buffer;
+    src_ptr_2b = ref_pic_list0->y_buffer_bit_inc;
+    dst_ptr = (uint16_t*)prediction_ptr->y_buffer + dst_origin_x +
+        (dst_origin_y) * prediction_ptr->y_stride;
 
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr_8b,
@@ -878,8 +878,8 @@ static EbErrorType get_single_prediction_for_obmc_chroma_hbd(SequenceControlSet*
 
     assert(ref_pic_list0 != NULL);
     //List0-Cb
-    src_stride  = ref_pic_list0->stride_cb;
-    dst_stride  = prediction_ptr->stride_cb;
+    src_stride  = ref_pic_list0->u_stride;
+    dst_stride  = prediction_ptr->u_stride;
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCb, 64, is_compound, bit_depth);
 
     ScaleFactors sf;
@@ -888,10 +888,10 @@ static EbErrorType get_single_prediction_for_obmc_chroma_hbd(SequenceControlSet*
     int pu_origin_y_chroma = ROUND_UV(pu_origin_y) >> ss_y;
     int pu_origin_x_chroma = ROUND_UV(pu_origin_x) >> ss_x;
 
-    src_ptr_8b = ref_pic_list0->buffer_cb;
-    src_ptr_2b = ref_pic_list0->buffer_bit_inc_cb;
-    dst_ptr = (uint16_t*)prediction_ptr->buffer_cb + (ROUND_UV(dst_origin_x) >> ss_x) +
-        (ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->stride_cb;
+    src_ptr_8b = ref_pic_list0->u_buffer;
+    src_ptr_2b = ref_pic_list0->u_buffer_bit_inc;
+    dst_ptr = (uint16_t*)prediction_ptr->u_buffer + (ROUND_UV(dst_origin_x) >> ss_x) +
+        (ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->u_stride;
 
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr_8b,
@@ -924,14 +924,14 @@ static EbErrorType get_single_prediction_for_obmc_chroma_hbd(SequenceControlSet*
                                      NULL); // wm_params
 
     //List0-Cr
-    src_stride  = ref_pic_list0->stride_cr;
-    dst_stride  = prediction_ptr->stride_cr;
+    src_stride  = ref_pic_list0->v_stride;
+    dst_stride  = prediction_ptr->v_stride;
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCr, 64, is_compound, bit_depth);
 
-    src_ptr_8b = ref_pic_list0->buffer_cr;
-    src_ptr_2b = ref_pic_list0->buffer_bit_inc_cr;
-    dst_ptr = (uint16_t*)prediction_ptr->buffer_cr + (ROUND_UV(dst_origin_x) >> ss_x) +
-        (ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->stride_cr;
+    src_ptr_8b = ref_pic_list0->v_buffer;
+    src_ptr_2b = ref_pic_list0->v_buffer_bit_inc;
+    dst_ptr = (uint16_t*)prediction_ptr->v_buffer + (ROUND_UV(dst_origin_x) >> ss_x) +
+        (ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->v_stride;
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr_8b,
                                      src_ptr_2b,
@@ -982,16 +982,16 @@ static EbErrorType get_single_prediction_for_obmc_luma(SequenceControlSet* scs, 
 
     //List0-Y
     assert(ref_pic_list0 != NULL);
-    src_stride = ref_pic_list0->stride_y;
-    dst_stride = prediction_ptr->stride_y;
+    src_stride = ref_pic_list0->y_stride;
+    dst_stride = prediction_ptr->y_stride;
 
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstY, 128, is_compound, EB_EIGHT_BIT);
 
     ScaleFactors sf;
     svt_av1_setup_scale_factors_for_frame(
         &sf, ref_pic_list0->width, ref_pic_list0->height, prediction_ptr->width, prediction_ptr->height);
-    src_ptr = ref_pic_list0->buffer_y;
-    dst_ptr = prediction_ptr->buffer_y + ((dst_origin_x + (dst_origin_y) * prediction_ptr->stride_y));
+    src_ptr = ref_pic_list0->y_buffer;
+    dst_ptr = prediction_ptr->y_buffer + ((dst_origin_x + (dst_origin_y) * prediction_ptr->y_stride));
 
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr,
@@ -1044,8 +1044,8 @@ static EbErrorType get_single_prediction_for_obmc_chroma(SequenceControlSet* scs
     ConvolveParams conv_params;
     assert(ref_pic_list0 != NULL);
     //List0-Cb
-    src_stride = ref_pic_list0->stride_cb;
-    dst_stride = prediction_ptr->stride_cb;
+    src_stride = ref_pic_list0->u_stride;
+    dst_stride = prediction_ptr->u_stride;
 
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCb, 64, is_compound, EB_EIGHT_BIT);
 
@@ -1055,9 +1055,9 @@ static EbErrorType get_single_prediction_for_obmc_chroma(SequenceControlSet* scs
     int pu_origin_y_chroma = ROUND_UV(pu_origin_y) >> ss_y;
     int pu_origin_x_chroma = ROUND_UV(pu_origin_x) >> ss_x;
 
-    src_ptr = ref_pic_list0->buffer_cb;
-    dst_ptr = prediction_ptr->buffer_cb + (ROUND_UV(dst_origin_x) >> ss_x) +
-            ((ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->stride_cb);
+    src_ptr = ref_pic_list0->u_buffer;
+    dst_ptr = prediction_ptr->u_buffer + (ROUND_UV(dst_origin_x) >> ss_x) +
+            ((ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->u_stride);
 
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr,
@@ -1090,14 +1090,14 @@ static EbErrorType get_single_prediction_for_obmc_chroma(SequenceControlSet* scs
                                      NULL); // wm_params
 
     //List0-Cr
-    src_stride = ref_pic_list0->stride_cr;
-    dst_stride = prediction_ptr->stride_cr;
+    src_stride = ref_pic_list0->v_stride;
+    dst_stride = prediction_ptr->v_stride;
 
     conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCr, 64, is_compound, EB_EIGHT_BIT);
 
-    src_ptr = ref_pic_list0->buffer_cr;
-    dst_ptr = prediction_ptr->buffer_cr + (ROUND_UV(dst_origin_x) >> ss_x) +
-            ((ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->stride_cr);
+    src_ptr = ref_pic_list0->v_buffer;
+    dst_ptr = prediction_ptr->v_buffer + (ROUND_UV(dst_origin_x) >> ss_x) +
+            ((ROUND_UV(dst_origin_y) >> ss_y) * prediction_ptr->v_stride);
     svt_aom_enc_make_inter_predictor(scs,
                                      src_ptr,
                                      NULL,
@@ -1140,12 +1140,12 @@ static INLINE void build_prediction_by_above_pred(uint8_t is16bit, MacroBlockD* 
     av1_setup_build_prediction_by_above_pred(xd, rel_mi_col, above_mi_width, &backup_mbmi, ctxt);
 
     ctxt->prediction_ptr.border    = 0;
-    ctxt->prediction_ptr.buffer_y  = ctxt->tmp_buf[0];
-    ctxt->prediction_ptr.buffer_cb = ctxt->tmp_buf[1];
-    ctxt->prediction_ptr.buffer_cr = ctxt->tmp_buf[2];
-    ctxt->prediction_ptr.stride_y  = ctxt->tmp_stride[0];
-    ctxt->prediction_ptr.stride_cb = ctxt->tmp_stride[1];
-    ctxt->prediction_ptr.stride_cr = ctxt->tmp_stride[2];
+    ctxt->prediction_ptr.y_buffer  = ctxt->tmp_buf[0];
+    ctxt->prediction_ptr.u_buffer = ctxt->tmp_buf[1];
+    ctxt->prediction_ptr.v_buffer = ctxt->tmp_buf[2];
+    ctxt->prediction_ptr.y_stride  = ctxt->tmp_stride[0];
+    ctxt->prediction_ptr.u_stride = ctxt->tmp_stride[1];
+    ctxt->prediction_ptr.v_stride = ctxt->tmp_stride[2];
     ctxt->prediction_ptr.width     = (uint16_t)ctxt->tmp_width;
     ctxt->prediction_ptr.height    = (uint16_t)ctxt->tmp_height;
 
@@ -1246,12 +1246,12 @@ static INLINE void build_prediction_by_left_pred(uint8_t is16bit, MacroBlockD* x
     int mi_y = left_mi_row << MI_SIZE_LOG2;
 
     ctxt->prediction_ptr.border    = 0;
-    ctxt->prediction_ptr.buffer_y  = ctxt->tmp_buf[0];
-    ctxt->prediction_ptr.buffer_cb = ctxt->tmp_buf[1];
-    ctxt->prediction_ptr.buffer_cr = ctxt->tmp_buf[2];
-    ctxt->prediction_ptr.stride_y  = ctxt->tmp_stride[0];
-    ctxt->prediction_ptr.stride_cb = ctxt->tmp_stride[1];
-    ctxt->prediction_ptr.stride_cr = ctxt->tmp_stride[2];
+    ctxt->prediction_ptr.y_buffer  = ctxt->tmp_buf[0];
+    ctxt->prediction_ptr.u_buffer = ctxt->tmp_buf[1];
+    ctxt->prediction_ptr.v_buffer = ctxt->tmp_buf[2];
+    ctxt->prediction_ptr.y_stride  = ctxt->tmp_stride[0];
+    ctxt->prediction_ptr.u_stride = ctxt->tmp_stride[1];
+    ctxt->prediction_ptr.v_stride = ctxt->tmp_stride[2];
     ctxt->prediction_ptr.width     = (uint16_t)ctxt->tmp_width;
     ctxt->prediction_ptr.height    = (uint16_t)ctxt->tmp_height;
 
@@ -1804,15 +1804,15 @@ void calc_target_weighted_pred(PictureControlSet* pcs, ModeDecisionContext* ctx,
     }
 
     EbPictureBufferDesc* src_pic = pcs->ppcs->enhanced_pic;
-    const uint8_t* src = src_pic->buffer_y + (ctx->blk_org_x) +
-        (ctx->blk_org_y) * src_pic->stride_y;
+    const uint8_t* src = src_pic->y_buffer + (ctx->blk_org_x) +
+        (ctx->blk_org_y) * src_pic->y_stride;
 
     for (int row = 0; row < bh; ++row) {
         for (int col = 0; col < bw; ++col) {
             wsrc_buf[col] = src[col] * src_scale - wsrc_buf[col];
         }
         wsrc_buf += bw;
-        src += src_pic->stride_y;
+        src += src_pic->y_stride;
     }
 }
 
@@ -1989,8 +1989,8 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
     const double effective_ac_bias = get_effective_ac_bias(
         pcs->scs->static_config.ac_bias, pcs->slice_type == I_SLICE, pcs->temporal_layer_index);
     EbPictureBufferDesc* input_pic    = bit_depth > 8 ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    const uint32_t input_offset = (ctx->blk_org_y) * input_pic->stride_y + (ctx->blk_org_x);
-    const uint32_t input_chroma_offset = ((ctx->blk_org_y) * input_pic->stride_cb + (ctx->blk_org_x)) / 2;
+    const uint32_t input_offset = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
+    const uint32_t input_chroma_offset = ((ctx->blk_org_y) * input_pic->u_stride + (ctx->blk_org_x)) / 2;
     const int32_t prediction_offset = 0;
     const int32_t prediction_chroma_offset = 0;
     const uint8_t         hbd                        = (bit_depth > 8) ? 1 : 0;
@@ -2005,22 +2005,22 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
 
         switch (plane) {
         case 0:
-            sse = spatial_full_dist_type_fun(input_pic->buffer_y,
+            sse = spatial_full_dist_type_fun(input_pic->y_buffer,
                                              input_offset,
-                                             input_pic->stride_y << shift,
-                                             prediction_ptr->buffer_y,
+                                             input_pic->y_stride << shift,
+                                             prediction_ptr->y_buffer,
                                              prediction_offset,
-                                             prediction_ptr->stride_y << shift,
+                                             prediction_ptr->y_stride << shift,
                                              ctx->blk_geom->bwidth,
                                              ctx->blk_geom->bheight >> shift)
                 << shift;
             if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->buffer_y,
+                sse += get_svt_psy_full_dist(input_pic->y_buffer,
                                              input_offset,
-                                             input_pic->stride_y << shift,
-                                             prediction_ptr->buffer_y,
+                                             input_pic->y_stride << shift,
+                                             prediction_ptr->y_buffer,
                                              prediction_offset,
-                                             prediction_ptr->stride_y << shift,
+                                             prediction_ptr->y_stride << shift,
                                              ctx->blk_geom->bwidth,
                                              ctx->blk_geom->bheight >> shift,
                                              hbd,
@@ -2029,21 +2029,21 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
             }
             break;
         case 1:
-            sse = spatial_full_dist_type_fun(input_pic->buffer_cb,
+            sse = spatial_full_dist_type_fun(input_pic->u_buffer,
                                              input_chroma_offset,
-                                             input_pic->stride_cb,
-                                             prediction_ptr->buffer_cb,
+                                             input_pic->u_stride,
+                                             prediction_ptr->u_buffer,
                                              prediction_chroma_offset,
-                                             prediction_ptr->stride_cb,
+                                             prediction_ptr->u_stride,
                                              ctx->blk_geom->bwidth_uv,
                                              ctx->blk_geom->bheight_uv);
             if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->buffer_cb,
+                sse += get_svt_psy_full_dist(input_pic->u_buffer,
                                              input_chroma_offset,
-                                             input_pic->stride_cb,
-                                             prediction_ptr->buffer_cb,
+                                             input_pic->u_stride,
+                                             prediction_ptr->u_buffer,
                                              prediction_chroma_offset,
-                                             prediction_ptr->stride_cb,
+                                             prediction_ptr->u_stride,
                                              ctx->blk_geom->bwidth_uv,
                                              ctx->blk_geom->bheight_uv,
                                              hbd,
@@ -2051,21 +2051,21 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
             }
             break;
         default:
-            sse = spatial_full_dist_type_fun(input_pic->buffer_cr,
+            sse = spatial_full_dist_type_fun(input_pic->v_buffer,
                                              input_chroma_offset,
-                                             input_pic->stride_cr,
-                                             prediction_ptr->buffer_cr,
+                                             input_pic->v_stride,
+                                             prediction_ptr->v_buffer,
                                              prediction_chroma_offset,
-                                             prediction_ptr->stride_cr,
+                                             prediction_ptr->v_stride,
                                              ctx->blk_geom->bwidth_uv,
                                              ctx->blk_geom->bheight_uv);
             if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->buffer_cr,
+                sse += get_svt_psy_full_dist(input_pic->v_buffer,
                                              input_chroma_offset,
-                                             input_pic->stride_cr,
-                                             prediction_ptr->buffer_cr,
+                                             input_pic->v_stride,
+                                             prediction_ptr->v_buffer,
                                              prediction_chroma_offset,
-                                             prediction_ptr->stride_cr,
+                                             prediction_ptr->v_stride,
                                              ctx->blk_geom->bwidth_uv,
                                              ctx->blk_geom->bheight_uv,
                                              hbd,
@@ -2284,12 +2284,12 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
 
     EbPictureBufferDesc intra_pred_desc;
     intra_pred_desc.border    = 0;
-    intra_pred_desc.stride_y  = bwidth;
-    intra_pred_desc.stride_cb = bwidth >> 1;
-    intra_pred_desc.stride_cr = bwidth >> 1;
-    intra_pred_desc.buffer_y  = intra_pred;
-    intra_pred_desc.buffer_cb = intra_pred;
-    intra_pred_desc.buffer_cr = intra_pred;
+    intra_pred_desc.y_stride  = bwidth;
+    intra_pred_desc.u_stride = bwidth >> 1;
+    intra_pred_desc.v_stride = bwidth >> 1;
+    intra_pred_desc.y_buffer  = intra_pred;
+    intra_pred_desc.u_buffer = intra_pred;
+    intra_pred_desc.v_buffer = intra_pred;
 
     for (int32_t plane = start_plane; plane < end_plane; ++plane) {
         const int       ssx         = plane ? 1 : 0;
@@ -2305,9 +2305,9 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
         uint32_t blk_originy_uv = (pu_origin_y >> 3 << 3) >> 1;
 
         if (plane == 0) {
-            dst = pred_pic->buffer_y + ((dst_origin_x + (dst_origin_y) * pred_pic->stride_y) << is16bit);
-            dst_stride   = pred_pic->stride_y;
-            intra_stride = intra_pred_desc.stride_y;
+            dst = pred_pic->y_buffer + ((dst_origin_x + (dst_origin_y) * pred_pic->y_stride) << is16bit);
+            dst_stride   = pred_pic->y_stride;
+            intra_stride = intra_pred_desc.y_stride;
 
             if (!use_precomputed_intra) {
                 if (pu_origin_y != 0) {
@@ -2332,12 +2332,12 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
         }
 
         else if (plane == 1) {
-            dst = pred_pic->buffer_cb +
+            dst = pred_pic->u_buffer +
                 ((ROUND_UV(dst_origin_x) / 2 +
-                    ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cb)
+                    ROUND_UV(dst_origin_y) / 2 * pred_pic->u_stride)
                     << is16bit);
-            dst_stride   = pred_pic->stride_cb;
-            intra_stride = intra_pred_desc.stride_cb;
+            dst_stride   = pred_pic->u_stride;
+            intra_stride = intra_pred_desc.u_stride;
 
             if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
@@ -2358,12 +2358,12 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
                         ->top_left_array[(recon_neigh_cb->max_pic_h + blk_originx_uv - blk_originy_uv / 2) << is16bit];
             }
         } else {
-            dst = pred_pic->buffer_cr +
+            dst = pred_pic->v_buffer +
                 ((ROUND_UV(dst_origin_x) / 2 +
-                    ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cr)
+                    ROUND_UV(dst_origin_y) / 2 * pred_pic->v_stride)
                     << is16bit);
-            dst_stride   = pred_pic->stride_cr;
-            intra_stride = intra_pred_desc.stride_cr;
+            dst_stride   = pred_pic->v_stride;
+            intra_stride = intra_pred_desc.v_stride;
 
             if (blk_originy_uv != 0) {
                 svt_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
@@ -2741,12 +2741,12 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet* scs, ScaleFactors sf
     // List0-Y
     assert(ref_pic_list0 != NULL);
 
-    src_ptr = ref_pic_list0->buffer_y;
-    dst_ptr = prediction_ptr->buffer_y +
-        ((dst_origin_x + (dst_origin_y) * prediction_ptr->stride_y)
+    src_ptr = ref_pic_list0->y_buffer;
+    dst_ptr = prediction_ptr->y_buffer +
+        ((dst_origin_x + (dst_origin_y) * prediction_ptr->y_stride)
             << is16bit);
 
-    int32_t dst_stride = prediction_ptr->stride_y;
+    int32_t dst_stride = prediction_ptr->y_stride;
     /*ScaleFactor*/
     const struct ScaleFactors* const sf = &sf_identity;
     conv_params                         = get_conv_params_no_round(0, 0, 0, tmp_dstY, 128, is_compound, bit_depth);
@@ -2765,7 +2765,7 @@ EbErrorType svt_aom_simple_luma_unipred(SequenceControlSet* scs, ScaleFactors sf
                        bwidth,
                        bheight,
                        blk_ptr->av1xd,
-                       ref_pic_list0->stride_y,
+                       ref_pic_list0->y_stride,
                        dst_stride,
                        bit_depth,
                        subsampling_shift);
@@ -2784,8 +2784,8 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet* scs, ModeDecision
     const uint8_t    bheight      = blk_geom->bheight;
     const uint8_t    is_compound  = has_second_ref(block_mi);
     DECLARE_ALIGNED(32, uint16_t, tmp_dstY[64 * 64]);
-    uint8_t* dst_ptr = pred->buffer_y + ((dst_origin_x + (dst_origin_y) * pred->stride_y));
-    int32_t  dst_stride        = pred->stride_y;
+    uint8_t* dst_ptr = pred->y_buffer + ((dst_origin_x + (dst_origin_y) * pred->y_stride));
+    int32_t  dst_stride        = pred->y_stride;
     ConvolveParams conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstY, 64, is_compound, EB_EIGHT_BIT);
     for (int ref_itr = 0; ref_itr < 1 + is_compound; ref_itr++) {
         SubpelParams subpel_params = {SCALE_SUBPEL_SHIFTS, SCALE_SUBPEL_SHIFTS, 0, 0};
@@ -2813,7 +2813,7 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet* scs, ModeDecision
                                   &pos_x);
         }
 
-        uint8_t* src_ptr = ref_pic->buffer_y + ((pos_x + (pos_y) * ref_pic->stride_y));
+        uint8_t* src_ptr = ref_pic->y_buffer + ((pos_x + (pos_y) * ref_pic->y_stride));
 
         if (ref_itr /*&& is_compound*/) {
             conv_params.do_average            = 1;
@@ -2822,7 +2822,7 @@ static void av1_inter_prediction_light_pd0(SequenceControlSet* scs, ModeDecision
 
         assert(IMPLIES(conv_params.do_average, is_compound));
         enc_make_inter_predictor_light_pd0(
-            src_ptr, dst_ptr, &subpel_params, &conv_params, bwidth, bheight, ref_pic->stride_y, dst_stride);
+            src_ptr, dst_ptr, &subpel_params, &conv_params, bwidth, bheight, ref_pic->y_stride, dst_stride);
     }
 }
 
@@ -2850,8 +2850,8 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
     // Luma prediction
     if (component_mask & PICTURE_BUFFER_DESC_LUMA_MASK) {
         ConvolveParams conv_params_y = get_conv_params_no_round(0, 0, 0, tmp_dst_y, 64, is_compound, bit_depth);
-        uint8_t* dst_ptr_y = pred_pic->buffer_y +
-            ((dst_origin_x + (dst_origin_y) * pred_pic->stride_y) << is_16bit);
+        uint8_t* dst_ptr_y = pred_pic->y_buffer +
+            ((dst_origin_x + (dst_origin_y) * pred_pic->y_stride) << is_16bit);
 
         for (int i = 0; i < 1 + is_compound; i++) {
             EbPictureBufferDesc* ref_pic = i ? ref_pic_1 : ref_pic_0;
@@ -2881,14 +2881,14 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
             }
 
             assert(IMPLIES(conv_params_y.do_average, is_compound));
-            src_mod = ref_pic->buffer_y + ((pos_x + (pos_y) * ref_pic->stride_y));
-            src_mod_2b = ref_pic->buffer_bit_inc_y +
-                ((pos_x + (pos_y) * ref_pic->stride_bit_inc_y));
+            src_mod = ref_pic->y_buffer + ((pos_x + (pos_y) * ref_pic->y_stride));
+            src_mod_2b = ref_pic->y_buffer_bit_inc +
+                ((pos_x + (pos_y) * ref_pic->y_stride_bit_inc));
             svt_inter_predictor_light_pd1(src_mod,
                                           src_mod_2b,
-                                          ref_pic->stride_y,
+                                          ref_pic->y_stride,
                                           dst_ptr_y,
-                                          pred_pic->stride_y,
+                                          pred_pic->y_stride,
                                           bwidth,
                                           bheight,
                                           block_mi->interp_filters,
@@ -2902,11 +2902,11 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
     if (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) {
         uint16_t* tmp_dst_cb = tmp_dst_y;
         uint16_t* tmp_dst_cr = &tmp_dst_y[32 * 32];
-        uint8_t* dst_ptr_cb = pred_pic->buffer_cb +
-            (((dst_origin_x) / 2 + (dst_origin_y) / 2 * pred_pic->stride_cb)
+        uint8_t* dst_ptr_cb = pred_pic->u_buffer +
+            (((dst_origin_x) / 2 + (dst_origin_y) / 2 * pred_pic->u_stride)
                 << is_16bit);
-        uint8_t* dst_ptr_cr = pred_pic->buffer_cr +
-            (((dst_origin_x) / 2 + (dst_origin_y) / 2 * pred_pic->stride_cr)
+        uint8_t* dst_ptr_cr = pred_pic->v_buffer +
+            (((dst_origin_x) / 2 + (dst_origin_y) / 2 * pred_pic->v_stride)
                 << is_16bit);
         ConvolveParams conv_params_cb      = get_conv_params_no_round(0, 0, 0, tmp_dst_cb, 32, is_compound, bit_depth);
         ConvolveParams conv_params_cr      = get_conv_params_no_round(0, 0, 0, tmp_dst_cr, 32, is_compound, bit_depth);
@@ -2942,15 +2942,15 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
                                   &pos_y,
                                   &pos_x);
             if (component_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-                src_mod = ref_pic->buffer_cb +
-                    ((+ pos_x + (pos_y) * ref_pic->stride_cb));
-                src_mod_2b = ref_pic->buffer_bit_inc_cb +
-                    ((pos_x + (pos_y) * ref_pic->stride_bit_inc_cb));
+                src_mod = ref_pic->u_buffer +
+                    ((+ pos_x + (pos_y) * ref_pic->u_stride));
+                src_mod_2b = ref_pic->u_buffer_bit_inc +
+                    ((pos_x + (pos_y) * ref_pic->u_stride_bit_inc));
                 svt_inter_predictor_light_pd1(src_mod,
                                               src_mod_2b,
-                                              ref_pic->stride_cb,
+                                              ref_pic->u_stride,
                                               dst_ptr_cb,
-                                              pred_pic->stride_cb,
+                                              pred_pic->u_stride,
                                               blk_geom->bwidth_uv,
                                               blk_geom->bheight_uv,
                                               block_mi->interp_filters,
@@ -2960,15 +2960,15 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
             }
 
             if (component_mask & PICTURE_BUFFER_DESC_Cr_FLAG) {
-                src_mod = ref_pic->buffer_cr +
-                    ((pos_x + (pos_y) * ref_pic->stride_cr));
-                src_mod_2b = ref_pic->buffer_bit_inc_cr +
-                    ((pos_x + (pos_y) * ref_pic->stride_bit_inc_cr));
+                src_mod = ref_pic->v_buffer +
+                    ((pos_x + (pos_y) * ref_pic->v_stride));
+                src_mod_2b = ref_pic->v_buffer_bit_inc +
+                    ((pos_x + (pos_y) * ref_pic->v_stride_bit_inc));
                 svt_inter_predictor_light_pd1(src_mod,
                                               src_mod_2b,
-                                              ref_pic->stride_cr,
+                                              ref_pic->v_stride,
                                               dst_ptr_cr,
-                                              pred_pic->stride_cr,
+                                              pred_pic->v_stride,
                                               blk_geom->bwidth_uv,
                                               blk_geom->bheight_uv,
                                               block_mi->interp_filters,
@@ -3045,21 +3045,21 @@ static void av1_inter_prediction_obmc(PictureControlSet* pcs, BlkStruct* blk_ptr
                                        is16bit);
     }
 
-    uint8_t* final_dst_ptr_y = pred_pic->buffer_y +
-        ((dst_origin_x + (dst_origin_y) * pred_pic->stride_y) << is16bit);
-    uint16_t final_dst_stride_y = pred_pic->stride_y;
+    uint8_t* final_dst_ptr_y = pred_pic->y_buffer +
+        ((dst_origin_x + (dst_origin_y) * pred_pic->y_stride) << is16bit);
+    uint16_t final_dst_stride_y = pred_pic->y_stride;
 
-    uint8_t* final_dst_ptr_u = pred_pic->buffer_cb +
+    uint8_t* final_dst_ptr_u = pred_pic->u_buffer +
         ((ROUND_UV(dst_origin_x) / 2 +
-            ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cb)
+            ROUND_UV(dst_origin_y) / 2 * pred_pic->u_stride)
             << is16bit);
-    uint16_t final_dst_stride_u = pred_pic->stride_cb;
+    uint16_t final_dst_stride_u = pred_pic->u_stride;
 
-    uint8_t* final_dst_ptr_v = pred_pic->buffer_cr +
+    uint8_t* final_dst_ptr_v = pred_pic->v_buffer +
         ((ROUND_UV(dst_origin_x) / 2 +
-            ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cr)
+            ROUND_UV(dst_origin_y) / 2 * pred_pic->v_stride)
             << is16bit);
-    uint16_t final_dst_stride_v = pred_pic->stride_cr;
+    uint16_t final_dst_stride_v = pred_pic->v_stride;
 
     av1_build_obmc_inter_prediction(final_dst_ptr_y,
                                     final_dst_stride_y,
@@ -3174,18 +3174,18 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
                 : &(scale_factors[this_mbmi->block_mi.ref_frame[0]]);
 
             // Cb
-            uint8_t* src_ptr = ref_pic->buffer_cb;
+            uint8_t* src_ptr = ref_pic->u_buffer;
 
             uint8_t* src_ptr_2b = NULL;
-            if (ref_pic->buffer_bit_inc_cb) {
-                src_ptr_2b = ref_pic->buffer_bit_inc_cb;
+            if (ref_pic->u_buffer_bit_inc) {
+                src_ptr_2b = ref_pic->u_buffer_bit_inc;
             }
-            uint8_t* dst_ptr = pred_pic->buffer_cb +
+            uint8_t* dst_ptr = pred_pic->u_buffer +
                 (((((dst_origin_x >> 3) << 3)) / 2 +
-                    (((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cb)
+                    (((dst_origin_y >> 3) << 3)) / 2 * pred_pic->u_stride)
                     << is16bit);
-            dst_ptr += (x + y * pred_pic->stride_cb) << is16bit;
-            int32_t dst_stride = pred_pic->stride_cb;
+            dst_ptr += (x + y * pred_pic->u_stride) << is16bit;
+            int32_t dst_stride = pred_pic->u_stride;
 
             svt_aom_enc_make_inter_predictor(
                 pcs->ppcs->scs,
@@ -3206,7 +3206,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
                 (uint8_t)b4_h,
                 bsize,
                 xd,
-                ref_pic->stride_cb,
+                ref_pic->u_stride,
                 dst_stride,
                 1,
                 ss_y,
@@ -3219,17 +3219,17 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
                 NULL); // wm_params
 
             //Cr
-            src_ptr = ref_pic->buffer_cr;
+            src_ptr = ref_pic->v_buffer;
             src_ptr_2b = NULL;
-            if (ref_pic->buffer_bit_inc_cr) {
-                src_ptr_2b = ref_pic->buffer_bit_inc_cr;
+            if (ref_pic->v_buffer_bit_inc) {
+                src_ptr_2b = ref_pic->v_buffer_bit_inc;
             }
-            dst_ptr = pred_pic->buffer_cr +
+            dst_ptr = pred_pic->v_buffer +
                 (((((dst_origin_x >> 3) << 3)) / 2 +
-                    (((dst_origin_y >> 3) << 3)) / 2 * pred_pic->stride_cr)
+                    (((dst_origin_y >> 3) << 3)) / 2 * pred_pic->v_stride)
                     << is16bit);
-            dst_ptr += (x + y * pred_pic->stride_cr) << is16bit;
-            dst_stride = pred_pic->stride_cr;
+            dst_ptr += (x + y * pred_pic->v_stride) << is16bit;
+            dst_stride = pred_pic->v_stride;
 
             svt_aom_enc_make_inter_predictor(
                 pcs->ppcs->scs,
@@ -3250,7 +3250,7 @@ static uint8_t inter_chroma_4xn_pred(PictureControlSet* pcs, MacroBlockD* xd, Bl
                 (uint8_t)b4_h,
                 bsize,
                 xd,
-                ref_pic->stride_cr,
+                ref_pic->v_stride,
                 dst_stride,
                 2,
                 ss_y,
@@ -3338,8 +3338,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
         const uint8_t  ss_x          = 0;
         const uint8_t  ss_y          = 0;
         ConvolveParams conv_params_y = get_conv_params_no_round(0, 0, 0, tmp_dst_y, 128, is_compound, bit_depth);
-        uint8_t* dst_ptr_y = pred_pic->buffer_y +
-            ((dst_origin_x + (dst_origin_y) * pred_pic->stride_y) << is16bit);
+        uint8_t* dst_ptr_y = pred_pic->y_buffer +
+            ((dst_origin_x + (dst_origin_y) * pred_pic->y_stride) << is16bit);
 
         for (int ref_itr = 0; ref_itr < 1 + is_compound; ref_itr++) {
             EbPictureBufferDesc* ref_pic   = ref_itr ? ref_pic_1 : ref_pic_0;
@@ -3356,12 +3356,12 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                 conv_params_y.use_jnt_comp_avg      = conv_params_y.use_dist_wtd_comp_avg;
             }
 
-            if (ref_pic->buffer_bit_inc_y) {
-                src_ptr = ref_pic->buffer_y;
-                src_ptr_2b = ref_pic->buffer_bit_inc_y;
+            if (ref_pic->y_buffer_bit_inc) {
+                src_ptr = ref_pic->y_buffer;
+                src_ptr_2b = ref_pic->y_buffer_bit_inc;
             }
             else {
-                src_ptr = ref_pic->buffer_y;
+                src_ptr = ref_pic->y_buffer;
                 src_ptr_2b = NULL;
             }
             // ScaleFactor
@@ -3389,8 +3389,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                 bheight,
                 bsize,
                 blk_ptr->av1xd,
-                ref_pic->stride_y,
-                pred_pic->stride_y,
+                ref_pic->y_stride,
+                pred_pic->y_stride,
                 0,
                 ss_y,
                 ss_x,
@@ -3406,13 +3406,13 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
     // Perform chroma prediction
     if ((component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK)) {
         assert(IMPLIES(ctx, ctx->has_uv));
-        uint8_t* dst_ptr_cb = pred_pic->buffer_cb +
+        uint8_t* dst_ptr_cb = pred_pic->u_buffer +
             ((ROUND_UV(dst_origin_x) / 2 +
-                ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cb)
+                ROUND_UV(dst_origin_y) / 2 * pred_pic->u_stride)
                 << is16bit);
-        uint8_t* dst_ptr_cr = pred_pic->buffer_cr +
+        uint8_t* dst_ptr_cr = pred_pic->v_buffer +
             ((ROUND_UV(dst_origin_x) / 2 +
-                ROUND_UV(dst_origin_y) / 2 * pred_pic->stride_cr)
+                ROUND_UV(dst_origin_y) / 2 * pred_pic->v_stride)
                 << is16bit);
         ConvolveParams  conv_params_cb     = get_conv_params_no_round(0, 0, 0, tmp_dst_cb, 64, is_compound, bit_depth);
         ConvolveParams  conv_params_cr     = get_conv_params_no_round(0, 0, 0, tmp_dst_cr, 64, is_compound, bit_depth);
@@ -3479,12 +3479,12 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                               : &ref0_scale_factors;
 
                 // Cb pred
-                if (ref_pic->buffer_bit_inc_cb) {
-                    src_ptr = ref_pic->buffer_cb;
-                    src_ptr_2b = ref_pic->buffer_bit_inc_cb;
+                if (ref_pic->u_buffer_bit_inc) {
+                    src_ptr = ref_pic->u_buffer;
+                    src_ptr_2b = ref_pic->u_buffer_bit_inc;
                 }
                 else {
-                    src_ptr = ref_pic->buffer_cb;
+                    src_ptr = ref_pic->u_buffer;
                     src_ptr_2b = NULL;
                 }
 
@@ -3507,8 +3507,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                     (uint8_t)bheight_uv,
                     bsize,
                     blk_ptr->av1xd,
-                    ref_pic->stride_cb,
-                    pred_pic->stride_cb,
+                    ref_pic->u_stride,
+                    pred_pic->u_stride,
                     1,
                     ss_y,
                     ss_x,
@@ -3520,12 +3520,12 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                     wm_params);
 
                 // Pred Cr
-                if (ref_pic->buffer_bit_inc_cr) {
-                    src_ptr = ref_pic->buffer_cr;
-                    src_ptr_2b = ref_pic->buffer_bit_inc_cr;
+                if (ref_pic->v_buffer_bit_inc) {
+                    src_ptr = ref_pic->v_buffer;
+                    src_ptr_2b = ref_pic->v_buffer_bit_inc;
                 }
                 else {
-                    src_ptr = ref_pic->buffer_cr;
+                    src_ptr = ref_pic->v_buffer;
                     src_ptr_2b = NULL;
                 }
                 svt_aom_enc_make_inter_predictor(
@@ -3547,8 +3547,8 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
                     bheight_uv,
                     bsize,
                     blk_ptr->av1xd,
-                    ref_pic->stride_cr,
-                    pred_pic->stride_cr,
+                    ref_pic->v_stride,
+                    pred_pic->v_stride,
                     2,
                     ss_y,
                     ss_x,
@@ -3618,7 +3618,7 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
     uint32_t             bheight = ctx->blk_geom->bheight;
     EbPictureBufferDesc  pred_desc;
     pred_desc.border   = 0;
-    pred_desc.stride_y = bwidth;
+    pred_desc.y_stride = bwidth;
 
     const Mv             mv_0      = {.as_int = cand->block_mi.mv[0].as_int};
     const Mv             mv_1      = {.as_int = cand->block_mi.mv[1].as_int};
@@ -3640,7 +3640,7 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
         ctx->pred0                                               = ctx->cmp_store.pred0_buf[ctx->cmp_store.pred0_cnt++];
     }
 
-    pred_desc.buffer_y = ctx->pred0;
+    pred_desc.y_buffer = ctx->pred0;
 
     //we call the regular inter prediction path here(no compound)
     if (!found_l0) {
@@ -3693,7 +3693,7 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
     }
 
     //ref1 prediction
-    pred_desc.buffer_y = ctx->pred1;
+    pred_desc.y_buffer = ctx->pred1;
 
     //we call the regular inter prediction path here(no compound)
     if (!found_l1) {
@@ -3750,14 +3750,14 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
     if (hbd_md) {
-        uint16_t* src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x) +
-            (ctx->blk_org_y) * src_pic->stride_y;
+        uint16_t* src_buf_hbd = (uint16_t*)src_pic->y_buffer + (ctx->blk_org_x) +
+            (ctx->blk_org_y) * src_pic->y_stride;
         svt_aom_highbd_subtract_block(bheight,
                                       bwidth,
                                       ctx->residual1,
                                       bwidth,
                                       (uint8_t*)src_buf_hbd,
-                                      src_pic->stride_y,
+                                      src_pic->y_stride,
                                       (uint8_t*)ctx->pred1,
                                       bwidth,
                                       EB_TEN_BIT);
@@ -3773,9 +3773,9 @@ bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionConte
     } else
 #endif
     {
-        uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x) +
-            (ctx->blk_org_y) * src_pic->stride_y;
-        svt_aom_subtract_block(bheight, bwidth, ctx->residual1, bwidth, src_buf, src_pic->stride_y, ctx->pred1, bwidth);
+        uint8_t* src_buf = src_pic->y_buffer + (ctx->blk_org_x) +
+            (ctx->blk_org_y) * src_pic->y_stride;
+        svt_aom_subtract_block(bheight, bwidth, ctx->residual1, bwidth, src_buf, src_pic->y_stride, ctx->pred1, bwidth);
         svt_aom_subtract_block(bheight, bwidth, ctx->diff10, bwidth, ctx->pred1, bwidth, ctx->pred0, bwidth);
     }
 

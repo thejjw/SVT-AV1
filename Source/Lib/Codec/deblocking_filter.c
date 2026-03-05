@@ -147,11 +147,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
-                src->buffer_y,
+                src->y_buffer,
                 (scs->max_input_luma_width -
                  scs->max_input_pad_right), // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom),
-                src->stride_y,
+                src->y_stride,
                 mi_row,
                 mi_col,
                 /*NULL,*/ pd->subsampling_x,
@@ -162,11 +162,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
-                src->buffer_cb,
+                src->u_buffer,
                 (scs->max_input_luma_width - scs->max_input_pad_right) >>
                     1, // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom) >> 1,
-                src->stride_cb,
+                src->u_stride,
                 mi_row,
                 mi_col,
                 /*NULL,*/ pd->subsampling_x,
@@ -177,11 +177,11 @@ void svt_av1_setup_dst_planes(PictureControlSet* pcs, MacroblockdPlane* planes, 
             setup_pred_plane(
                 &pd->dst,
                 bsize,
-                src->buffer_cr,
+                src->v_buffer,
                 (scs->max_input_luma_width - scs->max_input_pad_right) >>
                     1, // The width/height should be the unpadded width/height (see AV1 spec 7.14.2 Edge Loop Filter Process)
                 (scs->max_input_luma_height - scs->max_input_pad_bottom) >> 1,
-                src->stride_cr,
+                src->v_stride,
                 mi_row,
                 mi_col,
                 /* NULL,*/ pd->subsampling_x,
@@ -753,35 +753,35 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
 
     uint16_t chroma_width = (luma_width >> 1);
     if (plane == 0) {
-        uint16_t stride_y = srcBuffer->stride_y << is_16bit;
+        uint16_t y_stride = srcBuffer->y_stride << is_16bit;
 
-        dstBuffer->stride_y         = srcBuffer->stride_y;
-        dstBuffer->stride_bit_inc_y = srcBuffer->stride_bit_inc_y;
+        dstBuffer->y_stride         = srcBuffer->y_stride;
+        dstBuffer->y_stride_bit_inc = srcBuffer->y_stride_bit_inc;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            svt_memcpy((dstBuffer->buffer_y + stride_y * input_row_index),
-                       (srcBuffer->buffer_y + stride_y * input_row_index),
+            svt_memcpy((dstBuffer->y_buffer + y_stride * input_row_index),
+                       (srcBuffer->y_buffer + y_stride * input_row_index),
                        luma_width);
         }
     } else if (plane == 1) {
-        uint16_t stride_cb           = srcBuffer->stride_cb << is_16bit;
-        dstBuffer->stride_cb         = srcBuffer->stride_cb;
-        dstBuffer->stride_bit_inc_cb = srcBuffer->stride_bit_inc_cb;
+        uint16_t u_stride           = srcBuffer->u_stride << is_16bit;
+        dstBuffer->u_stride         = srcBuffer->u_stride;
+        dstBuffer->u_stride_bit_inc = srcBuffer->u_stride_bit_inc;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
-            svt_memcpy((dstBuffer->buffer_cb + stride_cb * input_row_index),
-                       (srcBuffer->buffer_cb + stride_cb * input_row_index),
+            svt_memcpy((dstBuffer->u_buffer + u_stride * input_row_index),
+                       (srcBuffer->u_buffer + u_stride * input_row_index),
                        chroma_width);
         }
     } else if (plane == 2) {
-        uint16_t stride_cr = srcBuffer->stride_cr << is_16bit;
+        uint16_t v_stride = srcBuffer->v_stride << is_16bit;
 
-        dstBuffer->stride_cr         = srcBuffer->stride_cr;
-        dstBuffer->stride_bit_inc_cr = srcBuffer->stride_bit_inc_cr;
+        dstBuffer->v_stride         = srcBuffer->v_stride;
+        dstBuffer->v_stride_bit_inc = srcBuffer->v_stride_bit_inc;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
-            svt_memcpy((dstBuffer->buffer_cr + stride_cr * input_row_index),
-                       (srcBuffer->buffer_cr + stride_cr * input_row_index),
+            svt_memcpy((dstBuffer->v_buffer + v_stride * input_row_index),
+                       (srcBuffer->v_buffer + v_stride * input_row_index),
                        chroma_width);
         }
     }
@@ -806,30 +806,30 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
         EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->ppcs->enhanced_pic;
 
         if (plane == 0) {
-            return svt_spatial_full_distortion_kernel(input_pic->buffer_y,
+            return svt_spatial_full_distortion_kernel(input_pic->y_buffer,
                                                       0,
-                                                      input_pic->stride_y,
-                                                      recon_ptr->buffer_y,
+                                                      input_pic->y_stride,
+                                                      recon_ptr->y_buffer,
                                                       0,
-                                                      recon_ptr->stride_y,
+                                                      recon_ptr->y_stride,
                                                       input_align_width,
                                                       input_align_height);
         } else if (plane == 1) {
-            return svt_spatial_full_distortion_kernel(input_pic->buffer_cb,
+            return svt_spatial_full_distortion_kernel(input_pic->u_buffer,
                                                       0,
-                                                      input_pic->stride_cb,
-                                                      recon_ptr->buffer_cb,
+                                                      input_pic->u_stride,
+                                                      recon_ptr->u_buffer,
                                                       0,
-                                                      recon_ptr->stride_cb,
+                                                      recon_ptr->u_stride,
                                                       input_align_width >> ss_x,
                                                       input_align_height >> ss_y);
         } else if (plane == 2) {
-            return svt_spatial_full_distortion_kernel(input_pic->buffer_cr,
+            return svt_spatial_full_distortion_kernel(input_pic->v_buffer,
                                                       0,
-                                                      input_pic->stride_cr,
-                                                      recon_ptr->buffer_cr,
+                                                      input_pic->v_stride,
+                                                      recon_ptr->v_buffer,
                                                       0,
-                                                      recon_ptr->stride_cr,
+                                                      recon_ptr->v_stride,
                                                       input_align_width >> ss_x,
                                                       input_align_height >> ss_y);
         }
@@ -838,30 +838,30 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
         EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->input_frame16bit;
 
         if (plane == 0) {
-            return svt_full_distortion_kernel16_bits(input_pic->buffer_y,
+            return svt_full_distortion_kernel16_bits(input_pic->y_buffer,
                                                      0,
-                                                     input_pic->stride_y,
-                                                     recon_ptr->buffer_y,
+                                                     input_pic->y_stride,
+                                                     recon_ptr->y_buffer,
                                                      0,
-                                                     recon_ptr->stride_y,
+                                                     recon_ptr->y_stride,
                                                      input_align_width,
                                                      input_align_height);
         } else if (plane == 1) {
-            return svt_full_distortion_kernel16_bits(input_pic->buffer_cb,
+            return svt_full_distortion_kernel16_bits(input_pic->u_buffer,
                                                      0,
-                                                     input_pic->stride_cb,
-                                                     recon_ptr->buffer_cb,
+                                                     input_pic->u_stride,
+                                                     recon_ptr->u_buffer,
                                                      0,
-                                                     recon_ptr->stride_cb,
+                                                     recon_ptr->u_stride,
                                                      (input_align_width + ss_x) >> ss_x,
                                                      (input_align_height + ss_y) >> ss_y);
         } else if (plane == 2) {
-            return svt_full_distortion_kernel16_bits(input_pic->buffer_cr,
+            return svt_full_distortion_kernel16_bits(input_pic->v_buffer,
                                                      0,
-                                                     input_pic->stride_cr,
-                                                     recon_ptr->buffer_cr,
+                                                     input_pic->v_stride,
+                                                     recon_ptr->v_buffer,
                                                      0,
-                                                     recon_ptr->stride_cr,
+                                                     recon_ptr->v_stride,
                                                      (input_align_width + ss_x) >> ss_x,
                                                      (input_align_height + ss_y) >> ss_y);
         }

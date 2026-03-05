@@ -240,9 +240,9 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
     EbPictureBufferDesc* recon_pic;
     svt_aom_get_recon_pic(pcs, &recon_pic, is_16bit);
 
-    EbByte recon_buffer_y = recon_pic->buffer_y;
-    EbByte recon_buffer_cb = recon_pic->buffer_cb;
-    EbByte recon_buffer_cr = recon_pic->buffer_cr;
+    EbByte recon_buffer_y = recon_pic->y_buffer;
+    EbByte recon_buffer_cb = recon_pic->u_buffer;
+    EbByte recon_buffer_cr = recon_pic->v_buffer;
 
     const int32_t num_planes = av1_num_planes(&scs->seq_header.color_config);
     DECLARE_ALIGNED(16, uint16_t, src[CDEF_INBUF_SIZE]);
@@ -390,17 +390,17 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
                 switch (pli) {
                 case 0:
                     rec_buff   = recon_buffer_y;
-                    rec_stride = recon_pic->stride_y;
+                    rec_stride = recon_pic->y_stride;
                     break;
                 case 1:
                     rec_buff     = recon_buffer_cb;
-                    rec_stride   = recon_pic->stride_cb;
+                    rec_stride   = recon_pic->u_stride;
                     level        = uv_level;
                     sec_strength = uv_sec_strength;
                     break;
                 case 2:
                     rec_buff     = recon_buffer_cr;
-                    rec_stride   = recon_pic->stride_cr;
+                    rec_stride   = recon_pic->v_stride;
                     level        = uv_level;
                     sec_strength = uv_sec_strength;
                     break;

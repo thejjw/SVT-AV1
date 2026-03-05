@@ -468,8 +468,8 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
         uint16_t input_row_index;
         uint32_t luma_buffer_offset = 0;
         uint32_t chroma_buffer_offset = 0;
-        uint16_t luma_stride   = dst_picture_ptr->stride_y << is_16bit_input;
-        uint16_t chroma_stride = dst_picture_ptr->stride_cb << is_16bit_input;
+        uint16_t luma_stride   = dst_picture_ptr->y_stride << is_16bit_input;
+        uint16_t chroma_stride = dst_picture_ptr->u_stride << is_16bit_input;
         uint16_t luma_width    = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
         uint16_t chroma_width  = (luma_width >> 1) << is_16bit_input;
         uint16_t luma_height   = (uint16_t)(dst_picture_ptr->height - scs->max_input_pad_bottom);
@@ -477,22 +477,22 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
         //uint16_t     luma_height  = input_pic->max_height;
         // Y
         for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            svt_memcpy((dst_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
-                       (src_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
+            svt_memcpy((dst_picture_ptr->y_buffer + luma_buffer_offset + luma_stride * input_row_index),
+                       (src_picture_ptr->y_buffer + luma_buffer_offset + luma_stride * input_row_index),
                        luma_width);
         }
 
         // U
         for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
-            svt_memcpy((dst_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
-                       (src_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
+            svt_memcpy((dst_picture_ptr->u_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
+                       (src_picture_ptr->u_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
                        chroma_width);
         }
 
         // V
         for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
-            svt_memcpy((dst_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
-                       (src_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
+            svt_memcpy((dst_picture_ptr->v_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
+                       (src_picture_ptr->v_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
                        chroma_width);
         }
     } else { // 10bit packed
@@ -890,7 +890,7 @@ void* svt_aom_resource_coordination_kernel(void* input_ptr) {
 
         EbObjectWrapper*    y8b_wrapper = input_cmd_obj->y8b_wrapper;
         EbBufferHeaderType* y8b_header  = (EbBufferHeaderType*)y8b_wrapper->object_ptr;
-        uint8_t*            buff_y8b    = ((EbPictureBufferDesc*)y8b_header->p_buffer)->buffer_y;
+        uint8_t*            buff_y8b    = ((EbPictureBufferDesc*)y8b_header->p_buffer)->y_buffer;
         eb_input_wrapper_ptr            = input_cmd_obj->eb_input_wrapper_ptr;
         eb_input_ptr                    = (EbBufferHeaderType*)eb_input_wrapper_ptr->object_ptr;
 
@@ -1065,7 +1065,7 @@ void* svt_aom_resource_coordination_kernel(void* input_ptr) {
             input_pic_wrapper = eb_input_wrapper_ptr;
             pcs->enhanced_pic = (EbPictureBufferDesc*)eb_input_ptr->p_buffer;
             // make pcs input buffer access the luma8bit part from the Luma8bit Pool
-            pcs->enhanced_pic->buffer_y = buff_y8b;
+            pcs->enhanced_pic->y_buffer = buff_y8b;
             pcs->input_ptr              = eb_input_ptr;
             end_of_sequence_flag        = (pcs->input_ptr->flags & EB_BUFFERFLAG_EOS) ? true : false;
             // Check whether super-res is previously enabled in this recycled parent pcs and restore
@@ -1184,7 +1184,7 @@ void* svt_aom_resource_coordination_kernel(void* input_ptr) {
                 svt_pa_reference_param_update(pa_ref_obj, scs);
             }
             EbPictureBufferDesc* input_padded_pic = (EbPictureBufferDesc*)pa_ref_obj->input_padded_pic;
-            input_padded_pic->buffer_y            = buff_y8b;
+            input_padded_pic->y_buffer            = buff_y8b;
             svt_object_inc_live_count(pcs->pa_ref_pic_wrapper, 1);
             if (pcs->y8b_wrapper) {
                 // y8b follows longest life cycle of pa ref and input. so it needs to build on top of live count of pa ref

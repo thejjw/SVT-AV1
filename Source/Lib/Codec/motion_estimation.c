@@ -415,8 +415,8 @@ static void open_loop_me_get_eight_search_point_results_block(
     int32_t y_search_index // input parameter, search region position in the
     // vertical direction, used to derive yMV
 ) {
-    // uint32_t ref_luma_stride = ref_pic_ptr->stride_y; // NADER
-    // uint8_t  *ref_ptr = ref_pic_ptr->buffer_y; // NADER
+    // uint32_t ref_luma_stride = ref_pic_ptr->y_stride; // NADER
+    // uint8_t  *ref_ptr = ref_pic_ptr->y_buffer; // NADER
     const bool sub_sad         = (me_ctx->me_search_method == SUB_SAD_SEARCH);
     uint32_t   ref_luma_stride = me_ctx->interpolated_full_stride[list_index][ref_pic_index];
     uint8_t*   ref_ptr         = me_ctx->integer_buffer_ptr[list_index][ref_pic_index] +
@@ -466,16 +466,16 @@ static void open_loop_me_get_search_point_results_block(
     const bool sub_sad = (me_ctx->me_search_method == SUB_SAD_SEARCH);
     uint8_t*   src_ptr = me_ctx->b64_src_ptr;
 
-    // uint8_t  *ref_ptr = ref_pic_ptr->buffer_y; // NADER
+    // uint8_t  *ref_ptr = ref_pic_ptr->y_buffer; // NADER
     uint8_t* ref_ptr = me_ctx->integer_buffer_ptr[list_index][ref_pic_index] + (ME_FILTER_TAP >> 1) +
         ((ME_FILTER_TAP >> 1) * me_ctx->interpolated_full_stride[list_index][ref_pic_index]);
-    // uint32_t ref_luma_stride = ref_pic_ptr->stride_y; // NADER
+    // uint32_t ref_luma_stride = ref_pic_ptr->y_stride; // NADER
     uint32_t ref_luma_stride          = me_ctx->interpolated_full_stride[list_index][ref_pic_index];
     int32_t search_position_tl_index = search_region_index;
     int32_t search_position_index;
     int32_t block_index;
     int32_t src_next_16x16_offset;
-    // uint32_t ref_next_16x16_offset = (ref_pic_ptr->stride_y << 4); // NADER
+    // uint32_t ref_next_16x16_offset = (ref_pic_ptr->y_stride << 4); // NADER
     uint32_t  ref_next_16x16_offset = (ref_luma_stride << 4);
     uint32_t  curr_mv_1             = (((uint32_t)y_search_index) << 16);
     uint16_t  curr_mv_2             = ((uint16_t)x_search_index);
@@ -842,15 +842,15 @@ static void hme_level_0(MeContext*           me_ctx, // ME context Ptr, used to 
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
     int32_t search_region_index = x_top_left_search_region +
-        y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
+        y_top_left_search_region * sixteenth_ref_pic_ptr->y_stride;
 
     // Put the first search location into level0 results
     svt_sad_loop_kernel(&me_ctx->sixteenth_b64_buffer[0],
                         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? me_ctx->sixteenth_b64_buffer_stride
                                                                        : me_ctx->sixteenth_b64_buffer_stride * 2,
-                        &sixteenth_ref_pic_ptr->buffer_y[search_region_index],
-                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? sixteenth_ref_pic_ptr->stride_y
-                                                                       : sixteenth_ref_pic_ptr->stride_y * 2,
+                        &sixteenth_ref_pic_ptr->y_buffer[search_region_index],
+                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? sixteenth_ref_pic_ptr->y_stride
+                                                                       : sixteenth_ref_pic_ptr->y_stride * 2,
                         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? block_height : block_height >> 1,
                         block_width,
                         /* results */
@@ -858,7 +858,7 @@ static void hme_level_0(MeContext*           me_ctx, // ME context Ptr, used to 
                         hme_l0_sc_x,
                         hme_l0_sc_y,
                         /* range */
-                        sixteenth_ref_pic_ptr->stride_y,
+                        sixteenth_ref_pic_ptr->y_stride,
                         0, // skip search line
                         sa_width,
                         sa_height);
@@ -935,15 +935,15 @@ static void hme_level_1(MeContext*           me_ctx, // ME context Ptr, used to 
     // Move to the top left of the search region
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
-    int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * quarter_ref_pic_ptr->stride_y;
+    int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * quarter_ref_pic_ptr->y_stride;
 
     // Put the first search location into level1 results
     svt_sad_loop_kernel(&me_ctx->quarter_b64_buffer[0],
                         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? me_ctx->quarter_b64_buffer_stride
                                                                        : me_ctx->quarter_b64_buffer_stride * 2,
-                        &quarter_ref_pic_ptr->buffer_y[search_region_index],
-                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? quarter_ref_pic_ptr->stride_y
-                                                                       : quarter_ref_pic_ptr->stride_y * 2,
+                        &quarter_ref_pic_ptr->y_buffer[search_region_index],
+                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? quarter_ref_pic_ptr->y_stride
+                                                                       : quarter_ref_pic_ptr->y_stride * 2,
                         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? block_height : block_height >> 1,
                         block_width,
                         /* results */
@@ -951,7 +951,7 @@ static void hme_level_1(MeContext*           me_ctx, // ME context Ptr, used to 
                         hme_l1_sc_x,
                         hme_l1_sc_y,
                         /* range */
-                        quarter_ref_pic_ptr->stride_y,
+                        quarter_ref_pic_ptr->y_stride,
                         0, // skip search line
                         sa_width,
                         sa_height);
@@ -1028,14 +1028,14 @@ void hme_level_2(MeContext*           me_ctx, // ME context Ptr, used to get/upd
     // Move to the top left of the search region
     int16_t  x_top_left_search_region = (org_x) + sa_origin_x;
     int16_t  y_top_left_search_region = (org_y) + sa_origin_y;
-    int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->stride_y;
+    int32_t search_region_index = x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->y_stride;
 
     // Put the first search location into level2 results
     svt_sad_loop_kernel(
         me_ctx->b64_src_ptr,
         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? me_ctx->b64_src_stride : me_ctx->b64_src_stride * 2,
-        &ref_pic_ptr->buffer_y[search_region_index],
-        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? ref_pic_ptr->stride_y : ref_pic_ptr->stride_y * 2,
+        &ref_pic_ptr->y_buffer[search_region_index],
+        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? ref_pic_ptr->y_stride : ref_pic_ptr->y_stride * 2,
         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? block_height : block_height >> 1,
         block_width,
         /* results */
@@ -1043,7 +1043,7 @@ void hme_level_2(MeContext*           me_ctx, // ME context Ptr, used to get/upd
         hme_l2_sc_x,
         hme_l2_sc_y,
         /* range */
-        ref_pic_ptr->stride_y,
+        ref_pic_ptr->y_stride,
         0, // skip search line
         sa_width,
         sa_height);
@@ -1071,14 +1071,14 @@ uint32_t check_00_center(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, ui
     int16_t  pad_height    = (int16_t)BLOCK_SIZE_64 - 1;
 
     int32_t search_region_index = org_x +
-        (org_y) * ref_pic_ptr->stride_y;
+        (org_y) * ref_pic_ptr->y_stride;
     if (me_ctx->me_early_exit_th) {
         zero_mv_sad = zz_sad;
     } else {
         zero_mv_sad = svt_nxm_sad_kernel(me_ctx->b64_src_ptr,
                                          me_ctx->b64_src_stride << subsample_sad,
-                                         &(ref_pic_ptr->buffer_y[search_region_index]),
-                                         ref_pic_ptr->stride_y << subsample_sad,
+                                         &(ref_pic_ptr->y_buffer[search_region_index]),
+                                         ref_pic_ptr->y_stride << subsample_sad,
                                          sb_height >> subsample_sad,
                                          sb_width);
     }
@@ -1106,12 +1106,12 @@ uint32_t check_00_center(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, ui
 
     zero_mv_cost        = zero_mv_sad << COST_PRECISION;
     search_region_index = (int16_t)(org_x) + *x_search_center +
-        ((int16_t)(org_y) + *y_search_center) * ref_pic_ptr->stride_y;
+        ((int16_t)(org_y) + *y_search_center) * ref_pic_ptr->y_stride;
 
     hme_mv_sad = svt_nxm_sad_kernel(me_ctx->b64_src_ptr,
                                     me_ctx->b64_src_stride << subsample_sad,
-                                    &(ref_pic_ptr->buffer_y[search_region_index]),
-                                    ref_pic_ptr->stride_y << subsample_sad,
+                                    &(ref_pic_ptr->y_buffer[search_region_index]),
+                                    ref_pic_ptr->y_stride << subsample_sad,
                                     sb_height >> subsample_sad,
                                     sb_width);
 
@@ -1320,9 +1320,9 @@ static void integer_search_b64(PictureParentControlSet* pcs, MeContext* me_ctx, 
                     x_search_area_origin;
                 y_top_left_search_region = (int16_t)(b64_origin_y) - (ME_FILTER_TAP >> 1) +
                     y_search_area_origin;
-                search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->stride_y;
-                me_ctx->integer_buffer_ptr[list_index][ref_pic_index] = &(ref_pic_ptr->buffer_y[search_region_index]);
-                me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->stride_y;
+                search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->y_stride;
+                me_ctx->integer_buffer_ptr[list_index][ref_pic_index] = &(ref_pic_ptr->y_buffer[search_region_index]);
+                me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->y_stride;
 
                 open_loop_me_fullpel_search_sblock(
                     me_ctx, list_index, ref_pic_index, x_search_center, y_search_center, 1, 1);
@@ -1396,9 +1396,9 @@ static void integer_search_b64(PictureParentControlSet* pcs, MeContext* me_ctx, 
                 x_search_area_origin;
             y_top_left_search_region = (int16_t)(b64_origin_y) - (ME_FILTER_TAP >> 1) +
                 y_search_area_origin;
-            search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->stride_y;
-            me_ctx->integer_buffer_ptr[list_index][ref_pic_index]       = &(ref_pic_ptr->buffer_y[search_region_index]);
-            me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->stride_y;
+            search_region_index = (x_top_left_search_region) + (y_top_left_search_region)*ref_pic_ptr->y_stride;
+            me_ctx->integer_buffer_ptr[list_index][ref_pic_index]       = &(ref_pic_ptr->y_buffer[search_region_index]);
+            me_ctx->interpolated_full_stride[list_index][ref_pic_index] = ref_pic_ptr->y_stride;
 
             // Move to the top left of the search region
             x_top_left_search_region = (int16_t)(b64_origin_x) + x_search_area_origin;
@@ -1514,21 +1514,21 @@ static void prehme_core(MeContext* me_ctx, int16_t org_x, int16_t org_y, uint32_
 
     x_top_left_search_region = (org_x) + x_search_area_origin;
     y_top_left_search_region = (org_y) + y_search_area_origin;
-    search_region_index      = x_top_left_search_region + y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
+    search_region_index      = x_top_left_search_region + y_top_left_search_region * sixteenth_ref_pic_ptr->y_stride;
 
     svt_sad_loop_kernel(&me_ctx->sixteenth_b64_buffer[0],
                         me_ctx->hme_search_method == FULL_SAD_SEARCH ? me_ctx->sixteenth_b64_buffer_stride
                                                                      : me_ctx->sixteenth_b64_buffer_stride * 2,
-                        &sixteenth_ref_pic_ptr->buffer_y[search_region_index],
-                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? sixteenth_ref_pic_ptr->stride_y
-                                                                       : sixteenth_ref_pic_ptr->stride_y * 2,
+                        &sixteenth_ref_pic_ptr->y_buffer[search_region_index],
+                        (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? sixteenth_ref_pic_ptr->y_stride
+                                                                       : sixteenth_ref_pic_ptr->y_stride * 2,
                         (me_ctx->hme_search_method == FULL_SAD_SEARCH) ? sb_height : sb_height >> 1,
                         sb_width,
                         /* results */
                         &prehme_data->sad,
                         &prehme_data->best_mv.x,
                         &prehme_data->best_mv.y,
-                        sixteenth_ref_pic_ptr->stride_y,
+                        sixteenth_ref_pic_ptr->y_stride,
                         me_ctx->prehme_ctrl.skip_search_line,
                         search_area_width,
                         search_area_height);
@@ -1553,12 +1553,12 @@ static uint32_t get_zz_sad(EbPictureBufferDesc* ref_pic_ptr, MeContext* me_ctx, 
     int16_t  org_y         = (int16_t)sb_origin_y;
     uint32_t subsample_sad = 1;
 
-    int32_t search_region_index = org_x + (org_y) * ref_pic_ptr->stride_y;
+    int32_t search_region_index = org_x + (org_y) * ref_pic_ptr->y_stride;
 
     zero_mv_sad = svt_nxm_sad_kernel(me_ctx->b64_src_ptr,
                                      me_ctx->b64_src_stride << subsample_sad,
-                                     &(ref_pic_ptr->buffer_y[search_region_index]),
-                                     ref_pic_ptr->stride_y << subsample_sad,
+                                     &(ref_pic_ptr->y_buffer[search_region_index]),
+                                     ref_pic_ptr->y_stride << subsample_sad,
                                      sb_height >> subsample_sad,
                                      sb_width);
 

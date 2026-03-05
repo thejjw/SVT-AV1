@@ -327,10 +327,10 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     DECLARE_ALIGNED(16, uint8_t, ii_pred_buf[2 * MAX_INTERINTRA_SB_SQUARE]);
     // get inter pred for ref0
     EbPictureBufferDesc* src_pic     = ctx->hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    uint16_t* src_buf_hbd = (uint16_t*)src_pic->buffer_y + (ctx->blk_org_x) +
-        (ctx->blk_org_y) * src_pic->stride_y;
-    uint8_t* src_buf = src_pic->buffer_y + (ctx->blk_org_x) +
-        (ctx->blk_org_y) * src_pic->stride_y;
+    uint16_t* src_buf_hbd = (uint16_t*)src_pic->y_buffer + (ctx->blk_org_x) +
+        (ctx->blk_org_y) * src_pic->y_stride;
+    uint8_t* src_buf = src_pic->y_buffer + (ctx->blk_org_x) +
+        (ctx->blk_org_y) * src_pic->y_stride;
 
     uint8_t  bit_depth   = ctx->hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT;
     uint32_t full_lambda = ctx->hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
@@ -339,7 +339,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
     uint32_t            bheight = ctx->blk_geom->bheight;
     EbPictureBufferDesc pred_desc;
     pred_desc.border = 0;
-    pred_desc.stride_y = bwidth;
+    pred_desc.y_stride = bwidth;
 
     EbPictureBufferDesc* ref_pic_list0 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[0]);
     EbPictureBufferDesc* ref_pic_list1 = NULL;
@@ -356,7 +356,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
             &ref_pic_list0,
             ctx->hbd_md);
     }
-    pred_desc.buffer_y = tmp_buf;
+    pred_desc.y_buffer = tmp_buf;
 
     //we call the regular inter prediction path here (no compound)
     cand->block_mi.interp_filters     = 0;
@@ -437,7 +437,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                          bwidth,
                                          bheight,
                                          ctx->hbd_md ? (uint8_t*)src_buf_hbd : src_buf,
-                                         src_pic->stride_y,
+                                         src_pic->y_stride,
                                          ii_pred_buf,
                                          bwidth,
                                          0,
@@ -454,11 +454,11 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
         } else {
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
             if (ctx->hbd_md) {
-                rd = svt_aom_highbd_sse((uint8_t*)src_buf_hbd, src_pic->stride_y, ii_pred_buf, bwidth, bwidth, bheight);
+                rd = svt_aom_highbd_sse((uint8_t*)src_buf_hbd, src_pic->y_stride, ii_pred_buf, bwidth, bwidth, bheight);
             } else
 #endif
             {
-                rd = svt_aom_sse(src_buf, src_pic->stride_y, ii_pred_buf, bwidth, bwidth, bheight);
+                rd = svt_aom_sse(src_buf, src_pic->y_stride, ii_pred_buf, bwidth, bwidth, bheight);
             }
         }
         if (rd < best_interintra_rd) {
@@ -478,7 +478,7 @@ static void inter_intra_search(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                                          ctx->intrapred_buf[best_interintra_mode],
                                                          tmp_buf,
                                                          ctx->hbd_md ? (uint8_t*)src_buf_hbd : src_buf,
-                                                         src_pic->stride_y,
+                                                         src_pic->y_stride,
                                                          &cand->block_mi.interintra_wedge_index);
     }
 
@@ -1951,11 +1951,11 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
     error_per_bit += (error_per_bit == 0);
     uint32_t             blk_origin_index   = 0;
     EbPictureBufferDesc* input_pic          = ppcs->enhanced_pic; // 10BIT not supported
-    uint32_t             input_origin_index = (ctx->blk_org_y) * input_pic->stride_y +
+    uint32_t             input_origin_index = (ctx->blk_org_y) * input_pic->y_stride +
         (ctx->blk_org_x);
     const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
     unsigned int            sse;
-    uint8_t*                src_y = input_pic->buffer_y + input_origin_index;
+    uint8_t*                src_y = input_pic->y_buffer + input_origin_index;
 
     int mv_prec_shift = ppcs->frm_hdr.allow_high_precision_mv ? 0 : 1;
     int best_cost     = INT_MAX;
@@ -2036,10 +2036,10 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
                                      EB_EIGHT_BIT,
                                      0); // is_16bit_pipeline
 
-            int var = fn_ptr->vf(ctx->scratch_prediction_ptr->buffer_y + blk_origin_index,
-                                 ctx->scratch_prediction_ptr->stride_y,
+            int var = fn_ptr->vf(ctx->scratch_prediction_ptr->y_buffer + blk_origin_index,
+                                 ctx->scratch_prediction_ptr->y_stride,
                                  src_y,
-                                 input_pic->stride_y,
+                                 input_pic->y_stride,
                                  &sse);
             if (ctx->approx_inter_rate) {
                 var += svt_aom_mv_err_cost_light(&test_mv, &ref_mv);
@@ -3821,8 +3821,8 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
 
         // only one TX unit, so no need to bitmask
         if (blk_ptr->y_has_coeff) {
-            src_ptr = &(((int32_t*)cand_bf->quant->buffer_y)[txb_1d_offset]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) + ctx->coded_area_sb;
+            src_ptr = &(((int32_t*)cand_bf->quant->y_buffer)[txb_1d_offset]);
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->y_buffer) + ctx->coded_area_sb;
             svt_memcpy(dst_ptr, src_ptr, tx_width * tx_height * sizeof(int32_t));
         }
         ctx->coded_area_sb += tx_width * tx_height;
@@ -3833,8 +3833,8 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // Cb
         // only one TX unit, so no need to bitmask
         if (blk_ptr->u_has_coeff) {
-            src_ptr = &(((int32_t*)cand_bf->quant->buffer_cb)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) +
+            src_ptr = &(((int32_t*)cand_bf->quant->u_buffer)[txb_1d_offset_uv]);
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->u_buffer) +
                 ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, tx_width_uv * tx_height_uv * sizeof(int32_t));
         }
@@ -3842,8 +3842,8 @@ void svt_aom_product_full_mode_decision_light_pd1(PictureControlSet* pcs, ModeDe
         // Cr
         // only one TX unit, so no need to bitmask
         if (blk_ptr->v_has_coeff) {
-            src_ptr = &(((int32_t*)cand_bf->quant->buffer_cr)[txb_1d_offset_uv]);
-            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) +
+            src_ptr = &(((int32_t*)cand_bf->quant->v_buffer)[txb_1d_offset_uv]);
+            dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->v_buffer) +
                 ctx->coded_area_sb_uv;
             svt_memcpy(dst_ptr, src_ptr, tx_width_uv * tx_height_uv * sizeof(int32_t));
         }
@@ -4039,11 +4039,11 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
         for (uint16_t txb_itr = 0; txb_itr < tu_total_count; txb_itr++) {
             const bool uv_pass = (blk_ptr->block_mi.tx_depth == 0 || txb_itr == 0);
 
-            int32_t* src_ptr = &(((int32_t*)cand_bf->quant->buffer_y)[txb_1d_offset]);
-            int32_t* dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_y)[txb_1d_offset]);
+            int32_t* src_ptr = &(((int32_t*)cand_bf->quant->y_buffer)[txb_1d_offset]);
+            int32_t* dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->y_buffer)[txb_1d_offset]);
 
             if (ctx->fixed_partition) {
-                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_y) +
+                dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->y_buffer) +
                     ctx->coded_area_sb;
                 ctx->coded_area_sb += tx_width * tx_height;
             }
@@ -4056,11 +4056,11 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
 
             if (ctx->has_uv && uv_pass) {
                 // Cb
-                src_ptr = &(((int32_t*)cand_bf->quant->buffer_cb)[txb_1d_offset_uv]);
-                dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_cb)[txb_1d_offset_uv]);
+                src_ptr = &(((int32_t*)cand_bf->quant->u_buffer)[txb_1d_offset_uv]);
+                dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->u_buffer)[txb_1d_offset_uv]);
 
                 if (ctx->fixed_partition) {
-                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cb) +
+                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->u_buffer) +
                         ctx->coded_area_sb_uv;
                 }
 
@@ -4069,11 +4069,11 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                 }
 
                 // Cr
-                src_ptr = &(((int32_t*)cand_bf->quant->buffer_cr)[txb_1d_offset_uv]);
-                dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->buffer_cr)[txb_1d_offset_uv]);
+                src_ptr = &(((int32_t*)cand_bf->quant->v_buffer)[txb_1d_offset_uv]);
+                dst_ptr = &(((int32_t*)ctx->blk_ptr->coeff_tmp->v_buffer)[txb_1d_offset_uv]);
 
                 if (ctx->fixed_partition) {
-                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->buffer_cr) +
+                    dst_ptr = ((int32_t*)pcs->ppcs->enc_dec_ptr->quantized_coeff[ctx->sb_index]->v_buffer) +
                         ctx->coded_area_sb_uv;
                     ctx->coded_area_sb_uv += tx_width_uv * tx_height_uv;
                 }

@@ -876,14 +876,14 @@ static void svt_enc_handle_dctor(EbPtr p) {
     EB_DELETE(enc_handle_ptr->input_cmd_resource_ptr);
     EB_DELETE(enc_handle_ptr->input_y8b_buffer_resource_ptr);
 
-    //all buffer_y have been redirected to y8b location that just got released.
+    //all y_buffer have been redirected to y8b location that just got released.
     //to prevent releasing twice, we need to reset the buffer back to NULL
     if (enc_handle_ptr->input_buffer_resource_ptr) {
         for (uint32_t w_i = 0; w_i < enc_handle_ptr->input_buffer_resource_ptr->object_total_count; ++w_i) {
             EbObjectWrapper*     wrp  = enc_handle_ptr->input_buffer_resource_ptr->wrapper_ptr_pool[w_i];
             EbBufferHeaderType*  obj  = (EbBufferHeaderType*)wrp->object_ptr;
             EbPictureBufferDesc* desc = (EbPictureBufferDesc*)obj->p_buffer;
-            desc->buffer_y            = 0;
+            desc->y_buffer            = 0;
         }
     }
     EB_DELETE(enc_handle_ptr->input_buffer_resource_ptr);
@@ -4908,8 +4908,8 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                 input_ptr->y_stride,
                                 luma_width << 1,
                                 luma_height << 1,
-                                y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
-                                input_pic->stride_y,
+                                y8b_input_picture_ptr->y_buffer + luma_buffer_offset,
+                                input_pic->y_stride,
                                 2);
 
         if (pass != ENCODE_FIRST_PASS) {
@@ -4917,15 +4917,15 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                     input_ptr->cb_stride,
                                     chroma_width << 1,
                                     chroma_height << 1,
-                                    input_pic->buffer_cb + chroma_buffer_offset,
-                                    input_pic->stride_cb,
+                                    input_pic->u_buffer + chroma_buffer_offset,
+                                    input_pic->u_stride,
                                     2);
             downsample_2d_c_skipall(input_ptr->cr,
                                     input_ptr->cr_stride,
                                     chroma_width << 1,
                                     chroma_height << 1,
-                                    input_pic->buffer_cr + chroma_buffer_offset,
-                                    input_pic->stride_cr,
+                                    input_pic->v_buffer + chroma_buffer_offset,
+                                    input_pic->v_stride,
                                     2);
         }
     } else { // 10bit packed
@@ -4933,32 +4933,32 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                             input_ptr->y_stride,
                                             luma_width << 1,
                                             luma_height << 1,
-                                            y8b_input_picture_ptr->buffer_y + luma_buffer_offset,
-                                            y8b_input_picture_ptr->stride_y,
+                                            y8b_input_picture_ptr->y_buffer + luma_buffer_offset,
+                                            y8b_input_picture_ptr->y_stride,
                                             2);
 
-        memset(input_pic->buffer_bit_inc_y, 0, input_pic->luma_size / 4);
+        memset(input_pic->y_buffer_bit_inc, 0, input_pic->luma_size / 4);
 
         if (pass != ENCODE_FIRST_PASS) {
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cb,
                                                 input_ptr->cb_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
-                                                input_pic->buffer_cb + chroma_buffer_offset,
-                                                y8b_input_picture_ptr->stride_cb,
+                                                input_pic->u_buffer + chroma_buffer_offset,
+                                                y8b_input_picture_ptr->u_stride,
                                                 2);
 
-            memset(input_pic->buffer_bit_inc_cb, 0, input_pic->chroma_size / 4);
+            memset(input_pic->u_buffer_bit_inc, 0, input_pic->chroma_size / 4);
 
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cr,
                                                 input_ptr->cr_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
-                                                input_pic->buffer_cr + chroma_buffer_offset,
-                                                y8b_input_picture_ptr->stride_cr,
+                                                input_pic->v_buffer + chroma_buffer_offset,
+                                                y8b_input_picture_ptr->v_stride,
                                                 2);
 
-            memset(input_pic->buffer_bit_inc_cr, 0, input_pic->chroma_size / 4);
+            memset(input_pic->v_buffer_bit_inc, 0, input_pic->chroma_size / 4);
         }
     }
     return return_error;
@@ -4991,50 +4991,50 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
     if (scs->static_config.encoder_bit_depth == EB_EIGHT_BIT) {
         svt_av1_copy_wxh_8bit(input_ptr->luma,
                               input_ptr->y_stride,
-                              y8b_input_picture_ptr->buffer_y,
-                              input_pic->stride_y,
+                              y8b_input_picture_ptr->y_buffer,
+                              input_pic->y_stride,
                               luma_height,
                               luma_width);
         svt_av1_copy_wxh_8bit(input_ptr->cb,
                               input_ptr->cb_stride,
-                              input_pic->buffer_cb,
-                              input_pic->stride_cb,
+                              input_pic->u_buffer,
+                              input_pic->u_stride,
                               chroma_height,
                               chroma_width);
         svt_av1_copy_wxh_8bit(input_ptr->cr,
                               input_ptr->cr_stride,
-                              input_pic->buffer_cr,
-                              input_pic->stride_cr,
+                              input_pic->v_buffer,
+                              input_pic->v_stride,
                               chroma_height,
                               chroma_width);
     } else { // 10bit packed
-        uint32_t comp_stride_y           = input_pic->stride_y / 4;
+        uint32_t comp_stride_y           = input_pic->y_stride / 4;
 
-        uint32_t comp_stride_uv            = input_pic->stride_cb / 4;
+        uint32_t comp_stride_uv            = input_pic->u_stride / 4;
 
         svt_unpack_and_2bcompress((uint16_t*)input_ptr->luma,
                                   input_ptr->y_stride,
-                                  y8b_input_picture_ptr->buffer_y,
-                                  y8b_input_picture_ptr->stride_y,
-                                  input_pic->buffer_bit_inc_y,
+                                  y8b_input_picture_ptr->y_buffer,
+                                  y8b_input_picture_ptr->y_stride,
+                                  input_pic->y_buffer_bit_inc,
                                   comp_stride_y,
                                   luma_width,
                                   luma_height);
         if (pass != ENCODE_FIRST_PASS) {
             svt_unpack_and_2bcompress((uint16_t*)input_ptr->cb,
                                       input_ptr->cb_stride,
-                                      input_pic->buffer_cb,
-                                      input_pic->stride_cb,
-                                      input_pic->buffer_bit_inc_cb,
+                                      input_pic->u_buffer,
+                                      input_pic->u_stride,
+                                      input_pic->u_buffer_bit_inc,
                                       comp_stride_uv,
                                       chroma_width,
                                       chroma_height);
 
             svt_unpack_and_2bcompress((uint16_t*)input_ptr->cr,
                                       input_ptr->cr_stride,
-                                      input_pic->buffer_cr,
-                                      input_pic->stride_cr,
-                                      input_pic->buffer_bit_inc_cr,
+                                      input_pic->v_buffer,
+                                      input_pic->v_stride,
+                                      input_pic->v_buffer_bit_inc,
                                       comp_stride_uv,
                                       chroma_width,
                                       chroma_height);
@@ -5743,9 +5743,9 @@ void svt_input_y8b_destroyer(EbPtr p) {
     EbBufferHeaderType*  obj = (EbBufferHeaderType*)p;
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
     if (buf) {
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_y);
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cb);
-        EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cr);
+        EB_FREE_ALIGNED_ARRAY(buf->y_buffer_bit_inc);
+        EB_FREE_ALIGNED_ARRAY(buf->u_buffer_bit_inc);
+        EB_FREE_ALIGNED_ARRAY(buf->v_buffer_bit_inc);
     }
 
     EB_DELETE(buf);
@@ -5781,12 +5781,12 @@ void svt_input_buffer_header_destroyer(EbPtr p) {
     if (buf) {
         EB_FREE_ALIGNED_ARRAY(buf->buffer_alloc);
         buf->buffer_alloc_sz = 0;
-        buf->buffer_y = NULL;
-        buf->buffer_cb = NULL;
-        buf->buffer_cr = NULL;
-        buf->buffer_bit_inc_y = NULL;
-        buf->buffer_bit_inc_cb = NULL;
-        buf->buffer_bit_inc_cr = NULL;
+        buf->y_buffer = NULL;
+        buf->u_buffer = NULL;
+        buf->v_buffer = NULL;
+        buf->y_buffer_bit_inc = NULL;
+        buf->u_buffer_bit_inc = NULL;
+        buf->v_buffer_bit_inc = NULL;
     }
 
     EB_DELETE(buf);

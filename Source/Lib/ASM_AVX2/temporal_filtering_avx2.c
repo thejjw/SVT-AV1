@@ -852,7 +852,7 @@ static void apply_filtering_central_loop_hbd(uint16_t w, uint16_t h, uint16_t* s
 void svt_aom_apply_filtering_central_avx2(MeContext* me_ctx, EbPictureBufferDesc* input_picture_ptr_central,
                                           EbByte* src, uint32_t** accum, uint16_t** count, uint16_t blk_width,
                                           uint16_t blk_height, uint32_t ss_x, uint32_t ss_y) {
-    uint16_t src_stride_y = input_picture_ptr_central->stride_y;
+    uint16_t src_stride_y = input_picture_ptr_central->y_stride;
 
     // Luma
     apply_filtering_central_loop_lbd(blk_width, blk_height, src[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);
@@ -872,7 +872,7 @@ void svt_aom_apply_filtering_central_highbd_avx2(MeContext* me_ctx, EbPictureBuf
                                                  uint16_t** src_16bit, uint32_t** accum, uint16_t** count,
                                                  uint16_t blk_width, uint16_t blk_height, uint32_t ss_x,
                                                  uint32_t ss_y) {
-    uint16_t src_stride_y = input_picture_ptr_central->stride_y;
+    uint16_t src_stride_y = input_picture_ptr_central->y_stride;
 
     // Luma
     apply_filtering_central_loop_hbd(blk_width, blk_height, src_16bit[PLANE_Y], src_stride_y, accum[PLANE_Y], count[PLANE_Y]);
@@ -889,7 +889,7 @@ void svt_aom_apply_filtering_central_highbd_avx2(MeContext* me_ctx, EbPictureBuf
     }
 }
 
-int32_t svt_estimate_noise_fp16_avx2(const uint8_t* src, uint16_t width, uint16_t height, uint16_t stride_y) {
+int32_t svt_estimate_noise_fp16_avx2(const uint8_t* src, uint16_t width, uint16_t height, uint16_t y_stride) {
     int64_t sum = 0;
     int64_t num = 0;
 
@@ -908,17 +908,17 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t* src, uint16_t width, uint16_
     for (int i = 1; i < height - 1; ++i) {
         int j = 1;
         for (; j + 16 < width - 1; j += 16) {
-            const int k = i * stride_y + j;
+            const int k = i * y_stride + j;
 
-            __m256i A = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - stride_y - 1])));
-            __m256i B = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - stride_y])));
-            __m256i C = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - stride_y + 1])));
+            __m256i A = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - y_stride - 1])));
+            __m256i B = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - y_stride])));
+            __m256i C = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - y_stride + 1])));
             __m256i D = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k - 1])));
             __m256i E = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k])));
             __m256i F = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + 1])));
-            __m256i G = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + stride_y - 1])));
-            __m256i H = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + stride_y])));
-            __m256i I = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + stride_y + 1])));
+            __m256i G = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + y_stride - 1])));
+            __m256i H = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + y_stride])));
+            __m256i I = _mm256_cvtepu8_epi16(_mm_loadu_si128((__m128i*)(&src[k + y_stride + 1])));
 
             __m256i A_m_I   = _mm256_sub_epi16(A, I);
             __m256i G_m_C   = _mm256_sub_epi16(G, C);
@@ -945,19 +945,19 @@ int32_t svt_estimate_noise_fp16_avx2(const uint8_t* src, uint16_t width, uint16_
             sum_accumulator = _mm256_add_epi32(sum_accumulator, _mm256_unpackhi_epi16(v_avx2, zero));
         }
         for (; j < width - 1; ++j) {
-            const int k = i * stride_y + j;
+            const int k = i * y_stride + j;
 
             // Sobel gradients
-            const int g_x = (src[k - stride_y - 1] - src[k - stride_y + 1]) +
-                (src[k + stride_y - 1] - src[k + stride_y + 1]) + 2 * (src[k - 1] - src[k + 1]);
-            const int g_y = (src[k - stride_y - 1] - src[k + stride_y - 1]) +
-                (src[k - stride_y + 1] - src[k + stride_y + 1]) + 2 * (src[k - stride_y] - src[k + stride_y]);
+            const int g_x = (src[k - y_stride - 1] - src[k - y_stride + 1]) +
+                (src[k + y_stride - 1] - src[k + y_stride + 1]) + 2 * (src[k - 1] - src[k + 1]);
+            const int g_y = (src[k - y_stride - 1] - src[k + y_stride - 1]) +
+                (src[k - y_stride + 1] - src[k + y_stride + 1]) + 2 * (src[k - y_stride] - src[k + y_stride]);
             const int ga = abs(g_x) + abs(g_y);
 
             if (ga < EDGE_THRESHOLD) { // Do not consider edge pixels to estimate the noise
                 // Find Laplacian
-                const int v = 4 * src[k] - 2 * (src[k - 1] + src[k + 1] + src[k - stride_y] + src[k + stride_y]) +
-                    (src[k - stride_y - 1] + src[k - stride_y + 1] + src[k + stride_y - 1] + src[k + stride_y + 1]);
+                const int v = 4 * src[k] - 2 * (src[k - 1] + src[k + 1] + src[k - y_stride] + src[k + y_stride]) +
+                    (src[k - y_stride - 1] + src[k - y_stride + 1] + src[k + y_stride - 1] + src[k + y_stride + 1]);
                 sum += abs(v);
                 ++num;
             }

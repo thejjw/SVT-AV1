@@ -1804,7 +1804,7 @@ class TemporalFilterTestApplyFilteringCentral
         me_ctx->tf_chroma = rand() % 2;
 
         input_picture_central = {};
-        input_picture_central.stride_y = TF_BW + 5;
+        input_picture_central.y_stride = TF_BW + 5;
     }
 
     void RunTest() {

@@ -274,16 +274,16 @@ extern "C" {
 static void svt_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc *obj = (EbPictureBufferDesc *)p;
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_y);
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_bit_inc_y);
+        EB_FREE_ALIGNED_ARRAY(obj->y_buffer);
+        EB_FREE_ALIGNED_ARRAY(obj->y_buffer_bit_inc);
     }
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_cb);
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_bit_inc_cb);
+        EB_FREE_ALIGNED_ARRAY(obj->u_buffer);
+        EB_FREE_ALIGNED_ARRAY(obj->u_buffer_bit_inc);
     }
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_cr);
-        EB_FREE_ALIGNED_ARRAY(obj->buffer_bit_inc_cr);
+        EB_FREE_ALIGNED_ARRAY(obj->v_buffer);
+        EB_FREE_ALIGNED_ARRAY(obj->v_buffer_bit_inc);
     }
 }
 
@@ -389,9 +389,9 @@ class DenoiseModelRunTest : public ::testing::Test {
         fg_init_data.denoise_apply = false;
         fg_init_data.width = width_;
         fg_init_data.height = height_;
-        fg_init_data.stride_y = width_;
-        fg_init_data.stride_cb = fg_init_data.stride_cr =
-            fg_init_data.stride_y >> subsampling_x_;
+        fg_init_data.y_stride = width_;
+        fg_init_data.u_stride = fg_init_data.v_stride =
+            fg_init_data.y_stride >> subsampling_x_;
 
         noise_model = {};
         err = svt_aom_denoise_and_model_ctor(&noise_model, &fg_init_data);
@@ -405,9 +405,9 @@ class DenoiseModelRunTest : public ::testing::Test {
 
     void SetUp() override {
         random_.Reset(100171);
-        data_ptr_[0] = in_pic_.buffer_y;
-        data_ptr_[1] = in_pic_.buffer_cb;
-        data_ptr_[2] = in_pic_.buffer_cr;
+        data_ptr_[0] = in_pic_.y_buffer;
+        data_ptr_[1] = in_pic_.u_buffer;
+        data_ptr_[2] = in_pic_.v_buffer;
 
         memset(&output_film_grain, 0, sizeof(output_film_grain));
 

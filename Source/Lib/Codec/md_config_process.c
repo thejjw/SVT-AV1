@@ -660,7 +660,7 @@ static void generate_ibc_data(PictureControlSet* pcs) {
         }
     }
 
-    svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->stride_y);
+    svt_av1_init3smotion_compensation(&pcs->ss_cfg, pcs->ppcs->enhanced_pic->y_stride);
 }
 #if FTR_INTRA_COEFF_LVL
 static void derive_intra_coeff_level(PictureControlSet* pcs) {
@@ -702,12 +702,12 @@ static void set_frame_coeff_lvl(PictureControlSet* pcs) {
     // Derive the input nois level
     EbPictureBufferDesc* input_pic = pcs->ppcs->enhanced_pic;
 
-    EbByte buffer_y = input_pic->buffer_y;
+    EbByte y_buffer = input_pic->y_buffer;
 
-    int32_t noise_level_fp16 = svt_estimate_noise_fp16(buffer_y, // Y
+    int32_t noise_level_fp16 = svt_estimate_noise_fp16(y_buffer, // Y
                                                        input_pic->width,
                                                        input_pic->height,
-                                                       input_pic->stride_y);
+                                                       input_pic->y_stride);
 
     noise_level_fp16 = svt_aom_noise_log1p_fp16(noise_level_fp16);
     uint64_t cmplx   = pcs->ppcs->norm_me_dist / MAX(1, pcs->scs->static_config.qp);
