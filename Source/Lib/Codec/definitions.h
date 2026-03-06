@@ -1719,8 +1719,6 @@ static const WarpedMotionParams default_warp_params = {
 
 #define LAST_BWD_FRAME     8
 
-#define MAX_NUM_TOKENS          200
-
 #define INPUT_SIZE_240p_TH                  0x28500      // 0.165 Million
 #define INPUT_SIZE_360p_TH                  0x4CE00      // 0.315 Million
 #define INPUT_SIZE_480p_TH                  0xA1400      // 0.661 Million
