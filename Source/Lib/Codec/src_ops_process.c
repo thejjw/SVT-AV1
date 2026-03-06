@@ -781,16 +781,16 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     x_curr_mv = (-TPL_PAD - mb_origin_x) << 3;
                 }
 
-                if (((int)mb_origin_x + (int)bsize + (x_curr_mv >> 3)) > (TPL_PAD + (int)ref_pic_ptr->width - 1)) {
-                    x_curr_mv = ((TPL_PAD + ref_pic_ptr->width - 1) - (mb_origin_x + bsize)) << 3;
+                if (((int)mb_origin_x + (int)bsize + (x_curr_mv >> 3)) > (TPL_PAD + (int)ref_pic_ptr->max_width - 1)) {
+                    x_curr_mv = ((TPL_PAD + ref_pic_ptr->max_width - 1) - (mb_origin_x + bsize)) << 3;
                 }
 
                 if (((int)mb_origin_y + (y_curr_mv >> 3)) < -TPL_PAD) {
                     y_curr_mv = (-TPL_PAD - mb_origin_y) << 3;
                 }
 
-                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) > (TPL_PAD + (int)ref_pic_ptr->height - 1)) {
-                    y_curr_mv = ((TPL_PAD + ref_pic_ptr->height - 1) - (mb_origin_y + bsize)) << 3;
+                if (((int)mb_origin_y + (int)bsize + (y_curr_mv >> 3)) > (TPL_PAD + (int)ref_pic_ptr->max_height - 1)) {
+                    y_curr_mv = ((TPL_PAD + ref_pic_ptr->max_height - 1) - (mb_origin_y + bsize)) << 3;
                 }
 
                 Mv best_mv = {{x_curr_mv, y_curr_mv}};
@@ -1809,9 +1809,9 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
             // Get Empty Reference Picture Object
             svt_get_empty_object(scs->enc_ctx->tpl_reference_picture_pool_fifo_ptr, &ref_pic_wrapper);
             // if resolution has changed, and the tpl_reference_picture settings do not match scs settings, update tpl reference params
-            if (((EbTplReferenceObject*)ref_pic_wrapper->object_ptr)->ref_picture_ptr->width !=
+            if (((EbTplReferenceObject*)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_width !=
                     scs->max_input_luma_width ||
-                ((EbTplReferenceObject*)ref_pic_wrapper->object_ptr)->ref_picture_ptr->height !=
+                ((EbTplReferenceObject*)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_height !=
                     scs->max_input_luma_height) {
                 svt_tpl_reference_param_update((EbTplReferenceObject*)ref_pic_wrapper->object_ptr, scs);
             }

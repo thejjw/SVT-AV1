@@ -46,6 +46,8 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc* pic_buf, con
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->max_width    = pic_buf_init_data->max_width;
+    pic_buf->max_height   = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
     pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
@@ -153,6 +155,8 @@ EbErrorType svt_picture_buffer_desc_noy8b_update(EbPictureBufferDesc* pic_buf, c
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->max_width    = pic_buf_init_data->max_width;
+    pic_buf->max_height   = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
     pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
@@ -189,9 +193,11 @@ EbErrorType svt_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf, const E
         ((pic_buf_init_data->color_format == EB_YUV444 || pic_buf_init_data->color_format == EB_YUV422) ? 0 : 1);
 
     // Set the Picture Buffer Static variables
-    pic_buf->width    = pic_buf_init_data->max_width;
-    pic_buf->height   = pic_buf_init_data->max_height;
-    pic_buf->y_stride = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
+    pic_buf->width      = pic_buf_init_data->max_width;
+    pic_buf->height     = pic_buf_init_data->max_height;
+    pic_buf->max_width  = pic_buf_init_data->max_width;
+    pic_buf->max_height = pic_buf_init_data->max_height;
+    pic_buf->y_stride   = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;
     pic_buf->u_stride = pic_buf->v_stride = (pic_buf->y_stride + ss_x) >> ss_x;
     pic_buf->border                       = pic_buf_init_data->border;
 
@@ -228,6 +234,8 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, const EbP
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->max_width    = pic_buf_init_data->max_width;
+    pic_buf->max_height   = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
     pic_buf->y_stride     = pic_buf_init_data->max_width + 2 * pic_buf_init_data->border /*left + right border*/;
@@ -337,6 +345,8 @@ EbErrorType svt_recon_picture_buffer_desc_update(EbPictureBufferDesc* pic_buf, E
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->max_width    = pic_buf_init_data->max_width;
+    pic_buf->max_height   = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
     pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right borders*/;
@@ -371,6 +381,8 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc* pic_buf, EbP
     // Set the Picture Buffer Static variables
     pic_buf->width        = pic_buf_init_data->max_width;
     pic_buf->height       = pic_buf_init_data->max_height;
+    pic_buf->max_width    = pic_buf_init_data->max_width;
+    pic_buf->max_height   = pic_buf_init_data->max_height;
     pic_buf->bit_depth    = pic_buf_init_data->bit_depth;
     pic_buf->color_format = pic_buf_init_data->color_format;
     pic_buf->y_stride     = pic_buf_init_data->max_width + (2 * pic_buf_init_data->border) /*left + right border*/;

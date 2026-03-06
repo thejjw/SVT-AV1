@@ -742,6 +742,8 @@ void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuf
     dstBuffer->border       = srcBuffer->border;
     dstBuffer->width        = srcBuffer->width;
     dstBuffer->height       = srcBuffer->height;
+    dstBuffer->max_width    = srcBuffer->max_width;
+    dstBuffer->max_height   = srcBuffer->max_height;
     dstBuffer->bit_depth    = srcBuffer->bit_depth;
     dstBuffer->color_format = srcBuffer->color_format;
     dstBuffer->luma_size    = srcBuffer->luma_size;

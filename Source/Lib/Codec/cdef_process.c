@@ -47,6 +47,8 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
     recon_picture_dst->border       = recon_picture_src->border;
     recon_picture_dst->width        = recon_picture_src->width;
     recon_picture_dst->height       = recon_picture_src->height;
+    recon_picture_dst->max_width    = recon_picture_src->max_width;
+    recon_picture_dst->max_height   = recon_picture_src->max_height;
     recon_picture_dst->bit_depth    = recon_picture_src->bit_depth;
     recon_picture_dst->color_format = recon_picture_src->color_format;
 

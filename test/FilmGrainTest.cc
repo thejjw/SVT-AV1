@@ -273,18 +273,14 @@ extern "C" {
 
 static void svt_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc *obj = (EbPictureBufferDesc *)p;
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->y_buffer);
-        EB_FREE_ALIGNED_ARRAY(obj->y_buffer_bit_inc);
-    }
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->u_buffer);
-        EB_FREE_ALIGNED_ARRAY(obj->u_buffer_bit_inc);
-    }
-    if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-        EB_FREE_ALIGNED_ARRAY(obj->v_buffer);
-        EB_FREE_ALIGNED_ARRAY(obj->v_buffer_bit_inc);
-    }
+    EB_FREE_ALIGNED_ARRAY(obj->buffer_alloc);
+    obj->buffer_alloc_sz = 0;
+    obj->y_buffer = NULL;
+    obj->u_buffer = NULL;
+    obj->v_buffer = NULL;
+    obj->y_buffer_bit_inc = NULL;
+    obj->u_buffer_bit_inc = NULL;
+    obj->v_buffer_bit_inc = NULL;
 }
 
 // Return normally distrbuted values with standard deviation of sigma.

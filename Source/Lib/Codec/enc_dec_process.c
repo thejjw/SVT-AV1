@@ -369,6 +369,9 @@ static void svt_av1_add_film_grain(EbPictureBufferDesc* src, EbPictureBufferDesc
         chroma_subsamp_y   = 1;
     }
 
+    dst->max_width  = src->max_width;
+    dst->max_height = src->max_height;
+
     svt_aom_fgn_copy_rect(
         src->y_buffer, src->y_stride, dst->y_buffer, dst->y_stride, dst->width, dst->height, use_high_bit_depth);
 
@@ -486,8 +489,8 @@ void svt_aom_recon_output(PictureControlSet* pcs, SequenceControlSet* scs) {
             uint16_t recon_w = recon_ptr->width;
             uint16_t recon_h = recon_ptr->height;
             if (scs->static_config.resize_mode != RESIZE_NONE) {
-                recon_w = recon_ptr->width; //ALIGN_POWER_OF_TWO(recon_ptr->width, 3);
-                recon_h = recon_ptr->height; //ALIGN_POWER_OF_TWO(recon_ptr->height, 3);
+                recon_w = recon_ptr->max_width; //ALIGN_POWER_OF_TWO(recon_ptr->width, 3);
+                recon_h = recon_ptr->max_height; //ALIGN_POWER_OF_TWO(recon_ptr->height, 3);
             }
             // Keep the recon at full resolution and show the lower resolution video on the top right part
             // Y Recon Samples

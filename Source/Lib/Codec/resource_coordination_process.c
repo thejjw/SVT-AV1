@@ -605,8 +605,8 @@ bool buffer_update_needed(EbBufferHeaderType* input_buffer, struct SequenceContr
     uint32_t max_height = !(scs->max_input_luma_height % 8)
         ? scs->max_input_luma_height
         : scs->max_input_luma_height + (scs->max_input_luma_height % 8);
-    if (((EbPictureBufferDesc*)(input_buffer->p_buffer))->width != max_width ||
-        ((EbPictureBufferDesc*)(input_buffer->p_buffer))->height != max_height) {
+    if (((EbPictureBufferDesc*)(input_buffer->p_buffer))->max_width != max_width ||
+        ((EbPictureBufferDesc*)(input_buffer->p_buffer))->max_height != max_height) {
         return true;
     } else {
         return false;
@@ -1179,8 +1179,8 @@ void* svt_aom_resource_coordination_kernel(void* input_ptr) {
             // make pa_ref full sample buffer access the luma8bit part from the y8b Pool
             EbPaReferenceObject* pa_ref_obj = (EbPaReferenceObject*)pcs->pa_ref_pic_wrapper->object_ptr;
             // if resolution has changed, and the pa_ref settings do not match scs settings, update pa reference params
-            if (pa_ref_obj->input_padded_pic->width != scs->max_input_luma_width ||
-                pa_ref_obj->input_padded_pic->height != scs->max_input_luma_height) {
+            if (pa_ref_obj->input_padded_pic->max_width != scs->max_input_luma_width ||
+                pa_ref_obj->input_padded_pic->max_height != scs->max_input_luma_height) {
                 svt_pa_reference_param_update(pa_ref_obj, scs);
             }
             EbPictureBufferDesc* input_padded_pic = (EbPictureBufferDesc*)pa_ref_obj->input_padded_pic;
