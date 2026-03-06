@@ -736,62 +736,43 @@ void svt_av1_loop_filter_frame(EbPictureBufferDesc* frame_buffer, PictureControl
 #endif
 }
 
-void svt_copy_buffer(EbPictureBufferDesc* srcBuffer, EbPictureBufferDesc* dstBuffer, PictureControlSet* pcs,
-                     uint8_t plane) {
-    bool is_16bit           = pcs->ppcs->scs->is_16bit_pipeline;
-    dstBuffer->border       = srcBuffer->border;
-    dstBuffer->width        = srcBuffer->width;
-    dstBuffer->height       = srcBuffer->height;
-    dstBuffer->max_width    = srcBuffer->max_width;
-    dstBuffer->max_height   = srcBuffer->max_height;
-    dstBuffer->bit_depth    = srcBuffer->bit_depth;
-    dstBuffer->color_format = srcBuffer->color_format;
-    dstBuffer->luma_size    = srcBuffer->luma_size;
-    dstBuffer->chroma_size  = srcBuffer->chroma_size;
-    dstBuffer->packed_flag  = srcBuffer->packed_flag;
+static void svt_copy_buffer(EbPictureBufferDesc* src, EbPictureBufferDesc* dst, Plane plane) {
+    bool is_16bit     = src->bit_depth > EB_EIGHT_BIT;
+    dst->border       = src->border;
+    dst->width        = src->width;
+    dst->height       = src->height;
+    dst->max_width    = src->max_width;
+    dst->max_height   = src->max_height;
+    dst->bit_depth    = src->bit_depth;
+    dst->color_format = src->color_format;
+    dst->luma_size    = src->luma_size;
+    dst->chroma_size  = src->chroma_size;
+    dst->packed_flag  = src->packed_flag;
 
-    uint16_t luma_width  = ALIGN_POWER_OF_TWO(srcBuffer->width, 3) << is_16bit;
-    uint16_t luma_height = ALIGN_POWER_OF_TWO(srcBuffer->height, 3);
+    uint16_t copy_width  = ALIGN_POWER_OF_TWO(src->width, 3) << is_16bit;
+    uint16_t copy_height = ALIGN_POWER_OF_TWO(src->height, 3);
 
-    uint16_t chroma_width = (luma_width >> 1);
-    if (plane == 0) {
-        uint16_t y_stride = srcBuffer->y_stride << is_16bit;
+    // TODO: Don't assume YUV420
+    if (plane) {
+        copy_width >>= 1;
+        copy_height >>= 1;
+    }
 
-        dstBuffer->y_stride         = srcBuffer->y_stride;
-        dstBuffer->y_stride_bit_inc = srcBuffer->y_stride_bit_inc;
+    uint16_t copy_stride       = src->stride[plane] << is_16bit;
+    dst->stride[plane]         = src->stride[plane];
+    dst->stride_bit_inc[plane] = src->stride_bit_inc[plane];
 
-        for (int32_t input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            svt_memcpy((dstBuffer->y_buffer + y_stride * input_row_index),
-                       (srcBuffer->y_buffer + y_stride * input_row_index),
-                       luma_width);
-        }
-    } else if (plane == 1) {
-        uint16_t u_stride           = srcBuffer->u_stride << is_16bit;
-        dstBuffer->u_stride         = srcBuffer->u_stride;
-        dstBuffer->u_stride_bit_inc = srcBuffer->u_stride_bit_inc;
-
-        for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
-            svt_memcpy((dstBuffer->u_buffer + u_stride * input_row_index),
-                       (srcBuffer->u_buffer + u_stride * input_row_index),
-                       chroma_width);
-        }
-    } else if (plane == 2) {
-        uint16_t v_stride = srcBuffer->v_stride << is_16bit;
-
-        dstBuffer->v_stride         = srcBuffer->v_stride;
-        dstBuffer->v_stride_bit_inc = srcBuffer->v_stride_bit_inc;
-
-        for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
-            svt_memcpy((dstBuffer->v_buffer + v_stride * input_row_index),
-                       (srcBuffer->v_buffer + v_stride * input_row_index),
-                       chroma_width);
-        }
+    for (uint16_t row = 0; row < copy_height; row++) {
+        svt_memcpy((dst->buffer[plane] + copy_stride * row), (src->buffer[plane] + copy_stride * row), copy_width);
     }
 }
 
 uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* recon_ptr, int32_t plane) {
     SequenceControlSet* scs      = pcs->ppcs->scs;
     bool                is_16bit = scs->is_16bit_pipeline;
+    assert(plane >= PLANE_Y && plane < MAX_PLANES);
+    const uint32_t ss_x = scs->subsampling_x;
+    const uint32_t ss_y = scs->subsampling_y;
 
     // svt_spatial_full_distortion_kernel note:
     // intrinsic optimization require width and height in 4 pixel aligned.
@@ -799,76 +780,21 @@ uint64_t picture_sse_calculations(PictureControlSet* pcs, EbPictureBufferDesc* r
     // here uses aligned_width and aligned_height to avoid wrong sse results.
     // if encoding in non-scaled frame, aligned_width and aligned_height equals
     // frame width and height, it has no effect to original resolution
-    const uint16_t input_align_width  = pcs->ppcs->aligned_width;
-    const uint16_t input_align_height = pcs->ppcs->aligned_height;
-    const uint32_t ss_x               = scs->subsampling_x;
-    const uint32_t ss_y               = scs->subsampling_y;
+    const uint16_t input_align_width  = plane ? pcs->ppcs->aligned_width >> ss_x : pcs->ppcs->aligned_width;
+    const uint16_t input_align_height = plane ? pcs->ppcs->aligned_height >> ss_y : pcs->ppcs->aligned_height;
 
-    if (!is_16bit) {
-        EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->ppcs->enhanced_pic;
+    EbSpatialFullDistType spatial_full_dist_type_fun = is_16bit ? svt_full_distortion_kernel16_bits
+                                                                : svt_spatial_full_distortion_kernel;
+    EbPictureBufferDesc*  input_pic                  = is_16bit ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
 
-        if (plane == 0) {
-            return svt_spatial_full_distortion_kernel(input_pic->y_buffer,
-                                                      0,
-                                                      input_pic->y_stride,
-                                                      recon_ptr->y_buffer,
-                                                      0,
-                                                      recon_ptr->y_stride,
-                                                      input_align_width,
-                                                      input_align_height);
-        } else if (plane == 1) {
-            return svt_spatial_full_distortion_kernel(input_pic->u_buffer,
-                                                      0,
-                                                      input_pic->u_stride,
-                                                      recon_ptr->u_buffer,
-                                                      0,
-                                                      recon_ptr->u_stride,
-                                                      input_align_width >> ss_x,
-                                                      input_align_height >> ss_y);
-        } else if (plane == 2) {
-            return svt_spatial_full_distortion_kernel(input_pic->v_buffer,
-                                                      0,
-                                                      input_pic->v_stride,
-                                                      recon_ptr->v_buffer,
-                                                      0,
-                                                      recon_ptr->v_stride,
-                                                      input_align_width >> ss_x,
-                                                      input_align_height >> ss_y);
-        }
-        return 0;
-    } else {
-        EbPictureBufferDesc* input_pic = (EbPictureBufferDesc*)pcs->input_frame16bit;
-
-        if (plane == 0) {
-            return svt_full_distortion_kernel16_bits(input_pic->y_buffer,
-                                                     0,
-                                                     input_pic->y_stride,
-                                                     recon_ptr->y_buffer,
-                                                     0,
-                                                     recon_ptr->y_stride,
-                                                     input_align_width,
-                                                     input_align_height);
-        } else if (plane == 1) {
-            return svt_full_distortion_kernel16_bits(input_pic->u_buffer,
-                                                     0,
-                                                     input_pic->u_stride,
-                                                     recon_ptr->u_buffer,
-                                                     0,
-                                                     recon_ptr->u_stride,
-                                                     (input_align_width + ss_x) >> ss_x,
-                                                     (input_align_height + ss_y) >> ss_y);
-        } else if (plane == 2) {
-            return svt_full_distortion_kernel16_bits(input_pic->v_buffer,
-                                                     0,
-                                                     input_pic->v_stride,
-                                                     recon_ptr->v_buffer,
-                                                     0,
-                                                     recon_ptr->v_stride,
-                                                     (input_align_width + ss_x) >> ss_x,
-                                                     (input_align_height + ss_y) >> ss_y);
-        }
-        return 0;
-    }
+    return spatial_full_dist_type_fun(input_pic->buffer[plane],
+                                      0,
+                                      input_pic->stride[plane],
+                                      recon_ptr->buffer[plane],
+                                      0,
+                                      recon_ptr->stride[plane],
+                                      input_align_width,
+                                      input_align_height);
 }
 
 /*************************************************************************************************
@@ -917,8 +843,7 @@ static int64_t try_filter_frame(const EbPictureBufferDesc* sd, EbPictureBufferDe
 
     // Re-instate the unfiltered frame; if both filters are off, no need to copy as there was no change to the pic
     if (filter_level[0] || filter_level[1]) {
-        svt_copy_buffer(
-            temp_lf_recon_buffer /*cpi->last_frame_uf*/, recon_buffer /*cm->frame_to_show*/, pcs, (uint8_t)plane);
+        svt_copy_buffer(temp_lf_recon_buffer, recon_buffer, (Plane)plane);
     }
 
     return filt_err;
@@ -973,8 +898,7 @@ static int32_t search_filter_level(EbPictureBufferDesc* sd, // source
     // Set each entry to -1
     memset(ss_err, 0xFF, sizeof(ss_err));
     // make a copy of recon_buffer
-    svt_copy_buffer(
-        recon_buffer /*cm->frame_to_show*/, temp_lf_recon_buffer /*&cpi->last_frame_uf*/, pcs, (uint8_t)plane);
+    svt_copy_buffer(recon_buffer, temp_lf_recon_buffer, (Plane)plane);
 
     best_err                = try_filter_frame(sd, temp_lf_recon_buffer, pcs, filt_mid, partial_frame, plane, dir);
     filt_best               = filt_mid;

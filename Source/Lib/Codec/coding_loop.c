@@ -181,8 +181,6 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
                                                      NEIGHBOR_ARRAY_UNIT_FULL_MASK);
         }
     }
-
-    return;
 }
 
 /**********************************************************
@@ -631,8 +629,8 @@ static void av1_encode_generate_recon(PictureControlSet* pcs, EncDecContext* ed_
     //**********************************
     if (component_mask & PICTURE_BUFFER_DESC_CHROMA_MASK) {
         const TxSize   tx_size_uv     = av1_get_max_uv_txsize(ed_ctx->blk_geom->bsize, 1, 1);
-        const uint32_t round_origin_x = (org_x >> 3) << 3; // for Chroma blocks with size of 4
-        const uint32_t round_origin_y = (org_y >> 3) << 3; // for Chroma blocks with size of 4
+        const uint32_t round_origin_x = ROUND_UV(org_x); // for Chroma blocks with size of 4
+        const uint32_t round_origin_y = ROUND_UV(org_y); // for Chroma blocks with size of 4
 
         //**********************************
         // Cb

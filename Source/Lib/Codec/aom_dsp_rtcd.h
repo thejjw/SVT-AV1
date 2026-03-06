@@ -66,15 +66,6 @@ RTCD_EXTERN void(*svt_av1_compute_stats)(int32_t wiener_win, const uint8_t *dgd8
 void svt_av1_compute_stats_highbd_c(int32_t wiener_win, const uint8_t *dgd8, const uint8_t *src8, int32_t h_start, int32_t h_end, int32_t v_start, int32_t v_end, int32_t dgd_stride, int32_t src_stride, int64_t *M, int64_t *H, EbBitDepth bit_depth);
 RTCD_EXTERN void(*svt_av1_compute_stats_highbd)(int32_t wiener_win, const uint8_t *dgd8, const uint8_t *src8, int32_t h_start, int32_t h_end, int32_t v_start, int32_t v_end, int32_t dgd_stride, int32_t src_stride, int64_t *M, int64_t *H, EbBitDepth bit_depth);
 #endif
-typedef uint64_t(*EbSpatialFullDistType)(
-    uint8_t   *input,
-    uint32_t   input_offset,
-    uint32_t   input_stride,
-    uint8_t   *recon,
-    int32_t    recon_offset,
-    uint32_t   recon_stride,
-    uint32_t   area_width,
-    uint32_t   area_height);
 int64_t svt_av1_lowbd_pixel_proj_error_c(const uint8_t *src8, int32_t width, int32_t height, int32_t src_stride, const uint8_t *dat8, int32_t dat_stride, int32_t *flt0, int32_t flt0_stride, int32_t *flt1, int32_t flt1_stride, const int32_t xq[2], const SgrParamsType *params);
 RTCD_EXTERN int64_t(*svt_av1_lowbd_pixel_proj_error)(const uint8_t *src8, int32_t width, int32_t height, int32_t src_stride, const uint8_t *dat8, int32_t dat_stride, int32_t *flt0, int32_t flt0_stride, int32_t *flt1, int32_t flt1_stride, const int32_t xq[2], const SgrParamsType *params);
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH

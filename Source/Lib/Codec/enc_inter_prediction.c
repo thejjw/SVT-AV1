@@ -1981,113 +1981,55 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
     uint64_t            rate_sum = 0;
     uint64_t            dist_sum = 0;
     SequenceControlSet* scs      = pcs->ppcs->scs;
+    int                 ss_x     = scs->subsampling_x;
+    int                 ss_y     = scs->subsampling_y;
 
     const double effective_ac_bias = get_effective_ac_bias(
         pcs->scs->static_config.ac_bias, pcs->slice_type == I_SLICE, pcs->temporal_layer_index);
-    EbPictureBufferDesc*  input_pic                  = bit_depth > 8 ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    const uint32_t        input_offset               = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
-    const uint32_t        input_chroma_offset        = ((ctx->blk_org_y) * input_pic->u_stride + (ctx->blk_org_x)) / 2;
-    const int32_t         prediction_offset          = 0;
-    const int32_t         prediction_chroma_offset   = 0;
+
     const uint8_t         hbd                        = (bit_depth > 8) ? 1 : 0;
+    EbPictureBufferDesc*  input_pic                  = hbd ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
     EbSpatialFullDistType spatial_full_dist_type_fun = hbd ? svt_full_distortion_kernel16_bits
                                                            : svt_spatial_full_distortion_kernel;
-    const uint16_t        blk_height                 = ctx->blk_geom->bheight;
-    const uint8_t         shift = (ctx->ifs_ctrls.subsampled_distortion && (blk_height > 16)) ? 1 : 0;
     for (int32_t plane = plane_from; plane <= plane_to; ++plane) {
-        uint64_t sse;
-        uint32_t rate;
-        uint64_t dist;
-
-        switch (plane) {
-        case 0:
-            sse = spatial_full_dist_type_fun(input_pic->y_buffer,
-                                             input_offset,
-                                             input_pic->y_stride << shift,
-                                             prediction_ptr->y_buffer,
-                                             prediction_offset,
-                                             prediction_ptr->y_stride << shift,
-                                             ctx->blk_geom->bwidth,
-                                             ctx->blk_geom->bheight >> shift)
-                << shift;
-            if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->y_buffer,
-                                             input_offset,
-                                             input_pic->y_stride << shift,
-                                             prediction_ptr->y_buffer,
-                                             prediction_offset,
-                                             prediction_ptr->y_stride << shift,
-                                             ctx->blk_geom->bwidth,
-                                             ctx->blk_geom->bheight >> shift,
-                                             hbd,
-                                             effective_ac_bias)
-                    << shift;
-            }
-            break;
-        case 1:
-            sse = spatial_full_dist_type_fun(input_pic->u_buffer,
-                                             input_chroma_offset,
-                                             input_pic->u_stride,
-                                             prediction_ptr->u_buffer,
-                                             prediction_chroma_offset,
-                                             prediction_ptr->u_stride,
-                                             ctx->blk_geom->bwidth_uv,
-                                             ctx->blk_geom->bheight_uv);
-            if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->u_buffer,
-                                             input_chroma_offset,
-                                             input_pic->u_stride,
-                                             prediction_ptr->u_buffer,
-                                             prediction_chroma_offset,
-                                             prediction_ptr->u_stride,
-                                             ctx->blk_geom->bwidth_uv,
-                                             ctx->blk_geom->bheight_uv,
-                                             hbd,
-                                             scs->static_config.ac_bias);
-            }
-            break;
-        default:
-            sse = spatial_full_dist_type_fun(input_pic->v_buffer,
-                                             input_chroma_offset,
-                                             input_pic->v_stride,
-                                             prediction_ptr->v_buffer,
-                                             prediction_chroma_offset,
-                                             prediction_ptr->v_stride,
-                                             ctx->blk_geom->bwidth_uv,
-                                             ctx->blk_geom->bheight_uv);
-            if (effective_ac_bias) {
-                sse += get_svt_psy_full_dist(input_pic->v_buffer,
-                                             input_chroma_offset,
-                                             input_pic->v_stride,
-                                             prediction_ptr->v_buffer,
-                                             prediction_chroma_offset,
-                                             prediction_ptr->v_stride,
-                                             ctx->blk_geom->bwidth_uv,
-                                             ctx->blk_geom->bheight_uv,
-                                             hbd,
-                                             scs->static_config.ac_bias);
-            }
-            break;
+        int      input_offset = plane ? (ctx->blk_org_y >> ss_y) * input_pic->stride[plane] + (ctx->blk_org_x >> ss_x)
+                                      : (ctx->blk_org_y) * input_pic->stride[plane] + (ctx->blk_org_x);
+        uint64_t sse          = spatial_full_dist_type_fun(input_pic->buffer[plane],
+                                                  input_offset,
+                                                  input_pic->stride[plane],
+                                                  prediction_ptr->buffer[plane],
+                                                  0,
+                                                  prediction_ptr->stride[plane],
+                                                  plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
+                                                  plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight);
+        if (effective_ac_bias) {
+            sse += get_svt_psy_full_dist(input_pic->buffer[plane],
+                                         input_offset,
+                                         input_pic->stride[plane],
+                                         prediction_ptr->buffer[plane],
+                                         0,
+                                         prediction_ptr->stride[plane],
+                                         plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
+                                         plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight,
+                                         hbd,
+                                         plane ? scs->static_config.ac_bias : effective_ac_bias);
         }
-        if (ctx->ifs_ctrls.skip_sse_rd_model) {
-            rate = 0;
-            dist = sse;
-            dist_sum += dist * 10;
-        } else {
-            const uint8_t   current_q_index = pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
-            Dequants* const dequants        = ctx->hbd_md ? &scs->enc_ctx->deq_bd : &scs->enc_ctx->deq_8bit;
-            int16_t         quantizer       = dequants->y_dequant_qtx[current_q_index][1];
-            model_rd_from_sse(plane == 0 ? ctx->blk_geom->bsize : ctx->blk_geom->bsize_uv,
-                              quantizer,
-                              bit_depth,
-                              ROUND_POWER_OF_TWO(sse, 2 * (bit_depth - 8)),
-                              &rate,
-                              &dist,
-                              0);
 
-            rate_sum += rate;
-            dist_sum += dist;
-        }
+        uint32_t        rate;
+        uint64_t        dist;
+        const uint8_t   current_q_index = pcs->ppcs->frm_hdr.quantization_params.base_q_idx;
+        Dequants* const dequants        = ctx->hbd_md ? &scs->enc_ctx->deq_bd : &scs->enc_ctx->deq_8bit;
+        int16_t         quantizer       = dequants->y_dequant_qtx[current_q_index][1];
+        model_rd_from_sse(plane == 0 ? ctx->blk_geom->bsize : ctx->blk_geom->bsize_uv,
+                          quantizer,
+                          bit_depth,
+                          ROUND_POWER_OF_TWO(sse, 2 * (bit_depth - 8)),
+                          &rate,
+                          &dist,
+                          0);
+
+        rate_sum += rate;
+        dist_sum += dist;
     }
 
     *out_rate_sum = (int32_t)rate_sum;
@@ -2212,8 +2154,8 @@ static void interpolation_filter_search(PictureControlSet* pcs, ModeDecisionCont
             model_rd_for_sb(pcs,
                             is_pred_buffer_ready ? cand_bf->pred : ctx->scratch_prediction_ptr,
                             ctx,
-                            0,
-                            0,
+                            PLANE_Y,
+                            PLANE_Y,
                             &tmp_rate,
                             &tmp_dist,
                             hbd_md ? EB_TEN_BIT : EB_EIGHT_BIT);
@@ -2297,8 +2239,8 @@ static void inter_intra_prediction(PictureControlSet* pcs, ModeDecisionContext* 
         uint8_t topNeighArray[(64 * 2 + 1) << 1];
         uint8_t leftNeighArray[(64 * 2 + 1) << 1];
 
-        uint32_t blk_originx_uv = (pu_origin_x >> 3 << 3) >> 1;
-        uint32_t blk_originy_uv = (pu_origin_y >> 3 << 3) >> 1;
+        uint32_t blk_originx_uv = ROUND_UV(pu_origin_x) >> 1;
+        uint32_t blk_originy_uv = ROUND_UV(pu_origin_y) >> 1;
 
         if (plane == 0) {
             dst          = pred_pic->y_buffer + ((dst_origin_x + (dst_origin_y)*pred_pic->y_stride) << is16bit);
@@ -2928,8 +2870,8 @@ static void av1_inter_prediction_light_pd1(SequenceControlSet* scs, ModeDecision
                                   &pos_y,
                                   &pos_x);
             if (component_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
-                src_mod    = ref_pic->u_buffer + ((+pos_x + (pos_y)*ref_pic->u_stride));
-                src_mod_2b = ref_pic->u_buffer_bit_inc + ((pos_x + (pos_y)*ref_pic->u_stride_bit_inc));
+                src_mod    = ref_pic->u_buffer + (pos_x + pos_y * ref_pic->u_stride);
+                src_mod_2b = ref_pic->u_buffer_bit_inc + (pos_x + pos_y * ref_pic->u_stride_bit_inc);
                 svt_inter_predictor_light_pd1(src_mod,
                                               src_mod_2b,
                                               ref_pic->u_stride,

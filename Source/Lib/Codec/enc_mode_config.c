@@ -4660,34 +4660,19 @@ static void set_interpolation_search_level_ctrls(ModeDecisionContext* ctx, uint8
 
     switch (interpolation_search_level) {
     case 0:
-        ifs_ctrls->level                 = IFS_OFF;
-        ifs_ctrls->subsampled_distortion = 0;
-        ifs_ctrls->skip_sse_rd_model     = 0;
+        ifs_ctrls->level = IFS_OFF;
         break;
     case 1:
-        ifs_ctrls->level                 = IFS_MDS0;
-        ifs_ctrls->subsampled_distortion = 0;
-        ifs_ctrls->skip_sse_rd_model     = 0;
+        ifs_ctrls->level = IFS_MDS0;
         break;
     case 2:
-        ifs_ctrls->level                 = IFS_MDS1;
-        ifs_ctrls->subsampled_distortion = 0;
-        ifs_ctrls->skip_sse_rd_model     = 0;
+        ifs_ctrls->level = IFS_MDS1;
         break;
     case 3:
-        ifs_ctrls->level                 = IFS_MDS2;
-        ifs_ctrls->subsampled_distortion = 0;
-        ifs_ctrls->skip_sse_rd_model     = 0;
+        ifs_ctrls->level = IFS_MDS2;
         break;
     case 4:
-        ifs_ctrls->level                 = IFS_MDS3;
-        ifs_ctrls->subsampled_distortion = 0;
-        ifs_ctrls->skip_sse_rd_model     = 0;
-        break;
-    case 5:
-        ifs_ctrls->level                 = IFS_MDS3;
-        ifs_ctrls->subsampled_distortion = 1;
-        ifs_ctrls->skip_sse_rd_model     = 1;
+        ifs_ctrls->level = IFS_MDS3;
         break;
     default:
         assert(0);

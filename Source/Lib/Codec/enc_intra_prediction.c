@@ -447,18 +447,10 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
 
     const int is_16bit = (bit_depth == EB_EIGHT_BIT) ? 0 : 1;
 
-    uint8_t* dst;
-    int32_t  dst_stride;
-    if (plane == 0) {
-        dst        = recon_buffer->y_buffer + ((dst_offset_x + (dst_offset_y)*recon_buffer->y_stride) << is_16bit);
-        dst_stride = recon_buffer->y_stride;
-    } else if (plane == 1) {
-        dst        = recon_buffer->u_buffer + (((dst_offset_x + (dst_offset_y)*recon_buffer->u_stride)) << is_16bit);
-        dst_stride = recon_buffer->u_stride;
-    } else {
-        dst        = recon_buffer->v_buffer + (((dst_offset_x + (dst_offset_y)*recon_buffer->v_stride)) << is_16bit);
-        dst_stride = recon_buffer->v_stride;
-    }
+    assert(plane >= PLANE_Y && plane < MAX_PLANES);
+    uint8_t* dst = recon_buffer->buffer[plane] +
+        ((dst_offset_x + (dst_offset_y)*recon_buffer->stride[plane]) << is_16bit);
+    int32_t dst_stride = recon_buffer->stride[plane];
 
     const int32_t txwpx = tx_size_wide[tx_size];
     const int32_t txhpx = tx_size_high[tx_size];

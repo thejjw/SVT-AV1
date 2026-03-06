@@ -122,6 +122,7 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
     int use_highbd = scs->is_16bit_pipeline;
 
     if (!skip_copy) {
+        assert(num_planes < MAX_PLANES);
         for (int plane = 0; plane < num_planes; ++plane) {
             uint8_t *src_buf, *dst_buf;
             int32_t  src_stride, dst_stride;
@@ -129,18 +130,10 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
             int sub_x = plane ? scs->subsampling_x : 0;
             int sub_y = plane ? scs->subsampling_y : 0;
 
-            src_buf    = plane == 0 ? recon_picture_src->y_buffer
-                   : plane == 1     ? recon_picture_src->u_buffer
-                                    : recon_picture_src->v_buffer;
-            src_stride = plane == 0 ? recon_picture_src->y_stride
-                : plane == 1        ? recon_picture_src->u_stride
-                                    : recon_picture_src->v_stride;
-            dst_buf    = plane == 0 ? recon_picture_dst->y_buffer
-                   : plane == 1     ? recon_picture_dst->u_buffer
-                                    : recon_picture_dst->v_buffer;
-            dst_stride = plane == 0 ? recon_picture_dst->y_stride
-                : plane == 1        ? recon_picture_dst->u_stride
-                                    : recon_picture_dst->v_stride;
+            src_buf    = recon_picture_src->buffer[plane];
+            src_stride = recon_picture_src->stride[plane];
+            dst_buf    = recon_picture_dst->buffer[plane];
+            dst_stride = recon_picture_dst->stride[plane];
 
             int height = ((recon_picture_src->height + sub_y) >> sub_y);
             for (int row = 0; row < height; ++row) {
@@ -184,16 +177,17 @@ static void svt_av1_superres_upscale_frame(struct Av1Common* cm, PictureControlS
     // get the bit-depth from the encoder config instead of from the recon ptr
     int bit_depth = scs->static_config.encoder_bit_depth;
 
+    assert(num_planes < MAX_PLANES);
     for (int plane = 0; plane < num_planes; ++plane) {
         uint8_t *src_buf, *dst_buf;
         int32_t  src_stride, dst_stride;
 
         int sub_x  = plane ? ss_x : 0;
         int sub_y  = plane ? ss_y : 0;
-        src_buf    = plane == 0 ? src->y_buffer : plane == 1 ? src->u_buffer : src->v_buffer;
-        src_stride = plane == 0 ? src->y_stride : plane == 1 ? src->u_stride : src->v_stride;
-        dst_buf    = plane == 0 ? dst->y_buffer : plane == 1 ? dst->u_buffer : dst->v_buffer;
-        dst_stride = plane == 0 ? dst->y_stride : plane == 1 ? dst->u_stride : dst->v_stride;
+        src_buf    = src->buffer[plane];
+        src_stride = src->stride[plane];
+        dst_buf    = dst->buffer[plane];
+        dst_stride = dst->stride[plane];
 
         svt_av1_upscale_normative_rows(cm,
                                        (const uint8_t*)src_buf,
