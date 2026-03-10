@@ -253,6 +253,13 @@ Win64 FFmpeg (vmaf Static):
 Win64 FFmpeg (Static):
   extends: .windows-ffmpeg-base
   stage: ffmpeg
+  cache:
+    key: "$CI_JOB_NAME_SLUG"
+    paths:
+      - .ccache
+      # We cache the build directory since, although ccache does help speed up compilation, the job can still take over an hour.
+      - ffmpeg-build/
+    policy: pull-push
   before_script:
     # Merge the artifacts from the dependency jobs into the expected locations for pkg-config
     - Move-Item aom-prefix/msys64/mingw64/* $env:PREFIX_DIR -Force
@@ -264,7 +271,54 @@ Win64 FFmpeg (Static):
     - git clone --depth 1 https://github.com/FFmpeg/FFmpeg.git ffmpeg-src
   script:
     - pkg-config --modversion aom dav1d SvtAv1Enc libvmaf vpx
-    - mkdir ffmpeg-build
+    # Prep fingerprint for caching the build dir.
+    # This is composed of hashing the compiler + CFLAGS, CXXFLAGS, and LDFLAGS.
+    # If any of these change, the cache will be invalidated and a new build will be forced.
+    # The reason this isn't done in the key: is because we don't have a way to get the hash of the compilers themselves.
+    - |
+      $fingerprint = Invoke-Command -ScriptBlock {
+        $envHashes = 'CC', 'CXX', 'LD', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS' |
+          ForEach-Object {
+            $val = Get-Content -LiteralPath env:$_ -ErrorAction SilentlyContinue
+            if ($null -eq $val) {
+              return
+            }
+            $ms = [IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes($val))
+            $hash = [Security.Cryptography.SHA512]::HashData($ms)
+            $ms.Dispose()
+            '{0}:{1}' -f $_, ([BitConverter]::ToString($hash).Replace('-', ''))
+          }
+
+        $toolHashes = @($env:CC, $env:CXX, $env:LD) |
+          Where-Object { $_ -is [string] } |
+          ForEach-Object { $_ -split '\s+' } |
+          Where-Object { $_.Trim().Length -gt 0 } |
+          Sort-Object -Unique |
+          ForEach-Object {
+            if (($cmd = Get-Command -CommandType Application -Name $_ -ErrorAction SilentlyContinue)) {
+              $path = (Resolve-Path -LiteralPath $cmd.Source -ErrorAction SilentlyContinue).Path
+              $fileHash = Get-FileHash -Algorithm SHA512 -LiteralPath $path
+              '{0}:{1}' -f $path.ToLowerInvariant(), $fileHash.Hash
+            } else {
+              "${_}:[NotFound]"
+            }
+          }
+
+        $aggregateBytes = [Text.Encoding]::UTF8.GetBytes(($envHashes + $toolHashes -join "`n"))
+        $hashBytes = [Security.Cryptography.SHA512]::HashData($aggregateBytes)
+        [BitConverter]::ToString($hashBytes).Replace('-', '')
+      }
+    - $cachedPrint = (Get-Content -LiteralPath ffmpeg-build/.cacheid -ErrorAction SilentlyContinue) ?? ""
+    - |
+      if ($cachedPrint -ne $fingerprint) {
+        Write-Output "Cache miss: $cachedPrint != $fingerprint"
+        Remove-Item -LiteralPath ffmpeg-build -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path ffmpeg-build | Out-Null
+        Set-Content -LiteralPath ffmpeg-build/.cacheid -Value $fingerprint
+      } else {
+        Write-Output "Cache hit: $cachedPrint == $fingerprint"
+      }
+
     - cd ffmpeg-build
     - bash ../ffmpeg-src/configure
       --arch=x86_64
