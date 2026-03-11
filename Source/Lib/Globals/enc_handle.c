@@ -4935,7 +4935,10 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                             y8b_input_picture_ptr->y_stride,
                                             2);
 
-        memset(input_pic->y_buffer_bit_inc, 0, input_pic->luma_size / 4);
+        memset(
+            input_pic->y_buffer_bit_inc - ((input_pic->border + (input_pic->y_stride_bit_inc * input_pic->border)) / 4),
+            0,
+            input_pic->luma_size / 4);
 
         if (pass != ENCODE_FIRST_PASS) {
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cb,
@@ -4946,7 +4949,12 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                                 y8b_input_picture_ptr->u_stride,
                                                 2);
 
-            memset(input_pic->u_buffer_bit_inc, 0, input_pic->chroma_size / 4);
+            memset(input_pic->u_buffer_bit_inc -
+                       (((input_pic->border >> subsampling_x) +
+                         (input_pic->u_stride_bit_inc * (input_pic->border >> subsampling_y))) /
+                        4),
+                   0,
+                   input_pic->chroma_size / 4);
 
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cr,
                                                 input_ptr->cr_stride,
@@ -4956,7 +4964,12 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                                 y8b_input_picture_ptr->v_stride,
                                                 2);
 
-            memset(input_pic->v_buffer_bit_inc, 0, input_pic->chroma_size / 4);
+            memset(input_pic->v_buffer_bit_inc -
+                       (((input_pic->border >> subsampling_x) +
+                         (input_pic->v_stride_bit_inc * (input_pic->border >> subsampling_y))) /
+                        4),
+                   0,
+                   input_pic->chroma_size / 4);
         }
     }
     return return_error;
