@@ -74,7 +74,6 @@ void svt_aom_down_sample_chroma(EbPictureBufferDesc* input_pic, EbPictureBufferD
     const uint16_t output_subsampling_y = (output_color_format >= EB_YUV422 ? 0 : 1);
 
     uint32_t stride_in, stride_out;
-    uint32_t input_origin_index, output_origin_index;
 
     uint8_t* ptr_in;
     uint8_t* ptr_out;
@@ -83,13 +82,11 @@ void svt_aom_down_sample_chroma(EbPictureBufferDesc* input_pic, EbPictureBufferD
 
     //Cb
     {
-        stride_in          = input_pic->u_stride;
-        input_origin_index = 0;
-        ptr_in             = &(input_pic->u_buffer[input_origin_index]);
+        stride_in = input_pic->u_stride;
+        ptr_in    = input_pic->u_buffer;
 
-        stride_out          = outputPicturePtr->u_stride;
-        output_origin_index = 0;
-        ptr_out             = &(outputPicturePtr->u_buffer[output_origin_index]);
+        stride_out = outputPicturePtr->u_stride;
+        ptr_out    = outputPicturePtr->u_buffer;
 
         for (jj = 0; jj < (uint32_t)(outputPicturePtr->height >> output_subsampling_y); jj++) {
             for (ii = 0; ii < (uint32_t)(outputPicturePtr->width >> output_subsampling_x); ii++) {
@@ -101,13 +98,11 @@ void svt_aom_down_sample_chroma(EbPictureBufferDesc* input_pic, EbPictureBufferD
 
     //Cr
     {
-        stride_in          = input_pic->v_stride;
-        input_origin_index = 0;
-        ptr_in             = &(input_pic->v_buffer[input_origin_index]);
+        stride_in = input_pic->v_stride;
+        ptr_in    = input_pic->v_buffer;
 
-        stride_out          = outputPicturePtr->v_stride;
-        output_origin_index = 0;
-        ptr_out             = &(outputPicturePtr->v_buffer[output_origin_index]);
+        stride_out = outputPicturePtr->v_stride;
+        ptr_out    = outputPicturePtr->v_buffer;
 
         for (jj = 0; jj < (uint32_t)(outputPicturePtr->height >> output_subsampling_y); jj++) {
             for (ii = 0; ii < (uint32_t)(outputPicturePtr->width >> output_subsampling_x); ii++) {
