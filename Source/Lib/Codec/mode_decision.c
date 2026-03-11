@@ -1947,7 +1947,6 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
     uint32_t    full_lambda   = ctx->full_lambda_md[EB_8_BIT_MD]; // 8bit only
     int         error_per_bit = full_lambda >> RD_EPB_SHIFT;
     error_per_bit += (error_per_bit == 0);
-    uint32_t                blk_origin_index   = 0;
     EbPictureBufferDesc*    input_pic          = ppcs->enhanced_pic; // 10BIT not supported
     uint32_t                input_origin_index = (ctx->blk_org_y) * input_pic->y_stride + (ctx->blk_org_x);
     const AomVarianceFnPtr* fn_ptr             = &svt_aom_mefn_ptr[ctx->blk_geom->bsize];
@@ -2033,7 +2032,7 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
                                      EB_EIGHT_BIT,
                                      0); // is_16bit_pipeline
 
-            int var = fn_ptr->vf(ctx->scratch_prediction_ptr->y_buffer + blk_origin_index,
+            int var = fn_ptr->vf(ctx->scratch_prediction_ptr->y_buffer,
                                  ctx->scratch_prediction_ptr->y_stride,
                                  src_y,
                                  input_pic->y_stride,
