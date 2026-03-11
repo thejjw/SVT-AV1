@@ -70,16 +70,24 @@ Win64 Unit Tests:
   variables:
     SVT_AV1_TEST_VECTOR_PATH: $CI_PROJECT_DIR/test/vectors
   cache:
-    key: testvectors
-    paths:
-      - test/vectors
-    policy: pull-push
+    - key: testvectors
+      paths:
+        - test/vectors
+      policy: pull-push
+    - key: "$CI_JOB_NAME_SLUG-gtest-parallel-v1"
+      paths:
+        - .cache/gtest-parallel
+      policy: pull-push
   before_script:
+    - if (-Not (Test-Path -LiteralPath "$env:CI_PROJECT_DIR/.cache")) { New-Item -ItemType Directory -Path "$env:CI_PROJECT_DIR/.cache" -Force | Out-Null }
+    - if (Test-Path -LiteralPath "$env:CI_PROJECT_DIR/.cache/gtest-parallel") { Copy-Item -LiteralPath "$env:CI_PROJECT_DIR/.cache/gtest-parallel" -Destination "$env:LOCALAPPDATA/gtest-parallel" -Force }
     - Invoke-WebRequest -OutFile gtest_parallel.py -Uri https://raw.githubusercontent.com/1480c1/gtest-parallel/unique_id/gtest_parallel.py
   script:
     - cmake -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
     - cmake --build Build --target TestVectors
     - python gtest_parallel.py --print_test_times ./Bin/Release/SvtAv1UnitTests ./Bin/Release/SvtAv1E2ETests -- --gtest_output="xml:reports/{#}.xml"
+  after_script:
+    - Copy-Item -LiteralPath "$env:LOCALAPPDATA/gtest-parallel" -Destination "$env:CI_PROJECT_DIR/.cache/gtest-parallel" -Force
   needs:
     - Win64 (MSVC, Tests)
 
