@@ -4889,11 +4889,8 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
     EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
     EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
 
-    // Need to include for Interlacing on the fly with pictureScanType = 1
-    uint32_t luma_buffer_offset   = 0;
-    uint32_t chroma_buffer_offset = 0;
-    uint32_t luma_width           = (uint32_t)(input_pic->width - scs->max_input_pad_right);
-    uint32_t luma_height          = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
+    uint32_t luma_width  = (uint32_t)(input_pic->width - scs->max_input_pad_right);
+    uint32_t luma_height = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);
 
     const uint8_t  subsampling_x = (input_pic->color_format == EB_YUV444 ? 0 : 1);
     const uint8_t  subsampling_y = ((input_pic->color_format == EB_YUV444 || input_pic->color_format == EB_YUV422) ? 0
@@ -4906,7 +4903,7 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                 input_ptr->y_stride,
                                 luma_width << 1,
                                 luma_height << 1,
-                                y8b_input_picture_ptr->y_buffer + luma_buffer_offset,
+                                y8b_input_picture_ptr->y_buffer,
                                 input_pic->y_stride,
                                 2);
 
@@ -4915,14 +4912,14 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                     input_ptr->cb_stride,
                                     chroma_width << 1,
                                     chroma_height << 1,
-                                    input_pic->u_buffer + chroma_buffer_offset,
+                                    input_pic->u_buffer,
                                     input_pic->u_stride,
                                     2);
             downsample_2d_c_skipall(input_ptr->cr,
                                     input_ptr->cr_stride,
                                     chroma_width << 1,
                                     chroma_height << 1,
-                                    input_pic->v_buffer + chroma_buffer_offset,
+                                    input_pic->v_buffer,
                                     input_pic->v_stride,
                                     2);
         }
@@ -4931,32 +4928,45 @@ static EbErrorType downsample_copy_frame_buffer(SequenceControlSet* scs, uint8_t
                                             input_ptr->y_stride,
                                             luma_width << 1,
                                             luma_height << 1,
-                                            y8b_input_picture_ptr->y_buffer + luma_buffer_offset,
+                                            y8b_input_picture_ptr->y_buffer,
                                             y8b_input_picture_ptr->y_stride,
                                             2);
 
-        memset(input_pic->y_buffer_bit_inc, 0, input_pic->luma_size / 4);
+        memset(
+            input_pic->y_buffer_bit_inc - ((input_pic->border + (input_pic->y_stride_bit_inc * input_pic->border)) / 4),
+            0,
+            input_pic->luma_size / 4);
 
         if (pass != ENCODE_FIRST_PASS) {
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cb,
                                                 input_ptr->cb_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
-                                                input_pic->u_buffer + chroma_buffer_offset,
+                                                input_pic->u_buffer,
                                                 y8b_input_picture_ptr->u_stride,
                                                 2);
 
-            memset(input_pic->u_buffer_bit_inc, 0, input_pic->chroma_size / 4);
+            memset(input_pic->u_buffer_bit_inc -
+                       (((input_pic->border >> subsampling_x) +
+                         (input_pic->u_stride_bit_inc * (input_pic->border >> subsampling_y))) /
+                        4),
+                   0,
+                   input_pic->chroma_size / 4);
 
             downsample_2d_c_16_zero2bit_skipall((uint16_t*)input_ptr->cr,
                                                 input_ptr->cr_stride,
                                                 chroma_width << 1,
                                                 chroma_height << 1,
-                                                input_pic->v_buffer + chroma_buffer_offset,
+                                                input_pic->v_buffer,
                                                 y8b_input_picture_ptr->v_stride,
                                                 2);
 
-            memset(input_pic->v_buffer_bit_inc, 0, input_pic->chroma_size / 4);
+            memset(input_pic->v_buffer_bit_inc -
+                       (((input_pic->border >> subsampling_x) +
+                         (input_pic->v_stride_bit_inc * (input_pic->border >> subsampling_y))) /
+                        4),
+                   0,
+                   input_pic->chroma_size / 4);
         }
     }
     return return_error;
@@ -4974,8 +4984,6 @@ static EbErrorType copy_frame_buffer(SequenceControlSet* scs, uint8_t* destinati
     EbPictureBufferDesc* input_pic             = (EbPictureBufferDesc*)destination;
     EbPictureBufferDesc* y8b_input_picture_ptr = (EbPictureBufferDesc*)destination_y8b;
     EbSvtIOFormat*       input_ptr             = (EbSvtIOFormat*)source;
-
-    // Need to include for Interlacing on the fly with pictureScanType = 1
 
     uint32_t luma_width  = (uint32_t)(input_pic->width - scs->max_input_pad_right);
     uint32_t luma_height = (uint32_t)(input_pic->height - scs->max_input_pad_bottom);

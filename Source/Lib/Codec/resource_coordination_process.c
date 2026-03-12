@@ -462,37 +462,31 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
     EbPictureBufferDesc* src_picture_ptr = (EbPictureBufferDesc*)src;
     bool                 is_16bit_input  = config->encoder_bit_depth > EB_EIGHT_BIT;
 
-    // Need to include for Interlacing on the fly with pictureScanType = 1
-
     if (!is_16bit_input) {
-        uint16_t input_row_index;
-        uint32_t luma_buffer_offset   = 0;
-        uint32_t chroma_buffer_offset = 0;
-        uint16_t luma_stride          = dst_picture_ptr->y_stride << is_16bit_input;
-        uint16_t chroma_stride        = dst_picture_ptr->u_stride << is_16bit_input;
-        uint16_t luma_width           = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
-        uint16_t chroma_width         = (luma_width >> 1) << is_16bit_input;
-        uint16_t luma_height          = (uint16_t)(dst_picture_ptr->height - scs->max_input_pad_bottom);
+        uint16_t luma_stride   = dst_picture_ptr->y_stride << is_16bit_input;
+        uint16_t chroma_stride = dst_picture_ptr->u_stride << is_16bit_input;
+        uint16_t luma_width    = (uint16_t)(dst_picture_ptr->width - scs->max_input_pad_right) << is_16bit_input;
+        uint16_t chroma_width  = (luma_width >> 1) << is_16bit_input;
+        uint16_t luma_height   = (uint16_t)(dst_picture_ptr->height - scs->max_input_pad_bottom);
 
-        //uint16_t     luma_height  = input_pic->max_height;
         // Y
-        for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            svt_memcpy((dst_picture_ptr->y_buffer + luma_buffer_offset + luma_stride * input_row_index),
-                       (src_picture_ptr->y_buffer + luma_buffer_offset + luma_stride * input_row_index),
+        for (uint16_t input_row_index = 0; input_row_index < luma_height; input_row_index++) {
+            svt_memcpy((dst_picture_ptr->y_buffer + luma_stride * input_row_index),
+                       (src_picture_ptr->y_buffer + luma_stride * input_row_index),
                        luma_width);
         }
 
         // U
-        for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
-            svt_memcpy((dst_picture_ptr->u_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
-                       (src_picture_ptr->u_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
+        for (uint16_t input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
+            svt_memcpy((dst_picture_ptr->u_buffer + chroma_stride * input_row_index),
+                       (src_picture_ptr->u_buffer + chroma_stride * input_row_index),
                        chroma_width);
         }
 
         // V
-        for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
-            svt_memcpy((dst_picture_ptr->v_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
-                       (src_picture_ptr->v_buffer + chroma_buffer_offset + chroma_stride * input_row_index),
+        for (uint16_t input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
+            svt_memcpy((dst_picture_ptr->v_buffer + chroma_stride * input_row_index),
+                       (src_picture_ptr->v_buffer + chroma_stride * input_row_index),
                        chroma_width);
         }
     } else { // 10bit packed

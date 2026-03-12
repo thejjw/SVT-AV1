@@ -122,7 +122,7 @@ static EbErrorType copy_recon_enc(SequenceControlSet* scs, EbPictureBufferDesc* 
     int use_highbd = scs->is_16bit_pipeline;
 
     if (!skip_copy) {
-        assert(num_planes < MAX_PLANES);
+        assert(num_planes <= MAX_PLANES);
         for (int plane = 0; plane < num_planes; ++plane) {
             uint8_t *src_buf, *dst_buf;
             int32_t  src_stride, dst_stride;
@@ -177,7 +177,7 @@ static void svt_av1_superres_upscale_frame(struct Av1Common* cm, PictureControlS
     // get the bit-depth from the encoder config instead of from the recon ptr
     int bit_depth = scs->static_config.encoder_bit_depth;
 
-    assert(num_planes < MAX_PLANES);
+    assert(num_planes <= MAX_PLANES);
     for (int plane = 0; plane < num_planes; ++plane) {
         uint8_t *src_buf, *dst_buf;
         int32_t  src_stride, dst_stride;
