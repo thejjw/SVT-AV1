@@ -490,10 +490,49 @@ static EbErrorType copy_frame_buffer_overlay(SequenceControlSet* scs, uint8_t* d
                        chroma_width);
         }
     } else { // 10bit packed
+        // buffer_y and the other buffers may not point to the same memory area, so don't copy with buffer_alloc
+        svt_memcpy(
+            dst_picture_ptr->y_buffer - (dst_picture_ptr->border + dst_picture_ptr->border * dst_picture_ptr->y_stride),
+            src_picture_ptr->y_buffer - (src_picture_ptr->border + src_picture_ptr->border * src_picture_ptr->y_stride),
+            src_picture_ptr->luma_size);
 
-        // This assumes all buffers are used/allocated. Therefore, use the new buffer_alloc
-        // and copy the whole thing in one shot.
-        svt_memcpy(dst_picture_ptr->buffer_alloc, src_picture_ptr->buffer_alloc, src_picture_ptr->buffer_alloc_sz);
+        svt_memcpy(dst_picture_ptr->u_buffer -
+                       ((dst_picture_ptr->border >> 1) + (dst_picture_ptr->border >> 1) * dst_picture_ptr->u_stride),
+                   src_picture_ptr->u_buffer -
+                       ((src_picture_ptr->border >> 1) + (src_picture_ptr->border >> 1) * src_picture_ptr->u_stride),
+                   src_picture_ptr->chroma_size);
+
+        svt_memcpy(dst_picture_ptr->v_buffer -
+                       ((dst_picture_ptr->border >> 1) + (dst_picture_ptr->border >> 1) * dst_picture_ptr->v_stride),
+                   src_picture_ptr->v_buffer -
+                       ((src_picture_ptr->border >> 1) + (src_picture_ptr->border >> 1) * src_picture_ptr->v_stride),
+                   src_picture_ptr->chroma_size);
+
+        svt_memcpy(dst_picture_ptr->y_buffer_bit_inc -
+                       ((dst_picture_ptr->border + dst_picture_ptr->border * dst_picture_ptr->y_stride_bit_inc) >> 2),
+                   src_picture_ptr->y_buffer_bit_inc -
+                       ((src_picture_ptr->border + src_picture_ptr->border * src_picture_ptr->y_stride_bit_inc) >> 2),
+                   src_picture_ptr->luma_size >> 2);
+
+        svt_memcpy(dst_picture_ptr->u_buffer_bit_inc -
+                       (((dst_picture_ptr->border >> 1) +
+                         (dst_picture_ptr->border >> 1) * dst_picture_ptr->u_stride_bit_inc) >>
+                        2),
+                   src_picture_ptr->u_buffer_bit_inc -
+                       (((src_picture_ptr->border >> 1) +
+                         (src_picture_ptr->border >> 1) * src_picture_ptr->u_stride_bit_inc) >>
+                        2),
+                   src_picture_ptr->chroma_size >> 2);
+
+        svt_memcpy(dst_picture_ptr->v_buffer_bit_inc -
+                       (((dst_picture_ptr->border >> 1) +
+                         (dst_picture_ptr->border >> 1) * dst_picture_ptr->v_stride_bit_inc) >>
+                        2),
+                   src_picture_ptr->v_buffer_bit_inc -
+                       (((src_picture_ptr->border >> 1) +
+                         (src_picture_ptr->border >> 1) * src_picture_ptr->v_stride_bit_inc) >>
+                        2),
+                   src_picture_ptr->chroma_size >> 2);
     }
     return return_error;
 }
