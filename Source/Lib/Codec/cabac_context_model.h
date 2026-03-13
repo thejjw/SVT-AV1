@@ -796,7 +796,7 @@ static INLINE void partition_gather_vert_alike(AomCdfProb* out, const AomCdfProb
     out[1] = AOM_ICDF(CDF_PROB_TOP);
     out[2] = 0;
 }
-
+#if !OPT_PALETTE_PATH
 /**********************************************************************************************************************/
 // onyxc_int.h
 
@@ -805,7 +805,7 @@ int svt_aom_get_palette_color_index_context_optimized(const uint8_t* color_map, 
                                                       int* color_idx);
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
-
+#endif
 #ifdef __cplusplus
 }
 #endif

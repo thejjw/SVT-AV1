@@ -487,7 +487,14 @@ typedef struct NicPruningCtrls {
     // band_index |0       |1         |2        |
     // band       |0 to 10 |10 to 20  |20 to +? |
     // action     |nic * 1 |nic * 1/2 |nic * 0  |
-
+#if OPT_NIC_SC
+    uint64_t mds1_class_th; // Class threshold after MDS0 (ignored for intra frames)
+    uint8_t  mds1_band_cnt;
+    uint64_t mds2_class_th; // Class threshold after MDS1 (ignored for intra frames)
+    uint8_t  mds2_band_cnt;
+    uint64_t mds3_class_th; // Class threshold after MDS2
+    uint8_t  i_mds3_class_th_mult; // Multiplier applied to MDS3 class pruning for intra frames only
+#else
     // Post mds0
     uint64_t mds1_class_th;
     // Post mds1
@@ -496,6 +503,7 @@ typedef struct NicPruningCtrls {
     // >=2 Post mds2
     uint8_t  mds2_band_cnt;
     uint64_t mds3_class_th;
+#endif
     // cand pruning signal(s)
     // mdsx_cand_th (for single cand removal per class); remove cand if
     // deviation to the best_cand for @ the target class is higher than mdsx_cand_th
