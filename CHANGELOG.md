@@ -7,7 +7,7 @@ Encoder
 - Refactor MD, EncDec, and Entropy Coding kernels (!2604)
 - Improve Still Image coding efficiency (!2612, !2614)
 - Change Wiener Filter level for chroma for presets M3 and below (!2620)
-- Optimize Screen Content coding (!2630)
+- Optimize Screen Content coding for Still Image (!2630)
 
 Arm
 
