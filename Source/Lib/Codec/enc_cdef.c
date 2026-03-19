@@ -344,7 +344,7 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
                 continue;
             }
 
-            int dirinit = !(ppcs->cdef_search_ctrls.use_reference_cdef_fs);
+            int dirinit = !(ppcs->cdef_search_ctrls.use_reference_cdef_fs || ppcs->cdef_search_ctrls.use_qp_strength);
             // When SB 128 is used, the search for certain blocks is skipped, so dir/var info is not generated
             // In those cases, must generate info here
             if (sb_size == 128) {
@@ -755,12 +755,11 @@ void finish_cdef_search(PictureControlSet* pcs) {
                     continue;
                 }
 
-                // Optional: skip SBs marked as no CDEF
-                if (pcs->skip_cdef_seg && pcs->skip_cdef_seg[fbr * nhfb + fbc]) {
+                // No filtering if the entire filter block is skipped
+                if (svt_sb_all_skip(pcs, cm, fbr * MI_SIZE_64X64, fbc * MI_SIZE_64X64)) {
                     continue;
                 }
 
-                // Only one strength → index 0
                 mbmi->cdef_strength = 0;
 
                 // Duplicate for large blocks in SVT MI map
