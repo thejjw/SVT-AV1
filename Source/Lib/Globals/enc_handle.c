@@ -327,7 +327,7 @@ static EbErrorType load_default_buffer_configuration_settings(SequenceControlSet
     /*To accomodate FFMPEG EOS, 1 frame delay is needed in Resource coordination for RA (for the low delay mode, buffering for receiving EOS does not happen).
       Note that we have the option to not add 1 frame delay of Resource Coordination. In this case we have wait for first I frame
       to be released back to be able to start first base(16). Anyway poc16 needs to wait for poc0 to finish.*/
-    const uint8_t eos_delay = is_low_delay ? 0 : 1;
+    const uint8_t eos_delay = is_low_delay || scs->allintra ? 0 : 1;
 
     //Minimum input pictures needed in the pipeline
     uint16_t lad_mg_pictures = (1 + mg_size + overlay) *
@@ -3972,7 +3972,7 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
 
     if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR ||
         scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR || scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
-        scs->static_config.pred_structure == LOW_DELAY || scs->static_config.pass != ENC_SINGLE_PASS) {
+        scs->static_config.pred_structure != RANDOM_ACCESS || scs->static_config.pass != ENC_SINGLE_PASS) {
         scs->enable_dg = 0;
     } else {
         scs->enable_dg = scs->static_config.enable_dg;
@@ -4061,10 +4061,15 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     scs->b64_size                          = 64;
     scs->static_config.intra_period_length = config_struct->intra_period_length;
     scs->static_config.avif                = config_struct->avif;
-    scs->allintra                          = (scs->static_config.intra_period_length == 0 || scs->static_config.avif);
-    scs->static_config.multiply_keyint     = config_struct->multiply_keyint;
-    scs->static_config.intra_refresh_type  = config_struct->intra_refresh_type;
-    scs->static_config.enc_mode            = config_struct->enc_mode;
+    scs->allintra                          = (scs->static_config.intra_period_length == 0 || scs->static_config.avif ||
+                     scs->static_config.pred_structure == ALL_INTRA);
+    if (scs->allintra) {
+        scs->static_config.pred_structure      = ALL_INTRA;
+        scs->static_config.intra_period_length = 0;
+    }
+    scs->static_config.multiply_keyint    = config_struct->multiply_keyint;
+    scs->static_config.intra_refresh_type = config_struct->intra_refresh_type;
+    scs->static_config.enc_mode           = config_struct->enc_mode;
     if (scs->allintra) {
         if (scs->static_config.enc_mode == ENC_MR) {
             SVT_WARN("The lowest supported preset for all-intra and still-image is M0.\n");

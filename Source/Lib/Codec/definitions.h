@@ -1775,21 +1775,6 @@ typedef enum MD_BIT_DEPTH_MODE
     EB_DUAL_BIT_MD  = 2     // Auto: 8bit & 10bit mode decision
 } MD_BIT_DEPTH_MODE;
 
- /* Indicates what prediction structure to use
-  *
-  * SVT_AV1_PRED_UNUSED is not used, and not supported in the code. It is a placeholder after removing SVT_AV1_PRED_LOW_DELAY_P
-  * so that the values for --pred-struct don't need to change.
-  *
-  * TODO: At v4.0 remove PRED_UNUSED to have only LOW_DELAY and RANDOM_ACCESS. Need to update documentation for --pred-struct
-  */
-typedef enum PredStructure {
-    PRED_UNUSED = 0, // Do not use
-    LOW_DELAY = 1,
-    RANDOM_ACCESS = 2,
-    PRED_TOTAL_COUNT = 3,
-    PRED_INVALID = 0xFF
-} PredStructure;
-
 typedef enum Tune {
     TUNE_VQ   = 0, // Visual Quality (video)
     TUNE_PSNR = 1, // Average of (PSNR, SSIM, VMAF)
