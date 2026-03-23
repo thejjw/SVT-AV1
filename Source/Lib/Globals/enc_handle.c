@@ -1123,7 +1123,7 @@ static int create_pa_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     enc_handle_ptr->scs_instance->enc_ctx->pa_reference_picture_pool_fifo_ptr = svt_system_resource_get_producer_fifo(
         enc_handle_ptr->pa_reference_picture_pool_ptr, 0);
 #if SRM_REPORT
-    enc_handle_ptr->scs_instance_array->enc_ctx->pa_reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
+    enc_handle_ptr->scs_instance->enc_ctx->pa_reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
 #endif
     return 0;
 }
@@ -1165,7 +1165,7 @@ static int create_tpl_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
     enc_handle_ptr->scs_instance->enc_ctx->tpl_reference_picture_pool_fifo_ptr = svt_system_resource_get_producer_fifo(
         enc_handle_ptr->tpl_reference_picture_pool_ptr, 0);
 #if SRM_REPORT
-    enc_handle_ptr->scs_instance_array->enc_ctx->tpl_reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
+    enc_handle_ptr->scs_instance->enc_ctx->tpl_reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
 #endif
     return 0;
 }
@@ -1228,7 +1228,7 @@ static int create_ref_buf_descs(EbEncHandle* enc_handle_ptr) {
         enc_handle_ptr->reference_picture_pool_ptr, 0);
 
 #if SRM_REPORT
-    enc_handle_ptr->scs_instance_array->enc_ctx->reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
+    enc_handle_ptr->scs_instance->enc_ctx->reference_picture_pool_fifo_ptr->queue_ptr->log = 0;
 #endif
 
     return 0;
@@ -1345,7 +1345,7 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
                &input_data,
                NULL);
 #if SRM_REPORT
-        enc_handle_ptr->picture_parent_control_set_pool_ptr_array->empty_queue->log = 0;
+        enc_handle_ptr->picture_parent_control_set_pool_ptr->empty_queue->log = 0;
 #endif
         EB_NEW(enc_handle_ptr->me_pool_ptr,
                svt_system_resource_ctor,
@@ -1356,8 +1356,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
                &input_data,
                NULL);
 #if SRM_REPORT
-        enc_handle_ptr->me_pool_ptr_array->empty_queue->log = 0;
-        dump_srm_content(enc_handle_ptr->me_pool_ptr_array, false);
+        enc_handle_ptr->me_pool_ptr->empty_queue->log = 0;
+        dump_srm_content(enc_handle_ptr->me_pool_ptr, false);
 #endif
     }
 
