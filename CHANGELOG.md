@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.1] - 2026-03-16
+## [4.1] - 2026-03-23
 
 Encoder
 
@@ -24,13 +24,15 @@ Bug fixes and documentation
 - Add mutexes to fix hangs when running multiple instances of the encoder in one process (!2603, !2605, !2619)
 - Fix motion calculation for cyclic QP refresh (!2613)
 - Fixed a Debug vs Release mismatch (!2618)
-- Fixed some new warnings with newer GCC versions (!2621)
+- Fixed some new warnings with newer GCC versions (!2621, !2636)
 - Changed Temporal Filtering distortion calculation to not include padding (!2623)
 - Cleanup some dead unit tests (!2626)
 - Benchmark framework improvements (!2627)
 - CI/CD improvements (!2628)
 - Fixed some niche crashes (!2629)
-- General code and doc cleanup (!2606, !2607, !2609, !2611, !2616, !2617, !2624, !2631)
+- Readd missing PredStructure enum without SVT_AV1 prefix (!2635)
+- Rename svt_log to prevent conflict with SVT-JPEG-XS (!2634)
+- General code and doc cleanup (!2606, !2607, !2609, !2611, !2616, !2617, !2624, !2631, !2633, !2637)
 
 ## [4.0.1] - 2026-01-27
 
