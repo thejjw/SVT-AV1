@@ -2916,13 +2916,13 @@ static INLINE TxfmFuncSSE2 fwd_txfm_type_to_func_sse4(TxfmType txfm_type) {
     return NULL;
 }
 
-//TODO: write sse code here
 static INLINE void int16_array_with_stride_to_int32_array_without_stride(const int16_t* input, int stride,
                                                                          int32_t* output, int txfm1d_size) {
-    int r, c;
-    for (r = 0; r < txfm1d_size; r++) {
-        for (c = 0; c < txfm1d_size; c++) {
-            output[r * txfm1d_size + c] = (int32_t)input[r * stride + c];
+    const int num_per_128 = 4; // _mm_cvtepi16_epi32 converts 4 int16 to 4 int32
+    for (int r = 0; r < txfm1d_size; r++) {
+        for (int c = 0; c < txfm1d_size; c += num_per_128) {
+            _mm_storeu_si128((__m128i*)(output + r * txfm1d_size + c),
+                             _mm_cvtepi16_epi32(_mm_loadl_epi64((const __m128i*)(input + r * stride + c))));
         }
     }
 }
