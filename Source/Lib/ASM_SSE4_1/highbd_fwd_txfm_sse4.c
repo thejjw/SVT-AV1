@@ -2918,6 +2918,7 @@ static INLINE TxfmFuncSSE2 fwd_txfm_type_to_func_sse4(TxfmType txfm_type) {
 
 static INLINE void int16_array_with_stride_to_int32_array_without_stride(const int16_t* input, int stride,
                                                                          int32_t* output, int txfm1d_size) {
+    assert(txfm1d_size % 4 == 0);
     const int num_per_128 = 4; // _mm_cvtepi16_epi32 converts 4 int16 to 4 int32
     for (int r = 0; r < txfm1d_size; r++) {
         for (int c = 0; c < txfm1d_size; c += num_per_128) {
