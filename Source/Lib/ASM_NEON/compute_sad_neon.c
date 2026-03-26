@@ -1626,3 +1626,88 @@ uint32_t svt_aom_sad_16b_kernel_neon(uint16_t* src, uint32_t src_stride, uint16_
 
     return acc;
 }
+
+// ============================================================
+// svt_aom_sadMxN_neon — thin RTCD wrappers calling sadNxh_neon helpers
+// ============================================================
+
+// The RTCD API uses int strides; the NEON helpers use uint32_t strides.
+// Strides are always positive in SVT-AV1 (no negative-stride reverse references),
+// so the cast is safe. The assert makes the assumption explicit.
+#define DEFINE_SAD_MXN_NEON(m, n, helper)                                                 \
+    uint32_t svt_aom_sad##m##x##n##_neon(                                                 \
+        const uint8_t* src_ptr, int src_stride, const uint8_t* ref_ptr, int ref_stride) { \
+        assert(src_stride > 0 && ref_stride > 0);                                         \
+        return helper(src_ptr, (uint32_t)src_stride, ref_ptr, (uint32_t)ref_stride, n);   \
+    }
+
+DEFINE_SAD_MXN_NEON(4, 4, sad4xh_neon)
+DEFINE_SAD_MXN_NEON(4, 8, sad4xh_neon)
+DEFINE_SAD_MXN_NEON(4, 16, sad4xh_neon)
+DEFINE_SAD_MXN_NEON(8, 4, sad8xh_neon)
+DEFINE_SAD_MXN_NEON(8, 8, sad8xh_neon)
+DEFINE_SAD_MXN_NEON(8, 16, sad8xh_neon)
+DEFINE_SAD_MXN_NEON(8, 32, sad8xh_neon)
+DEFINE_SAD_MXN_NEON(16, 4, sad16xh_neon)
+DEFINE_SAD_MXN_NEON(16, 8, sad16xh_neon)
+DEFINE_SAD_MXN_NEON(16, 16, sad16xh_neon)
+DEFINE_SAD_MXN_NEON(16, 32, sad16xh_neon)
+DEFINE_SAD_MXN_NEON(16, 64, sad16xh_neon)
+DEFINE_SAD_MXN_NEON(32, 8, sad32xh_neon)
+DEFINE_SAD_MXN_NEON(32, 16, sad32xh_neon)
+DEFINE_SAD_MXN_NEON(32, 32, sad32xh_neon)
+DEFINE_SAD_MXN_NEON(32, 64, sad32xh_neon)
+DEFINE_SAD_MXN_NEON(64, 16, sad64xh_neon)
+DEFINE_SAD_MXN_NEON(64, 32, sad64xh_neon)
+DEFINE_SAD_MXN_NEON(64, 64, sad64xh_neon)
+DEFINE_SAD_MXN_NEON(64, 128, sad64xh_neon)
+DEFINE_SAD_MXN_NEON(128, 64, sad128xh_neon)
+DEFINE_SAD_MXN_NEON(128, 128, sad128xh_neon)
+
+// ============================================================
+// svt_aom_sadMxNx4d_neon — x4D wrappers (4 independent reference pointers)
+//
+// Uses sad{W}xh_indep4d_neon helpers which load source once per row and compute
+// SAD against 4 fully-independent reference pointers in parallel.
+// ============================================================
+
+#define DEFINE_SAD_MXNx4D_NEON(m, n, helper4d)                                                                         \
+    void svt_aom_sad##m##x##n##x4d_neon(                                                                               \
+        const uint8_t* src_ptr, int src_stride, const uint8_t* const ref_ptr[], int ref_stride, uint32_t* sad_array) { \
+        assert(src_stride > 0 && ref_stride > 0);                                                                      \
+        vst1q_u32(sad_array,                                                                                           \
+                  helper4d(src_ptr,                                                                                    \
+                           (uint32_t)src_stride,                                                                       \
+                           ref_ptr[0],                                                                                 \
+                           ref_ptr[1],                                                                                 \
+                           ref_ptr[2],                                                                                 \
+                           ref_ptr[3],                                                                                 \
+                           (uint32_t)ref_stride,                                                                       \
+                           n));                                                                                        \
+    }
+
+// clang-format off
+DEFINE_SAD_MXNx4D_NEON(4,   4,   sad4xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(4,   8,   sad4xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(4,  16,   sad4xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(8,   4,   sad8xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(8,   8,   sad8xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(8,  16,   sad8xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(8,  32,   sad8xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(16,  4,   sad16xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(16,  8,   sad16xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(16, 16,   sad16xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(16, 32,   sad16xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(16, 64,   sad16xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(32,  8,   sad32xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(32, 16,   sad32xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(32, 32,   sad32xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(32, 64,   sad32xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(64, 16,   sad64xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(64, 32,   sad64xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(64, 64,   sad64xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(64, 128,  sad64xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(128, 64,  sad128xh_indep4d_neon)
+DEFINE_SAD_MXNx4D_NEON(128, 128, sad128xh_indep4d_neon)
+
+    // clang-format on
