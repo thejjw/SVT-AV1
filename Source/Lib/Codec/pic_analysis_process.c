@@ -1288,32 +1288,42 @@ void svt_aom_is_screen_content_antialiasing_aware(PictureParentControlSet* pcs) 
 
     // The threshold values are selected experimentally.
     // Penalize presence of photo-like blocks (1/16th the weight of a palettizable block)
-    pcs->sc_class0 = ((count_palette_16 - count_photo_16 / 16) * blk_area8 * 10 > area);
+    pcs->sc_class0 = ((count_palette_16 - count_photo_16 / 16) * blk_area16 * 10 > area);
 
     // IntraBC would force loop filters off, so we use more strict rules that also
     // requires that the block has high variance.
     // Penalize presence of photo-like blocks (1/16th the weight of a palettizable block)
-    pcs->sc_class1 = pcs->sc_class0 && ((count_intrabc_16 - count_photo_16 / 16) * blk_area8 * 12 > area);
+    pcs->sc_class1 = pcs->sc_class0 && ((count_intrabc_16 - count_photo_16 / 16) * blk_area16 * 12 > area);
 
     pcs->sc_class2 = pcs->sc_class1 ||
-        (count_palette_16 * blk_area8 * 15 > area * 4 && count_intrabc_16 * blk_area8 * 30 > area);
+        (count_palette_16 * blk_area16 * 15 > area * 4 && count_intrabc_16 * blk_area16 * 30 > area);
 
     pcs->sc_class3 = pcs->sc_class1 ||
-        (count_palette_16 * blk_area8 * 8 > area && count_intrabc_16 * blk_area8 * 50 > area);
+        (count_palette_16 * blk_area16 * 8 > area && count_intrabc_16 * blk_area16 * 50 > area);
 
     const int64_t region_area = area >> 2; // area/4 for 2x2 regions
     int           pass        = 0;
 
     for (int i = 0; i < 4; ++i) {
+#if OPT_SC_STILL_IMAGE
+        if ((counts_8X8.region_palette[i] * blk_area8 * 10 > region_area) &&
+            (counts_8X8.region_intrabc[i] * blk_area8 * 25 > region_area)) {
+#else
         if ((counts_8X8.region_palette[i] * blk_area8 * 18 > region_area) &&
             (counts_8X8.region_intrabc[i] * blk_area8 * 50 > region_area)) {
+#endif
             pass++;
         }
     }
     pcs->sc_class4 = (pass >= 3) && (count_palette_8 * blk_area8 * 5 > area);
+#if OPT_SC_STILL_IMAGE
+    pcs->sc_class5 = (pass >= 3) &&
+        ((count_palette_8 * blk_area8 * 10 > area) && (count_intrabc_8 * blk_area8 * 23 > area));
+#else
     pcs->sc_class5 = (pass >= 2) &&
         ((count_palette_8 * blk_area8 * 18 > area) && (count_intrabc_8 * blk_area8 * 50 > area));
 
+#endif
 #if DEBUG_AA_SCM
     fprintf(stats_file,
             "block count palette: %" PRId64 ", count intrabc: %" PRId64 ", count photo: %" PRId64 ", total: %d\n",
@@ -1649,12 +1659,23 @@ void* svt_aom_picture_analysis_kernel(void* input_ptr) {
             // If running multi-threaded mode, perform SC detection in svt_aom_picture_analysis_kernel, else in svt_aom_picture_decision_kernel
             if (scs->static_config.level_of_parallelism != 1) {
                 switch (scs->static_config.screen_content_mode) {
+#if OPT_SC_STILL_IMAGE
+                case 0:
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 =
+                        pcs->sc_class5                                                = 0;
+                    break;
+                case 1:
+                    pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 =
+                        pcs->sc_class5                                                = 1;
+                    break;
+#else
                 case 0:
                     pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 0;
                     break;
                 case 1:
                     pcs->sc_class0 = pcs->sc_class1 = pcs->sc_class2 = pcs->sc_class3 = pcs->sc_class4 = 1;
                     break;
+#endif
                 case 2:
                     // SC Detection is OFF for 4K and higher
                     if (scs->input_resolution <= INPUT_SIZE_1080p_RANGE) {
