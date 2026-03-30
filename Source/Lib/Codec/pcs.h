@@ -606,13 +606,22 @@ typedef struct IntrabcCtrls {
     uint8_t     search_dir; // Search direction: 0 = Left + Top, 1 = Top only
 } IntrabcCtrls;
 
+#if OPT_SC_STILL_IMAGE
+typedef struct PaletteCtrls {
+    uint8_t enabled; // Enable/disable palette mode
+    uint8_t dominant_color_step; // Step size for dominant color search
+    uint8_t kmean_color_step; // Step size for k-means color refinement
+    bool    centroid_refinement; // Enable refinement of palette centroids
+    uint8_t k_means_max_itr; // Maximum number of iterations for K-means refinement (stops earlier if converged)
+} PaletteCtrls;
+#else
 typedef struct PaletteCtrls {
     uint8_t enabled;
     uint8_t dominant_color_step;
     uint8_t kmean_color_step;
     bool    centroid_refinement;
 } PaletteCtrls;
-
+#endif
 /*!
  * \brief The structure of Cyclic_Refresh.
  * \ingroup cyclic_refresh

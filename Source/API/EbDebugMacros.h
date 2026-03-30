@@ -34,6 +34,24 @@
 extern "C" {
 #endif // __cplusplus
 
+#define OPT_NSC_STILL_IMAGE         1 // optimize the NSC path for still-image
+#define OPT_SC_STILL_IMAGE          1 // optimize the SC path (scm1/scm2) for still-image
+
+#define FIX_CDEF                    1
+#if FIX_CDEF
+#define FIX_Q_STRENGTH              1 // Fix initialization issue for use_qp_strength
+#define OPT_CDEF_SKIP_CHROMA_BORDER 1 // Skip all chroma border copies when all UV strengths are 0 for the entire frame
+#define CLN_FINISH_CDEF             1 // Remove dead allocation/write/free for use_qp_strength and use_reference_cdef_fs paths, unify CDEF strength-per-mi propagation through propagate_cdef_strength()
+#define OPT_SC_CDEF_QP              1 // SC model for CDEF from QP for sc-class1
+#endif
+
+#define FTR_COUPLE_VLPD0_TXS        1 // Use fastest TXS when VERY_LIGHT_PD0 is active and default TXS is off
+#if FTR_COUPLE_VLPD0_TXS
+#define FTR_COUPLE_VLPD0_TXS_PER_SB 1
+#endif
+#define OPT_SC_RA                   1 // optimize the SC path (scm1) for RA
+#define OPT_SC_RTC                  1 // optimize the SC path (scm1) for RTC
+
 //FOR DEBUGGING - Do not remove
 #define LOG_ENC_DONE            0 // log encoder job one
 #define DEBUG_TPL               0 // Prints to debug TPL

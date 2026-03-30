@@ -4290,11 +4290,26 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     scs->subsampling_y     = (scs->chroma_format_idc >= EB_YUV422 ? 0 : 1);
     // Force screen-content detection OFF when allintra
     const bool allintra = scs->allintra;
-
+#if OPT_SC_STILL_IMAGE
+    if (allintra) {
+        if (config_struct->screen_content_mode <= 1) {
+            scs->static_config.screen_content_mode = config_struct->screen_content_mode;
+        } else if (scs->static_config.enc_mode <= ENC_M7) {
+            scs->static_config.screen_content_mode = 3;
+        } else {
+            scs->static_config.screen_content_mode = 0;
+            SVT_WARN(
+                "Screen-content detection and tools are disabled for all-intra coding at M8 and above; forcing NSC "
+                "path\n");
+        }
+#else
     if (allintra && config_struct->screen_content_mode > 1) {
         scs->static_config.screen_content_mode = 0;
         SVT_WARN("Screen-content detection is disabled for all-intra coding; forcing NSC path\n");
-    } else {
+#endif
+    }
+
+    else {
         scs->static_config.screen_content_mode = config_struct->screen_content_mode;
     }
     // Annex A parameters
