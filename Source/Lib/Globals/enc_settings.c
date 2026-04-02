@@ -1005,6 +1005,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->max_tx_size                       = 64;
     config_ptr->extended_crf_qindex_offset        = 0;
     config_ptr->ac_bias                           = 0.0;
+    config_ptr->hbd_mds                           = 0;
     return return_error;
 }
 
@@ -2206,6 +2207,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"enable-tf", &config_struct->enable_tf},
         {"tf-strength", &config_struct->tf_strength},
         {"max-tx-size", &config_struct->max_tx_size},
+        {"hbd-mds", &config_struct->hbd_mds},
     };
 
     const size_t uint8_opts_size = sizeof(uint8_opts) / sizeof(uint8_opts[0]);
