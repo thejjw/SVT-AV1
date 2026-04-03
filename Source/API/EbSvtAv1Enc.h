@@ -974,7 +974,6 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint8_t hbd_mds;
 
-
     // clang-format off
     /* Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct */
     uint8_t padding[128
