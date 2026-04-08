@@ -43,8 +43,7 @@ namespace {
 TEST(EncApiDeathTest, set_parameter_null_pointer) {
     // death tests: TODO: alert, fix me! fix me!! fix me!!!
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    SvtAv1Context context;
-    memset(&context, 0, sizeof(context));
+    SvtAv1Context context{};
 
     // initialize encoder and get handle
     EXPECT_EQ(EB_ErrorBadParameter,
@@ -72,8 +71,7 @@ TEST(EncApiDeathTest, set_parameter_null_pointer) {
  * All the encoder parameters.
  */
 TEST(EncApiTest, check_null_pointer) {
-    SvtAv1Context context;
-    memset(&context, 0, sizeof(context));
+    SvtAv1Context context{};
 
     // initialize encoder and with all null pointer
     EXPECT_EQ(EB_ErrorBadParameter, svt_av1_enc_init_handle(nullptr, nullptr));
@@ -124,8 +122,7 @@ TEST(EncApiTest, check_null_pointer) {
  * only happens without in IDE debugging mode.
  */
 TEST(EncApiTest, DISABLED_check_normal_setup) {
-    SvtAv1Context context;
-    memset(&context, 0, sizeof(context));
+    SvtAv1Context context{};
 
     const int width = 1280;
     const int height = 720;
@@ -171,8 +168,7 @@ TEST(EncApiTest, DISABLED_check_normal_setup) {
  * Disabled for it causes memory leak, and lead to effect other tests
  */
 TEST(EncApiTest, DISABLED_repeat_normal_setup) {
-    SvtAv1Context context;
-    memset(&context, 0, sizeof(context));
+    SvtAv1Context context{};
 
     const int width = 1280;
     const int height = 720;

@@ -92,25 +92,28 @@ void SvtAv1E2ETestFramework::setup_src_param(const VideoSource *source,
 }
 
 SvtAv1E2ETestFramework::SvtAv1E2ETestFramework()
-    : enc_setting(GetParam()), enc_config_(create_enc_config()) {
-    memset(&av1enc_ctx_, 0, sizeof(av1enc_ctx_));
-    video_src_ = nullptr;
-    psnr_src_ = nullptr;
-    recon_queue_ = nullptr;
-    refer_dec_ = nullptr;
-    output_file_ = nullptr;
-    obu_frame_header_size_ = 0;
-    collect_ = nullptr;
-    ref_compare_ = nullptr;
-    collect_ = new PerformanceCollect(typeid(this).name());
-    use_ext_qp_ = false;
-    enable_recon = false;
-    enable_decoder = false;
-    enable_stat = false;
-    enable_save_bitstream = false;
-    enable_analyzer = false;
-    enable_config = false;
-    insert_blank_interval = 0;
+    : video_src_(nullptr),
+      av1enc_ctx_{},
+      start_pos_(0),
+      frames_to_test_(0),
+      recon_queue_(nullptr),
+      refer_dec_(nullptr),
+      output_file_(nullptr),
+      obu_frame_header_size_(0),
+      collect_(new PerformanceCollect(typeid(this).name())),
+      psnr_src_(nullptr),
+      ref_compare_(nullptr),
+      use_ext_qp_(false),
+      enc_setting(GetParam()),
+      enable_recon(false),
+      enable_decoder(false),
+      enable_stat(false),
+      enable_save_bitstream(false),
+      enable_analyzer(false),
+      enable_config(false),
+      enable_invert_tile_decoding(false),
+      enc_config_(create_enc_config()),
+      insert_blank_interval(0) {
 }
 
 SvtAv1E2ETestFramework::~SvtAv1E2ETestFramework() {
