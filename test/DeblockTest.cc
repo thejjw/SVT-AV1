@@ -101,7 +101,7 @@ class LoopFilterTest : public ::testing::TestWithParam<TestParamType> {
     void TearDown() override {
     }
 
-    void init_buffer_with_value(uint8_t *buf, int length, uint8_t val) {
+    static void init_buffer_with_value(uint8_t *buf, int length, uint8_t val) {
         for (int i = 0; i < length; ++i)
             buf[i] = val;
     }
@@ -114,9 +114,9 @@ class LoopFilterTest : public ::testing::TestWithParam<TestParamType> {
         (void)bd;
     }
 
-    void init_input(Sample *s, Sample *ref_s, ACMRandom *rnd,
-                    const uint8_t limit, const int mask, const int32_t p,
-                    const int i) {
+    static void init_input(Sample *s, Sample *ref_s, ACMRandom *rnd,
+                           const uint8_t limit, const int mask, const int32_t p,
+                           const int i) {
         uint16_t tmp_s[kNumCoeffs];
 
         for (int j = 0; j < kNumCoeffs;) {

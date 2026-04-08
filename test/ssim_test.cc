@@ -122,7 +122,7 @@ class SsimTest : public ::testing::TestWithParam<SsimTestParam> {
     virtual void run_8x8_test(double *score_ref, double *score_simd) = 0;
     virtual void run_4x4_test(double *score_ref, double *score_simd) = 0;
 
-    void check_data(double score_ref, double score_simd, int32_t index) {
+    static void check_data(double score_ref, double score_simd, int32_t index) {
         ASSERT_EQ(score_ref, score_simd)
             << "SSIM score mismatch at test(" << index << ")";
     }

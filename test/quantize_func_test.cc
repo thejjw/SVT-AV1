@@ -687,7 +687,7 @@ class QuantizeQmTest : public QuantizeTest<QuantizeQmParam, QuantizeQmFunc> {
     }
 
   private:
-    TxSize av1_get_adjusted_tx_size(TxSize tx_size) {
+    static TxSize av1_get_adjusted_tx_size(TxSize tx_size) {
         switch (tx_size) {
         case TX_64X64:
         case TX_64X32:

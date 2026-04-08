@@ -257,7 +257,7 @@ class SADTestBase : public ::testing::Test {
         }
     }
 
-    void fill_buf_with_value(uint32_t *buf, int num, uint32_t value) {
+    static void fill_buf_with_value(uint32_t *buf, int num, uint32_t value) {
         for (int i = 0; i < num; ++i)
             buf[i] = value;
     }
