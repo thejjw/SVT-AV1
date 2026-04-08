@@ -3027,13 +3027,11 @@ static INLINE void fwd_txfm2d_sse4_1(const int16_t* input, int32_t* output, cons
 
 static INLINE void load_buffer_32x8n(const int16_t* input, __m128i* out, int stride, int flipud, int fliplr, int shift,
                                      const int height) {
-    const int16_t* in     = input;
-    __m128i*       output = out;
     for (int col = 0; col < height; col++) {
-        in     = input + col * stride;
-        output = out + col * 8;
+        const int16_t* in     = input + col * stride;
+        __m128i*       output = out + col * 8;
         load_buffer_4x4(in, output, 4, flipud, fliplr, shift);
-        load_buffer_4x4((in + 16), (output + 4), 4, flipud, fliplr, shift);
+        load_buffer_4x4(in + 16, output + 4, 4, flipud, fliplr, shift);
     }
 }
 
