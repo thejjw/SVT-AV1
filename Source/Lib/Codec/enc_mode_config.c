@@ -8785,7 +8785,7 @@ static void set_pic_lpd0_lvl_default(PictureControlSet* pcs, EncMode enc_mode) {
     const bool               transition_present = (ppcs->transition_present == 1);
     InputCoeffLvl            coeff_lvl          = pcs->coeff_lvl;
     const ResolutionRange    input_resolution   = ppcs->input_resolution;
-    uint8_t                  ldp0_lvl_offset[4] = {2, 2, 1, 0};
+    const uint8_t            ldp0_lvl_offset[4] = {2, 2, 1, 0};
     uint8_t                  qp_band_idx        = 0;
     const uint8_t            seq_qp_mod         = pcs->scs->seq_qp_mod;
 

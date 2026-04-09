@@ -4246,7 +4246,7 @@ static void perform_tx_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ct
 
     const uint32_t th = ((bwidth * bheight) >> 5);
     if (ctx->rate_est_ctrls.coeff_rate_est_lvl == 0) {
-        uint8_t input_resolution_factor[INPUT_SIZE_COUNT] = {0, 1, 2, 3, 4, 4, 4};
+        const uint8_t input_resolution_factor[INPUT_SIZE_COUNT] = {0, 1, 2, 3, 4, 4, 4};
         *y_coeff_bits = 5000 + (input_resolution_factor[pcs->ppcs->input_resolution] * 1600) +
             (cand_bf->eob.y[0] * 100);
     } else if (ctx->rate_est_ctrls.coeff_rate_est_lvl >= 2 && (cand_bf->eob.y[0] < th)) {

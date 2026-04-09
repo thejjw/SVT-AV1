@@ -2848,11 +2848,11 @@ static EbErrorType produce_temporally_filtered_pic(PictureParentControlSet** pcs
             // 2nd segment: current pic
             // 3rd segment: future pics - from closest to farthest
 
-            int start_frame_index[3] = {0, centre_pcs->past_altref_nframes, centre_pcs->past_altref_nframes + 1};
+            const int start_frame_index[3] = {0, centre_pcs->past_altref_nframes, centre_pcs->past_altref_nframes + 1};
 
-            int end_frame_index[3] = {centre_pcs->past_altref_nframes - 1,
-                                      centre_pcs->past_altref_nframes,
-                                      centre_pcs->past_altref_nframes + centre_pcs->future_altref_nframes};
+            const int end_frame_index[3] = {centre_pcs->past_altref_nframes - 1,
+                                            centre_pcs->past_altref_nframes,
+                                            centre_pcs->past_altref_nframes + centre_pcs->future_altref_nframes};
 
             for (int segment_idx = 0; segment_idx < 3; segment_idx++) {
                 for (int frame_index = start_frame_index[segment_idx]; frame_index <= end_frame_index[segment_idx];
