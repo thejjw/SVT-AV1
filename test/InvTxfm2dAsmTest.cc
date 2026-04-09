@@ -92,24 +92,28 @@ class InvTxfm2dAsmTestBase : public ::testing::Test {
     // some tx_size;
     void populate_with_random(const int width, const int height,
                               const TxType tx_type, const TxSize tx_size) {
-        using FwdTxfm2dFunc = void (*)(int16_t *input,
-                                       int32_t *output,
-                                       uint32_t stride,
-                                       TxType tx_type,
-                                       uint8_t bd);
-
-        const FwdTxfm2dFunc fwd_txfm_func[TX_SIZES_ALL] = {
-            svt_av1_transform_two_d_4x4_c,   svt_av1_transform_two_d_8x8_c,
-            svt_av1_transform_two_d_16x16_c, svt_av1_transform_two_d_32x32_c,
-            svt_av1_transform_two_d_64x64_c, svt_av1_fwd_txfm2d_4x8_c,
-            svt_av1_fwd_txfm2d_8x4_c,        svt_av1_fwd_txfm2d_8x16_c,
-            svt_av1_fwd_txfm2d_16x8_c,       svt_av1_fwd_txfm2d_16x32_c,
-            svt_av1_fwd_txfm2d_32x16_c,      svt_av1_fwd_txfm2d_32x64_c,
-            svt_av1_fwd_txfm2d_64x32_c,      svt_av1_fwd_txfm2d_4x16_c,
-            svt_av1_fwd_txfm2d_16x4_c,       svt_av1_fwd_txfm2d_8x32_c,
-            svt_av1_fwd_txfm2d_32x8_c,       svt_av1_fwd_txfm2d_16x64_c,
-            svt_av1_fwd_txfm2d_64x16_c,
-        };
+        constexpr typeof(&svt_av1_transform_two_d_4x4_c)
+            fwd_txfm_func[TX_SIZES_ALL]{
+                svt_av1_transform_two_d_4x4_c,
+                svt_av1_transform_two_d_8x8_c,
+                svt_av1_transform_two_d_16x16_c,
+                svt_av1_transform_two_d_32x32_c,
+                svt_av1_transform_two_d_64x64_c,
+                svt_av1_fwd_txfm2d_4x8_c,
+                svt_av1_fwd_txfm2d_8x4_c,
+                svt_av1_fwd_txfm2d_8x16_c,
+                svt_av1_fwd_txfm2d_16x8_c,
+                svt_av1_fwd_txfm2d_16x32_c,
+                svt_av1_fwd_txfm2d_32x16_c,
+                svt_av1_fwd_txfm2d_32x64_c,
+                svt_av1_fwd_txfm2d_64x32_c,
+                svt_av1_fwd_txfm2d_4x16_c,
+                svt_av1_fwd_txfm2d_16x4_c,
+                svt_av1_fwd_txfm2d_8x32_c,
+                svt_av1_fwd_txfm2d_32x8_c,
+                svt_av1_fwd_txfm2d_16x64_c,
+                svt_av1_fwd_txfm2d_64x16_c,
+            };
 
         memset(output_ref_, 0, MAX_TX_SQUARE * sizeof(uint16_t));
         memset(output_test_, 0, MAX_TX_SQUARE * sizeof(uint16_t));

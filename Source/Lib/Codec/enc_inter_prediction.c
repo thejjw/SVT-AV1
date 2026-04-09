@@ -548,15 +548,11 @@ static void pick_interinter_seg(PictureControlSet* pcs, ModeDecisionContext* ctx
     DIFFWTD_MASK_TYPE cur_mask_type;
     int64_t           best_rd        = INT64_MAX;
     DIFFWTD_MASK_TYPE best_mask_type = 0;
-    // cppcheck-suppress unassignedVariable
-    DECLARE_ALIGNED(16, uint8_t, seg_mask0[2 * MAX_SB_SQUARE]);
-    // cppcheck-suppress unassignedVariable
-    DECLARE_ALIGNED(16, uint8_t, seg_mask1[2 * MAX_SB_SQUARE]);
 
     const int bd_round = 0;
     // try each mask type and its inverse
     for (cur_mask_type = 0; cur_mask_type < DIFFWTD_MASK_TYPES; cur_mask_type++) {
-        uint8_t* const temp_mask = cur_mask_type ? seg_mask1 : seg_mask0;
+        DECLARE_ALIGNED(16, uint8_t, temp_mask[2 * MAX_SB_SQUARE]);
         // build mask and inverse
         if (hbd_md) {
             svt_av1_build_compound_diffwtd_mask_highbd(temp_mask, cur_mask_type, p0, bw, p1, bw, bh, bw, EB_TEN_BIT);
@@ -1458,10 +1454,10 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD* xd,
         }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
-                 : plane == 1                  ? ctxt->final_dst_stride_u
+            : plane == 1                       ? ctxt->final_dst_stride_u
                                                : ctxt->final_dst_stride_v;
         uint8_t* const dst        = plane == 0 ? &ctxt->final_dst_ptr_y[plane_col_pos]
-                   : plane == 1                ? &ctxt->final_dst_ptr_u[plane_col_pos]
+            : plane == 1                       ? &ctxt->final_dst_ptr_u[plane_col_pos]
                                                : &ctxt->final_dst_ptr_v[plane_col_pos];
 
         const int            tmp_stride = ctxt->adjacent_stride[plane];
@@ -1499,10 +1495,10 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD* xd, 
         }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
-                 : plane == 1                  ? ctxt->final_dst_stride_u
+            : plane == 1                       ? ctxt->final_dst_stride_u
                                                : ctxt->final_dst_stride_v;
         uint8_t* const dst        = plane == 0 ? &ctxt->final_dst_ptr_y[plane_row_pos * dst_stride]
-                   : plane == 1                ? &ctxt->final_dst_ptr_u[plane_row_pos * dst_stride]
+            : plane == 1                       ? &ctxt->final_dst_ptr_u[plane_row_pos * dst_stride]
                                                : &ctxt->final_dst_ptr_v[plane_row_pos * dst_stride];
 
         const int            tmp_stride = ctxt->adjacent_stride[plane];
@@ -1863,8 +1859,8 @@ void svt_aom_precompute_obmc_data(PictureControlSet* pcs, ModeDecisionContext* c
                                    ctx->hbd_md);
     ctx->obmc_neighbor_luma_pred_ready   = component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
             component_mask == PICTURE_BUFFER_DESC_LUMA_MASK
-          ? true
-          : ctx->obmc_neighbor_luma_pred_ready;
+        ? true
+        : ctx->obmc_neighbor_luma_pred_ready;
     ctx->obmc_neighbor_chroma_pred_ready = component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
             component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK
         ? true
@@ -1995,13 +1991,13 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
         int      input_offset = plane ? (ctx->blk_org_y >> ss_y) * input_pic->stride[plane] + (ctx->blk_org_x >> ss_x)
                                       : (ctx->blk_org_y) * input_pic->stride[plane] + (ctx->blk_org_x);
         uint64_t sse          = spatial_full_dist_type_fun(input_pic->buffer[plane],
-                                                  input_offset,
-                                                  input_pic->stride[plane],
-                                                  prediction_ptr->buffer[plane],
-                                                  0,
-                                                  prediction_ptr->stride[plane],
-                                                  plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
-                                                  plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight);
+                                                           input_offset,
+                                                           input_pic->stride[plane],
+                                                           prediction_ptr->buffer[plane],
+                                                           0,
+                                                           prediction_ptr->stride[plane],
+                                                           plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
+                                                           plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight);
         if (effective_ac_bias) {
             sse += get_svt_psy_full_dist(input_pic->buffer[plane],
                                          input_offset,
@@ -3749,8 +3745,8 @@ EbErrorType svt_aom_inter_pu_prediction_av1_light_pd1(uint8_t hbd_md, ModeDecisi
     EbPictureBufferDesc* ref_pic_list1 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[1]);
     //for light PD1 inter prediction is Luma only for MDS0 and Chroma only for MDS3
     uint32_t            component_mask     = ctx->md_stage == MD_STAGE_0 ? PICTURE_BUFFER_DESC_LUMA_MASK
-                       : ctx->lpd1_chroma_comp == COMPONENT_CHROMA       ? PICTURE_BUFFER_DESC_CHROMA_MASK
-                       : ctx->lpd1_chroma_comp == COMPONENT_CHROMA_CB    ? PICTURE_BUFFER_DESC_Cb_FLAG
+        : ctx->lpd1_chroma_comp == COMPONENT_CHROMA                      ? PICTURE_BUFFER_DESC_CHROMA_MASK
+        : ctx->lpd1_chroma_comp == COMPONENT_CHROMA_CB                   ? PICTURE_BUFFER_DESC_Cb_FLAG
                                                                          : PICTURE_BUFFER_DESC_Cr_FLAG;
     SequenceControlSet* scs                = pcs->scs;
     ScaleFactors        ref0_scale_factors = scs->sf_identity;
