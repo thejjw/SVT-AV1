@@ -217,7 +217,7 @@ static void flush_encoder(EbComponentType *encoder_handle) {
         EbErrorType ret =
             svt_av1_enc_get_packet(encoder_handle, &output_header, 1);
 
-        if (ret == EB_NoErrorEmptyQueue || ret != EB_ErrorNone) {
+        if (ret != EB_ErrorNone) {
             break;
         }
 
