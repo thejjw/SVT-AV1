@@ -4705,13 +4705,9 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2(const int16_t* input, __m128i*
 
     if (fliplr) {
         // Swap top rows
-        tmp   = top_l;
         top_l = top_r;
-        top_r = tmp;
         // Swap bottom rows
-        tmp   = bot_l;
         bot_l = bot_r;
-        bot_r = tmp;
     }
 
     // load first 8 columns
@@ -4733,11 +4729,8 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_H(const int16_t* input, __m128
         // Swap left columns
         tmp   = top_l;
         top_l = bot_l;
-        bot_l = tmp;
         // Swap right columns
-        tmp   = top_r;
         top_r = bot_r;
-        bot_r = tmp;
     }
 
     if (fliplr) {
@@ -4745,10 +4738,6 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_H(const int16_t* input, __m128
         tmp   = top_l;
         top_l = top_r;
         top_r = tmp;
-        // Swap bottom rows
-        tmp   = bot_l;
-        bot_l = bot_r;
-        bot_r = tmp;
     }
 
     // load first 8 columns
@@ -4766,28 +4755,16 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_half(const int16_t* input, __m
     const int16_t* bot_l = input + 8 * stride;
     const int16_t* bot_r = input + 8 * stride + 8;
 
-    const int16_t* tmp;
-
     if (flipud) {
         // Swap left columns
-        tmp   = top_l;
         top_l = bot_l;
-        bot_l = tmp;
         // Swap right columns
-        tmp   = top_r;
         top_r = bot_r;
-        bot_r = tmp;
     }
 
     if (fliplr) {
         // Swap top rows
-        tmp   = top_l;
         top_l = top_r;
-        top_r = tmp;
-        // Swap bottom rows
-        tmp   = bot_l;
-        bot_l = bot_r;
-        bot_r = tmp;
     }
 
     // load first 8 columns

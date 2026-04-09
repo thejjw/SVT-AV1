@@ -424,7 +424,7 @@ void* svt_aom_rest_kernel(void* input_ptr) {
                                        "calculations");
                 }
             } else {
-                EbErrorType return_error = EB_ErrorNone;
+                EbErrorType return_error;
                 if (pcs->ppcs->compute_psnr) {
                     // Note: if temporal_filtering is used, memory needs to be freed in the last of these calls
                     return_error = psnr_calculations(pcs, scs, !pcs->ppcs->compute_ssim);

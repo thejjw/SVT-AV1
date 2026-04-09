@@ -131,8 +131,8 @@ static void sad_loop_kernel_generalized_avx2(
     __m128i        s0, s1, s2, s3, s4, s5;
     __m256i        ss0, ss1, ss2, ss3, ss4, ss5, ss6, ss7;
     __m256i        ss8, ss9, ss10, ss11;
-    uint32_t       low_sum   = 0xffffff;
-    uint32_t       tem_sum_1 = 0;
+    uint32_t       low_sum = 0xffffff;
+    uint32_t       tem_sum_1;
     int16_t        x_best = *x_search_center, y_best = *y_search_center;
     uint32_t       leftover = search_area_width & 7;
 

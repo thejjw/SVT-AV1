@@ -655,14 +655,10 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     DECLARE_ALIGNED(MAX_TPL_SIZE, uint8_t, left_data[MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2]);
                     DECLARE_ALIGNED(MAX_TPL_SIZE, uint8_t, above_data[MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2]);
 
-                    uint8_t* above_row;
-                    uint8_t* left_col;
                     uint8_t* above0_row;
                     uint8_t* left0_col;
                     above0_row = above0_data + MAX_TPL_SIZE;
                     left0_col  = left0_data + MAX_TPL_SIZE;
-                    above_row  = above_data + MAX_TPL_SIZE;
-                    left_col   = left_data + MAX_TPL_SIZE;
 
                     // Fill Neighbor Arrays
                     svt_aom_update_neighbor_samples_array_open_loop_mb(1,
@@ -682,6 +678,8 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                             ? mode_to_angle_map[(PredictionMode)ois_intra_mode]
                             : 0;
 
+                        uint8_t* above_row;
+                        uint8_t* left_col;
                         // Edge filter
                         if (av1_is_directional_mode((PredictionMode)ois_intra_mode)) {
                             svt_memcpy(left_data, left0_data, sizeof(uint8_t) * (MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2));

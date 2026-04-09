@@ -115,8 +115,8 @@ static int calc_active_worst_quality_no_stats_cbr(PictureParentControlSet* ppcs)
     RATE_CONTROL*       rc      = &enc_ctx->rc;
     // Buffer level below which we push active_worst to worst_quality.
     int64_t critical_level = rc->optimal_buffer_level >> 3;
-    int64_t buff_lvl_step  = 0;
-    int     adjustment     = 0;
+    int64_t buff_lvl_step;
+    int     adjustment = 0;
     int     active_worst_quality;
     if (ppcs->frm_hdr.frame_type == KEY_FRAME) {
         return rc->worst_quality;

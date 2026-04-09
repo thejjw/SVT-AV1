@@ -233,8 +233,7 @@ class AomUpsampledPredTest
         // which have to be set properly by
         // svt_aom_setup_common_rtcd_internal(), we want to test intrinsic
         // version of it, so feature flag is necessary
-        uint64_t EbCpuFlags = TEST_GET_PARAM(5);
-        svt_aom_setup_common_rtcd_internal(EbCpuFlags);
+        svt_aom_setup_common_rtcd_internal(TEST_GET_PARAM(5));
 
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {

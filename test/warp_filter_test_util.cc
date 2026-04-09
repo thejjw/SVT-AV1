@@ -345,7 +345,7 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
     std::vector<uint16_t> output2(output_n);
     std::array<int32_t, 8> mat;
     int16_t alpha, beta, gamma, delta;
-    ConvolveParams conv_params = get_conv_params(ref, 0, 0, bd);
+    ConvolveParams conv_params;
     std::vector<ConvBufType> dsta(output_n, 0);
     std::vector<ConvBufType> dstb(output_n, 0);
     for (i = 0; i < output_n; ++i) {

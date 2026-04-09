@@ -253,11 +253,11 @@ static void set_hme_search_params(PictureParentControlSet* pcs, MeContext* me_ct
                                             &q_weight_denom,
                                             pcs->scs->static_config.qp);
     me_ctx->hme_l0_sa.sa_min.width  = MAX(8,
-                                         DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.width * q_weight, q_weight_denom));
+                                          DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.width * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_min.height = MAX(8,
                                           DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.height * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_max.width  = MAX(96,
-                                         DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.width * q_weight, q_weight_denom));
+                                          DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.width * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_max.height = MAX(96,
                                           DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.height * q_weight, q_weight_denom));
     // Set the HME Level 1 and Level 2 refinement areas
@@ -2047,14 +2047,14 @@ Input   : encoder mode and tune
 Output  : Multi-Processes signal(s)
 ******************************************************/
 void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureParentControlSet* pcs) {
-    FrameHeader*            frm_hdr           = &pcs->frm_hdr;
-    EncMode                 enc_mode          = pcs->enc_mode;
-    const uint8_t           is_islice         = pcs->slice_type == I_SLICE;
-    const uint8_t           is_base           = pcs->temporal_layer_index == 0;
-    const ResolutionRange   input_resolution  = pcs->input_resolution;
-    const uint8_t           fast_decode       = scs->static_config.fast_decode;
-    const uint8_t           sc_class1         = pcs->sc_class1;
-    const uint8_t           is_not_last_layer = !pcs->is_highest_layer;
+    FrameHeader*          frm_hdr           = &pcs->frm_hdr;
+    EncMode               enc_mode          = pcs->enc_mode;
+    const uint8_t         is_islice         = pcs->slice_type == I_SLICE;
+    const uint8_t         is_base           = pcs->temporal_layer_index == 0;
+    const ResolutionRange input_resolution  = pcs->input_resolution;
+    const uint8_t         fast_decode       = scs->static_config.fast_decode;
+    const uint8_t         sc_class1         = pcs->sc_class1;
+    const uint8_t         is_not_last_layer = !pcs->is_highest_layer;
 
     // Set GM ctrls assuming super-res is off for gm-pp need
     svt_aom_set_gm_controls(pcs, svt_aom_derive_gm_level(pcs, true));
@@ -2725,7 +2725,7 @@ void svt_aom_set_gm_controls(PictureParentControlSet* pcs, uint8_t gm_level) {
         gm_ctrls->ref_idx0_only           = 1;
         gm_ctrls->rfn_early_exit          = 1;
         gm_ctrls->correspondence_method   = pcs->input_resolution <= INPUT_SIZE_480p_RANGE ? MV_8x8
-              : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                            ? MV_16x16
+            : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                              ? MV_16x16
                                                                                            : MV_32x32;
         break;
     case 4:
@@ -2745,7 +2745,7 @@ void svt_aom_set_gm_controls(PictureParentControlSet* pcs, uint8_t gm_level) {
         gm_ctrls->ref_idx0_only           = 1;
         gm_ctrls->rfn_early_exit          = 1;
         gm_ctrls->correspondence_method   = pcs->input_resolution <= INPUT_SIZE_480p_RANGE ? MV_8x8
-              : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                            ? MV_16x16
+            : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                              ? MV_16x16
                                                                                            : MV_32x32;
         break;
     default:
@@ -5168,14 +5168,12 @@ static void set_nsq_search_ctrls(PictureControlSet* pcs, ModeDecisionContext* ct
     if (pcs->mimic_only_tx_4x4) {
         nsq_search_level = 0;
     } else if (me_dist_mod && nsq_search_level) {
-        uint32_t dist_64, dist_32, dist_16, dist_8, me_8x8_cost_variance;
+        uint32_t dist_8, me_8x8_cost_variance;
         if (pcs->scs->super_block_size == 64) {
-            dist_64              = pcs->ppcs->me_64x64_distortion[ctx->sb_index];
-            dist_32              = pcs->ppcs->me_32x32_distortion[ctx->sb_index];
-            dist_16              = pcs->ppcs->me_16x16_distortion[ctx->sb_index];
             dist_8               = pcs->ppcs->me_8x8_distortion[ctx->sb_index];
             me_8x8_cost_variance = pcs->ppcs->me_8x8_cost_variance[ctx->sb_index];
         } else {
+            uint32_t dist_64, dist_32, dist_16;
             get_sb128_me_data(pcs, ctx, &dist_64, &dist_32, &dist_16, &dist_8, &me_8x8_cost_variance);
         }
 
@@ -5485,7 +5483,7 @@ static void set_nsq_search_ctrls(PictureControlSet* pcs, ModeDecisionContext* ct
     nsq_search_ctrls->component_multiple_th = DIVIDE_AND_ROUND(nsq_search_ctrls->component_multiple_th * q_weight,
                                                                q_weight_denom);
     nsq_search_ctrls->nsq_split_cost_th     = DIVIDE_AND_ROUND(nsq_search_ctrls->nsq_split_cost_th * q_weight,
-                                                           q_weight_denom);
+                                                               q_weight_denom);
     int max_part0_to_part1_dev_offset       = 5;
     max_part0_to_part1_dev_offset = DIVIDE_AND_ROUND(max_part0_to_part1_dev_offset * q_weight, q_weight_denom);
     nsq_search_ctrls->max_part0_to_part1_dev = MAX(
@@ -6604,7 +6602,7 @@ static bool get_sb_tpl_intra_stats(PictureControlSet* pcs, ModeDecisionContext* 
         const uint32_t mb_origin_x     = ctx->sb_origin_x;
         const uint32_t mb_origin_y     = ctx->sb_origin_y;
         const int      tpl_blk_size    = ppcs->tpl_ctrls.dispenser_search_level == 0 ? 16
-                    : ppcs->tpl_ctrls.dispenser_search_level == 1                    ? 32
+            : ppcs->tpl_ctrls.dispenser_search_level == 1                            ? 32
                                                                                      : 64;
         // tpl_src_stats_buffer is created for 16x16 always, so TPL dispenser is for larger block sizes
         // the step between blocks must be adjusted
@@ -7200,8 +7198,8 @@ void svt_aom_sig_deriv_enc_dec_common(SequenceControlSet* scs, PictureControlSet
             if (pcs->slice_type != I_SLICE) {
                 int me_8x8 = pcs->ppcs->me_8x8_cost_variance[ctx->sb_index];
                 int th     = ((!scs->use_flat_ipp && enc_mode <= ENC_M10) || (scs->use_flat_ipp && enc_mode <= ENC_M11))
-                        ? 3 * ctx->qp_index
-                        : 3000;
+                    ? 3 * ctx->qp_index
+                    : 3000;
 
                 // when lpd1 is optimized, this lpd1_lvl == 0 check should be removed, leaving only the lpd1_lvl +=2 statement
                 // this extra check has been added to help low-delay perform similarly to v1.7.0

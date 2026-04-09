@@ -533,7 +533,6 @@ void SvtAv1E2ETestFramework::run_encode_process() {
                         early_termination = true;
                 } else {
                     if (return_error != EB_NoErrorEmptyQueue) {
-                        enc_file_eos = true;
                         GTEST_FAIL() << "encoder return: " << return_error;
                     }
                     break;

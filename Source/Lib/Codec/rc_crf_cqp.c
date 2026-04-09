@@ -751,8 +751,6 @@ void svt_av1_coded_frames_stat_calc(PictureParentControlSet* ppcs) {
                                                       CODED_FRAMES_STAT_QUEUE_MAX_DEPTH - 1)
                 ? 0
                 : rc->coded_frames_stat_queue_head_index + 1;
-
-            queue_entry_ptr = (rc->coded_frames_stat_queue[rc->coded_frames_stat_queue_head_index]);
         }
     }
 }

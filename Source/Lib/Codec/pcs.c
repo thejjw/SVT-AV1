@@ -394,7 +394,7 @@ EbErrorType pcs_update_param(PictureControlSet* pcs) {
         svt_picture_buffer_desc_update(pcs->input_frame16bit, (EbPtr)&coeff_buffer_desc_init_data);
     }
     if (allintra       ? svt_aom_get_enable_restoration_allintra(scs->static_config.enc_mode,
-                                                           scs->static_config.enable_restoration_filtering)
+                                                                 scs->static_config.enable_restoration_filtering)
             : rtc_tune ? svt_aom_get_enable_restoration_rtc(scs->static_config.enc_mode,
                                                             scs->static_config.enable_restoration_filtering,
                                                             scs->input_resolution,
@@ -463,7 +463,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     uint32_t tile_idx       = 0;
 
     uint32_t output_buffer_size   = svt_aom_get_out_buffer_size(init_data_ptr->picture_width,
-                                                              init_data_ptr->picture_height);
+                                                                init_data_ptr->picture_height);
     object_ptr->frame_width       = init_data_ptr->picture_width;
     object_ptr->frame_height      = init_data_ptr->picture_height;
     object_ptr->tile_row_count    = init_data_ptr->tile_row_count;
@@ -490,13 +490,13 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     object_ptr->temp_lf_recon_pic                 = NULL;
     object_ptr->scaled_input_pic                  = NULL;
     bool enable_restoration                       = allintra
-                              ? svt_aom_get_enable_restoration_allintra(init_data_ptr->enc_mode,
+        ? svt_aom_get_enable_restoration_allintra(init_data_ptr->enc_mode,
                                                   init_data_ptr->static_config.enable_restoration_filtering)
-                              : rtc_tune ? svt_aom_get_enable_restoration_rtc(init_data_ptr->enc_mode,
+        : rtc_tune ? svt_aom_get_enable_restoration_rtc(init_data_ptr->enc_mode,
                                                         init_data_ptr->static_config.enable_restoration_filtering,
                                                         init_data_ptr->input_resolution,
                                                         init_data_ptr->static_config.fast_decode)
-                                         : svt_aom_get_enable_restoration_default(init_data_ptr->enc_mode,
+                   : svt_aom_get_enable_restoration_default(init_data_ptr->enc_mode,
                                                             init_data_ptr->static_config.enable_restoration_filtering,
                                                             init_data_ptr->input_resolution,
                                                             init_data_ptr->static_config.fast_decode);
@@ -504,7 +504,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
         set_restoration_unit_size(
             init_data_ptr->picture_width, init_data_ptr->picture_height, 1, 1, object_ptr->rst_info);
 
-        return_error = svt_av1_alloc_restoration_buffers(object_ptr, init_data_ptr->av1_cm);
+        if (svt_av1_alloc_restoration_buffers(object_ptr, init_data_ptr->av1_cm) != EB_ErrorNone) {
+            return EB_ErrorInsufficientResources;
+        }
 
         int32_t ntiles[2];
         for (int32_t is_uv = 0; is_uv < 2; ++is_uv) {
@@ -1084,10 +1086,10 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
 
     object_ptr->disallow_4x4_all_frames = disallow_4x4;
     disallow_8x8                        = allintra ? MIN(disallow_8x8, svt_aom_get_disallow_8x8_allintra())
-                               : rtc_tune          ? MIN(disallow_8x8,
+        : rtc_tune ? MIN(disallow_8x8,
                          svt_aom_get_disallow_8x8_rtc(
                              init_data_ptr->enc_mode, init_data_ptr->picture_width, init_data_ptr->picture_height))
-                                                   : MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
+                   : MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
     object_ptr->disallow_8x8_all_frames = disallow_8x8;
     /* If 4x4 blocks are disallowed for all frames, the the MI blocks only need to be allocated for
     8x8 blocks.  The mi_grid will still be 4x4 so that the data can be accessed the same way throughout
