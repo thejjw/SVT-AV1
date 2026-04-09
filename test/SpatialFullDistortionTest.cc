@@ -166,7 +166,6 @@ void SpatialFullDistortionKernelFuncTest::RunCheckOutput(TestPattern pattern) {
 
 void SpatialFullDistortionKernelFuncTest::RunSpeedTest() {
     uint64_t dist_org, dist_opt;
-    double time_c, time_o;
     uint64_t start_time_seconds, start_time_useconds;
     uint64_t middle_time_seconds, middle_time_useconds;
     uint64_t finish_time_seconds, finish_time_useconds;
@@ -205,28 +204,27 @@ void SpatialFullDistortionKernelFuncTest::RunSpeedTest() {
 
         EXPECT_EQ(dist_org, dist_opt) << area_width << "x" << area_height;
 
-        time_c = svt_av1_compute_overall_elapsed_time_ms(start_time_seconds,
-                                                         start_time_useconds,
-                                                         middle_time_seconds,
-                                                         middle_time_useconds);
-        time_o = svt_av1_compute_overall_elapsed_time_ms(middle_time_seconds,
-                                                         middle_time_useconds,
-                                                         finish_time_seconds,
-                                                         finish_time_useconds);
-        printf("Average Nanoseconds per Function Call\n");
-        printf("    svt_spatial_full_distortion_kernel_c  (%dx%d) : %6.2f\n",
-               area_width,
-               area_height,
-               1000000 * time_c / num_loops);
-        printf(
-            "    svt_spatial_full_distortion_kernel_opt(%dx%d) : %6.2f   "
-            "(Comparison: %5.2fx)\n",
-            area_width,
-            area_height,
-            1000000 * time_o / num_loops,
-            time_c / time_o);
+        double time_c =
+            svt_av1_compute_overall_elapsed_time_ms(start_time_seconds,
+                                                    start_time_useconds,
+                                                    middle_time_seconds,
+                                                    middle_time_useconds);
+        double time_o =
+            svt_av1_compute_overall_elapsed_time_ms(middle_time_seconds,
+                                                    middle_time_useconds,
+                                                    finish_time_seconds,
+                                                    finish_time_useconds);
+        std::cerr << "Average Nanoseconds per Function Call\n";
+        std::cerr << "    svt_spatial_full_distortion_kernel_c  (" << area_width
+                  << "x" << area_height
+                  << ") : " << 1000000 * time_c / num_loops << "\n";
+        std::cerr << "    svt_spatial_full_distortion_kernel_opt(" << area_width
+                  << "x" << area_height
+                  << ") : " << 1000000 * time_o / num_loops << "   "
+                  << "(Comparison: " << time_c / time_o << "x)\n";
     }
 }
+
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(
     SpatialFullDistortionKernelFuncTest);
 
@@ -376,7 +374,6 @@ void FullDistortionKernel16BitsFuncTest::RunCheckOutput(TestPattern pattern) {
 
 void FullDistortionKernel16BitsFuncTest::RunSpeedTest() {
     uint64_t dist_org, dist_opt;
-    double time_c, time_o;
     uint64_t start_time_seconds, start_time_useconds;
     uint64_t middle_time_seconds, middle_time_useconds;
     uint64_t finish_time_seconds, finish_time_useconds;
@@ -414,26 +411,24 @@ void FullDistortionKernel16BitsFuncTest::RunSpeedTest() {
 
         EXPECT_EQ(dist_org, dist_opt) << area_width << "x" << area_height;
 
-        time_c = svt_av1_compute_overall_elapsed_time_ms(start_time_seconds,
-                                                         start_time_useconds,
-                                                         middle_time_seconds,
-                                                         middle_time_useconds);
-        time_o = svt_av1_compute_overall_elapsed_time_ms(middle_time_seconds,
-                                                         middle_time_useconds,
-                                                         finish_time_seconds,
-                                                         finish_time_useconds);
-        printf("Average Nanoseconds per Function Call\n");
-        printf("    svt_full_distortion_kernel16_bits_c  (%dx%d) : %6.2f\n",
-               area_width,
-               area_height,
-               1000000 * time_c / num_loops);
-        printf(
-            "    svt_full_distortion_kernel16_bits_opt(%dx%d) : %6.2f   "
-            "(Comparison: %5.2fx)\n",
-            area_width,
-            area_height,
-            1000000 * time_o / num_loops,
-            time_c / time_o);
+        double time_c =
+            svt_av1_compute_overall_elapsed_time_ms(start_time_seconds,
+                                                    start_time_useconds,
+                                                    middle_time_seconds,
+                                                    middle_time_useconds);
+        double time_o =
+            svt_av1_compute_overall_elapsed_time_ms(middle_time_seconds,
+                                                    middle_time_useconds,
+                                                    finish_time_seconds,
+                                                    finish_time_useconds);
+        std::cerr << "Average Nanoseconds per Function Call\n"
+                  << "    svt_full_distortion_kernel16_bits_c  (" << area_width
+                  << "x" << area_height
+                  << ") : " << 1000000 * time_c / num_loops << "\n"
+                  << "    svt_full_distortion_kernel16_bits_opt(" << area_width
+                  << "x" << area_height
+                  << ") : " << 1000000 * time_o / num_loops << "   "
+                  << "(Comparison: " << time_c / time_o << "x)\n";
     }
 }
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(
