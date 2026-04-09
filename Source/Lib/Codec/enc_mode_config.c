@@ -8239,12 +8239,7 @@ void svt_aom_sig_deriv_enc_dec_allintra(PictureControlSet* pcs, ModeDecisionCont
     }
     set_intra_ctrls(pcs, ctx, intra_level, dist_based_ang_intra_level);
     // Use Hadamard at MDS0
-    ctx->mds0_use_hadamard_sb = false;
-    if (pd_pass == PD_PASS_0) {
-        ctx->mds0_use_hadamard_sb = false;
-    } else {
-        ctx->mds0_use_hadamard_sb = true;
-    }
+    ctx->mds0_use_hadamard_sb = pd_pass != PD_PASS_0;
 
     set_mds0_controls(ctx, pcs->mds0_level);
     set_subres_controls(ctx, 0);

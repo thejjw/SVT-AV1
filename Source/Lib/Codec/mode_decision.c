@@ -3875,7 +3875,6 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                     // if two candidates have the same ssim cost, choose the one with lower ssd cost
                     if (ssd_cost < ssd_lowest_cost) {
                         lowest_cost_index = cand_index;
-                        ssim_lowest_cost  = ssim_cost;
                         ssd_lowest_cost   = ssd_cost;
                     }
                 }

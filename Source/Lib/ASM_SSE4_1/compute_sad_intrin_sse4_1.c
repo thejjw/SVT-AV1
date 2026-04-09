@@ -197,7 +197,6 @@ void svt_sad_loop_kernel_sse4_1_intrin(uint8_t*  src, // input parameter, source
                     s2 = _mm_cvtsi32_si128(*(uint32_t*)p_src);
                     s3 = _mm_adds_epu16(s3, _mm_mpsadbw_epu8(s0, s2, 0));
                     p_src += src_stride << 1;
-                    p_ref += ref_stride << 1;
                 }
 
                 s3      = _mm_minpos_epu16(s3);
@@ -229,7 +228,6 @@ void svt_sad_loop_kernel_sse4_1_intrin(uint8_t*  src, // input parameter, source
                     s2 = _mm_cvtsi32_si128(*(uint32_t*)p_src);
                     s3 = _mm_adds_epu16(s3, _mm_mpsadbw_epu8(s0, s2, 0));
                     p_src += src_stride << 1;
-                    p_ref += ref_stride << 1;
                 }
 
                 s3      = _mm_or_si128(s3, s8);
@@ -267,7 +265,6 @@ void svt_sad_loop_kernel_sse4_1_intrin(uint8_t*  src, // input parameter, source
                     s2 = _mm_cvtsi32_si128(*(uint32_t*)p_src);
                     s3 = _mm_adds_epu16(s3, _mm_mpsadbw_epu8(s0, s2, 0));
                     p_src += src_stride << 1;
-                    p_ref += ref_stride << 1;
                 }
 
                 DECLARE_ALIGNED(16, uint16_t, tsum[8]);
@@ -312,7 +309,6 @@ void svt_sad_loop_kernel_sse4_1_intrin(uint8_t*  src, // input parameter, source
                     s2 = _mm_cvtsi32_si128(*(uint32_t*)p_src);
                     s3 = _mm_adds_epu16(s3, _mm_mpsadbw_epu8(s0, s2, 0));
                     p_src += src_stride << 1;
-                    p_ref += ref_stride << 1;
                 }
 
                 s3 = _mm_or_si128(s3, s8);
