@@ -203,14 +203,14 @@ static int adjust_q_cbr_flat(PictureParentControlSet* ppcs, int q) {
         }
         // Adjust Q base on source content change from scene detection.
         if (rc->prev_avg_base_me_dist > 0 && rc->frames_since_key > 5 && rc->cur_avg_base_me_dist > 0) {
-            int    bit_depth = scs->static_config.encoder_bit_depth;
-            double delta     = (double)rc->cur_avg_base_me_dist / (double)rc->prev_avg_base_me_dist - 1.0;
+            double delta = (double)rc->cur_avg_base_me_dist / (double)rc->prev_avg_base_me_dist - 1.0;
             // Push Q downwards if content change is decreasing and buffer level
             // is stable (at least 1/4-optimal level), so not overshooting. Do so
             // only for high Q to avoid excess overshoot.
             // Else reduce decrease in Q from previous frame if content change is
             // increasing and buffer is below max (so not undershooting).
             if (delta < 0.0 && rc->buffer_level > (rc->optimal_buffer_level >> 2) && q > (rc->worst_quality >> 1)) {
+                int    bit_depth    = scs->static_config.encoder_bit_depth;
                 double q_adj_factor = 1.0 + 0.5 * tanh(4.0 * delta);
                 double q_val        = svt_av1_convert_qindex_to_q(q, bit_depth);
                 q += svt_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
@@ -254,12 +254,12 @@ static int adjust_q_cbr(PictureParentControlSet* ppcs, int q) {
         // Adjust Q base on source content change.
         if (ppcs->temporal_layer_index == 0 && rc->prev_avg_base_me_dist > 0 && rc->frames_since_key > 5 &&
             rc->cur_avg_base_me_dist > 0) {
-            int    bit_depth = scs->static_config.encoder_bit_depth;
-            double delta     = (double)rc->cur_avg_base_me_dist / (double)rc->prev_avg_base_me_dist - 1.0;
+            double delta = (double)rc->cur_avg_base_me_dist / (double)rc->prev_avg_base_me_dist - 1.0;
             // Push Q downwards if content change is decreasing and buffer level
             // is stable (at least 1/4-optimal level), so not overshooting. Do so
             // only for high Q to avoid excess overshoot.
             if (delta < 0.0 && rc->buffer_level > (rc->optimal_buffer_level >> 2) && q > (rc->worst_quality >> 1)) {
+                int    bit_depth    = scs->static_config.encoder_bit_depth;
                 double q_adj_factor = 1.0 + 0.5 * tanh(4.0 * delta);
                 double q_val        = svt_av1_convert_qindex_to_q(q, bit_depth);
                 q += svt_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
@@ -413,8 +413,8 @@ static int av1_rc_regulate_q(PictureParentControlSet* ppcs, int active_best_qual
 
     int q = find_closest_qindex_by_rate(
         target_bits_per_mb, ppcs, correction_factor, active_best_quality, active_worst_quality);
-    SequenceControlSet* scs     = ppcs->scs;
-    EncodeContext*      enc_ctx = scs->enc_ctx;
+    const SequenceControlSet* scs     = ppcs->scs;
+    const EncodeContext*      enc_ctx = scs->enc_ctx;
     if (enc_ctx->rc_cfg.mode == AOM_CBR) {
         if (ppcs->scs->use_flat_ipp) {
             return adjust_q_cbr_flat(ppcs, q);
@@ -1066,7 +1066,7 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     ASSIGN_MINQ_TABLE(bit_depth, inter_minq);
     int active_best_quality = 0;
     int is_leaf_frame       = !(ppcs->update_type == SVT_AV1_GF_UPDATE || ppcs->update_type == SVT_AV1_ARF_UPDATE ||
-                          is_intrl_arf_boost);
+                                is_intrl_arf_boost);
     int is_overlay_frame    = ppcs->is_overlay;
 
     if (is_leaf_frame || is_overlay_frame) {
@@ -1133,18 +1133,18 @@ static void adjust_active_best_and_worst_quality_org(PictureControlSet* pcs, RAT
 }
 
 static int get_q(PictureControlSet* pcs, int active_worst_quality, int active_best_quality) {
-    PictureParentControlSet* ppcs    = pcs->ppcs;
-    SequenceControlSet*      scs     = ppcs->scs;
-    EncodeContext*           enc_ctx = scs->enc_ctx;
-    RATE_CONTROL*            rc      = &enc_ctx->rc;
-    TWO_PASS*                twopass = &scs->twopass;
-    int                      width   = ppcs->av1_cm->frm_size.frame_width;
-    int                      height  = ppcs->av1_cm->frm_size.frame_height;
-    int                      q;
+    PictureParentControlSet*  ppcs    = pcs->ppcs;
+    const SequenceControlSet* scs     = ppcs->scs;
+    const EncodeContext*      enc_ctx = scs->enc_ctx;
+    const RATE_CONTROL*       rc      = &enc_ctx->rc;
+    const TWO_PASS*           twopass = &scs->twopass;
+    int                       q;
     if (frame_is_intra_only(ppcs) && twopass->kf_zeromotion_pct >= STATIC_KF_GROUP_THRESH && rc->frames_to_key > 1) {
         q = active_best_quality;
     } else {
-        q = av1_rc_regulate_q(ppcs, active_best_quality, active_worst_quality, width, height);
+        int width  = ppcs->av1_cm->frm_size.frame_width;
+        int height = ppcs->av1_cm->frm_size.frame_height;
+        q          = av1_rc_regulate_q(ppcs, active_best_quality, active_worst_quality, width, height);
         if (q > active_worst_quality) {
             // Special case when we are targeting the max allowed rate.
             if (ppcs->this_frame_target < rc->max_frame_bandwidth) {
@@ -1763,7 +1763,7 @@ void recode_loop_update_q(PictureParentControlSet* ppcs, bool* const loop, int* 
     RATE_CONTROL*       rc            = &enc_ctx->rc;
     RateControlCfg*     rc_cfg        = &enc_ctx->rc_cfg;
     int                 do_dummy_pack = (scs->enc_ctx->recode_loop >= ALLOW_RECODE_KFMAXBW &&
-                         !(rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate == 0)) ||
+                                         !(rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate == 0)) ||
         rc_cfg->min_cr > 0;
     if (do_dummy_pack) {
         svt_block_on_mutex(ppcs->pcs_total_rate_mutex);
