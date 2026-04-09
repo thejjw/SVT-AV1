@@ -1332,8 +1332,8 @@ static void prepare_input_picture(SequenceControlSet* scs, PictureControlSet* pc
         const uint32_t input_cr_offset   = (((sb_org_y) >> 1) * input_pic->v_stride) + ((sb_org_x) >> 1);
 
         sb_width  = ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
-             ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->border) - sb_org_x)
-             : sb_width;
+            ? MIN(scs->sb_size, (pcs->ppcs->aligned_width + scs->border) - sb_org_x)
+            : sb_width;
         sb_height = ((sb_height < MIN_SB_SIZE) || ((sb_height > MIN_SB_SIZE) && (sb_height < MAX_SB_SIZE)))
             ? MIN(scs->sb_size, (pcs->ppcs->aligned_height + scs->border) - sb_org_y)
             : sb_height;
@@ -1406,10 +1406,10 @@ static void set_blocks_to_test(PictureControlSet* pcs, ModeDecisionContext* ctx,
     const bool inj_hv_incomp = (!has_cols || !has_rows);
     uint8_t    shapes_idx    = 0;
     const Part max_part      = (!ctx->nsq_geom_ctrls.enabled || (sq_size <= ctx->nsq_geom_ctrls.min_nsq_block_size) ||
-                           sq_size == 4 || (ctx->md_disallow_nsq_search && !inj_hv_incomp))
-             ? PART_N
-             : (sq_size == 8 || inj_hv_incomp) ? PART_V
-                                               : PART_S - 1;
+                                sq_size == 4 || (ctx->md_disallow_nsq_search && !inj_hv_incomp))
+        ? PART_N
+        : (sq_size == 8 || inj_hv_incomp) ? PART_V
+                                          : PART_S - 1;
     for (Part part = PART_N; part <= max_part; part++) {
         if (inj_hv_incomp) {
             if ((has_cols && part != PART_H) || (has_rows && part != PART_V)) {
@@ -1562,13 +1562,13 @@ static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* c
             const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                      : ctx->full_sb_lambda_md[EB_8_BIT_MD];
             const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                    pc_tree->parent->bsize,
-                                                                    pc_tree->parent->mi_row,
-                                                                    pc_tree->parent->mi_col,
-                                                                    ctx->md_rate_est_ctx,
-                                                                    PARTITION_SPLIT,
-                                                                    0,
-                                                                    0);
+                                                                     pc_tree->parent->bsize,
+                                                                     pc_tree->parent->mi_row,
+                                                                     pc_tree->parent->mi_col,
+                                                                     ctx->md_rate_est_ctx,
+                                                                     PARTITION_SPLIT,
+                                                                     0,
+                                                                     0);
             const uint64_t split_cost  = RDCOST(full_lambda, split_rate, 0);
             if (split_cost * 10000 < pc_tree->parent->block_data[PART_N][0]->cost * lower_depth_split_cost_th) {
                 *s_depth = 0;
@@ -1586,13 +1586,13 @@ static void update_pred_th_offset(PictureControlSet* pcs, ModeDecisionContext* c
         const uint32_t full_lambda = ctx->hbd_md ? ctx->full_sb_lambda_md[EB_10_BIT_MD]
                                                  : ctx->full_sb_lambda_md[EB_8_BIT_MD];
         const uint64_t split_rate  = svt_aom_partition_rate_cost(pcs->ppcs,
-                                                                pc_tree->bsize,
-                                                                pc_tree->mi_row,
-                                                                pc_tree->mi_col,
-                                                                ctx->md_rate_est_ctx,
-                                                                PARTITION_SPLIT,
-                                                                0, // partition ctxs not updated in PD0
-                                                                0);
+                                                                 pc_tree->bsize,
+                                                                 pc_tree->mi_row,
+                                                                 pc_tree->mi_col,
+                                                                 ctx->md_rate_est_ctx,
+                                                                 PARTITION_SPLIT,
+                                                                 0, // partition ctxs not updated in PD0
+                                                                 0);
         const uint64_t split_cost  = RDCOST(full_lambda, split_rate, 0);
 
         if (split_cost * 1000 > pc_tree->block_data[PART_N][0]->cost * split_cost_th) {
@@ -2062,9 +2062,8 @@ static void exaustive_light_pd1_features(ModeDecisionContext* md_ctx, PicturePar
             md_ctx->spatial_sse_ctrls.level == SSSE_OFF && md_ctx->md_sq_me_ctrls.enabled == 0 &&
             md_ctx->md_pme_ctrls.enabled == 0 && md_ctx->txt_ctrls.enabled == 0 && md_ctx->unipred3x3_injection == 0 &&
             md_ctx->bipred3x3_ctrls.enabled == 0 && md_ctx->inter_comp_ctrls.tot_comp_types == 1 &&
-            md_ctx->obmc_ctrls.enabled == 0 && md_ctx->filter_intra_ctrls.enabled == 0 &&
-            md_ctx->new_nearest_near_comb_injection == 0 && md_ctx->md_palette_level == 0 &&
-            ppcs->gm_ctrls.enabled == 0 &&
+            md_ctx->filter_intra_ctrls.enabled == 0 && md_ctx->new_nearest_near_comb_injection == 0 &&
+            md_ctx->md_palette_level == 0 && ppcs->gm_ctrls.enabled == 0 &&
             // If TXS enabled at picture level, there are necessary context updates that must be added to LPD1
             ppcs->frm_hdr.tx_mode != TX_MODE_SELECT && md_ctx->txs_ctrls.enabled == 0 && md_ctx->pred_depth_only &&
             md_ctx->md_disallow_nsq_search == true && md_ctx->disallow_4x4 == true &&
@@ -2765,8 +2764,8 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                 for (uint16_t tile_group_idx = 0; tile_group_idx < tg_count; tile_group_idx++) {
                     svt_get_empty_object(ed_ctx->enc_dec_feedback_fifo_ptr, &enc_dec_re_encode_tasks_wrapper);
 
-                    EncDecTasks* enc_dec_re_encode_tasks_ptr = (EncDecTasks*)
-                                                                   enc_dec_re_encode_tasks_wrapper->object_ptr;
+                    EncDecTasks* enc_dec_re_encode_tasks_ptr      = (EncDecTasks*)
+                                                                        enc_dec_re_encode_tasks_wrapper->object_ptr;
                     enc_dec_re_encode_tasks_ptr->pcs_wrapper      = enc_dec_tasks->pcs_wrapper;
                     enc_dec_re_encode_tasks_ptr->input_type       = ENCDEC_TASKS_MDC_INPUT;
                     enc_dec_re_encode_tasks_ptr->tile_group_index = tile_group_idx;
@@ -2807,7 +2806,7 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                 segment_row_index  = segment_index / segments_ptr->segment_band_count;
                 segment_band_index = segment_index - segment_row_index * segments_ptr->segment_band_count;
                 segment_band_size  = (segments_ptr->sb_band_count * (segment_band_index + 1) +
-                                     segments_ptr->segment_band_count - 1) /
+                                      segments_ptr->segment_band_count - 1) /
                     segments_ptr->segment_band_count;
 
                 // Reset Coding Loop State
@@ -2919,7 +2918,7 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                         ed_ctx->md_ctx->is_subres_safe = (uint8_t)~0;
                         // Signal initialized here; if needed, will be set in md_encode_block before MDS3
                         md_ctx->need_hbd_comp_mds3 = 0;
-                        bool skip_pd_pass_0        = (ed_ctx->md_ctx->depth_removal_ctrls.disallow_below_64x64 &&
+                        bool skip_pd_pass_0 = (ed_ctx->md_ctx->depth_removal_ctrls.disallow_below_64x64 &&
                                                (scs->super_block_size == 64 || ed_ctx->md_ctx->max_block_size == 64)) ||
                             (ed_ctx->md_ctx->depth_removal_ctrls.disallow_below_32x32 &&
                              ed_ctx->md_ctx->max_block_size == 32);
@@ -3220,8 +3219,8 @@ void* svt_aom_mode_decision_kernel(void* input_ptr) {
                     for (uint16_t tile_group_idx = 0; tile_group_idx < tg_count; tile_group_idx++) {
                         svt_get_empty_object(ed_ctx->enc_dec_feedback_fifo_ptr, &enc_dec_re_encode_tasks_wrapper);
 
-                        EncDecTasks* enc_dec_re_encode_tasks_ptr = (EncDecTasks*)
-                                                                       enc_dec_re_encode_tasks_wrapper->object_ptr;
+                        EncDecTasks* enc_dec_re_encode_tasks_ptr      = (EncDecTasks*)
+                                                                            enc_dec_re_encode_tasks_wrapper->object_ptr;
                         enc_dec_re_encode_tasks_ptr->pcs_wrapper      = enc_dec_tasks->pcs_wrapper;
                         enc_dec_re_encode_tasks_ptr->input_type       = ENCDEC_TASKS_MDC_INPUT;
                         enc_dec_re_encode_tasks_ptr->tile_group_index = tile_group_idx;
