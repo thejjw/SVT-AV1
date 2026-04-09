@@ -470,8 +470,8 @@ static void init_scaling_function(int32_t scaling_points[][2], int32_t num_point
     }
 
     for (int32_t point = 0; point < num_points - 1; point++) {
-        int32_t delta_y = scaling_points[point + 1][1] - scaling_points[point][1];
-        int32_t delta_x = scaling_points[point + 1][0] - scaling_points[point][0];
+        int64_t delta_y = scaling_points[point + 1][1] - scaling_points[point][1];
+        int64_t delta_x = scaling_points[point + 1][0] - scaling_points[point][0];
 
         int64_t delta = delta_y * ((65536 + (delta_x >> 1)) / delta_x);
 

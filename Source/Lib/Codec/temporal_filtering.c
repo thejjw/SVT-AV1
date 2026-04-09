@@ -208,7 +208,7 @@ static void create_me_context_and_picture_control(MotionEstimationContext_t* me_
     // set reference picture for alt-refs
     me_context_ptr->me_ctx->alt_ref_reference_ptr = (EbPaReferenceObject*)
                                                         picture_control_set_ptr_frame->pa_ref_pic_wrapper->object_ptr;
-    me_context_ptr->me_ctx->me_type = ME_MCTF;
+    me_context_ptr->me_ctx->me_type               = ME_MCTF;
 
     // set the buffers with the original, quarter and sixteenth pixels version of the source frame
     EbPaReferenceObject* src_object     = (EbPaReferenceObject*)centre_pcs->pa_ref_pic_wrapper->object_ptr;
@@ -596,11 +596,11 @@ static inline void svt_av1_calculate_decay_factor(uint32_t* tf_decay_factor_fp16
         *n_decay_fp10 = (decay_control_cu * (const_0dot7_fp16 + noise_levels_log1p_fp16[PLANE_U])) / ((int32_t)1 << 6);
         *(tf_decay_factor_fp16 +
           PLANE_U)    = (uint32_t)((((((int64_t)*n_decay_fp10) * ((int64_t)*n_decay_fp10))) * q_decay_fp8) >>
-                                shift_factor);
+                                   shift_factor);
         *n_decay_fp10 = (decay_control_cv * (const_0dot7_fp16 + noise_levels_log1p_fp16[PLANE_V])) / ((int32_t)1 << 6);
         *(tf_decay_factor_fp16 +
           PLANE_V)    = (uint32_t)((((((int64_t)*n_decay_fp10) * ((int64_t)*n_decay_fp10))) * q_decay_fp8) >>
-                                shift_factor);
+                                   shift_factor);
     }
 }
 
@@ -1013,7 +1013,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint64_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint64_t avg_err_fp10 = (uint64_t)(combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3);
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
         uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
@@ -1157,21 +1157,21 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[1] = (((sum << 4) / bw_half) << 4) / bh_half;
     sum                      = calculate_squared_errors_sum_highbd(y_src + y_src_stride * (bh_half),
-                                              y_src_stride,
-                                              y_pre + y_pre_stride * (bh_half),
-                                              y_pre_stride,
-                                              bw_half,
-                                              bh_half,
-                                              shift_factor);
+                                                                   y_src_stride,
+                                                                   y_pre + y_pre_stride * (bh_half),
+                                                                   y_pre_stride,
+                                                                   bw_half,
+                                                                   bh_half,
+                                                                   shift_factor);
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[2] = (((sum << 4) / bw_half) << 4) / bh_half;
     sum                      = calculate_squared_errors_sum_highbd(y_src + y_src_stride * (bh_half) + bw_half,
-                                              y_src_stride,
-                                              y_pre + y_pre_stride * (bh_half) + bw_half,
-                                              y_pre_stride,
-                                              bw_half,
-                                              bh_half,
-                                              shift_factor);
+                                                                   y_src_stride,
+                                                                   y_pre + y_pre_stride * (bh_half) + bw_half,
+                                                                   y_pre_stride,
+                                                                   bw_half,
+                                                                   bh_half,
+                                                                   shift_factor);
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[3] = (((sum << 4) / bw_half) << 4) / bh_half;
 
@@ -1190,7 +1190,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint64_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint64_t avg_err_fp10 = (uint64_t)(combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3);
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
         uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
@@ -1692,11 +1692,11 @@ static void tf_64x64_sub_pel_search(PictureParentControlSet* pcs, MeContext* me_
         prediction_ptr.u_buffer = (uint8_t*)pred_16bit[PLANE_U];
         prediction_ptr.v_buffer = (uint8_t*)pred_16bit[PLANE_V];
         reference_ptr.y_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_Y] + pic_ptr_ref->border +
-                                            (pic_ptr_ref->y_stride * pic_ptr_ref->border));
+                                             (pic_ptr_ref->y_stride * pic_ptr_ref->border));
         reference_ptr.u_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_U] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.v_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_V] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.border    = pic_ptr_ref->border;
         reference_ptr.y_stride  = pic_ptr_ref->y_stride;
         reference_ptr.u_stride  = pic_ptr_ref->u_stride;
@@ -1727,11 +1727,11 @@ static void tf_64x64_sub_pel_search(PictureParentControlSet* pcs, MeContext* me_
     // Set the starting MV and distortion
     me_ctx->tf_64x64_block_error = INT_MAX;
     me_ctx->tf_64x64_mv_x        = (me_ctx->tf_use_pred_64x64_only_th == (uint8_t)~0)
-               ? me_ctx->search_results[0][0].hme_sc_x << 3
-               : (_MVXT(me_ctx->p_best_mv64x64[0])) << 3;
+        ? me_ctx->search_results[0][0].hme_sc_x << 3
+        : (_MVXT(me_ctx->p_best_mv64x64[0])) << 3;
     me_ctx->tf_64x64_mv_y        = (me_ctx->tf_use_pred_64x64_only_th == (uint8_t)~0)
-               ? me_ctx->search_results[0][0].hme_sc_y << 3
-               : (_MVYT(me_ctx->p_best_mv64x64[0])) << 3;
+        ? me_ctx->search_results[0][0].hme_sc_y << 3
+        : (_MVYT(me_ctx->p_best_mv64x64[0])) << 3;
 
     TF_SUBPEL_SEARCH_PARAMS tf_sp_param;
     tf_sp_param.subsampling_shift = pcs->tf_ctrls.sub_sampling_shift;
@@ -1801,11 +1801,11 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet* pcs, MeContext* me_
         prediction_ptr.u_buffer = (uint8_t*)pred_16bit[PLANE_U];
         prediction_ptr.v_buffer = (uint8_t*)pred_16bit[PLANE_V];
         reference_ptr.y_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_Y] + pic_ptr_ref->border +
-                                            (pic_ptr_ref->y_stride * pic_ptr_ref->border));
+                                             (pic_ptr_ref->y_stride * pic_ptr_ref->border));
         reference_ptr.u_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_U] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.v_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_V] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.border    = pic_ptr_ref->border;
         reference_ptr.y_stride  = pic_ptr_ref->y_stride;
         reference_ptr.u_stride  = pic_ptr_ref->u_stride;
@@ -2131,11 +2131,11 @@ static void tf_64x64_inter_prediction(PictureParentControlSet* pcs, MeContext* m
         prediction_ptr.u_buffer = (uint8_t*)pred_16bit[PLANE_U];
         prediction_ptr.v_buffer = (uint8_t*)pred_16bit[PLANE_V];
         reference_ptr.y_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_Y] + pic_ptr_ref->border +
-                                            (pic_ptr_ref->y_stride * pic_ptr_ref->border));
+                                             (pic_ptr_ref->y_stride * pic_ptr_ref->border));
         reference_ptr.u_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_U] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.v_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_V] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.border    = pic_ptr_ref->border;
         reference_ptr.y_stride  = pic_ptr_ref->y_stride;
         reference_ptr.u_stride  = pic_ptr_ref->u_stride;
@@ -2227,11 +2227,11 @@ static void tf_32x32_inter_prediction(PictureParentControlSet* pcs, MeContext* m
         prediction_ptr.u_buffer = (uint8_t*)pred_16bit[PLANE_U];
         prediction_ptr.v_buffer = (uint8_t*)pred_16bit[PLANE_V];
         reference_ptr.y_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_Y] + pic_ptr_ref->border +
-                                            (pic_ptr_ref->y_stride * pic_ptr_ref->border));
+                                             (pic_ptr_ref->y_stride * pic_ptr_ref->border));
         reference_ptr.u_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_U] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->u_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.v_buffer  = (uint8_t*)(pcs_ref->altref_buffer_highbd[PLANE_V] + (pic_ptr_ref->border >> ss_x) +
-                                            (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
+                                             (pic_ptr_ref->v_stride * (pic_ptr_ref->border >> ss_x)));
         reference_ptr.border    = pic_ptr_ref->border;
         reference_ptr.y_stride  = pic_ptr_ref->y_stride;
         reference_ptr.u_stride  = pic_ptr_ref->u_stride;

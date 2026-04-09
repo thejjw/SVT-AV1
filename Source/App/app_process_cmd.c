@@ -776,7 +776,7 @@ static void normal_read_input_frames(EbConfig* app_cfg, uint8_t is_16bit, EbBuff
         read_y4m_frame_delimiter(app_cfg->input_file, app_cfg->error_log_file);
     }
     uint64_t luma_read_size   = (uint64_t)input_padded_width * input_padded_height << is_16bit;
-    uint64_t chroma_read_size = chroma_width * chroma_height << is_16bit;
+    size_t   chroma_read_size = (size_t)chroma_width * chroma_height << is_16bit;
     uint64_t read_size        = luma_read_size + 2 * chroma_read_size;
 
     uint8_t* eb_input_ptr = input_ptr->luma;
