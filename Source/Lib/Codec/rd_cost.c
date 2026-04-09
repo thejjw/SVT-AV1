@@ -579,8 +579,8 @@ uint64_t svt_aom_intra_fast_cost(PictureControlSet* pcs, ModeDecisionContext* ct
         uint32_t luma_rate   = 0;
         uint32_t chroma_rate = 0;
         intra_mode_bits_num  = pcs->slice_type != I_SLICE
-             ? (uint64_t)ctx->md_rate_est_ctx->mb_mode_fac_bits[eb_size_group_lookup[blk_geom->bsize]][intra_mode]
-             : ZERO_COST;
+            ? (uint64_t)ctx->md_rate_est_ctx->mb_mode_fac_bits[eb_size_group_lookup[blk_geom->bsize]][intra_mode]
+            : ZERO_COST;
 
         skip_mode_rate = pcs->slice_type != I_SLICE && pcs->ppcs->frm_hdr.skip_mode_params.skip_mode_flag &&
                 is_comp_ref_allowed(blk_geom->bsize)
@@ -648,7 +648,7 @@ uint64_t svt_aom_intra_fast_cost(PictureControlSet* pcs, ModeDecisionContext* ct
             ? ctx->md_rate_est_ctx->intra_inter_fac_bits[ctx->is_inter_ctx][0]
             : 0;
         luma_rate              = (uint32_t)(intra_mode_bits_num + skip_mode_rate + intra_luma_mode_bits_num +
-                               intra_luma_ang_mode_bits_num + is_inter_rate + intra_filter_mode_bits_num);
+                                            intra_luma_ang_mode_bits_num + is_inter_rate + intra_filter_mode_bits_num);
         if (svt_aom_allow_intrabc(&pcs->ppcs->frm_hdr, pcs->ppcs->slice_type)) {
             svt_aom_assert_err(cand->block_mi.use_intrabc == 0, "this block ibc should be off\n");
             luma_rate += ctx->md_rate_est_ctx->intrabc_fac_bits[cand->block_mi.use_intrabc];
@@ -1847,12 +1847,10 @@ uint64_t svt_aom_get_tx_size_bits(ModeDecisionCandidateBuffer* candidateBuffer, 
 int64_t svt_aom_partition_rate_cost(PictureParentControlSet* ppcs, const BlockSize bsize, const int mi_row,
                                     const int mi_col, MdRateEstimationContext* md_rate_est_ctx, PartitionType p,
                                     const PartitionContextType left_ctx, const PartitionContextType above_ctx) {
-    assert(mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
-    assert(bsize < BLOCK_SIZES_ALL);
-
     if (bsize < BLOCK_8X8) {
         return 0;
     }
+    assert(bsize < BLOCK_SIZES_ALL && mi_size_wide_log2[bsize] == mi_size_high_log2[bsize]);
 
     const int hbs      = mi_size_wide[bsize] >> 1;
     const int has_rows = (mi_row + hbs) < ppcs->av1_cm->mi_rows;
