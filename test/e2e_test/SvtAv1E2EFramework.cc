@@ -618,17 +618,12 @@ static void write_ivf_frame_header(
     svt_av1_e2e_test::SvtAv1E2ETestFramework::IvfFile *ivf,
     uint32_t byte_count) {
     char header[IVF_FRAME_HEADER_SIZE];
-    int32_t write_location = 0;
 
-    mem_put_le32(&header[write_location], (int32_t)byte_count);
-    write_location = write_location + 4;
-    mem_put_le32(&header[write_location],
-                 (int32_t)((ivf->ivf_count) & 0xFFFFFFFF));
-    write_location = write_location + 4;
-    mem_put_le32(&header[write_location], (int32_t)((ivf->ivf_count) >> 32));
-    write_location = write_location + 4;
+    mem_put_le32(&header[0], (int32_t)byte_count);
+    mem_put_le32(&header[4], (int32_t)((ivf->ivf_count) & 0xFFFFFFFF));
+    mem_put_le32(&header[8], (int32_t)((ivf->ivf_count) >> 32));
 
-    ivf->byte_count_since_ivf = (byte_count);
+    ivf->byte_count_since_ivf = byte_count;
 
     ivf->ivf_count++;
     fflush(stdout);

@@ -1418,8 +1418,8 @@ static EbErrorType svt_av1_interpolate_core_col_avx2(const uint8_t* const input,
 
     const int32_t  delta  = (((uint32_t)in_height << RS_SCALE_SUBPEL_BITS) + out_height / 2) / out_height;
     const int32_t  offset = in_height > out_height
-         ? (((int32_t)(in_height - out_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height
-         : -(((int32_t)(out_height - in_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height;
+        ? (((int32_t)(in_height - out_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height
+        : -(((int32_t)(out_height - in_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height;
     int32_t        x, x1, x2;
     int32_t        y;
     const uint8_t* in   = NULL;
@@ -1693,7 +1693,7 @@ static INLINE __m128i mm_32i_to_16i(__m256i a) {
 static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t* in, __m128i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int*)in, vindex, 2);
     dst[0]       = mm_32i_to_16i(_mm256_and_si256(load,
-                                            _mm256_set1_epi32(0xffff))); // col 0
+                                                  _mm256_set1_epi32(0xffff))); // col 0
     dst[1]       = mm_32i_to_16i(_mm256_srli_epi32(load, 16)); // col 1
 
     load   = _mm256_i32gather_epi32((const int*)(in + 2), vindex, 2);
@@ -1715,7 +1715,7 @@ static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t* in, _
 static INLINE void highbd_down2_symeven_mm256_gather_load_8x8(const uint16_t* in, __m256i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int*)in, vindex, 2);
     dst[0]       = _mm256_and_si256(load,
-                              _mm256_set1_epi32(0xffff)); // col 0
+                                    _mm256_set1_epi32(0xffff)); // col 0
     dst[1]       = _mm256_srli_epi32(load, 16); // col 1
 
     load   = _mm256_i32gather_epi32((const int*)(in + 2), vindex, 2);
@@ -2141,9 +2141,6 @@ static EbErrorType svt_av1_highbd_down2_symeven_col_avx2(const uint16_t* const i
             highbd_down2_symeven_mm_gather_load_8x8(in, &vec_src[8], vindex_pos5);
 
             highbd_down2_symeven_output_4x8_kernel(vec_src, filter_2x, base_sum, min, max, optr, out_stride);
-
-            optr += steps / 2 * out_stride;
-            in += steps * in_stride;
         }
     }
 
@@ -2200,9 +2197,6 @@ static EbErrorType svt_av1_highbd_down2_symeven_col_avx2(const uint16_t* const i
             highbd_down2_symeven_mm_gather_load_16x2(in, in_stride, vec_src, vindex_0, vindex_pos5, 8);
 
             highbd_down2_symeven_output_4x2_kernel(vec_src, filter_2x, base_sum, min, max, optr, out_stride);
-
-            optr += 2 * out_stride;
-            in += 4 * in_stride;
         }
     }
 
@@ -2435,9 +2429,6 @@ static EbErrorType svt_av1_down2_symeven_col_avx2(const uint8_t* const input, in
             down2_symeven_mm_gather_load_8x16(in, vindex_pos5, &vec_src[16]);
 
             down2_symeven_output_4x16_kernel(vec_src, filter_2x, base_sum, min, max, optr, out_stride);
-
-            optr += 4 * out_stride;
-            in += 8 * in_stride;
         }
     }
 
@@ -2505,9 +2496,6 @@ static EbErrorType svt_av1_down2_symeven_col_avx2(const uint8_t* const input, in
             down2_symeven_gather_load_8x4(in, vindex_pos5, &vec_src[4]);
 
             down2_symeven_output_4x4_kernel(vec_src, filter_2x, base_sum, min, max, optr, out_stride);
-
-            optr += 4 * out_stride; // steps 4 rows
-            in += 8 * in_stride; // steps 8 rows
         }
     }
     // up to two columns left
@@ -2525,12 +2513,9 @@ static EbErrorType svt_av1_down2_symeven_col_avx2(const uint8_t* const input, in
         arrbuf[0] = 0;
 
         for (; col < in_width; ++col) {
-            in   = &input[col];
-            optr = &output[col];
-
-            fill_col_to_arr(in, in_stride, in_height, arrbuf);
+            fill_col_to_arr(input + col, in_stride, in_height, arrbuf);
             svt_av1_down2_symeven_avx2(arrbuf, in_height, arrbuf2);
-            fill_arr_to_col(optr, out_stride, out_height, arrbuf2);
+            fill_arr_to_col(output + col, out_stride, out_height, arrbuf2);
         }
 
         EB_FREE_ARRAY(arrbuf);

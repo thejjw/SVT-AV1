@@ -4723,11 +4723,8 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_H(const int16_t* input, __m128
     const int16_t* bot_l = input + 8 * stride;
     const int16_t* bot_r = input + 8 * stride + 8;
 
-    const int16_t* tmp;
-
     if (flipud) {
         // Swap left columns
-        tmp   = top_l;
         top_l = bot_l;
         // Swap right columns
         top_r = bot_r;
@@ -4735,9 +4732,9 @@ static AOM_FORCE_INLINE void load_buffer_16x16_N2_H(const int16_t* input, __m128
 
     if (fliplr) {
         // Swap top rows
-        tmp   = top_l;
-        top_l = top_r;
-        top_r = tmp;
+        const int16_t* tmp = top_l;
+        top_l              = top_r;
+        top_r              = tmp;
     }
 
     // load first 8 columns
