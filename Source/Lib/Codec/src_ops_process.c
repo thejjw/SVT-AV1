@@ -1864,7 +1864,6 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
                         tpl_ref_list[i].ref                                            = NULL;
                         enc_ctx->mc_flow_rec_picture_buffer[tpl_ref_list[i].frame_idx] = NULL;
                         tpl_ref_list[i].frame_idx                                      = -1;
-                        tpl_ref_list[i].refresh_frame_mask                             = 0;
                         tpl_ref_list[i].is_valid                                       = false;
                     }
                 }
