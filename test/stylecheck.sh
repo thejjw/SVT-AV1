@@ -120,13 +120,13 @@ if [ -n "$diff_output" ]; then
 clang-format check failed!
 Please run inside a posix compatible shell with git and amend or commit the
 results or pipe the output of this script into `git apply -p0`
-git apply -p0 <<'EOF'
+git apply -p0 <<'CLANG_FORMAT_DIFF'
 FOE
     cat << FOE
 $diff_output
 FOE
     cat >&2 << 'FOE'
-EOF
+CLANG_FORMAT_DIFF
 FOE
     ret=1
 fi
