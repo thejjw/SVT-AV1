@@ -35,6 +35,9 @@ echo "Checking for carriage returns" >&2
 echo "Checking for trailing spaces" >&2
 ! git -C "$REPO_DIR" --no-pager grep -InP " $" -- "$@" || ret=1
 
+echo "Checking for UTF-8 BOM" >&2
+! git -C "$REPO_DIR" --no-pager grep -IlP "^\xEF\xBB\xBF" -- "$@" || ret=1
+
 # Test only "new" commits, that is, commits that are not upstream on
 # the default branch.
 if git -C "$REPO_DIR" fetch -q "${CI_REPOSITORY_URL:-https://gitlab.com/AOMediaCodec/SVT-AV1.git}" "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-HEAD}"; then
