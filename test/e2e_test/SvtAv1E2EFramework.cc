@@ -520,7 +520,7 @@ void SvtAv1E2ETestFramework::run_encode_process() {
                 if (return_error != EB_NoErrorEmptyQueue && enc_out) {
                     if (enc_out->flags & EB_BUFFERFLAG_EOS) {
                         enc_file_eos = true;
-                        printf("Encoder EOS\n");
+                        std::cerr << "Encoder EOS\n";
                     } else {
                         // send to reference decoder
                         TimeAutoCount counter(CONFORMANCE, collect_);
@@ -558,8 +558,7 @@ void SvtAv1E2ETestFramework::run_test() {
     config_test();
     for (auto test_vector : enc_setting.test_vectors) {
         std::string fn = std::get<0>(test_vector);
-        std::cout << "Start test case " << enc_setting.to_string(fn)
-                  << std::endl;
+        SCOPED_TRACE(enc_setting.to_string(fn));
         init_test(test_vector);
         EXPECT_NO_FATAL_FAILURE(run_encode_process())
             << "Fatal Error on running test case " << enc_setting.to_string(fn);
@@ -573,8 +572,7 @@ void SvtAv1E2ETestFramework::run_death_test() {
     config_test();
     for (auto test_vector : enc_setting.test_vectors) {
         std::string fn = std::get<0>(test_vector);
-        std::cout << "Start test case " << enc_setting.to_string(fn)
-                  << std::endl;
+        SCOPED_TRACE(enc_setting.to_string(fn));
         EXPECT_EXIT(
             {
                 init_test(test_vector);
