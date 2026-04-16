@@ -1710,4 +1710,4 @@ DEFINE_SAD_MXNx4D_NEON(64, 128,  sad64xh_indep4d_neon)
 DEFINE_SAD_MXNx4D_NEON(128, 64,  sad128xh_indep4d_neon)
 DEFINE_SAD_MXNx4D_NEON(128, 128, sad128xh_indep4d_neon)
 
-    // clang-format on
+// clang-format on
