@@ -631,36 +631,36 @@ static INLINE unsigned int svt_aom_sub_pixel_variance32xh_avx512(const uint8_t* 
     return sum;
 }
 
-#define AOM_SUB_PIXEL_VAR_AVX512(w, h, wf, wlog2, hlog2)                                      \
-    unsigned int svt_aom_sub_pixel_variance##w##x##h##_avx512(const uint8_t* src,             \
-                                                              int            src_stride,      \
-                                                              int            x_offset,        \
-                                                              int            y_offset,        \
-                                                              const uint8_t* dst,             \
-                                                              int            dst_stride,      \
-                                                              unsigned int*  sse_ptr) {       \
-        /*Avoid overflow in helper by capping height.*/                                       \
-        const int    hf  = AOMMIN(h, 64);                                                     \
-        const int    wf2 = AOMMIN(wf, 128);                                                   \
-        unsigned int sse = 0;                                                                 \
-        int          se  = 0;                                                                 \
-        for (int i = 0; i < (w / wf2); ++i) {                                                 \
-            const uint8_t* src_ptr = src;                                                     \
-            const uint8_t* dst_ptr = dst;                                                     \
-            for (int j = 0; j < (h / hf); ++j) {                                              \
-                unsigned int sse2;                                                            \
-                const int    se2 = svt_aom_sub_pixel_variance##wf##xh_avx512(                 \
+#define AOM_SUB_PIXEL_VAR_AVX512(w, h, wf, wlog2, hlog2)                                         \
+    unsigned int svt_aom_sub_pixel_variance##w##x##h##_avx512(const uint8_t* src,                \
+                                                              int            src_stride,         \
+                                                              int            x_offset,           \
+                                                              int            y_offset,           \
+                                                              const uint8_t* dst,                \
+                                                              int            dst_stride,         \
+                                                              unsigned int*  sse_ptr) {           \
+        /*Avoid overflow in helper by capping height.*/                                          \
+        const int    hf  = AOMMIN(h, 64);                                                        \
+        const int    wf2 = AOMMIN(wf, 128);                                                      \
+        unsigned int sse = 0;                                                                    \
+        int          se  = 0;                                                                    \
+        for (int i = 0; i < (w / wf2); ++i) {                                                    \
+            const uint8_t* src_ptr = src;                                                        \
+            const uint8_t* dst_ptr = dst;                                                        \
+            for (int j = 0; j < (h / hf); ++j) {                                                 \
+                unsigned int sse2;                                                               \
+                const int    se2 = svt_aom_sub_pixel_variance##wf##xh_avx512(                    \
                     src_ptr, src_stride, x_offset, y_offset, dst_ptr, dst_stride, hf, &sse2); \
-                dst_ptr += hf * dst_stride;                                                   \
-                src_ptr += hf * src_stride;                                                   \
-                se += se2;                                                                    \
-                sse += sse2;                                                                  \
-            }                                                                                 \
-            src += wf;                                                                        \
-            dst += wf;                                                                        \
-        }                                                                                     \
-        *sse_ptr = sse;                                                                       \
-        return sse - (unsigned int)(((int64_t)se * se) >> (wlog2 + hlog2));                   \
+                dst_ptr += hf * dst_stride;                                                      \
+                src_ptr += hf * src_stride;                                                      \
+                se += se2;                                                                       \
+                sse += sse2;                                                                     \
+            }                                                                                    \
+            src += wf;                                                                           \
+            dst += wf;                                                                           \
+        }                                                                                        \
+        *sse_ptr = sse;                                                                          \
+        return sse - (unsigned int)(((int64_t)se * se) >> (wlog2 + hlog2));                      \
     }
 
 AOM_SUB_PIXEL_VAR_AVX512(128, 128, 64, 7, 7);
@@ -741,7 +741,7 @@ static INLINE int variance_final_1024_avx512(__m512i vsse, __m512i vsum, unsigne
     // extract the low lane and add it to the high lane
     const __m128i vsum_128 = mm512_add_hi_lo_epi16(vsum);
     const __m128i vsum_64  = _mm_add_epi32(_mm_cvtepi16_epi32(vsum_128),
-                                           _mm_cvtepi16_epi32(_mm_srli_si128(vsum_128, 8)));
+                                          _mm_cvtepi16_epi32(_mm_srli_si128(vsum_128, 8)));
     return variance_final_from_32bit_sum_avx512(vsse, vsum_64, sse);
 }
 

@@ -1695,7 +1695,7 @@ static INLINE __m128i mm_32i_to_16i(__m256i a) {
 static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t* in, __m128i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int*)in, vindex, 2);
     dst[0]       = mm_32i_to_16i(_mm256_and_si256(load,
-                                                  _mm256_set1_epi32(0xffff))); // col 0
+                                            _mm256_set1_epi32(0xffff))); // col 0
     dst[1]       = mm_32i_to_16i(_mm256_srli_epi32(load, 16)); // col 1
 
     load   = _mm256_i32gather_epi32((const int*)(in + 2), vindex, 2);
@@ -1717,7 +1717,7 @@ static INLINE void highbd_down2_symeven_mm_gather_load_8x8(const uint16_t* in, _
 static INLINE void highbd_down2_symeven_mm256_gather_load_8x8(const uint16_t* in, __m256i dst[8], __m256i vindex) {
     __m256i load = _mm256_i32gather_epi32((const int*)in, vindex, 2);
     dst[0]       = _mm256_and_si256(load,
-                                    _mm256_set1_epi32(0xffff)); // col 0
+                              _mm256_set1_epi32(0xffff)); // col 0
     dst[1]       = _mm256_srli_epi32(load, 16); // col 1
 
     load   = _mm256_i32gather_epi32((const int*)(in + 2), vindex, 2);

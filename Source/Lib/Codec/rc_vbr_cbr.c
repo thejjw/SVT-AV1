@@ -1066,7 +1066,7 @@ static int get_active_best_quality(PictureControlSet* pcs, int active_worst_qual
     ASSIGN_MINQ_TABLE(bit_depth, inter_minq);
     int active_best_quality = 0;
     int is_leaf_frame       = !(ppcs->update_type == SVT_AV1_GF_UPDATE || ppcs->update_type == SVT_AV1_ARF_UPDATE ||
-                                is_intrl_arf_boost);
+                          is_intrl_arf_boost);
     int is_overlay_frame    = ppcs->is_overlay;
 
     if (is_leaf_frame || is_overlay_frame) {
@@ -1763,7 +1763,7 @@ void recode_loop_update_q(PictureParentControlSet* ppcs, bool* const loop, int* 
     RATE_CONTROL*       rc            = &enc_ctx->rc;
     RateControlCfg*     rc_cfg        = &enc_ctx->rc_cfg;
     int                 do_dummy_pack = (scs->enc_ctx->recode_loop >= ALLOW_RECODE_KFMAXBW &&
-                                         !(rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate == 0)) ||
+                         !(rc_cfg->mode == AOM_Q && scs->static_config.max_bit_rate == 0)) ||
         rc_cfg->min_cr > 0;
     if (do_dummy_pack) {
         svt_block_on_mutex(ppcs->pcs_total_rate_mutex);

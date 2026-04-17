@@ -1330,8 +1330,8 @@ static void foreach_rest_unit_in_tile_seg(const Av1PixelRect* tile_rect, int32_t
     while (y0 < yend) {
         int32_t remaining_h = tile_h - y0;
         int32_t h           = (remaining_h < ext_size)
-            ? remaining_h
-            : unit_size; //the area at the pic boundary should have size>= half unit_size to be an independent unit.
+                      ? remaining_h
+                      : unit_size; //the area at the pic boundary should have size>= half unit_size to be an independent unit.
         //if not, it will be added to the last complete unit, increasing its size to up to  3/2 unit_size.
 
         RestorationTileLimits limits;

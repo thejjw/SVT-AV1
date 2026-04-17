@@ -1217,7 +1217,7 @@ static void bipred_3x3_candidates_injection(PictureControlSet* pcs, ModeDecision
 
         int8_t best_list = -1;
         int    diff      = ((int)ctx->post_subpel_me_mv_cost[ref0_list][list0_ref_index] -
-                            (int)ctx->post_subpel_me_mv_cost[ref1_list][list1_ref_index]) *
+                    (int)ctx->post_subpel_me_mv_cost[ref1_list][list1_ref_index]) *
             100;
 
         if (ctx->bipred3x3_ctrls.use_l0_l1_dev != (uint8_t)~0) {
@@ -1755,7 +1755,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                 Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                 Mv                 to_inj_mv1 = {.as_int = ctx->ref_mv_stack[ref_pair][0].comp_mv.as_int};
                 bool               inj_mv     = (ctx->injected_mv_count == 0 ||
-                                                 !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
+                               !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                     svt_aom_is_me_data_present(ctx->me_block_offset, ctx->me_cand_offset, me_results, 0, ref_idx_0);
                 if (inj_mv) {
                     svt_aom_get_av1_mv_pred_drl(ctx,
@@ -1812,7 +1812,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                     Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                     Mv                 to_inj_mv1 = {.as_int = nearmv[1].as_int};
                     bool               inj_mv     = (ctx->injected_mv_count == 0 ||
-                                                     !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
+                                   !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                         svt_aom_is_me_data_present(ctx->me_block_offset, ctx->me_cand_offset, me_results, 0, ref_idx_0);
                     if (inj_mv) {
                         ModeDecisionCandidate* cand       = &cand_array[cand_idx];
@@ -1855,7 +1855,7 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                     Mv                 to_inj_mv0 = {.as_int = nearmv[0].as_int};
                     Mv                 to_inj_mv1 = ctx->sb_me_mv[list_idx_1][ref_idx_1];
                     bool               inj_mv     = (ctx->injected_mv_count == 0 ||
-                                                     !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
+                                   !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                         svt_aom_is_me_data_present(
                                       ctx->me_block_offset, ctx->me_cand_offset, me_results, list_idx_1, ref_idx_1);
 
@@ -1947,14 +1947,14 @@ uint8_t svt_aom_wm_motion_refinement(PictureControlSet* pcs, ModeDecisionContext
             }
             mv_record[tot_checked_pos++] = test_mv.as_int;
             uint8_t local_warp_valid     = svt_aom_warped_motion_parameters(ctx,
-                                                                            test_mv,
-                                                                            ctx->blk_geom,
-                                                                            cand->block_mi.ref_frame[0],
-                                                                            &cand->wm_params_l0,
-                                                                            &cand->block_mi.num_proj_ref,
-                                                                            ctx->wm_ctrls.lower_band_th,
-                                                                            ctx->wm_ctrls.upper_band_th,
-                                                                            shut_approx);
+                                                                        test_mv,
+                                                                        ctx->blk_geom,
+                                                                        cand->block_mi.ref_frame[0],
+                                                                        &cand->wm_params_l0,
+                                                                        &cand->block_mi.num_proj_ref,
+                                                                        ctx->wm_ctrls.lower_band_th,
+                                                                        ctx->wm_ctrls.upper_band_th,
+                                                                        shut_approx);
             if (!local_warp_valid) {
                 continue;
             }
@@ -2706,11 +2706,11 @@ static void inject_global_candidates(PictureControlSet* pcs, ModeDecisionContext
                                                              0 /* force_integer_mv */);
 
             Mv      to_inj_mv1         = svt_aom_gm_get_motion_vector_enc(gm_params_1,
-                                                                          pcs->ppcs->frm_hdr.allow_high_precision_mv,
-                                                                          ctx->blk_geom->bsize,
-                                                                          mi_col,
-                                                                          mi_row,
-                                                                          0 /* force_integer_mv */);
+                                                             pcs->ppcs->frm_hdr.allow_high_precision_mv,
+                                                             ctx->blk_geom->bsize,
+                                                             mi_col,
+                                                             mi_row,
+                                                             0 /* force_integer_mv */);
             uint8_t to_inject_ref_type = av1_ref_frame_type(rf);
 
             ModeDecisionCandidate* cand       = &cand_array[cand_total_cnt];
@@ -3287,9 +3287,9 @@ static void inject_filter_intra_candidates(PictureControlSet* pcs, ModeDecisionC
                                            uint32_t* candidate_total_cnt) {
     FilterIntraMode intra_mode_start = FILTER_DC_PRED;
     FilterIntraMode intra_mode_end   = ctx->intra_ctrls.intra_mode_end == PAETH_PRED ? FILTER_PAETH_PRED
-        : ctx->intra_ctrls.intra_mode_end >= D157_PRED                               ? FILTER_D157_PRED
-        : ctx->intra_ctrls.intra_mode_end >= H_PRED                                  ? FILTER_H_PRED
-        : ctx->intra_ctrls.intra_mode_end >= V_PRED                                  ? FILTER_V_PRED
+          : ctx->intra_ctrls.intra_mode_end >= D157_PRED                             ? FILTER_D157_PRED
+          : ctx->intra_ctrls.intra_mode_end >= H_PRED                                ? FILTER_H_PRED
+          : ctx->intra_ctrls.intra_mode_end >= V_PRED                                ? FILTER_V_PRED
                                                                                      : FILTER_DC_PRED;
     intra_mode_end                   = MIN(intra_mode_end, ctx->filter_intra_ctrls.max_filter_intra_mode);
 
@@ -4115,12 +4115,12 @@ void aom_av1_set_ssim_rdmult(ModeDecisionContext* ctx, PictureControlSet* pcs, c
             (uint32_t)((double)ctx->ed_ctx->pic_fast_lambda[EB_10_BIT_MD] * geom_mean_of_scale + 0.5);
     } else {
         ctx->full_lambda_md[EB_8_BIT_MD]  = (uint32_t)((double)ctx->full_lambda_md[EB_8_BIT_MD] * geom_mean_of_scale +
-                                                       0.5);
+                                                      0.5);
         ctx->full_lambda_md[EB_10_BIT_MD] = (uint32_t)((double)ctx->full_lambda_md[EB_10_BIT_MD] * geom_mean_of_scale +
                                                        0.5);
 
         ctx->fast_lambda_md[EB_8_BIT_MD]  = (uint32_t)((double)ctx->fast_lambda_md[EB_8_BIT_MD] * geom_mean_of_scale +
-                                                       0.5);
+                                                      0.5);
         ctx->fast_lambda_md[EB_10_BIT_MD] = (uint32_t)((double)ctx->fast_lambda_md[EB_10_BIT_MD] * geom_mean_of_scale +
                                                        0.5);
     }
