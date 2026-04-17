@@ -1416,10 +1416,12 @@ static EbErrorType svt_av1_interpolate_core_col_avx2(const uint8_t* const input,
     const __m256i vindex_pos4 = _mm256_set_epi32(
         in_stride * 3, in_stride * 3, in_stride * 3, in_stride * 3, in_stride * 3, in_stride * 2, in_stride, 0);
 
-    const int32_t  delta  = (((uint32_t)in_height << RS_SCALE_SUBPEL_BITS) + out_height / 2) / out_height;
-    const int32_t  offset = in_height > out_height
-        ? (((int32_t)(in_height - out_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height
-        : -(((int32_t)(out_height - in_height) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height;
+    const int32_t delta    = (((uint32_t)in_height << RS_SCALE_SUBPEL_BITS) + out_height / 2) / out_height;
+    const int32_t diff     = in_height - out_height;
+    const int32_t sign     = (diff > 0) - (diff < 0); // 1, 0, or -1
+    const int32_t abs_diff = diff >= 0 ? diff : -diff;
+    const int32_t offset   = sign * ((((abs_diff) << (RS_SCALE_SUBPEL_BITS - 1)) + out_height / 2) / out_height);
+
     int32_t        x, x1, x2;
     int32_t        y;
     const uint8_t* in   = NULL;
