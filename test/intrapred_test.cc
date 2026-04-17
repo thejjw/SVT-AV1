@@ -173,7 +173,7 @@ TEST_P(HighbdIntraPredTest, match_test) {
                height)
 
 #ifdef ARCH_X86_64
-constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmSSE2[] = {
+const HBD_PARAMS HighbdIntraPredTestVectorAsmSSE2[] = {
     hbd_entry(dc_128, 4, 16, sse2),  hbd_entry(dc_128, 4, 4, sse2),
     hbd_entry(dc_128, 4, 8, sse2),   hbd_entry(dc_128, 8, 16, sse2),
     hbd_entry(dc_128, 8, 32, sse2),  hbd_entry(dc_128, 8, 4, sse2),
@@ -200,7 +200,7 @@ constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmSSE2[] = {
 
 };
 
-constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmAVX2[] = {
+const HBD_PARAMS HighbdIntraPredTestVectorAsmAVX2[] = {
     hbd_entry(dc_128, 16, 16, avx2),   hbd_entry(dc_128, 16, 32, avx2),
     hbd_entry(dc_128, 16, 4, avx2),    hbd_entry(dc_128, 16, 64, avx2),
     hbd_entry(dc_128, 16, 8, avx2),    hbd_entry(dc_128, 32, 16, avx2),
@@ -270,7 +270,7 @@ constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmAVX2[] = {
     hbd_entry(paeth, 4, 8, avx2),      hbd_entry(paeth, 4, 16, avx2),
 };
 
-constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmSSSE3[] = {
+const HBD_PARAMS HighbdIntraPredTestVectorAsmSSSE3[] = {
     hbd_entry(smooth_h, 4, 16, ssse3),
     hbd_entry(smooth_h, 4, 4, ssse3),
     hbd_entry(smooth_h, 4, 8, ssse3),
@@ -294,7 +294,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr HBD_PARAMS HighbdIntraPredTestVectorAsmNEON[] = {
+const HBD_PARAMS HighbdIntraPredTestVectorAsmNEON[] = {
     hbd_entry(smooth_v, 4, 4, neon),   hbd_entry(smooth_v, 4, 8, neon),
     hbd_entry(smooth_v, 4, 16, neon),  hbd_entry(smooth_v, 8, 4, neon),
     hbd_entry(smooth_v, 8, 8, neon),   hbd_entry(smooth_v, 8, 16, neon),
@@ -407,7 +407,7 @@ TEST_P(LowbdIntraPredTest, match_test) {
                height)
 
 #ifdef ARCH_X86_64
-constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmSSE2[] = {
+const LBD_PARAMS LowbdIntraPredTestVectorAsmSSE2[] = {
     lbd_entry(dc, 4, 4, sse2),        lbd_entry(dc, 8, 8, sse2),
     lbd_entry(dc, 16, 16, sse2),      lbd_entry(dc, 16, 32, sse2),
     lbd_entry(dc, 16, 4, sse2),       lbd_entry(dc, 16, 64, sse2),
@@ -452,7 +452,7 @@ constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmSSE2[] = {
     lbd_entry(h, 8, 4, sse2),
 };
 
-constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmAVX2[] = {
+const LBD_PARAMS LowbdIntraPredTestVectorAsmAVX2[] = {
     lbd_entry(dc, 32, 32, avx2),      lbd_entry(dc, 64, 64, avx2),
     lbd_entry(dc, 32, 16, avx2),      lbd_entry(dc, 32, 64, avx2),
     lbd_entry(dc, 64, 16, avx2),      lbd_entry(dc, 64, 32, avx2),
@@ -476,7 +476,7 @@ constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmAVX2[] = {
     lbd_entry(paeth, 64, 64, avx2),
 };
 
-constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmSSSE3[] = {
+const LBD_PARAMS LowbdIntraPredTestVectorAsmSSSE3[] = {
     lbd_entry(smooth_h, 64, 64, ssse3), lbd_entry(smooth_h, 32, 32, ssse3),
     lbd_entry(smooth_h, 16, 16, ssse3), lbd_entry(smooth_h, 8, 8, ssse3),
     lbd_entry(smooth_h, 4, 4, ssse3),   lbd_entry(smooth_h, 16, 32, ssse3),
@@ -529,7 +529,7 @@ INSTANTIATE_TEST_SUITE_P(SSSE3, LowbdIntraPredTest,
 
 #ifdef ARCH_AARCH64
 
-constexpr LBD_PARAMS LowbdIntraPredTestVectorAsmNEON[] = {
+const LBD_PARAMS LowbdIntraPredTestVectorAsmNEON[] = {
     lbd_entry(dc, 4, 4, neon),         lbd_entry(dc, 4, 8, neon),
     lbd_entry(dc, 4, 16, neon),        lbd_entry(dc, 8, 4, neon),
     lbd_entry(dc, 8, 8, neon),         lbd_entry(dc, 8, 16, neon),

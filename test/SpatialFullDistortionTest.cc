@@ -56,7 +56,7 @@ class SpatialFullDistortionFuncTestBase : public ::testing::Test {
     std::vector<uint8_t> recon_{};
 };
 
-constexpr AreaSize TEST_AREA_SIZES[] = {
+const AreaSize TEST_AREA_SIZES[] = {
     AreaSize(4, 4),    AreaSize(4, 8),    AreaSize(8, 4),   AreaSize(8, 8),
     AreaSize(16, 16),  AreaSize(12, 16),  AreaSize(4, 16),  AreaSize(16, 4),
     AreaSize(16, 8),   AreaSize(20, 16),  AreaSize(24, 16), AreaSize(28, 16),

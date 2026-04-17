@@ -202,7 +202,7 @@ TEST_P(InvTxfm2dAsmSqrTest, sqr_txfm_match_test) {
 
 #ifdef ARCH_X86_64
 
-constexpr InvSqrTxfmTestParam sqr_inv_txfm_c_sse4_1_func_pairs[10] = {
+const InvSqrTxfmTestParam sqr_inv_txfm_c_sse4_1_func_pairs[10] = {
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x4, sse4_1, TX_4X4,
                    dct_adst_combine_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x8, sse4_1, TX_8X8, all_txtype_imp),
@@ -217,7 +217,7 @@ constexpr InvSqrTxfmTestParam sqr_inv_txfm_c_sse4_1_func_pairs[10] = {
 INSTANTIATE_TEST_SUITE_P(SSE4_1, InvTxfm2dAsmSqrTest,
                          ::testing::ValuesIn(sqr_inv_txfm_c_sse4_1_func_pairs));
 
-constexpr InvSqrTxfmTestParam sqr_inv_txfm_c_avx2_func_pairs[10] = {
+const InvSqrTxfmTestParam sqr_inv_txfm_c_avx2_func_pairs[10] = {
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x4, avx2, TX_4X4, all_txtype_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x8, avx2, TX_8X8, all_txtype_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_16x16, avx2, TX_16X16,
@@ -231,7 +231,7 @@ constexpr InvSqrTxfmTestParam sqr_inv_txfm_c_avx2_func_pairs[10] = {
 INSTANTIATE_TEST_SUITE_P(AVX2, InvTxfm2dAsmSqrTest,
                          ::testing::ValuesIn(sqr_inv_txfm_c_avx2_func_pairs));
 
-constexpr InvSqrTxfmTestParam sqr_dav1d_inv_txfm_c_avx2_func_pairs[10] = {
+const InvSqrTxfmTestParam sqr_dav1d_inv_txfm_c_avx2_func_pairs[10] = {
     SQR_FUNC_PAIRS_DAV1D(inv_txfm2d_add_4x4, avx2, TX_4X4, all_txtype_imp),
     SQR_FUNC_PAIRS_DAV1D(inv_txfm2d_add_8x8, avx2, TX_8X8, all_txtype_imp),
     SQR_FUNC_PAIRS_DAV1D(inv_txfm2d_add_16x16, avx2, TX_16X16, all_txtype_imp),
@@ -246,7 +246,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::ValuesIn(sqr_dav1d_inv_txfm_c_avx2_func_pairs));
 
 #if EN_AVX512_SUPPORT
-constexpr InvSqrTxfmTestParam sqr_inv_txfm_c_avx512_func_pairs[6] = {
+const InvSqrTxfmTestParam sqr_inv_txfm_c_avx512_func_pairs[6] = {
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_16x16, avx512, TX_16X16,
                    all_txtype_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_32x32, avx512, TX_32X32,
@@ -262,7 +262,7 @@ INSTANTIATE_TEST_SUITE_P(AVX512, InvTxfm2dAsmSqrTest,
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr InvSqrTxfmTestParam inv_txfm_c_neon_func_pairs[10] = {
+const InvSqrTxfmTestParam inv_txfm_c_neon_func_pairs[10] = {
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x4, neon, TX_4X4, all_txtype_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x8, neon, TX_8X8, all_txtype_imp),
     SQR_FUNC_PAIRS(svt_av1_inv_txfm2d_add_16x16, neon, TX_16X16,
@@ -350,7 +350,7 @@ TEST_P(InvTxfm2dAsmType1Test, rect_type1_txfm_match_test) {
     }
 
 #ifdef ARCH_X86_64
-constexpr InvRectTxfmType1TestParam rect_type1_ref_funcs_sse4_1[20] = {
+const InvRectTxfmType1TestParam rect_type1_ref_funcs_sse4_1[20] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x16_c,
                           svt_av1_highbd_inv_txfm_add_sse4_1, TX_8X16),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x32_c,
@@ -376,7 +376,7 @@ constexpr InvRectTxfmType1TestParam rect_type1_ref_funcs_sse4_1[20] = {
 INSTANTIATE_TEST_SUITE_P(SSE4_1, InvTxfm2dAsmType1Test,
                          ::testing::ValuesIn(rect_type1_ref_funcs_sse4_1));
 
-constexpr InvRectTxfmType1TestParam rect_type1_ref_funcs_avx2[20] = {
+const InvRectTxfmType1TestParam rect_type1_ref_funcs_avx2[20] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x16_c,
                           svt_dav1d_highbd_inv_txfm_add_avx2, TX_8X16),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x32_c,
@@ -403,7 +403,7 @@ INSTANTIATE_TEST_SUITE_P(AVX2, InvTxfm2dAsmType1Test,
                          ::testing::ValuesIn(rect_type1_ref_funcs_avx2));
 
 #if EN_AVX512_SUPPORT
-constexpr InvRectTxfmType1TestParam rect_type1_ref_funcs_avx512[12] = {
+const InvRectTxfmType1TestParam rect_type1_ref_funcs_avx512[12] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_16x32_c,
                           svt_av1_inv_txfm2d_add_16x32_avx512, TX_16X32),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_16x64_c,
@@ -425,7 +425,7 @@ INSTANTIATE_TEST_SUITE_P(AVX512, InvTxfm2dAsmType1Test,
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr InvRectTxfmType1TestParam rect_type1_ref_funcs_neon[20] = {
+const InvRectTxfmType1TestParam rect_type1_ref_funcs_neon[20] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x16_c,
                           svt_av1_inv_txfm2d_add_8x16_neon, TX_8X16),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x32_c,
@@ -507,7 +507,7 @@ TEST_P(InvTxfm2dAsmType2Test, rect_type2_txfm_match_test) {
 }
 
 #ifdef ARCH_X86_64
-constexpr InvRectTxfmType2TestParam rect_type2_ref_funcs_sse4_1[8] = {
+const InvRectTxfmType2TestParam rect_type2_ref_funcs_sse4_1[8] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x8_c,
                           svt_av1_inv_txfm2d_add_4x8_sse4_1, TX_4X8),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x4_c,
@@ -521,7 +521,7 @@ constexpr InvRectTxfmType2TestParam rect_type2_ref_funcs_sse4_1[8] = {
 INSTANTIATE_TEST_SUITE_P(SSE4_1, InvTxfm2dAsmType2Test,
                          ::testing::ValuesIn(rect_type2_ref_funcs_sse4_1));
 
-constexpr InvRectTxfmType2TestParam rect_type2_ref_funcs_avx2[8] = {
+const InvRectTxfmType2TestParam rect_type2_ref_funcs_avx2[8] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x8_c,
                           svt_dav1d_inv_txfm2d_add_4x8_avx2, TX_4X8),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_8x4_c,
@@ -538,7 +538,7 @@ INSTANTIATE_TEST_SUITE_P(AVX2, InvTxfm2dAsmType2Test,
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr InvRectTxfmType2TestParam rect_type2_ref_funcs_neon[8] = {
+const InvRectTxfmType2TestParam rect_type2_ref_funcs_neon[8] = {
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x8_c,
                           svt_av1_inv_txfm2d_add_4x8_neon, TX_4X8),
     RECT_TYPE1_FUNC_PAIRS(svt_av1_inv_txfm2d_add_4x16_c,
@@ -700,7 +700,7 @@ TEST_P(HandleTransformTest, match_test) {
 }
 
 #ifdef ARCH_X86_64
-constexpr HandleTransformParam HandleTransformArrAVX2[10] = {
+const HandleTransformParam HandleTransformArrAVX2[10] = {
     // clang-format off
     { svt_handle_transform16x64_c, svt_handle_transform16x64_avx2, TX_16X64 },
     { svt_handle_transform32x64_c, svt_handle_transform32x64_avx2, TX_32X64 },
@@ -725,7 +725,7 @@ INSTANTIATE_TEST_SUITE_P(AVX2, HandleTransformTest,
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr HandleTransformParam HandleTransformArrNEON[10] = {
+const HandleTransformParam HandleTransformArrNEON[10] = {
     // clang-format off
     { svt_handle_transform16x64_c, svt_handle_transform16x64_neon, TX_16X64 },
     { svt_handle_transform32x64_c, svt_handle_transform32x64_neon, TX_32X64 },

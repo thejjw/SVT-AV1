@@ -235,7 +235,7 @@ TEST_P(HbdLoopFilterTest, MatchTestRandomData) {
 #ifdef ARCH_X86_64
 // target and reference functions in different cases
 /* clang-format off */
-constexpr HbdLpfTestParam kHbdLoop8Test6[] = {
+const HbdLpfTestParam kHbdLoop8Test6[] = {
     make_tuple(&svt_aom_highbd_lpf_horizontal_4_sse2,
                &svt_aom_highbd_lpf_horizontal_4_c, 8),
     make_tuple(&svt_aom_highbd_lpf_horizontal_6_sse2,
@@ -290,7 +290,7 @@ constexpr HbdLpfTestParam kHbdLoop8Test6[] = {
     make_tuple(&svt_aom_highbd_lpf_vertical_14_sse2,
                &svt_aom_highbd_lpf_vertical_14_c, 12)};
 
-constexpr LdbLpfTestParam kLoop8Test6[] = {
+const LdbLpfTestParam kLoop8Test6[] = {
     make_tuple(&svt_aom_lpf_horizontal_4_sse2, &svt_aom_lpf_horizontal_4_c, 8),
     make_tuple(&svt_aom_lpf_vertical_4_sse2, &svt_aom_lpf_vertical_4_c, 8),
     make_tuple(&svt_aom_lpf_horizontal_6_sse2, &svt_aom_lpf_horizontal_6_c, 8),
@@ -309,7 +309,7 @@ INSTANTIATE_TEST_SUITE_P(SSE2, HbdLoopFilterTest,
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
-constexpr LdbLpfTestParam kLoop8Test6[] = {
+const LdbLpfTestParam kLoop8Test6[] = {
     make_tuple(&svt_aom_lpf_horizontal_4_neon, &svt_aom_lpf_horizontal_4_c, 8),
     make_tuple(&svt_aom_lpf_vertical_4_neon, &svt_aom_lpf_vertical_4_c, 8),
     make_tuple(&svt_aom_lpf_horizontal_6_neon, &svt_aom_lpf_horizontal_6_c, 8),
@@ -324,7 +324,7 @@ constexpr LdbLpfTestParam kLoop8Test6[] = {
 INSTANTIATE_TEST_SUITE_P(NEON, LbdLoopFilterTest,
                          ::testing::ValuesIn(kLoop8Test6));
 
-constexpr HbdLpfTestParam kHbdLoop8Test6[] = {
+const HbdLpfTestParam kHbdLoop8Test6[] = {
     make_tuple(&svt_aom_highbd_lpf_horizontal_4_neon,
                &svt_aom_highbd_lpf_horizontal_4_c, 8),
     make_tuple(&svt_aom_highbd_lpf_horizontal_6_neon,
