@@ -1627,9 +1627,7 @@ uint32_t svt_aom_sad_16b_kernel_neon(uint16_t* src, uint32_t src_stride, uint16_
     return acc;
 }
 
-// ============================================================
-// svt_aom_sadMxN_neon — thin RTCD wrappers calling sadNxh_neon helpers
-// ============================================================
+// svt_aom_sadMxN_neon: thin RTCD wrappers calling sad{W}xh_neon helpers.
 
 // The RTCD API uses int strides; the NEON helpers use uint32_t strides.
 // Strides are always positive in SVT-AV1 (no negative-stride reverse references),
@@ -1664,12 +1662,8 @@ DEFINE_SAD_MXN_NEON(64, 128, sad64xh_neon)
 DEFINE_SAD_MXN_NEON(128, 64, sad128xh_neon)
 DEFINE_SAD_MXN_NEON(128, 128, sad128xh_neon)
 
-// ============================================================
-// svt_aom_sadMxNx4d_neon — x4D wrappers (4 independent reference pointers)
-//
-// Uses sad{W}xh_indep4d_neon helpers which load source once per row and compute
-// SAD against 4 fully-independent reference pointers in parallel.
-// ============================================================
+// svt_aom_sadMxNx4d_neon: wrappers using sad{W}xh_indep4d_neon helpers which load
+// source once per row and compute SAD against 4 fully-independent reference pointers.
 
 #define DEFINE_SAD_MXNx4D_NEON(m, n, helper4d)                                                                         \
     void svt_aom_sad##m##x##n##x4d_neon(                                                                               \

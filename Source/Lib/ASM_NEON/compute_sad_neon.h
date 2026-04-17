@@ -632,27 +632,19 @@ static inline uint32_t sadwxh_neon(const uint8_t* src, uint32_t src_stride, cons
     return sum + vaddvq_u32(sum_u32);
 }
 
-// ============================================================
-// sad{W}xh_indep4d_neon — 4-way parallel SAD with independent reference pointers
+// sad{W}xh_indep4d_neon: 4-way parallel SAD with independent reference pointers.
 //
 // Unlike sad{W}xhx4d_neon (which assumes 4 adjacent reference offsets for motion
 // search), these helpers accept 4 fully-independent reference pointers as required
 // by the RTCD svt_aom_sadMxNx4d API.
 //
-// Why sad4d_reduce_u16x8 instead of horizontal_add_4d_u16x8 for w>=16:
-//
+// sad4d_reduce_u16x8 is used instead of horizontal_add_4d_u16x8 for w>=16 because
 // horizontal_add_4d_u16x8() reduces via two stages of vpaddq_u16 (uint16 pairwise),
-// so intermediate values reach 4 × per_lane before the final vpaddlq_u16 widening.
-// When per_lane > 16383, the product 4 × per_lane exceeds 65535 and wraps in uint16.
-//
-// For w=16, h=64:  per_lane = 64 × 510 = 32640   →  4 × 32640 = 130560  OVERFLOW
-// For w=32, h=64:  per_lane = 128 × 510 = 65280   →  4 × 65280 = 261120  OVERFLOW
-//   (note: 65280 < 65535 so the accumulator itself is safe, but horizontal_add
-//    is still not usable — sad4d_reduce_u16x8 is required, not merely preferred)
-//
-// For w=4, h<=16:  per_lane = 8 × 255 = 2040      →  4 × 2040 = 8160  safe
-// For w=8, h<=32:  per_lane = 32 × 255 = 8160     →  4 × 8160 = 32640  safe
-// ============================================================
+// so intermediate values reach 4*per_lane before the final vpaddlq_u16 widening.
+// When per_lane > 16383, 4*per_lane exceeds 65535 and wraps in uint16:
+//   w=16, h=64: per_lane = 64*510 = 32640, 4*32640 = 130560  OVERFLOW
+//   w=32, h=64: per_lane = 128*510 = 65280, 4*65280 = 261120  OVERFLOW
+// For w=4/8 the per-lane max stays below 16383 so horizontal_add_4d_u16x8 is safe.
 
 static inline uint32x4_t sad4d_reduce_u16x8(const uint16x8_t sum[4]) {
     // Pairwise promote each accumulator to uint32, then reduce across refs.
@@ -660,14 +652,12 @@ static inline uint32x4_t sad4d_reduce_u16x8(const uint16x8_t sum[4]) {
     const uint32x4_t a1 = vpaddlq_u16(sum[1]);
     const uint32x4_t a2 = vpaddlq_u16(sum[2]);
     const uint32x4_t a3 = vpaddlq_u16(sum[3]);
-    // vpaddq_u32: [sum[0]_half0, sum[0]_half1, sum[1]_half0, sum[1]_half1]
-    //           + [sum[2]_half0, sum[2]_half1, sum[3]_half0, sum[3]_half1]
-    // → [total(sum[0]), total(sum[1]), total(sum[2]), total(sum[3])]
+    // Two-stage pairwise reduction: produces [total(sum[0]), total(sum[1]), total(sum[2]), total(sum[3])].
     return vpaddq_u32(vpaddq_u32(a0, a1), vpaddq_u32(a2, a3));
 }
 
-// w=4: 2 rows per iteration via load_u8_4x2; per lane = (h/2)*255*2 = h*255.
-// For h<=16 (max AV1 w=4 height): per_lane<=4080, 4×4080=16320 — safe for
+// w=4: 2 rows per iteration via load_u8_4x2; per lane = (h/2)*255.
+// For h<=16 (max AV1 w=4 height): per_lane<=2040, 4*2040=8160 -- safe for
 // horizontal_add_4d_u16x8 (threshold: per_lane <= 16383).
 static inline uint32x4_t sad4xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
                                              const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
@@ -696,7 +686,7 @@ static inline uint32x4_t sad4xh_indep4d_neon(const uint8_t* src, uint32_t src_st
     return horizontal_add_4d_u16x8(sum);
 }
 
-// w=8: 1 row/iter; max per lane = h*255. For h<=32: per lane<=8160, 4x<=32640 — safe.
+// w=8: 1 row/iter; max per lane = h*255. For h<=32: per lane<=8160, 4x<=32640 -- safe.
 static inline uint32x4_t sad8xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
                                              const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
                                              uint32_t ref_stride, uint32_t h) {
