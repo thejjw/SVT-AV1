@@ -740,8 +740,8 @@ static inline uint32x4_t sad16xh_indep4d_neon(const uint8_t* src, uint32_t src_s
 }
 
 // w=32: 1 row/iter, 2 chunks accumulated into a single sum[4].
-// Per lane = 2 chunks × h × 510 = 128 × 510 = 65280 < 65535 — uint16 accumulator safe.
-// However horizontal_add_4d_u16x8 is NOT usable: its intermediate 4×65280=261120
+// Per lane = 2 chunks * h * 510 = 128 * 510 = 65280 < 65535 -- uint16 accumulator safe.
+// However horizontal_add_4d_u16x8 is NOT usable: its intermediate 4*65280=261120
 // overflows uint16. sad4d_reduce_u16x8 (vpaddlq_u16 first) is required.
 static inline uint32x4_t sad32xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
                                               const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
