@@ -66,7 +66,7 @@ const AreaSize TEST_AREA_SIZES[] = {
     AreaSize(96, 128), AreaSize(64, 128), AreaSize(128, 64)};
 
 using SpatialKernelTestParam =
-    std::tuple<AreaSize, typeof(&svt_spatial_full_distortion_kernel_c)>;
+    std::tuple<AreaSize, decltype(&svt_spatial_full_distortion_kernel_c)>;
 
 /**
  * @brief Unit test for spatial distortion calculation functions include:
@@ -306,7 +306,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif
 
 using FullDistortionKernel32Bits =
-    ::testing::TestWithParam<typeof(&svt_full_distortion_kernel32_bits_c)>;
+    ::testing::TestWithParam<decltype(&svt_full_distortion_kernel32_bits_c)>;
 
 TEST_P(FullDistortionKernel32Bits, CheckOutput) {
     std::array<uint64_t, DIST_CALC_TOTAL> result_ref;
@@ -364,7 +364,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif
 
 using FullDistortionKernelCbfZero32Bits = ::testing::TestWithParam<
-    typeof(&svt_full_distortion_kernel_cbf_zero32_bits_c)>;
+    decltype(&svt_full_distortion_kernel_cbf_zero32_bits_c)>;
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(
     FullDistortionKernelCbfZero32Bits);
 

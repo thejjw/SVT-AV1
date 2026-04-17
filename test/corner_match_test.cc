@@ -20,7 +20,7 @@
 namespace {
 using libaom_test::ACMRandom;
 
-using ComputeCrossCorrFunc = typeof(&svt_av1_compute_cross_correlation_c);
+using ComputeCrossCorrFunc = decltype(&svt_av1_compute_cross_correlation_c);
 using CornerMatchParam = std::tuple<int, int, ComputeCrossCorrFunc>;
 
 class AV1CornerMatchTest : public ::testing::TestWithParam<CornerMatchParam> {

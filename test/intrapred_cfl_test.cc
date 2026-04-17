@@ -174,7 +174,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, HbdCflPredTest,
                          ::testing::Values(svt_cfl_predict_hbd_neon));
 #endif  // ARCH_AARCH64
 
-using AomUpsampledPredFunc = typeof(&svt_aom_upsampled_pred_c);
+using AomUpsampledPredFunc = decltype(&svt_aom_upsampled_pred_c);
 
 using AomUpsampledPredParam =
     ::testing::tuple<BlockSize, AomUpsampledPredFunc, int, int, int, uint64_t>;
@@ -293,7 +293,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif  // HAVE_NEON_I8MM
 #endif  // ARCH_AARCH64
 
-using CflLumaSubsamplingLbdFunc = typeof(&svt_cfl_luma_subsampling_420_lbd_c);
+using CflLumaSubsamplingLbdFunc = decltype(&svt_cfl_luma_subsampling_420_lbd_c);
 
 using CflLumaSubsamplingLbdParam =
     ::testing::tuple<BlockSize, CflLumaSubsamplingLbdFunc>;
@@ -357,7 +357,7 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(svt_cfl_luma_subsampling_420_lbd_neon)));
 #endif
 
-using CflLumaSubsamplingHbdFunc = typeof(&svt_cfl_luma_subsampling_420_hbd_c);
+using CflLumaSubsamplingHbdFunc = decltype(&svt_cfl_luma_subsampling_420_hbd_c);
 using CflLumaSubsamplingHbdParam =
     ::testing::tuple<BlockSize, CflLumaSubsamplingHbdFunc>;
 

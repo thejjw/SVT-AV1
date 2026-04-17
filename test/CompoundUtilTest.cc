@@ -130,7 +130,7 @@ class CompBlendTest : public ::testing::TestWithParam<BlendTestParam> {
     int w_{}, h_{};
 };
 
-using LbdBlendA64MaskFunc = typeof(&svt_aom_blend_a64_mask_c);
+using LbdBlendA64MaskFunc = decltype(&svt_aom_blend_a64_mask_c);
 
 class LbdCompBlendTest
     : public CompBlendTest<uint8_t, uint8_t, LbdBlendA64MaskFunc, 8> {
@@ -181,7 +181,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, LbdCompBlendTest,
                          ::testing::Values(svt_aom_blend_a64_mask_neon));
 #endif  // ARCH_AARCH64
 
-using LbdBlendA64D16MaskFunc = typeof(&svt_aom_lowbd_blend_a64_d16_mask_c);
+using LbdBlendA64D16MaskFunc = decltype(&svt_aom_lowbd_blend_a64_d16_mask_c);
 
 class LbdCompBlendD16Test
     : public CompBlendTest<uint16_t, uint8_t, LbdBlendA64D16MaskFunc, 8, true> {
@@ -240,7 +240,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(svt_aom_lowbd_blend_a64_d16_mask_neon));
 #endif  // ARCH_AARCH64
 
-using LbdBlendA64HMaskFunc = typeof(&svt_aom_blend_a64_hmask_c);
+using LbdBlendA64HMaskFunc = decltype(&svt_aom_blend_a64_hmask_c);
 
 class LbdCompBlendHMaskTest
     : public CompBlendTest<uint8_t, uint8_t, LbdBlendA64HMaskFunc, 8, false,
@@ -291,7 +291,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, LbdCompBlendHMaskTest,
                          ::testing::Values(svt_aom_blend_a64_hmask_neon));
 #endif  // ARCH_AARCH64
 
-using LbdBlendA64VMaskFunc = typeof(&svt_aom_blend_a64_vmask_c);
+using LbdBlendA64VMaskFunc = decltype(&svt_aom_blend_a64_vmask_c);
 
 class LbdCompBlendVMaskTest
     : public CompBlendTest<uint8_t, uint8_t, LbdBlendA64VMaskFunc, 8, false,
@@ -342,7 +342,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, LbdCompBlendVMaskTest,
                          ::testing::Values(svt_aom_blend_a64_vmask_neon));
 #endif  // ARCH_AARCH64
 
-using HbdBlendA64MaskFunc = typeof(&svt_aom_highbd_blend_a64_mask_c);
+using HbdBlendA64MaskFunc = decltype(&svt_aom_highbd_blend_a64_mask_c);
 
 template <int bd_to_test>
 class HbdCompBlendTest : public CompBlendTest<uint16_t, uint16_t,
@@ -407,7 +407,7 @@ INSTANTIATE_HBD_BLEND_TEST(NEON, HbdCompBlendTest,
                            svt_aom_highbd_blend_a64_mask_neon);
 #endif  // ARCH_AARCH64
 
-using HbdBlendA64D16MaskFunc = typeof(&svt_aom_highbd_blend_a64_d16_mask_c);
+using HbdBlendA64D16MaskFunc = decltype(&svt_aom_highbd_blend_a64_d16_mask_c);
 
 template <int bd_to_test>
 class HbdCompBlendD16Test
@@ -478,7 +478,7 @@ INSTANTIATE_HBD_BLEND_TEST(NEON, HbdCompBlendD16Test,
 #endif  // ARCH_AARCH64
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-using HbdBlendA64HMaskFunc = typeof(&svt_aom_highbd_blend_a64_hmask_16bit_c);
+using HbdBlendA64HMaskFunc = decltype(&svt_aom_highbd_blend_a64_hmask_16bit_c);
 
 template <int bd_to_test>
 class HbdCompBlendHMaskTest
@@ -542,7 +542,7 @@ INSTANTIATE_HBD_BLEND_TEST(NEON, HbdCompBlendHMaskTest,
                            svt_aom_highbd_blend_a64_hmask_16bit_neon);
 #endif  // ARCH_AARCH64
 
-using HbdBlendA64VMaskFunc = typeof(&svt_aom_highbd_blend_a64_vmask_16bit_c);
+using HbdBlendA64VMaskFunc = decltype(&svt_aom_highbd_blend_a64_vmask_16bit_c);
 
 template <int bd_to_test>
 class HbdCompBlendVMaskTest
@@ -609,7 +609,7 @@ INSTANTIATE_HBD_BLEND_TEST(NEON, HbdCompBlendVMaskTest,
 #endif  // CONFIG_ENABLE_HIGH_BIT_DEPTH
 
 using BuildCompDiffwtdMaskedFunc =
-    typeof(&svt_av1_build_compound_diffwtd_mask_c);
+    decltype(&svt_av1_build_compound_diffwtd_mask_c);
 using BuildCompDiffwtdMaskParam =
     std::tuple<BlockSize, BuildCompDiffwtdMaskedFunc>;
 
@@ -691,7 +691,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif  // ARCH_AARCH64
 
 using BuildCompDiffwtdMaskedHighbdFunc =
-    typeof(&svt_av1_build_compound_diffwtd_mask_highbd_c);
+    decltype(&svt_av1_build_compound_diffwtd_mask_highbd_c);
 using BuildCompDiffwtdMaskHighbdParam =
     std::tuple<BlockSize, BuildCompDiffwtdMaskedHighbdFunc>;
 
@@ -779,7 +779,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 // test svt_av1_build_compound_diffwtd_mask_d16_avx2
 using BuildCompDiffwtdMaskD16Func =
-    typeof(&svt_av1_build_compound_diffwtd_mask_d16_c);
+    decltype(&svt_av1_build_compound_diffwtd_mask_d16_c);
 
 using BuildCompDiffwtdMaskD16Param =
     std::tuple<int, BuildCompDiffwtdMaskD16Func, BlockSize>;
@@ -1105,7 +1105,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
 
-using AomHighbdSubtractBlockFunc = typeof(&svt_aom_highbd_subtract_block_c);
+using AomHighbdSubtractBlockFunc = decltype(&svt_aom_highbd_subtract_block_c);
 using AomHighbdSubtractBlockParam =
     std::tuple<BlockSize, AomHighbdSubtractBlockFunc>;
 

@@ -65,7 +65,7 @@ class InvTxfm2dAsmTestBase : public ::testing::TestWithParam<Params> {
     // some tx_size;
     void populate_with_random(const int width, const int height,
                               const TxType tx_type, const TxSize tx_size) {
-        constexpr typeof(&svt_av1_transform_two_d_4x4_c)
+        constexpr decltype(&svt_av1_transform_two_d_4x4_c)
             fwd_txfm_func[TX_SIZES_ALL]{
                 svt_av1_transform_two_d_4x4_c,
                 svt_av1_transform_two_d_8x8_c,
@@ -184,19 +184,19 @@ TEST_P(InvTxfm2dAsmSqrTest, sqr_txfm_match_test) {
 
 // clang-format off
 #define SQR_FUNC_PAIRS(name, type, tx_size, is_tx_type_imp)                 \
-    {8,reinterpret_cast<typeof(&name##_c)>(name##_c),                          \
-     reinterpret_cast<typeof(&name##_c)>(name##_##type), is_tx_type_imp,     \
+    {8,reinterpret_cast<decltype(&name##_c)>(name##_c),                          \
+     reinterpret_cast<decltype(&name##_c)>(name##_##type), is_tx_type_imp,     \
      tx_size},                                                           \
-    {10, reinterpret_cast<typeof(&name##_c)>(name##_c),                          \
-     reinterpret_cast<typeof(&name##_c)>(name##_##type), is_tx_type_imp,     \
+    {10, reinterpret_cast<decltype(&name##_c)>(name##_c),                          \
+     reinterpret_cast<decltype(&name##_c)>(name##_##type), is_tx_type_imp,     \
      tx_size}
 
 #define SQR_FUNC_PAIRS_DAV1D(name, type, tx_size, is_tx_type_imp)          \
-    {8, reinterpret_cast<typeof(&svt_av1_##name##_c)>(svt_av1_##name##_c),               \
-     reinterpret_cast<typeof(&svt_av1_##name##_c)>(svt_dav1d_##name##_##type),        \
+    {8, reinterpret_cast<decltype(&svt_av1_##name##_c)>(svt_av1_##name##_c),               \
+     reinterpret_cast<decltype(&svt_av1_##name##_c)>(svt_dav1d_##name##_##type),        \
      is_tx_type_imp, tx_size},                                          \
-    {10, reinterpret_cast<typeof(&svt_av1_##name##_c)>(svt_av1_##name##_c),               \
-     reinterpret_cast<typeof(&svt_av1_##name##_c)>(svt_dav1d_##name##_##type),        \
+    {10, reinterpret_cast<decltype(&svt_av1_##name##_c)>(svt_av1_##name##_c),               \
+     reinterpret_cast<decltype(&svt_av1_##name##_c)>(svt_dav1d_##name##_##type),        \
      is_tx_type_imp, tx_size}
 // clang-format on
 
@@ -337,16 +337,16 @@ TEST_P(InvTxfm2dAsmType1Test, rect_type1_txfm_match_test) {
     }
 }
 
-#define RECT_TYPE1_FUNC_PAIRS(c, asm, tx_size)          \
-    {                                                   \
-        8,                                              \
-        reinterpret_cast<typeof(&c)>(c),                \
-        reinterpret_cast<typeof(&c)>(asm),              \
-        tx_size,                                        \
-    },                                                  \
-    {                                                   \
-        10, reinterpret_cast<typeof(&c)>(c),            \
-            reinterpret_cast<typeof(&c)>(asm), tx_size, \
+#define RECT_TYPE1_FUNC_PAIRS(c, asm, tx_size)            \
+    {                                                     \
+        8,                                                \
+        reinterpret_cast<decltype(&c)>(c),                \
+        reinterpret_cast<decltype(&c)>(asm),              \
+        tx_size,                                          \
+    },                                                    \
+    {                                                     \
+        10, reinterpret_cast<decltype(&c)>(c),            \
+            reinterpret_cast<decltype(&c)>(asm), tx_size, \
     }
 
 #ifdef ARCH_X86_64
@@ -555,7 +555,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, InvTxfm2dAsmType2Test,
 
 class InvTxfm2dAddTest
     : public InvTxfm2dAsmTestBase<
-          std::tuple<EbBitDepth, typeof(&svt_av1_inv_txfm_add_c)>> {
+          std::tuple<EbBitDepth, decltype(&svt_av1_inv_txfm_add_c)>> {
   public:
     void run_svt_av1_inv_txfm_add_test(const TxSize tx_size, bool lossless) {
         const auto test_func = TEST_GET_PARAM(1);

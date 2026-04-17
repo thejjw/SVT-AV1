@@ -869,7 +869,7 @@ INSTANTIATE_TEST_SUITE_P(NEON, QuantizeHbdTest,
 #endif  // ARCH_AARCH64
 
 using ComputeCulLevelTest =
-    ::testing::TestWithParam<typeof(&svt_av1_compute_cul_level_c)>;
+    ::testing::TestWithParam<decltype(&svt_av1_compute_cul_level_c)>;
 
 TEST_P(ComputeCulLevelTest, test_match) {
     const auto test_func_{GetParam()};

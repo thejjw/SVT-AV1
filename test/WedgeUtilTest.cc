@@ -55,7 +55,8 @@ class WedgeUtilTest : public ::testing::Test {
 };
 
 // test svt_av1_wedge_sign_from_residuals
-using WedgeSignFromResidualsFunc = typeof(&svt_av1_wedge_sign_from_residuals_c);
+using WedgeSignFromResidualsFunc =
+    decltype(&svt_av1_wedge_sign_from_residuals_c);
 
 constexpr auto MAX_MASK_VALUE = 1 << WEDGE_WEIGHT_BITS;
 
@@ -176,7 +177,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 // test svt_av1_wedge_compute_delta_squares
 using WedgeComputeDeltaSquaresFunc =
-    typeof(&svt_av1_wedge_compute_delta_squares_c);
+    decltype(&svt_av1_wedge_compute_delta_squares_c);
 
 class WedgeComputeDeltaSquaresTest
     : public WedgeUtilTest,
@@ -238,7 +239,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif  // ARCH_AARCH64
 
 // test svt_av1_wedge_sse_from_residuals
-using WedgeSseFromResidualsFunc = typeof(&svt_av1_wedge_sse_from_residuals_c);
+using WedgeSseFromResidualsFunc = decltype(&svt_av1_wedge_sse_from_residuals_c);
 
 class WedgeSseFromResidualsTest
     : public WedgeUtilTest,
@@ -352,7 +353,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif
 #endif  // ARCH_AARCH64
 
-using AomSumSquaresI16Func = typeof(&svt_aom_sum_squares_i16_c);
+using AomSumSquaresI16Func = decltype(&svt_aom_sum_squares_i16_c);
 using AomHSumSquaresParam = ::testing::tuple<BlockSize, AomSumSquaresI16Func>;
 
 class AomSumSquaresTest : public ::testing::TestWithParam<AomHSumSquaresParam> {

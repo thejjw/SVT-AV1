@@ -21,7 +21,7 @@ namespace libaom_test {
 
 namespace AV1WarpFilter {
 
-using warp_affine_func = typeof(&svt_av1_warp_affine_c);
+using warp_affine_func = decltype(&svt_av1_warp_affine_c);
 
 using WarpTestParam = std::tuple<int, int, int, warp_affine_func>;
 using WarpTestParams = std::tuple<WarpTestParam, int, int, int, int>;
@@ -44,7 +44,7 @@ class AV1WarpFilterTest : public ::testing::TestWithParam<WarpTestParams> {
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(AV1WarpFilterTest);
 
 namespace AV1HighbdWarpFilter {
-using highbd_warp_affine_func = typeof(&svt_av1_highbd_warp_affine_c);
+using highbd_warp_affine_func = decltype(&svt_av1_highbd_warp_affine_c);
 
 using HighbdWarpTestParam =
     std::tuple<int, int, int, int, highbd_warp_affine_func>;
