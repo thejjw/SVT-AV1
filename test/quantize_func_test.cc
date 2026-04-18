@@ -28,24 +28,48 @@ namespace {
 using std::make_tuple;
 using svt_av1_test_tool::SVTRandom;
 
-class aligned_allocator : public std::allocator<TranLow> {
+template <typename T>
+class aligned_allocator {
   public:
+    using value_type = T;
+    using pointer = T *;
+    using const_pointer = const T *;
+    using reference = T &;
+    using const_reference = const T &;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+
+    aligned_allocator() noexcept = default;
+
+    template <typename U>
+    explicit aligned_allocator(const aligned_allocator<U> &) noexcept {
+    }
+
     template <typename U>
     struct rebind {
-        using other = aligned_allocator;
+        using other = aligned_allocator<U>;
     };
 
-    static TranLow *allocate(size_t n, const void * = nullptr) {
-        if (TranLow *ptr = reinterpret_cast<TranLow *>(
-                svt_aom_memalign(32, n * sizeof(TranLow))))
+    static pointer allocate(size_type n, const void * = nullptr) {
+        if (T *ptr = reinterpret_cast<T *>(svt_aom_memalign(32, n * sizeof(T))))
             return ptr;
         throw std::bad_alloc();
     }
 
-    static void deallocate(TranLow *ptr, size_t) noexcept {
+    static void deallocate(pointer ptr, size_type) noexcept {
         svt_aom_free(ptr);
     }
 };
+
+template <typename T, typename U>
+bool operator==(const aligned_allocator<T> &, const aligned_allocator<U> &) {
+    return true;
+}
+
+template <typename T, typename U>
+bool operator!=(const aligned_allocator<T> &, const aligned_allocator<U> &) {
+    return false;
+}
 
 #define QUAN_PARAM_LIST                                                      \
     const TranLow *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr,    \
@@ -158,7 +182,7 @@ class QuantizeTest : public ::testing::TestWithParam<ParamType> {
 
     SVTRandom rnd_{32, true};
     QuanTable qtab_{};
-    std::vector<TranLow, aligned_allocator> coeff_{};
+    std::vector<TranLow, aligned_allocator<TranLow>> coeff_{};
     TxSize tx_size_{TEST_GET_PARAM(2)};
     EbBitDepth bd_{TEST_GET_PARAM(4)};
 };
