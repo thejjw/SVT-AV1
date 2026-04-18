@@ -246,8 +246,7 @@ class LbdCompBlendHMaskTest
     : public CompBlendTest<uint8_t, uint8_t, LbdBlendA64HMaskFunc, 8, false,
                            true> {
   public:
-    void run_blend(int subw [[maybe_unused]],
-                   int subh [[maybe_unused]]) override {
+    void run_blend(int, int) override {
         if (w_ > 32)
             return;
         const uint8_t *const mask = svt_av1_get_obmc_mask(w_);
@@ -297,8 +296,7 @@ class LbdCompBlendVMaskTest
     : public CompBlendTest<uint8_t, uint8_t, LbdBlendA64VMaskFunc, 8, false,
                            true> {
   public:
-    void run_blend(int subw [[maybe_unused]],
-                   int subh [[maybe_unused]]) override {
+    void run_blend(int, int) override {
         if (h_ > 32)
             return;
         const uint8_t *const mask = svt_av1_get_obmc_mask(h_);
@@ -485,8 +483,7 @@ class HbdCompBlendHMaskTest
     : public CompBlendTest<uint16_t, uint16_t, HbdBlendA64HMaskFunc, bd_to_test,
                            false, true> {
   public:
-    void run_blend(int subw [[maybe_unused]],
-                   int subh [[maybe_unused]]) override {
+    void run_blend(int, int) override {
         if (this->w_ > 32)
             return;
         const uint8_t *const mask = svt_av1_get_obmc_mask(this->w_);
@@ -549,8 +546,7 @@ class HbdCompBlendVMaskTest
     : public CompBlendTest<uint16_t, uint16_t, HbdBlendA64VMaskFunc, bd_to_test,
                            false, true> {
   public:
-    void run_blend(int subw [[maybe_unused]],
-                   int subh [[maybe_unused]]) override {
+    void run_blend(int, int) override {
         if (this->h_ > 32)
             return;
         const uint8_t *const mask = svt_av1_get_obmc_mask(this->h_);

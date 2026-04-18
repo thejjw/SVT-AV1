@@ -42,7 +42,7 @@ class aligned_allocator : public std::allocator<TranLow> {
         throw std::bad_alloc();
     }
 
-    static void deallocate(TranLow *ptr, size_t n [[maybe_unused]]) noexcept {
+    static void deallocate(TranLow *ptr, size_t) noexcept {
         svt_aom_free(ptr);
     }
 };

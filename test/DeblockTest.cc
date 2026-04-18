@@ -208,7 +208,7 @@ class LoopFilterTest : public ::testing::TestWithParam<TestParamType> {
 class LbdLoopFilterTest
     : public LoopFilterTest<uint8_t, LbdLoopFilterFunc, LdbLpfTestParam> {
   public:
-    void run_lpf(LOOP_PARAM, int bd [[maybe_unused]]) override {
+    void run_lpf(LOOP_PARAM, int) override {
         lpf_tst_(start_tst_, p, blimit, limit, thresh);
         lpf_ref_(start_ref_, p, blimit, limit, thresh);
     }
