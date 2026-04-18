@@ -965,10 +965,21 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     double ac_bias;
 
+    /**
+     * @brief High Bit-Depth Mode Decision, used to control the bit-depth of the mode decision path.
+     * -1: preset determined (auto)
+     * 0: preset-determined
+     * 1: full 10-bit MD
+     * 2: hybrid 8/10-bit MD
+     * Default is -1
+     */
+    int hbd_mds;
+
     // clang-format off
     /* Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct */
     uint8_t padding[128
         - sizeof(PredStructure) + sizeof (uint8_t) // pred_strucutre type was changed from uint8_t to PredStructure
+        - sizeof(int) // This was added to take into account the new hbd_mds field while keeping previous ABI compat
     ];
     // clang-format on
 } EbSvtAv1EncConfiguration;
