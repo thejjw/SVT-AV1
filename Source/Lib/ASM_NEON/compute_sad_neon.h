@@ -775,14 +775,21 @@ static inline uint32x4_t sad32xh_indep4d_neon(const uint8_t* src, uint32_t src_s
     return sad4d_reduce_u16x8(sum);
 }
 
-// w=64: 1 row/iter, 4 chunks; 4*h*510 per uint16 lane would overflow for large h.
-// Use separate uint16x8_t accumulator per chunk per ref (16 total); each chunk
-// accumulates at most h*510 <= 128*510 = 65280 per lane, safely under 65535.
-// Reduce each chunk group with sad4d_reduce_u16x8, then sum across chunks.
+// w=64: 16 independent uint16x8_t accumulators (4 chunks x 4 refs).
+//
+// Overflow safety: each chunk accumulates at most h*510 per lane.
+// AV1 max 64-wide block height is 64: 64*510 = 32640 < 65535 (safe).
+//
+// Why not the sum_lo/sum_hi + outer-u32 pattern used by sadwxhx4d_large_neon?
+// That pattern halves the accumulator count, but forces each acc to be updated
+// twice per row (offsets 0+32 share sum_lo, 16+48 share sum_hi), creating a
+// RAW dependency chain that serialises accumulation on every row. Benchmarked
+// on Neoverse N1 (AWS Graviton2): -22% at preset 6. The 16-acc layout gives
+// the OoO scheduler 16 independent chains and fully hides vpadalq latency.
 static inline uint32x4_t sad64xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
                                               const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
                                               uint32_t ref_stride, uint32_t h) {
-    // chunk{0..3}[ref{0..3}]: separate accumulator per 16-byte chunk per ref
+    // chunk{0..3}[ref{0..3}]: one accumulator per 16-byte chunk per ref
     uint16x8_t chunk0[4], chunk1[4], chunk2[4], chunk3[4];
     chunk0[0] = chunk0[1] = chunk0[2] = chunk0[3] = vdupq_n_u16(0);
     chunk1[0] = chunk1[1] = chunk1[2] = chunk1[3] = vdupq_n_u16(0);
