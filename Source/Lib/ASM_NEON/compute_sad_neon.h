@@ -632,4 +632,216 @@ static inline uint32_t sadwxh_neon(const uint8_t* src, uint32_t src_stride, cons
     return sum + vaddvq_u32(sum_u32);
 }
 
+// sad{W}xh_indep4d_neon: 4-way parallel SAD with independent reference pointers.
+//
+// Unlike sad{W}xhx4d_neon (which assumes 4 adjacent reference offsets for motion
+// search), these helpers accept 4 fully-independent reference pointers as required
+// by the RTCD svt_aom_sadMxNx4d API.
+//
+// sad4d_reduce_u16x8 is used instead of horizontal_add_4d_u16x8 for w>=16 because
+// horizontal_add_4d_u16x8() reduces via two stages of vpaddq_u16 (uint16 pairwise),
+// so intermediate values reach 4*per_lane before the final vpaddlq_u16 widening.
+// When per_lane > 16383, 4*per_lane exceeds 65535 and wraps in uint16:
+//   w=16, h=64: per_lane = 64*510 = 32640, 4*32640 = 130560  OVERFLOW
+//   w=32, h=64: per_lane = 128*510 = 65280, 4*65280 = 261120  OVERFLOW
+// For w=4/8 the per-lane max stays below 16383 so horizontal_add_4d_u16x8 is safe.
+
+static inline uint32x4_t sad4d_reduce_u16x8(const uint16x8_t sum[4]) {
+    // Pairwise promote each accumulator to uint32, then reduce across refs.
+    const uint32x4_t a0 = vpaddlq_u16(sum[0]);
+    const uint32x4_t a1 = vpaddlq_u16(sum[1]);
+    const uint32x4_t a2 = vpaddlq_u16(sum[2]);
+    const uint32x4_t a3 = vpaddlq_u16(sum[3]);
+    // Two-stage pairwise reduction: produces [total(sum[0]), total(sum[1]), total(sum[2]), total(sum[3])].
+    return vpaddq_u32(vpaddq_u32(a0, a1), vpaddq_u32(a2, a3));
+}
+
+// w=4: 2 rows per iteration via load_u8_4x2; per lane = (h/2)*255.
+// For h<=16 (max AV1 w=4 height): per_lane<=2040, 4*2040=8160 -- safe for
+// horizontal_add_4d_u16x8 (threshold: per_lane <= 16383).
+static inline uint32x4_t sad4xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                             const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                             uint32_t ref_stride, uint32_t h) {
+    assert(h > 0 && (h & 1) == 0); // AV1 w=4 blocks have h in {4,8,16}
+    uint16x8_t sum[4];
+    sum[0] = vdupq_n_u16(0);
+    sum[1] = vdupq_n_u16(0);
+    sum[2] = vdupq_n_u16(0);
+    sum[3] = vdupq_n_u16(0);
+
+    uint32_t i = h / 2;
+    do {
+        const uint8x8_t s = load_u8_4x2(src, src_stride);
+        sum[0]            = vabal_u8(sum[0], s, load_u8_4x2(ref0, ref_stride));
+        sum[1]            = vabal_u8(sum[1], s, load_u8_4x2(ref1, ref_stride));
+        sum[2]            = vabal_u8(sum[2], s, load_u8_4x2(ref2, ref_stride));
+        sum[3]            = vabal_u8(sum[3], s, load_u8_4x2(ref3, ref_stride));
+        src += 2 * src_stride;
+        ref0 += 2 * ref_stride;
+        ref1 += 2 * ref_stride;
+        ref2 += 2 * ref_stride;
+        ref3 += 2 * ref_stride;
+    } while (--i != 0);
+
+    return horizontal_add_4d_u16x8(sum);
+}
+
+// w=8: 1 row/iter; max per lane = h*255. For h<=32: per lane<=8160, 4x<=32640 -- safe.
+static inline uint32x4_t sad8xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                             const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                             uint32_t ref_stride, uint32_t h) {
+    uint16x8_t sum[4];
+    sum[0] = vdupq_n_u16(0);
+    sum[1] = vdupq_n_u16(0);
+    sum[2] = vdupq_n_u16(0);
+    sum[3] = vdupq_n_u16(0);
+
+    do {
+        const uint8x8_t s = vld1_u8(src);
+        sum[0]            = vabal_u8(sum[0], s, vld1_u8(ref0));
+        sum[1]            = vabal_u8(sum[1], s, vld1_u8(ref1));
+        sum[2]            = vabal_u8(sum[2], s, vld1_u8(ref2));
+        sum[3]            = vabal_u8(sum[3], s, vld1_u8(ref3));
+        src += src_stride;
+        ref0 += ref_stride;
+        ref1 += ref_stride;
+        ref2 += ref_stride;
+        ref3 += ref_stride;
+    } while (--h != 0);
+
+    return horizontal_add_4d_u16x8(sum);
+}
+
+// w=16: 1 row/iter, 1 chunk; max per lane = h*510.
+// For h<=64: per lane<=32640. Use sad4d_reduce_u16x8 (safe reduction via uint32).
+static inline uint32x4_t sad16xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                              const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                              uint32_t ref_stride, uint32_t h) {
+    uint16x8_t sum[4];
+    sum[0] = vdupq_n_u16(0);
+    sum[1] = vdupq_n_u16(0);
+    sum[2] = vdupq_n_u16(0);
+    sum[3] = vdupq_n_u16(0);
+
+    do {
+        const uint8x16_t s = vld1q_u8(src);
+        sum[0]             = vpadalq_u8(sum[0], vabdq_u8(s, vld1q_u8(ref0)));
+        sum[1]             = vpadalq_u8(sum[1], vabdq_u8(s, vld1q_u8(ref1)));
+        sum[2]             = vpadalq_u8(sum[2], vabdq_u8(s, vld1q_u8(ref2)));
+        sum[3]             = vpadalq_u8(sum[3], vabdq_u8(s, vld1q_u8(ref3)));
+        src += src_stride;
+        ref0 += ref_stride;
+        ref1 += ref_stride;
+        ref2 += ref_stride;
+        ref3 += ref_stride;
+    } while (--h != 0);
+
+    return sad4d_reduce_u16x8(sum);
+}
+
+// w=32: 1 row/iter, 2 chunks accumulated into a single sum[4].
+// Per lane = 2 chunks * h * 510 = 128 * 510 = 65280 < 65535 -- uint16 accumulator safe.
+// However horizontal_add_4d_u16x8 is NOT usable: its intermediate 4*65280=261120
+// overflows uint16. sad4d_reduce_u16x8 (vpaddlq_u16 first) is required.
+static inline uint32x4_t sad32xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                              const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                              uint32_t ref_stride, uint32_t h) {
+    uint16x8_t sum[4];
+    sum[0] = vdupq_n_u16(0);
+    sum[1] = vdupq_n_u16(0);
+    sum[2] = vdupq_n_u16(0);
+    sum[3] = vdupq_n_u16(0);
+
+    do {
+        const uint8x16_t s0 = vld1q_u8(src);
+        sum[0]              = vpadalq_u8(sum[0], vabdq_u8(s0, vld1q_u8(ref0)));
+        sum[1]              = vpadalq_u8(sum[1], vabdq_u8(s0, vld1q_u8(ref1)));
+        sum[2]              = vpadalq_u8(sum[2], vabdq_u8(s0, vld1q_u8(ref2)));
+        sum[3]              = vpadalq_u8(sum[3], vabdq_u8(s0, vld1q_u8(ref3)));
+
+        const uint8x16_t s1 = vld1q_u8(src + 16);
+        sum[0]              = vpadalq_u8(sum[0], vabdq_u8(s1, vld1q_u8(ref0 + 16)));
+        sum[1]              = vpadalq_u8(sum[1], vabdq_u8(s1, vld1q_u8(ref1 + 16)));
+        sum[2]              = vpadalq_u8(sum[2], vabdq_u8(s1, vld1q_u8(ref2 + 16)));
+        sum[3]              = vpadalq_u8(sum[3], vabdq_u8(s1, vld1q_u8(ref3 + 16)));
+
+        src += src_stride;
+        ref0 += ref_stride;
+        ref1 += ref_stride;
+        ref2 += ref_stride;
+        ref3 += ref_stride;
+    } while (--h != 0);
+
+    return sad4d_reduce_u16x8(sum);
+}
+
+// w=64: 16 independent uint16x8_t accumulators (4 chunks x 4 refs).
+//
+// Overflow safety: each chunk accumulates at most h*510 per lane.
+// AV1 max 64-wide block height is 64: 64*510 = 32640 < 65535 (safe).
+//
+// Why not the sum_lo/sum_hi + outer-u32 pattern used by sadwxhx4d_large_neon?
+// That pattern halves the accumulator count, but forces each acc to be updated
+// twice per row (offsets 0+32 share sum_lo, 16+48 share sum_hi), creating a
+// RAW dependency chain that serialises accumulation on every row. Benchmarked
+// on Neoverse N1 (AWS Graviton2): -22% at preset 6. The 16-acc layout gives
+// the OoO scheduler 16 independent chains and fully hides vpadalq latency.
+static inline uint32x4_t sad64xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                              const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                              uint32_t ref_stride, uint32_t h) {
+    // chunk{0..3}[ref{0..3}]: one accumulator per 16-byte chunk per ref
+    uint16x8_t chunk0[4], chunk1[4], chunk2[4], chunk3[4];
+    chunk0[0] = chunk0[1] = chunk0[2] = chunk0[3] = vdupq_n_u16(0);
+    chunk1[0] = chunk1[1] = chunk1[2] = chunk1[3] = vdupq_n_u16(0);
+    chunk2[0] = chunk2[1] = chunk2[2] = chunk2[3] = vdupq_n_u16(0);
+    chunk3[0] = chunk3[1] = chunk3[2] = chunk3[3] = vdupq_n_u16(0);
+
+    do {
+        uint8x16_t s;
+
+        s         = vld1q_u8(src);
+        chunk0[0] = vpadalq_u8(chunk0[0], vabdq_u8(s, vld1q_u8(ref0)));
+        chunk0[1] = vpadalq_u8(chunk0[1], vabdq_u8(s, vld1q_u8(ref1)));
+        chunk0[2] = vpadalq_u8(chunk0[2], vabdq_u8(s, vld1q_u8(ref2)));
+        chunk0[3] = vpadalq_u8(chunk0[3], vabdq_u8(s, vld1q_u8(ref3)));
+
+        s         = vld1q_u8(src + 16);
+        chunk1[0] = vpadalq_u8(chunk1[0], vabdq_u8(s, vld1q_u8(ref0 + 16)));
+        chunk1[1] = vpadalq_u8(chunk1[1], vabdq_u8(s, vld1q_u8(ref1 + 16)));
+        chunk1[2] = vpadalq_u8(chunk1[2], vabdq_u8(s, vld1q_u8(ref2 + 16)));
+        chunk1[3] = vpadalq_u8(chunk1[3], vabdq_u8(s, vld1q_u8(ref3 + 16)));
+
+        s         = vld1q_u8(src + 32);
+        chunk2[0] = vpadalq_u8(chunk2[0], vabdq_u8(s, vld1q_u8(ref0 + 32)));
+        chunk2[1] = vpadalq_u8(chunk2[1], vabdq_u8(s, vld1q_u8(ref1 + 32)));
+        chunk2[2] = vpadalq_u8(chunk2[2], vabdq_u8(s, vld1q_u8(ref2 + 32)));
+        chunk2[3] = vpadalq_u8(chunk2[3], vabdq_u8(s, vld1q_u8(ref3 + 32)));
+
+        s         = vld1q_u8(src + 48);
+        chunk3[0] = vpadalq_u8(chunk3[0], vabdq_u8(s, vld1q_u8(ref0 + 48)));
+        chunk3[1] = vpadalq_u8(chunk3[1], vabdq_u8(s, vld1q_u8(ref1 + 48)));
+        chunk3[2] = vpadalq_u8(chunk3[2], vabdq_u8(s, vld1q_u8(ref2 + 48)));
+        chunk3[3] = vpadalq_u8(chunk3[3], vabdq_u8(s, vld1q_u8(ref3 + 48)));
+
+        src += src_stride;
+        ref0 += ref_stride;
+        ref1 += ref_stride;
+        ref2 += ref_stride;
+        ref3 += ref_stride;
+    } while (--h != 0);
+
+    return vaddq_u32(vaddq_u32(sad4d_reduce_u16x8(chunk0), sad4d_reduce_u16x8(chunk1)),
+                     vaddq_u32(sad4d_reduce_u16x8(chunk2), sad4d_reduce_u16x8(chunk3)));
+}
+
+// w=128: process as two 64-wide halves to reuse sad64xh_indep4d_neon.
+static inline uint32x4_t sad128xh_indep4d_neon(const uint8_t* src, uint32_t src_stride, const uint8_t* ref0,
+                                               const uint8_t* ref1, const uint8_t* ref2, const uint8_t* ref3,
+                                               uint32_t ref_stride, uint32_t h) {
+    const uint32x4_t lo = sad64xh_indep4d_neon(src, src_stride, ref0, ref1, ref2, ref3, ref_stride, h);
+    const uint32x4_t hi = sad64xh_indep4d_neon(
+        src + 64, src_stride, ref0 + 64, ref1 + 64, ref2 + 64, ref3 + 64, ref_stride, h);
+    return vaddq_u32(lo, hi);
+}
+
 #endif // COMPUTE_SAD_NEON_H
