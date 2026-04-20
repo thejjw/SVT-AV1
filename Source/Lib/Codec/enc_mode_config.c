@@ -2230,7 +2230,15 @@ void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureP
     // 1                                     ON
     pcs->frame_end_cdf_update_mode = 1;
 
-    if (scs->enable_hbd_mode_decision == DEFAULT) {
+    //User accessible setting for forcing different levels of
+    //high bit depth mode decision; also has a check to make sure
+    //encoder bith depth>8 to work in full hbd-md
+    if (scs->encoder_bit_depth == EB_EIGHT_BIT) {
+        pcs->hbd_md = 0;
+    } else if (pcs->scs->static_config.hbd_mds != DEFAULT) {
+        pcs->hbd_md = pcs->scs->static_config.hbd_mds;
+    } else {
+        //Default preset-defined behavior
         if (enc_mode <= ENC_MR) {
             pcs->hbd_md = 1;
         } else if (enc_mode <= ENC_M5) {
@@ -2238,8 +2246,6 @@ void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureP
         } else {
             pcs->hbd_md = is_islice ? 2 : 0;
         }
-    } else {
-        pcs->hbd_md = scs->enable_hbd_mode_decision;
     }
 
     pcs->max_can_count = svt_aom_get_max_can_count(enc_mode);
