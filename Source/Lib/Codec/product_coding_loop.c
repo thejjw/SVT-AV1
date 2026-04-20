@@ -7652,7 +7652,7 @@ void svt_aom_get_blk_var_map(int block_size, int org_x, int org_y, int* blk_idx,
     // Valid range is block_size in [8, 64], i.e. lvl in [0, 3].
     // Anything outside that range has no variance data; return safe sentinel values.
     if (lvl < 0 || lvl > 3) {
-        *blk_idx = 0;
+        *blk_idx   = 0;
         sub_idx[0] = sub_idx[1] = sub_idx[2] = sub_idx[3] = 0;
         return;
     }
