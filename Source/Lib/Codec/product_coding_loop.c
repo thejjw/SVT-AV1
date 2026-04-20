@@ -7648,6 +7648,14 @@ void svt_aom_get_blk_var_map(int block_size, int org_x, int org_y, int* blk_idx,
     // Map block size to level: 64->0, 32->1, 16->2, 8->3
     const int lvl = 6 - svt_log2f(block_size);
 
+    // Valid range is block_size in [8, 64], i.e. lvl in [0, 3].
+    // Anything outside that range has no variance data; return safe sentinel values.
+    if (lvl < 0 || lvl > 3) {
+        *blk_idx = 0;
+        sub_idx[0] = sub_idx[1] = sub_idx[2] = sub_idx[3] = 0;
+        return;
+    }
+
     // Parent block
     const int shift = var_log2_lut[lvl];
     const int grid  = var_grid_lut[lvl];
@@ -7658,19 +7666,25 @@ void svt_aom_get_blk_var_map(int block_size, int org_x, int org_y, int* blk_idx,
 
     *blk_idx = base + gy * grid + gx;
 
-    // Sub-blocks
-    const int sub_lvl   = lvl + 1;
-    const int sub_shift = var_log2_lut[sub_lvl];
-    const int sub_base  = var_base_lut[sub_lvl];
-    const int sub_grid  = var_grid_lut[sub_lvl];
+    // Sub-blocks: only valid when lvl < 3 (i.e. block_size >= 16).
+    // For block_size == 8 (lvl == 3), sub_lvl would be 4 which is out of bounds.
+    // Callers must not use sub_idx[] when block_size < 16.
+    const int sub_lvl = lvl + 1;
+    if (sub_lvl < 4) {
+        const int sub_shift = var_log2_lut[sub_lvl];
+        const int sub_base  = var_base_lut[sub_lvl];
+        const int sub_grid  = var_grid_lut[sub_lvl];
 
-    const int sx = org_x >> sub_shift;
-    const int sy = org_y >> sub_shift;
+        const int sx = org_x >> sub_shift;
+        const int sy = org_y >> sub_shift;
 
-    sub_idx[0] = sub_base + (sy + 0) * sub_grid + (sx + 0);
-    sub_idx[1] = sub_base + (sy + 0) * sub_grid + (sx + 1);
-    sub_idx[2] = sub_base + (sy + 1) * sub_grid + (sx + 0);
-    sub_idx[3] = sub_base + (sy + 1) * sub_grid + (sx + 1);
+        sub_idx[0] = sub_base + (sy + 0) * sub_grid + (sx + 0);
+        sub_idx[1] = sub_base + (sy + 0) * sub_grid + (sx + 1);
+        sub_idx[2] = sub_base + (sy + 1) * sub_grid + (sx + 0);
+        sub_idx[3] = sub_base + (sy + 1) * sub_grid + (sx + 1);
+    } else {
+        sub_idx[0] = sub_idx[1] = sub_idx[2] = sub_idx[3] = 0;
+    }
 }
 
 /*
