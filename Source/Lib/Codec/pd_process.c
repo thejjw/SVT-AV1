@@ -427,9 +427,8 @@ static void early_hme_b64(uint8_t* sixteenth_b64_buffer, uint32_t sixteenth_b64_
 ) {
     // round up the search region width to nearest multiple of 8 because the SAD calculation performance (for
     // intrinsic functions) is the same for search region width from 1 to 8
-    sa_width           = (int16_t)((sa_width + 7) & ~0x07);
-    int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
-    int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
+    sa_width          = (int16_t)((sa_width + 7) & ~0x07);
+    int16_t pad_width = (int16_t)(sixteenth_ref_pic_ptr->border) - 1, pad_height = pad_width;
 
     int16_t sa_origin_x = -(int16_t)(sa_width >> 1);
     int16_t sa_origin_y = -(int16_t)(sa_height >> 1);

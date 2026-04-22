@@ -799,9 +799,8 @@ static void hme_level_0(MeContext*           me_ctx, // ME context Ptr, used to 
 ) {
     // round up the search region width to nearest multiple of 8 because the SAD calculation performance (for
     // intrinsic functions) is the same for search region width from 1 to 8
-    sa_width           = (int16_t)((sa_width + 7) & ~0x07);
-    int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
-    int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
+    sa_width          = (int16_t)((sa_width + 7) & ~0x07);
+    int16_t pad_width = (int16_t)(sixteenth_ref_pic_ptr->border) - 1, pad_height = pad_width;
 
     int16_t x_search_region_distance = sa_width * sr_w;
     int16_t y_search_region_distance = sa_height * sr_h;
@@ -892,8 +891,7 @@ static void hme_level_1(MeContext*           me_ctx, // ME context Ptr, used to 
     // intrinsic functions) is the same for search region width from 1 to 8
     sa_width = (int16_t)((sa_width + 7) & ~0x07);
 
-    int16_t pad_width  = (int16_t)(quarter_ref_pic_ptr->border) - 1;
-    int16_t pad_height = (int16_t)(quarter_ref_pic_ptr->border) - 1;
+    int16_t pad_width = (int16_t)(quarter_ref_pic_ptr->border) - 1, pad_height = pad_width;
 
     int16_t sa_origin_x = -(sa_width >> 1) + hme_l0_sc_x;
     int16_t sa_origin_y = -(sa_height >> 1) + hme_l0_sc_y;
@@ -1460,8 +1458,7 @@ static void prehme_core(MeContext* me_ctx, int16_t org_x, int16_t org_y, uint32_
     int16_t y_top_left_search_region;
     int32_t search_region_index;
 
-    int16_t pad_width  = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
-    int16_t pad_height = (int16_t)(sixteenth_ref_pic_ptr->border) - 1;
+    int16_t pad_width = (int16_t)(sixteenth_ref_pic_ptr->border) - 1, pad_height = pad_width;
 
     int16_t search_area_width  = prehme_data->sa.width;
     int16_t search_area_height = prehme_data->sa.height;
