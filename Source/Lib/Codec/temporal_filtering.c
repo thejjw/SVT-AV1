@@ -1013,7 +1013,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint64_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint64_t avg_err_fp10 = (uint64_t)(combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3);
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
         uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
@@ -1190,7 +1190,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint64_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint64_t avg_err_fp10 = (uint64_t)(combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3);
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
         uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
@@ -2848,11 +2848,11 @@ static EbErrorType produce_temporally_filtered_pic(PictureParentControlSet** pcs
             // 2nd segment: current pic
             // 3rd segment: future pics - from closest to farthest
 
-            int start_frame_index[3] = {0, centre_pcs->past_altref_nframes, centre_pcs->past_altref_nframes + 1};
+            const int start_frame_index[3] = {0, centre_pcs->past_altref_nframes, centre_pcs->past_altref_nframes + 1};
 
-            int end_frame_index[3] = {centre_pcs->past_altref_nframes - 1,
-                                      centre_pcs->past_altref_nframes,
-                                      centre_pcs->past_altref_nframes + centre_pcs->future_altref_nframes};
+            const int end_frame_index[3] = {centre_pcs->past_altref_nframes - 1,
+                                            centre_pcs->past_altref_nframes,
+                                            centre_pcs->past_altref_nframes + centre_pcs->future_altref_nframes};
 
             for (int segment_idx = 0; segment_idx < 3; segment_idx++) {
                 for (int frame_index = start_frame_index[segment_idx]; frame_index <= end_frame_index[segment_idx];

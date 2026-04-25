@@ -4246,7 +4246,7 @@ static void perform_tx_light_pd0(PictureControlSet* pcs, ModeDecisionContext* ct
 
     const uint32_t th = ((bwidth * bheight) >> 5);
     if (ctx->rate_est_ctrls.coeff_rate_est_lvl == 0) {
-        uint8_t input_resolution_factor[INPUT_SIZE_COUNT] = {0, 1, 2, 3, 4, 4, 4};
+        const uint8_t input_resolution_factor[INPUT_SIZE_COUNT] = {0, 1, 2, 3, 4, 4, 4};
         *y_coeff_bits = 5000 + (input_resolution_factor[pcs->ppcs->input_resolution] * 1600) +
             (cand_bf->eob.y[0] * 100);
     } else if (ctx->rate_est_ctrls.coeff_rate_est_lvl >= 2 && (cand_bf->eob.y[0] < th)) {
@@ -4740,9 +4740,8 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
             } else if (ssim_cost == best_ssim_cost_tx_search) {
                 // if two candidates have the same ssim cost, choose the one with lower ssd cost
                 if (ssd_cost < best_cost_tx_search) {
-                    best_cost_tx_search      = ssd_cost;
-                    best_ssim_cost_tx_search = ssim_cost;
-                    best_tx_type             = tx_type;
+                    best_cost_tx_search = ssd_cost;
+                    best_tx_type        = tx_type;
                 }
             }
         }
@@ -8907,11 +8906,11 @@ static void md_encode_block(PictureControlSet* pcs, ModeDecisionContext* ctx, co
     ctx->mds0_best_class_it     = 0;
     // Enable Hadamard cost at block level only when enabled for the SB
     // and when multiple fast candidates exist (no benefit for single candidate).
-    ctx->mds0_use_hadamard_blk  = ctx->mds0_use_hadamard_sb && fast_candidate_total_count > 1;
-    ctx->mds1_best_idx          = 0;
-    ctx->mds1_best_class_it     = 0;
-    ctx->perform_mds1           = 1;
-    ctx->use_tx_shortcuts_mds3  = 0;
+    ctx->mds0_use_hadamard_blk = ctx->mds0_use_hadamard_sb && fast_candidate_total_count > 1;
+    ctx->mds1_best_idx         = 0;
+    ctx->mds1_best_class_it    = 0;
+    ctx->perform_mds1          = 1;
+    ctx->use_tx_shortcuts_mds3 = 0;
     for (cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++) {
         ctx->mds0_best_cost_per_class[cand_class_it] = (uint64_t)~0;
     }

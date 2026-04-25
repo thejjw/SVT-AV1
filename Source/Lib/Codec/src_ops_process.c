@@ -13,6 +13,7 @@
 #include "sequence_control_set.h"
 
 #include "src_ops_process.h"
+#include <stdint.h>
 #include "initial_rc_results.h"
 #include "pic_demux_results.h"
 #ifdef ARCH_X86_64
@@ -654,14 +655,10 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     DECLARE_ALIGNED(MAX_TPL_SIZE, uint8_t, left_data[MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2]);
                     DECLARE_ALIGNED(MAX_TPL_SIZE, uint8_t, above_data[MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2]);
 
-                    uint8_t* above_row;
-                    uint8_t* left_col;
                     uint8_t* above0_row;
                     uint8_t* left0_col;
                     above0_row = above0_data + MAX_TPL_SIZE;
                     left0_col  = left0_data + MAX_TPL_SIZE;
-                    above_row  = above_data + MAX_TPL_SIZE;
-                    left_col   = left_data + MAX_TPL_SIZE;
 
                     // Fill Neighbor Arrays
                     svt_aom_update_neighbor_samples_array_open_loop_mb(1,
@@ -681,6 +678,8 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                             ? mode_to_angle_map[(PredictionMode)ois_intra_mode]
                             : 0;
 
+                        uint8_t* above_row;
+                        uint8_t* left_col;
                         // Edge filter
                         if (av1_is_directional_mode((PredictionMode)ois_intra_mode)) {
                             svt_memcpy(left_data, left0_data, sizeof(uint8_t) * (MAX_TX_SIZE * 2 + MAX_TPL_SIZE * 2));
@@ -729,7 +728,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                             svt_av1_wht_fwd_txfm(
                                 src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
-                            intra_cost = svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
+                            intra_cost = (int64_t)svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
                                 << tpl_ctrls->subsample_tx;
                         }
 
@@ -860,7 +859,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
                     TxCoeffShape pf_shape = pcs->tpl_ctrls.pf_shape;
                     svt_av1_wht_fwd_txfm(src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
-                    inter_cost = svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
+                    inter_cost = (int64_t)svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
                         << tpl_ctrls->subsample_tx;
                 }
 
@@ -944,7 +943,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
 
                 get_quantize_error(&mb_plane, best_coeff, qcoeff, dqcoeff, tx_size, &eob, &recon_error, &sse);
 
-                int rate_cost        = pcs->tpl_ctrls.compute_rate ? rate_estimator(qcoeff, eob, tx_size) : 0;
+                int64_t rate_cost    = pcs->tpl_ctrls.compute_rate ? rate_estimator(qcoeff, eob, tx_size) : 0;
                 tpl_stats.srcrf_rate = (rate_cost << TPL_DEP_COST_SCALE_LOG2) << tpl_ctrls->subsample_tx;
                 tpl_stats.srcrf_dist = (recon_error << (TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
             }
@@ -1139,7 +1138,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext* enc_ctx, SequenceCon
         uint16_t eob = 0;
 
         get_quantize_error(&mb_plane, coeff, qcoeff, dqcoeff, tx_size, &eob, &recon_error, &sse);
-        int rate_cost = pcs->tpl_ctrls.compute_rate ? rate_estimator(qcoeff, eob, tx_size) : 0;
+        int64_t rate_cost = pcs->tpl_ctrls.compute_rate ? rate_estimator(qcoeff, eob, tx_size) : 0;
 
         if (!disable_intra_pred || (pcs->tpl_data.is_ref)) {
             if (eob) {
@@ -1865,7 +1864,6 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
                         tpl_ref_list[i].ref                                            = NULL;
                         enc_ctx->mc_flow_rec_picture_buffer[tpl_ref_list[i].frame_idx] = NULL;
                         tpl_ref_list[i].frame_idx                                      = -1;
-                        tpl_ref_list[i].refresh_frame_mask                             = 0;
                         tpl_ref_list[i].is_valid                                       = false;
                     }
                 }
@@ -1928,7 +1926,6 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
             tpl_ref_list[i].ref                                            = NULL;
             enc_ctx->mc_flow_rec_picture_buffer[tpl_ref_list[i].frame_idx] = NULL;
             tpl_ref_list[i].frame_idx                                      = -1;
-            tpl_ref_list[i].refresh_frame_mask                             = 0;
             tpl_ref_list[i].is_valid                                       = false;
         }
     }

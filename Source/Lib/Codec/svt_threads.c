@@ -15,6 +15,7 @@
 // and mutexs.  The goal is to eliminiate platform #define
 // in the code.
 
+#include "EbSvtAv1.h"
 #if defined(__has_feature)
 #if __has_feature(thread_sanitizer)
 #define EB_THREAD_SANITIZER_ENABLED 1
@@ -420,8 +421,6 @@ EbErrorType svt_set_cond_var(CondVar* cond_var, int32_t newval) {
 */
 
 EbErrorType svt_wait_cond_var(CondVar* cond_var, int32_t input) {
-    EbErrorType return_error;
-
 #ifdef _WIN32
 
     EnterCriticalSection(&cond_var->cs);
@@ -429,15 +428,21 @@ EbErrorType svt_wait_cond_var(CondVar* cond_var, int32_t input) {
         SleepConditionVariableCS(&cond_var->cv, &cond_var->cs, INFINITE);
     }
     LeaveCriticalSection(&cond_var->cs);
-    return_error = EB_ErrorNone;
 #else
-    return_error = pthread_mutex_lock(&cond_var->m_mutex);
-    while (cond_var->val == input) {
-        return_error = pthread_cond_wait(&cond_var->m_cond, &cond_var->m_mutex);
+    if (pthread_mutex_lock(&cond_var->m_mutex)) {
+        return EB_ErrorMutexUnresponsive;
     }
-    return_error = pthread_mutex_unlock(&cond_var->m_mutex);
+    while (cond_var->val == input) {
+        if (pthread_cond_wait(&cond_var->m_cond, &cond_var->m_mutex)) {
+            (void)pthread_mutex_unlock(&cond_var->m_mutex);
+            return EB_ErrorMutexUnresponsive;
+        }
+    }
+    if (pthread_mutex_unlock(&cond_var->m_mutex)) {
+        return EB_ErrorMutexUnresponsive;
+    }
 #endif
-    return return_error;
+    return EB_ErrorNone;
 }
 
 void svt_run_once(OnceType* once_control, OnceFn init_routine) {

@@ -13,6 +13,7 @@
 /***************************************
 * Includes
 ***************************************/
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -1694,17 +1695,11 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
             const uint8_t ref_idx_1  = get_ref_frame_idx(rf[1]);
             const uint8_t list_idx_0 = get_list_idx(rf[0]);
             const uint8_t list_idx_1 = get_list_idx(rf[1]);
-            if (list_idx_0 != INVALID_REF) {
-                if (!svt_aom_is_valid_unipred_ref(
-                        ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_0, ref_idx_0)) {
-                    continue;
-                }
-            }
-            if (list_idx_1 != INVALID_REF) {
-                if (!svt_aom_is_valid_unipred_ref(
-                        ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_1, ref_idx_1)) {
-                    continue;
-                }
+            if (!svt_aom_is_valid_unipred_ref(
+                    ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_0, ref_idx_0) ||
+                !svt_aom_is_valid_unipred_ref(
+                    ctx, MIN(TOT_INTER_GROUP - 1, NRST_NEW_NEAR_GROUP), list_idx_1, ref_idx_1)) {
+                continue;
             }
 
             {
@@ -1712,11 +1707,10 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                 const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                 Mv                 to_inj_mv0 = {.as_int = ctx->ref_mv_stack[ref_pair][0].this_mv.as_int};
                 Mv                 to_inj_mv1 = ctx->sb_me_mv[list_idx_1][ref_idx_1];
-                uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
-                                  mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair) == false);
-                inj_mv                        = inj_mv &&
+                bool               inj_mv =
+                    (ctx->injected_mv_count == 0 || !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                     svt_aom_is_me_data_present(
-                             ctx->me_block_offset, ctx->me_cand_offset, me_results, get_list_idx(rf[1]), ref_idx_1);
+                        ctx->me_block_offset, ctx->me_cand_offset, me_results, get_list_idx(rf[1]), ref_idx_1);
                 if (inj_mv) {
                     svt_aom_get_av1_mv_pred_drl(ctx,
                                                 ctx->blk_ptr,
@@ -1760,9 +1754,8 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                 const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                 Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                 Mv                 to_inj_mv1 = {.as_int = ctx->ref_mv_stack[ref_pair][0].comp_mv.as_int};
-                uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
-                                  mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair) == false);
-                inj_mv                        = inj_mv &&
+                bool               inj_mv     = (ctx->injected_mv_count == 0 ||
+                               !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                     svt_aom_is_me_data_present(ctx->me_block_offset, ctx->me_cand_offset, me_results, 0, ref_idx_0);
                 if (inj_mv) {
                     svt_aom_get_av1_mv_pred_drl(ctx,
@@ -1818,9 +1811,8 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                     const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                     Mv                 to_inj_mv0 = ctx->sb_me_mv[list_idx_0][ref_idx_0];
                     Mv                 to_inj_mv1 = {.as_int = nearmv[1].as_int};
-                    uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
-                                      mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair) == false);
-                    inj_mv                        = inj_mv &&
+                    bool               inj_mv     = (ctx->injected_mv_count == 0 ||
+                                   !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                         svt_aom_is_me_data_present(ctx->me_block_offset, ctx->me_cand_offset, me_results, 0, ref_idx_0);
                     if (inj_mv) {
                         ModeDecisionCandidate* cand       = &cand_array[cand_idx];
@@ -1862,11 +1854,10 @@ static void inject_new_nearest_new_comb_candidates(PictureControlSet* pcs, ModeD
                     const MeSbResults* me_results = pcs->ppcs->pa_me_data->me_results[ctx->me_sb_addr];
                     Mv                 to_inj_mv0 = {.as_int = nearmv[0].as_int};
                     Mv                 to_inj_mv1 = ctx->sb_me_mv[list_idx_1][ref_idx_1];
-                    uint8_t            inj_mv     = (ctx->injected_mv_count == 0 ||
-                                      mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair) == false);
-                    inj_mv                        = inj_mv &&
+                    bool               inj_mv     = (ctx->injected_mv_count == 0 ||
+                                   !mv_is_already_injected(ctx, to_inj_mv0, to_inj_mv1, ref_pair)) &&
                         svt_aom_is_me_data_present(
-                                 ctx->me_block_offset, ctx->me_cand_offset, me_results, list_idx_1, ref_idx_1);
+                                      ctx->me_block_offset, ctx->me_cand_offset, me_results, list_idx_1, ref_idx_1);
 
                     if (inj_mv) {
                         ModeDecisionCandidate* cand       = &cand_array[cand_idx];
@@ -3884,7 +3875,6 @@ uint32_t svt_aom_product_full_mode_decision(PictureControlSet* pcs, ModeDecision
                     // if two candidates have the same ssim cost, choose the one with lower ssd cost
                     if (ssd_cost < ssd_lowest_cost) {
                         lowest_cost_index = cand_index;
-                        ssim_lowest_cost  = ssim_cost;
                         ssd_lowest_cost   = ssd_cost;
                     }
                 }
