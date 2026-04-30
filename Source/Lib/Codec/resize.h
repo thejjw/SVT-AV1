@@ -72,6 +72,16 @@ static INLINE int coded_to_superres_mi(int mi_col, int denom) {
     return (mi_col * denom + SCALE_NUMERATOR / 2) / SCALE_NUMERATOR;
 }
 
+// The following two declarations are for ResizeTest.cc
+
+EbErrorType svt_av1_resize_plane_horizontal(const uint8_t* const input, int height, int width, int in_stride,
+                                            uint8_t* output, int height2, int width2, int out_stride);
+
+#if CONFIG_ENABLE_HIGH_BIT_DEPTH
+EbErrorType svt_av1_highbd_resize_plane_horizontal(const uint16_t* const input, int height, int width, int in_stride,
+                                                   uint16_t* output, int height2, int width2, int out_stride, int bd);
+#endif
+
 #define filteredinterp_filters1000 svt_av1_resize_filter_normative
 
 #ifdef __cplusplus

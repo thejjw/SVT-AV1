@@ -13,6 +13,10 @@
 #ifndef EbSuperRes_h
 #define EbSuperRes_h
 
+#include <stdbool.h>
+#include <stdint.h>
+#include "pcs.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +34,7 @@ extern const int16_t svt_av1_resize_filter_normative[(1 << RS_SUBPEL_BITS)][UPSC
 
 void svt_av1_upscale_normative_rows(const Av1Common* cm, const uint8_t* src, int src_stride, uint8_t* dst,
                                     int dst_stride, int rows, int sub_x, int bd, bool is_16bit_pipeline);
+void calculate_scaled_size_helper(uint16_t* dim, uint8_t denom);
 #ifdef __cplusplus
 }
 #endif

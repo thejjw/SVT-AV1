@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include "TestEnv.h"
 #include "aom_dsp_rtcd.h"
 #include "random.h"
 
@@ -32,10 +33,6 @@ namespace {
 using svt_av1_test_tool::SVTRandom;
 
 constexpr int test_times = 20;
-
-/** setup_test_env and reset_test_env are implemented in test/TestEnv.c */
-extern "C" void setup_test_env();
-extern "C" void reset_test_env();
 
 template <typename Sample, int bd>
 class SsimTest : public ::testing::Test {

@@ -22,6 +22,7 @@
  *
  ******************************************************************************/
 
+#include "TestEnv.h"
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
 #include "gtest/gtest.h"
@@ -138,8 +139,6 @@ INSTANTIATE_TEST_SUITE_P(NEON, UpsampleTest,
 #define INTRA_EDGE_FILT 3
 #define INTRA_EDGE_TAPS 5
 #define MAX_UPSAMPLE_SZ 16
-
-extern "C" void reset_test_env();
 
 using FILTER_EDGE_LBD = void (*)(uint8_t *p, int size, int strength);
 using FILTER_EDGE_HBD = void (*)(uint16_t *p, int size, int strength);

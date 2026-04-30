@@ -22,14 +22,14 @@
  ******************************************************************************/
 
 #include "gtest/gtest.h"
+#include "TestEnv.h"
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
-#include "utility.h"
-#include "unit_test_utility.h"
 #include "random.h"
+#include "resize.h"
+#include "super_res.h"
+#include "svt_time.h"
 #include "util.h"
-
-extern "C" void calculate_scaled_size_helper(uint16_t *dim, uint8_t denom);
 
 namespace {
 using std::make_tuple;
@@ -39,17 +39,6 @@ static const int min_test_times = 10;
 static const int default_speed_test_times = 1000;
 static const uint8_t REF_STUFF = 0xAA;
 static const uint8_t TST_STUFF = 0xBB;
-
-/** setup_test_env and reset_test_env are implemented in test/TestEnv.c */
-extern "C" void setup_test_env();
-extern "C" void reset_test_env();
-
-extern "C" EbErrorType svt_av1_resize_plane_horizontal(
-    const uint8_t *const input, int height, int width, int in_stride,
-    uint8_t *output, int height2, int width2, int out_stride);
-extern "C" EbErrorType svt_av1_highbd_resize_plane_horizontal(
-    const uint16_t *const input, int height, int width, int in_stride,
-    uint16_t *output, int height2, int width2, int out_stride, int bd);
 
 typedef std::tuple<int, /**< width of source/upscaled picture */
                    int, /**< height of source picture */

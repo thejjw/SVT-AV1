@@ -3665,7 +3665,7 @@ void svt_vmaf_vpass_row_c(const uint32_t* hpass, uint32_t* sc0, uint32_t* sc1, u
 }
 #endif
 
-void pad_and_decimate_filtered_pic(PictureParentControlSet* centre_pcs) {
+static void pad_and_decimate_filtered_pic(PictureParentControlSet* centre_pcs) {
     // reference structures (padded pictures + downsampled versions)
     SequenceControlSet*  scs        = centre_pcs->scs;
     EbPaReferenceObject* src_object = (EbPaReferenceObject*)centre_pcs->pa_ref_pic_wrapper->object_ptr;

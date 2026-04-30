@@ -70,6 +70,7 @@ set(arch_neutral_files
     IntraBcUtilTest.cc
     ResizeTest.cc
     TestEnv.c
+    TestEnv.h
     TxfmCommon.h
     acm_random.h
     random.h
