@@ -419,7 +419,8 @@ Linux Gstreamer (Static):
       else
         git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
       fi
-    - meson setup -Dprefix=/usr --buildtype release -Dauto_features=disabled -Dbad=enabled -Dgst-plugins-bad:svtav1=enabled -Dtests=disabled gstreamer-plugin gstreamer
+    - git -C gstreamer submodule update --init --recursive
+    - meson setup -Dprefix=/usr --buildtype release -Dauto_features=disabled -Dbad=enabled -Dgst-plugins-bad:svtav1=enabled -Dtests=disabled -Dgstreamer:check=enabled gstreamer-plugin gstreamer
     - meson install -C gstreamer-plugin
     - |
       gst-launch-1.0 -v filesrc location=akiyo_cif.y4m \
