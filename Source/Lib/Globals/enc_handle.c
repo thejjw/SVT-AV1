@@ -1946,7 +1946,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,
                            scs->picture_analysis_process_init_count,
                            svt_aom_picture_analysis_kernel,
-                           enc_handle_ptr->picture_analysis_context_ptr_array);
+                           enc_handle_ptr->picture_analysis_context_ptr_array,
+                           "svt-picana");
 
     // Picture Decision
     EB_CREATE_THREAD(enc_handle_ptr->picture_decision_thread_handle,
@@ -1957,7 +1958,8 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->motion_estimation_thread_handle_array,
                            scs->motion_estimation_process_init_count,
                            svt_aom_motion_estimation_kernel,
-                           enc_handle_ptr->motion_estimation_context_ptr_array);
+                           enc_handle_ptr->motion_estimation_context_ptr_array,
+                           "svt-me");
 
     // Initial Rate Control
     EB_CREATE_THREAD(enc_handle_ptr->initial_rate_control_thread_handle,
@@ -1968,13 +1970,15 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->source_based_operations_thread_handle_array,
                            scs->source_based_operations_process_init_count,
                            svt_aom_source_based_operations_kernel,
-                           enc_handle_ptr->source_based_operations_context_ptr_array);
+                           enc_handle_ptr->source_based_operations_context_ptr_array,
+                           "svt-srcops");
 
     // TPL dispenser
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->tpl_disp_thread_handle_array,
                            scs->tpl_disp_process_init_count,
                            svt_aom_tpl_disp_kernel, //TODOOMK
-                           enc_handle_ptr->tpl_disp_context_ptr_array);
+                           enc_handle_ptr->tpl_disp_context_ptr_array,
+                           "svt-tpl");
     // Picture Manager
     EB_CREATE_THREAD(enc_handle_ptr->picture_manager_thread_handle,
                      svt_aom_picture_manager_kernel,
@@ -1988,37 +1992,43 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType* svt_enc_component) {
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->mode_decision_configuration_thread_handle_array,
                            scs->mode_decision_configuration_process_init_count,
                            svt_aom_mode_decision_configuration_kernel,
-                           enc_handle_ptr->mode_decision_configuration_context_ptr_array);
+                           enc_handle_ptr->mode_decision_configuration_context_ptr_array,
+                           "svt-mdcfg");
 
     // EncDec Process
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->enc_dec_thread_handle_array,
                            scs->enc_dec_process_init_count,
                            svt_aom_mode_decision_kernel,
-                           enc_handle_ptr->enc_dec_context_ptr_array);
+                           enc_handle_ptr->enc_dec_context_ptr_array,
+                           "svt-md");
 
     // Dlf Process
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->dlf_thread_handle_array,
                            scs->dlf_process_init_count,
                            svt_aom_dlf_kernel,
-                           enc_handle_ptr->dlf_context_ptr_array);
+                           enc_handle_ptr->dlf_context_ptr_array,
+                           "svt-dlf");
 
     // Cdef Process
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->cdef_thread_handle_array,
                            scs->cdef_process_init_count,
                            svt_aom_cdef_kernel,
-                           enc_handle_ptr->cdef_context_ptr_array);
+                           enc_handle_ptr->cdef_context_ptr_array,
+                           "svt-cdef");
 
     // Rest Process
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->rest_thread_handle_array,
                            scs->rest_process_init_count,
                            svt_aom_rest_kernel,
-                           enc_handle_ptr->rest_context_ptr_array);
+                           enc_handle_ptr->rest_context_ptr_array,
+                           "svt-rest");
 
     // Entropy Coding Process
     EB_CREATE_THREAD_ARRAY(enc_handle_ptr->entropy_coding_thread_handle_array,
                            scs->entropy_coding_process_init_count,
                            svt_aom_entropy_coding_kernel,
-                           enc_handle_ptr->entropy_coding_context_ptr_array);
+                           enc_handle_ptr->entropy_coding_context_ptr_array,
+                           "svt-ec");
     // Packetization
     EB_CREATE_THREAD(enc_handle_ptr->packetization_thread_handle,
                      svt_aom_packetization_kernel,
