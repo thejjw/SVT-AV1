@@ -79,12 +79,8 @@ class ResizePlaneTest : public ::testing::TestWithParam<ResizeTestParam> {
         src_stride_ = std::get<2>(TEST_GET_PARAM(0));
         denom_ = TEST_GET_PARAM(1);
         bd_ = TEST_GET_PARAM(2);
-        uint16_t scaled_width = (uint16_t)src_width_;
-        calculate_scaled_size_helper(&scaled_width, denom_);
-        scaled_width_ = (int)scaled_width;
-        uint16_t scaled_height = (uint16_t)src_height_;
-        calculate_scaled_size_helper(&scaled_height, denom_);
-        scaled_height_ = (int)scaled_height;
+        scaled_width_ = svt_aom_calc_scaled_size_helper(src_width_, denom_);
+        scaled_height_ = svt_aom_calc_scaled_size_helper(src_height_, denom_);
         width_only_ = false;
         rnd_ = new SVTRandom(bd_, false);
         setup_test_env();

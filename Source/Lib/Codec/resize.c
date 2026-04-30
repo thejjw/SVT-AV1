@@ -1928,17 +1928,13 @@ static int validate_size_scales(RESIZE_MODE resize_mode, SUPERRES_MODE superres_
     } else if (resize_mode == RESIZE_RANDOM && superres_mode != SUPERRES_RANDOM) {
         // Alter resize scale as needed to enforce conformity.
         *resize_denom        = (2 * SCALE_NUMERATOR * SCALE_NUMERATOR) / rsz->superres_denom;
-        rsz->encoding_width  = owidth;
-        rsz->encoding_height = oheight;
-        calculate_scaled_size_helper(&rsz->encoding_width, *resize_denom);
-        calculate_scaled_size_helper(&rsz->encoding_height, *resize_denom);
+        rsz->encoding_width  = svt_aom_calc_scaled_size_helper(owidth, *resize_denom);
+        rsz->encoding_height = svt_aom_calc_scaled_size_helper(oheight, *resize_denom);
         if (!dimensions_are_ok(owidth, oheight, rsz)) {
             if (*resize_denom > SCALE_NUMERATOR) {
                 --(*resize_denom);
-                rsz->encoding_width  = owidth;
-                rsz->encoding_height = oheight;
-                calculate_scaled_size_helper(&rsz->encoding_width, *resize_denom);
-                calculate_scaled_size_helper(&rsz->encoding_height, *resize_denom);
+                rsz->encoding_width  = svt_aom_calc_scaled_size_helper(owidth, *resize_denom);
+                rsz->encoding_height = svt_aom_calc_scaled_size_helper(oheight, *resize_denom);
             }
         }
     } else if (resize_mode == RESIZE_RANDOM && superres_mode == SUPERRES_RANDOM) {
@@ -1949,10 +1945,8 @@ static int validate_size_scales(RESIZE_MODE resize_mode, SUPERRES_MODE superres_
             } else {
                 --rsz->superres_denom;
             }
-            rsz->encoding_width  = owidth;
-            rsz->encoding_height = oheight;
-            calculate_scaled_size_helper(&rsz->encoding_width, *resize_denom);
-            calculate_scaled_size_helper(&rsz->encoding_height, *resize_denom);
+            rsz->encoding_width  = svt_aom_calc_scaled_size_helper(owidth, *resize_denom);
+            rsz->encoding_height = svt_aom_calc_scaled_size_helper(oheight, *resize_denom);
         } while (!dimensions_are_ok(owidth, oheight, rsz) &&
                  (*resize_denom > SCALE_NUMERATOR || rsz->superres_denom > SCALE_NUMERATOR));
     } else { // We are allowed to alter neither resize scale nor superres
@@ -1982,8 +1976,8 @@ void svt_aom_init_resize_picture(SequenceControlSet* scs, PictureParentControlSe
     }
     pcs->frame_resize_enabled = (pcs->resize_denom == SCALE_NUMERATOR ? false : true);
     if (pcs->frame_resize_enabled == true) {
-        calculate_scaled_size_helper(&spr_params.encoding_width, pcs->resize_denom);
-        calculate_scaled_size_helper(&spr_params.encoding_height, pcs->resize_denom);
+        spr_params.encoding_width  = svt_aom_calc_scaled_size_helper(spr_params.encoding_width, pcs->resize_denom);
+        spr_params.encoding_height = svt_aom_calc_scaled_size_helper(spr_params.encoding_height, pcs->resize_denom);
     }
     pcs->render_width  = spr_params.encoding_width;
     pcs->render_height = spr_params.encoding_height;
@@ -2028,7 +2022,8 @@ void svt_aom_init_resize_picture(SequenceControlSet* scs, PictureParentControlSe
                 pcs->render_height        = spr_params.encoding_height;
             }
             // only encoding width is adjusted
-            calculate_scaled_size_helper(&spr_params.encoding_width, spr_params.superres_denom);
+            spr_params.encoding_width = svt_aom_calc_scaled_size_helper(spr_params.encoding_width,
+                                                                        spr_params.superres_denom);
         }
     }
 

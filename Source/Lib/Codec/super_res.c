@@ -48,7 +48,7 @@ const int16_t svt_av1_resize_filter_normative[(1 << RS_SUBPEL_BITS)][UPSCALE_NOR
 
 // Calculates the scaled dimension given the original dimension and the scale
 // denominator.
-void calculate_scaled_size_helper(uint16_t* dim, uint8_t denom) {
+uint16_t svt_aom_calc_scaled_size_helper(uint16_t dim, uint8_t denom) {
     if (denom != SCALE_NUMERATOR && denom <= SCALE_DENOMINATOR_MAX) {
         // We need to ensure the constraint in "Appendix A" of the spec:
         // * FrameWidth is greater than or equal to 16
@@ -57,16 +57,17 @@ void calculate_scaled_size_helper(uint16_t* dim, uint8_t denom) {
         // exception: if original dimension itself was < 16, then we keep the
         // downscaled dimension to be same as the original, to ensure that resizing
         // is valid.
-        const int min_dim = AOMMIN(16, *dim);
+        const int min_dim = AOMMIN(16, dim);
         // Use this version if we need *dim to be even
         // *width = (*width * SCALE_NUMERATOR + denom) / (2 * denom);
         // *width <<= 1;
-        *dim = (uint16_t)((*dim * SCALE_NUMERATOR + denom / 2) / (denom));
-        *dim = (uint16_t)AOMMAX(*dim, min_dim);
+        dim = (uint16_t)((dim * SCALE_NUMERATOR + denom / 2) / (denom));
+        dim = (uint16_t)AOMMAX(dim, min_dim);
     } else if (denom == SCALE_THREE_QUATER) {
         // reference scaling resize defines denom 17 as 3/4
-        *dim = (uint16_t)((3 + (*dim * 3)) >> 2);
+        dim = (uint16_t)((3 + (dim * 3)) >> 2);
     }
+    return dim;
 }
 
 static int32_t av1_get_upscale_convolve_step(int in_length, int out_length) {
