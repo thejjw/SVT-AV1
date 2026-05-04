@@ -31,8 +31,13 @@
  ****************************************/
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "svt_threads.h"
 #include "svt_log.h"
+#if SVT_AV1_NVTX
+#include "svt_nvtx.h"
+#include <sys/syscall.h>
+#endif
 /****************************************
   * Win32 Includes
   ****************************************/
@@ -66,6 +71,54 @@ void printfTime(const char* fmt, ...) {
 static void* dummy_func(void* arg) {
     (void)arg;
     return NULL;
+}
+
+/*
+ * pthread_setname_np has different signatures across platforms; the trampoline
+ * always invokes this from inside the new thread, so Apple's self-only form is
+ * naturally compatible.
+ */
+static inline void svt_thread_self_setname(const char* name) {
+#if defined(__APPLE__)
+    (void)pthread_setname_np(name);
+#elif defined(__linux__) || defined(__GLIBC__) || defined(__ANDROID__)
+    (void)pthread_setname_np(pthread_self(), name);
+#else
+    (void)name;
+#endif
+}
+
+/*
+ * Self-naming trampoline. nsys snapshots the thread name early (often before a
+ * spawner-side pthread_setname_np lands), so we let the new thread rename
+ * itself before it enters user_fn. This makes svt-* names visible in Nsight
+ * timelines, /proc/<tid>/comm, and ps/top.
+ */
+typedef struct SvtThreadStart {
+    void* (*fn)(void*);
+    void* arg;
+    char  name[16];
+} SvtThreadStart;
+
+static void* svt_thread_trampoline(void* p) {
+    SvtThreadStart* payload = (SvtThreadStart*)p;
+    void* (*fn)(void*)      = payload->fn;
+    void* arg               = payload->arg;
+    char  name[16];
+    strncpy(name, payload->name, sizeof(name) - 1);
+    name[sizeof(name) - 1] = '\0';
+    free(payload);
+
+    if (name[0]) {
+        svt_thread_self_setname(name);
+#if SVT_AV1_NVTX
+        // syscall(SYS_gettid) instead of gettid(): gettid() needs glibc 2.30+
+        // (Aug 2019); the raw syscall works on older glibc and musl too.
+        SVT_NVTX_NAME_OS_THREAD((unsigned long)syscall(SYS_gettid), name);
+#endif
+    }
+
+    return fn(arg);
 }
 
 // These can stay with pthread_once_t since this is specific to pthreads implementation
@@ -118,14 +171,26 @@ end:
 }
 #endif
 
+void svt_format_thread_name(char* buf, size_t size, const char* prefix, uint32_t index) {
+    snprintf(buf, size, "%s%u", prefix, index);
+}
+
 /****************************************
  * svt_create_thread
  ****************************************/
-EbHandle svt_create_thread(void* thread_function(void*), void* thread_context) {
+EbHandle svt_create_thread(void* thread_function(void*), void* thread_context, const char* name) {
     EbHandle thread_handle = NULL;
 
-#ifdef _WIN32
+    // Drop the `svt_aom_` prefix that EB_CREATE_THREAD pulls in via
+    // `#thread_function`. Linux's TASK_COMM_LEN is 15 chars; without the strip
+    // `svt_aom_picture_decision_kernel` and `svt_aom_picture_manager_kernel`
+    // collapse to the same `svt_aom_picture` label in /proc/.../comm and the
+    // Nsight ThreadNames table.
+    if (name && !strncmp(name, "svt_aom_", 8)) {
+        name += 8;
+    }
 
+#ifdef _WIN32
     thread_handle = (EbHandle)CreateThread(
         NULL, // default security attributes
         0, // default stack size
@@ -133,6 +198,20 @@ EbHandle svt_create_thread(void* thread_function(void*), void* thread_context) {
         thread_context, // context to be tied to the new thread
         0, // thread active when created
         NULL); // new thread ID
+
+    // SetThreadDescription (Windows 10 1607+) — best effort. Older Windows
+    // returns E_NOTIMPL; nothing else we can do here.
+    if (thread_handle && name && *name) {
+        // Mirror Linux's TASK_COMM_LEN (15 + NUL); MultiByteToWideChar fails if
+        // the source doesn't fit, so truncate first.
+        char    truncated[16];
+        wchar_t wname[16];
+        strncpy(truncated, name, sizeof(truncated) - 1);
+        truncated[sizeof(truncated) - 1] = '\0';
+        if (MultiByteToWideChar(CP_UTF8, 0, truncated, -1, wname, (int)(sizeof(wname) / sizeof(wname[0]))) > 0) {
+            (void)SetThreadDescription((HANDLE)thread_handle, wname);
+        }
+    }
 
 #else
     if (pthread_once(&checked_once, check_set_prio)) {
@@ -166,9 +245,26 @@ EbHandle svt_create_thread(void* thread_function(void*), void* thread_context) {
         return NULL;
     }
 
+    SvtThreadStart* payload = malloc(sizeof(*payload));
+    if (payload == NULL) {
+        SVT_ERROR("Failed to allocate thread start payload\n");
+        free(th);
+        pthread_attr_destroy(&attr);
+        return NULL;
+    }
+    payload->fn  = thread_function;
+    payload->arg = thread_context;
+    if (name && *name) {
+        strncpy(payload->name, name, sizeof(payload->name) - 1);
+        payload->name[sizeof(payload->name) - 1] = '\0';
+    } else {
+        payload->name[0] = '\0';
+    }
+
     int ret;
-    if ((ret = pthread_create(th, &attr, thread_function, thread_context))) {
+    if ((ret = pthread_create(th, &attr, svt_thread_trampoline, payload))) {
         SVT_ERROR("Failed to create thread: %s\n", strerror(ret));
+        free(payload);
         free(th);
         pthread_attr_destroy(&attr);
         return NULL;

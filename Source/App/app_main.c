@@ -435,6 +435,9 @@ int main(int argc, char* argv[]) {
     _setmode(_fileno(stdin), _O_BINARY);
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
+#ifdef __linux__
+    (void)pthread_setname_np(pthread_self(), "svt-app-main");
+#endif
     // GLOBAL VARIABLES
     EbErrorType return_error = EB_ErrorNone; // Error Handling
     uint32_t    passes;
