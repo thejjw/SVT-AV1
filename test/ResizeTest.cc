@@ -28,7 +28,7 @@
 #include "TestEnv.h"
 #include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "resize.h"
 #include "super_res.h"
 #include "util.h"

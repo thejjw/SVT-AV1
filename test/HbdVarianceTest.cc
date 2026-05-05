@@ -29,7 +29,7 @@
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
 #include "utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 using svt_av1_test_tool::SVTRandom;  // to generate the random

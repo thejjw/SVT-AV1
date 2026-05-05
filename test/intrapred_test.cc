@@ -26,7 +26,7 @@
 #include <array>
 #include <tuple>
 #include "common_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_malloc.h"
 
 namespace {

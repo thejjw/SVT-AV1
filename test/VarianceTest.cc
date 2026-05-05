@@ -28,7 +28,7 @@
 #include <new>
 
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "gtest/gtest.h"
 #include "utility.h"

@@ -28,7 +28,7 @@
 #include "mcp_sse2.h"
 #include "enc_intra_prediction.h"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "common_dsp_rtcd.h"
 #include "aom_dsp_rtcd.h"

@@ -27,7 +27,7 @@
 
 #include "gtest/gtest.h"
 #include "svt_psnr.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "pic_buffer_desc.h"
 

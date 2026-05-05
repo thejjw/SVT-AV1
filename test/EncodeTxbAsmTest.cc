@@ -32,7 +32,7 @@
 #include "util.h"
 #include "aom_dsp_rtcd.h"
 #include "TxfmCommon.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_time.h"
 #include "encode_txb_ref_c.h"
 

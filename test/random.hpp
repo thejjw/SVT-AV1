@@ -11,7 +11,7 @@
  */
 
 /******************************************************************************
- * @file random.h
+ * @file random.hpp
  *
  * @brief Random generator for svt-av1 unit tests
  * - wrap C++11 random generator for different range.
@@ -23,9 +23,8 @@
 #ifndef _TEST_RANDOM_H_
 #define _TEST_RANDOM_H_
 
-#include <stdint.h>
-#include <assert.h>
-#include <math.h>
+#include <cstdint>
+#include <cassert>
 #include <random>
 
 /** @defgroup svt_av1_test_tool Tool set of test
@@ -39,6 +38,7 @@ namespace svt_av1_test_tool {
 using std::mt19937;
 using std::uniform_int_distribution;
 using std::uniform_real_distribution;
+using seed_type = mt19937::result_type;
 
 /** SVTRandom defines a tool class for generating random integer as unit test
  * samples and params, the tool can support a random 32-bit integer from
@@ -47,34 +47,34 @@ using std::uniform_real_distribution;
 class SVTRandom {
   public:
     /** contructor with given minimum and maximum bound of random integer*/
-    SVTRandom(const int min_bound, const int max_bound)
-        : gen_(deterministic_seed_) {
+    SVTRandom(const int min_bound, const int max_bound) {
         setup(min_bound, max_bound);
+        setup(static_cast<float>(min_bound), static_cast<float>(max_bound));
     }
 
     /** contructor with given limit bits and signed symbol*/
-    SVTRandom(const int nbits, const bool is_signed)
-        : gen_(deterministic_seed_) {
+    SVTRandom(const int nbits, const bool is_signed) {
         calculate_bounds(nbits, is_signed);
     }
 
     /** contructor with given minimum and maximum bound of random real*/
-    SVTRandom(const float min_bound, const float max_bound)
-        : gen_(deterministic_seed_) {
+    SVTRandom(const float min_bound, const float max_bound) {
         setup(min_bound, max_bound);
+        setup(static_cast<int>(min_bound), static_cast<int>(max_bound));
     }
 
     /** contructor with given minimum, maximum bound of random integer and seed
      */
     explicit SVTRandom(const int min_bound, const int max_bound,
-                       const uint32_t seed)
+                       const seed_type seed)
         : gen_(seed) {
         setup(min_bound, max_bound);
+        setup(static_cast<float>(min_bound), static_cast<float>(max_bound));
     }
 
     /** contructor with given limit bits, signed symbol and seed */
     explicit SVTRandom(const int nbits, const bool is_signed,
-                       const uint32_t seed)
+                       const seed_type seed)
         : gen_(seed) {
         calculate_bounds(nbits, is_signed);
     }
@@ -82,7 +82,7 @@ class SVTRandom {
     /** reset generator with new seed
      * @param seed new seed for generator reset
      */
-    void reset(uint32_t seed) {
+    void reset(seed_type seed) {
         gen_.seed(seed);
     }
 
@@ -101,15 +101,15 @@ class SVTRandom {
     }
 
     float random_float() {
-        return (float)dist_real_(gen_);
+        return dist_real_(gen_);
     }
 
     uint8_t Rand8(void) {
-        return (uint8_t)(random());
+        return static_cast<uint8_t>(random());
     }
 
     uint16_t Rand16(void) {
-        return (uint16_t)(random());
+        return static_cast<uint16_t>(random());
     }
 
   private:
@@ -130,19 +130,21 @@ class SVTRandom {
     void calculate_bounds(const int nbits, const bool is_signed) {
         assert(nbits <= 32);
         const int set_bits = nbits - (is_signed || nbits == 32);
-        int min_bound = 0, max_bound = 0;
-        for (int i = 0; i < set_bits; i++)
-            max_bound |= (1 << i);
-        if (is_signed)
-            min_bound = 0 - (1 << (nbits - 1));
+        const int max_bound = (1 << set_bits) - 1;
+        const int min_bound = is_signed ? 0 - (1 << (nbits - 1)) : 0;
         setup(min_bound, max_bound);
+        setup(static_cast<float>(min_bound), static_cast<float>(max_bound));
     }
 
   private:
-    const int deterministic_seed_{13596};   /**< seed of random generator */
-    std::mt19937 gen_;                      /**< random integer generator */
-    uniform_int_distribution<> dist_nbit_;  /**< rule of integer generator */
-    uniform_real_distribution<> dist_real_; /**< rule of real generator */
+    /**< seed of random generator */
+    static constexpr seed_type deterministic_seed_{13596};
+    /**< random integer generator */
+    std::mt19937 gen_{deterministic_seed_};
+    /**< rule of integer generator */
+    uniform_int_distribution<int> dist_nbit_;
+    /**< rule of real generator */
+    uniform_real_distribution<float> dist_real_;
 };
 
 }  // namespace svt_av1_test_tool

@@ -28,7 +28,7 @@
 #include "common_dsp_rtcd.h"
 #include "common_utils.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_malloc.h"
 #include "util.h"
 

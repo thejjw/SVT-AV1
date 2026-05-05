@@ -38,7 +38,7 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "convolve.h"
 

@@ -28,7 +28,7 @@
 #include "restoration.h"
 #include "svt_time.h"
 #include "utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 /**

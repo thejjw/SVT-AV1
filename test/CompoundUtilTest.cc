@@ -32,7 +32,7 @@
 #include <array>
 #include "definitions.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "convolve.h"
 #include "svt_malloc.h"
 #include "util.h"

@@ -30,7 +30,7 @@
 #include "svt_time.h"
 #include "definitions.h"
 #include "transforms.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "aom_dsp_rtcd.h"
 #include "transforms.h"

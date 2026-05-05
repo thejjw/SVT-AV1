@@ -29,7 +29,7 @@
 
 #include "aom_dsp_rtcd.h"
 #include "compute_mean.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "utility.h"
 /**

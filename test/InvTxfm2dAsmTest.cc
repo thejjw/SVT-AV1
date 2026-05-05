@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include "common_dsp_rtcd.h"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "aom_dsp_rtcd.h"
 #include "unit_test_utility.h"

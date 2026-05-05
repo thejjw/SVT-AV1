@@ -27,7 +27,7 @@
 #include <cstdint>
 #include "TestEnv.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 
 namespace {
 using svt_av1_test_tool::SVTRandom;

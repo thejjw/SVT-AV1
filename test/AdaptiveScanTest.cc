@@ -26,7 +26,7 @@
 #include "TxfmCommon.h"
 #include "cabac_context_model.h"  // use tx_type_to_class
 #include "util.h"
-#include "random.h"
+#include "random.hpp"
 
 static bool valid_scan(const int16_t *scan, const int16_t *iscan, int si,
                        int expected_pos) {

@@ -34,7 +34,7 @@
 #include "pcs.h"
 #include "aom_dsp_rtcd.h"
 #include "util.h"
-#include "random.h"
+#include "random.hpp"
 #include "q_matrices.h"
 
 namespace QuantizeAsmTest {

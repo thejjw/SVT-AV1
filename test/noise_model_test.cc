@@ -10,7 +10,7 @@
  * https://www.aomedia.org/license/patent-license.
  */
 #include "gtest/gtest.h"
-#include "random.h"
+#include "random.hpp"
 #include "definitions.h"
 #include "aom_dsp_rtcd.h"
 #include "noise_util.h"

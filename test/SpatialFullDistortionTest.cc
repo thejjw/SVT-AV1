@@ -14,7 +14,7 @@
 #include <array>
 #include <cstdio>
 #include <vector>
-#include "random.h"
+#include "random.hpp"
 #include "definitions.h"
 #include "pic_operators.h"
 #include "unit_test_utility.h"

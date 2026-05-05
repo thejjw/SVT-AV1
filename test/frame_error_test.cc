@@ -18,5 +18,5 @@
 #include "aom_dsp_rtcd.h"
 #include "unit_test_utility.h"
 #include "utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"

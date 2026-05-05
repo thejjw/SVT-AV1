@@ -26,7 +26,7 @@
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
 #include "gtest/gtest.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 namespace {

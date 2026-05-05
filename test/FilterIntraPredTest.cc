@@ -22,7 +22,7 @@
  ******************************************************************************/
 #include "gtest/gtest.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "utility.h"
 #include "common_utils.h"

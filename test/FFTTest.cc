@@ -27,7 +27,7 @@
 #include <sstream>
 
 #include "gtest/gtest.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "utility.h"
 #include "aom_dsp_rtcd.h"

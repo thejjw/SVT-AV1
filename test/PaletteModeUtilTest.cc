@@ -28,7 +28,7 @@
 #include "gtest/gtest.h"
 #include "definitions.h"
 #include "utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "svt_time.h"
 #include "aom_dsp_rtcd.h"

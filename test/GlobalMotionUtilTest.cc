@@ -32,7 +32,7 @@
 extern "C" {
 #include "ransac.h"
 }
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 using std::tuple;

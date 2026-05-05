@@ -29,7 +29,7 @@
 #include "utility.h"
 #include "restoration.h"
 #include "unit_test_utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 #define MAX_DATA_BLOCK 384

@@ -42,7 +42,7 @@
 #include "motion_estimation.h"
 #include "me_context.h"
 #include "svt_time.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 #include "mcomp.h"

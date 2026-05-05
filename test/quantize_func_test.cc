@@ -18,7 +18,7 @@
 #include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
 #include "md_config_process.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "definitions.h"
 #include "pcs.h"
