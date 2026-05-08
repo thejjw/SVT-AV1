@@ -208,6 +208,7 @@
 #define MAX_TX_SIZE_TOKEN "--max-tx-size"
 #define AC_BIAS_TOKEN "--ac-bias"
 #define HBD_MDS_TOKEN "--hbd-mds"
+#define ZONES_TOKEN "--zones"
 
 static EbErrorType validate_error(EbErrorType err, const char* token, const char* value) {
     switch (err) {
@@ -543,6 +544,22 @@ err:
     return EB_ErrorBadParameter;
 }
 
+static EbErrorType set_cfg_quality_zones(EbConfig* cfg, const char* token, const char* value) {
+    (void)token;
+
+    if (!value) {
+        return svt_av1_enc_parse_parameter(&cfg->config, "zones", "");
+    }
+
+    EbErrorType err = svt_av1_enc_parse_parameter(&cfg->config, "zones", value);
+    if (err != EB_ErrorNone) {
+        fprintf(stderr, "Error: Failed to parse quality zones from config file: %s\n", value);
+        return err;
+    }
+
+    return EB_ErrorNone;
+}
+
 static EbErrorType set_no_progress(EbConfig* cfg, const char* token, const char* value) {
     (void)token;
     switch (value ? *value : '1') {
@@ -869,6 +886,8 @@ ConfigDescription config_entry_rc[] = {
     {LUMINANCE_QP_BIAS_TOKEN, "Adjusts a frame's QP based on its average luma value, default is 0 [0-100]"},
     // Sharpness
     {SHARPNESS_TOKEN, "Bias towards decreased/increased sharpness, default is 0 [-7 to 7]"},
+    // Zones
+    {ZONES_TOKEN, "CRF/CQP zones, format: start,end,quality;start,end,quality;..., default is no zones"},
     // Termination
     {NULL, NULL}};
 
@@ -1247,6 +1266,7 @@ ConfigEntry config_entry[] = {
     // HBD MDS
     {HBD_MDS_TOKEN, "HBDMDS", set_cfg_generic_token},
 
+    {ZONES_TOKEN, "Zones", set_cfg_quality_zones},
     // Termination
     {NULL, NULL, NULL}};
 
