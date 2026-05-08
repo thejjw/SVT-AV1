@@ -9642,12 +9642,30 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
             }
         }
     }
+
+    uint32_t active_ext_crf_qindex_offset = scs->static_config.extended_crf_qindex_offset;
+    if (scs->enable_qp_scaling_flag && scs->static_config.quality_zones && scs->static_config.num_zones > 0) {
+        for (uint16_t i = 0; i < scs->static_config.num_zones; i++) {
+            if (ppcs->picture_number >= scs->static_config.quality_zones[i].start_frame &&
+                ppcs->picture_number <= scs->static_config.quality_zones[i].end_frame) {
+                int zone_baseq = scs->static_config.quality_zones[i].zone_baseq;
+                int zone_qsidx = scs->static_config.quality_zones[i].zone_qsidx;
+                if (zone_baseq >= MAX_QP_VALUE) {
+                    active_ext_crf_qindex_offset = (zone_baseq - MAX_QP_VALUE) * 4 + zone_qsidx;
+                } else if (zone_baseq >= 0) {
+                    active_ext_crf_qindex_offset = 0;
+                }
+                break;
+            }
+        }
+    }
+
     // Extended CRF range (63.25 - 70), increase lambda weight toward further bit saving
     // Max lambda weight increase: 28 * 28 = 784
     // The multiplier of "28" was derived empirically to allow a smooth bitrate decrease as
     // CRF increases from 63.25 (extended_crf_qindex_offset = 1) to 70 (extended_crf_qindex_offset = 4 * 7)
-    if (scs->static_config.qp == MAX_QP_VALUE && scs->static_config.extended_crf_qindex_offset) {
-        pcs->lambda_weight += scs->static_config.extended_crf_qindex_offset * 28;
+    if (scs->static_config.qp == MAX_QP_VALUE && active_ext_crf_qindex_offset) {
+        pcs->lambda_weight += active_ext_crf_qindex_offset * 28;
     }
 
     uint8_t dlf_level = 0;
@@ -10110,12 +10128,30 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
         // Upper QP cutoff: QP 39 = (63 - QP) * 3
         pcs->lambda_weight = CLIP3(0, 72, MIN(ppcs->picture_qp * 4, (63 - pcs->ppcs->picture_qp) * 3)) + 128;
     }
+
+    uint32_t active_ext_crf_qindex_offset = scs->static_config.extended_crf_qindex_offset;
+    if (scs->enable_qp_scaling_flag && scs->static_config.quality_zones && scs->static_config.num_zones > 0) {
+        for (uint16_t i = 0; i < scs->static_config.num_zones; i++) {
+            if (ppcs->picture_number >= scs->static_config.quality_zones[i].start_frame &&
+                ppcs->picture_number <= scs->static_config.quality_zones[i].end_frame) {
+                int zone_baseq = scs->static_config.quality_zones[i].zone_baseq;
+                int zone_qsidx = scs->static_config.quality_zones[i].zone_qsidx;
+                if (zone_baseq >= MAX_QP_VALUE) {
+                    active_ext_crf_qindex_offset = (zone_baseq - MAX_QP_VALUE) * 4 + zone_qsidx;
+                } else if (zone_baseq >= 0) {
+                    active_ext_crf_qindex_offset = 0;
+                }
+                break;
+            }
+        }
+    }
+
     // Extended CRF range (63.25 - 70), increase lambda weight toward further bit saving
     // Max lambda weight increase: 28 * 28 = 784
     // The multiplier of "28" was derived empirically to allow a smooth bitrate decrease as
     // CRF increases from 63.25 (extended_crf_qindex_offset = 1) to 70 (extended_crf_qindex_offset = 4 * 7)
-    if (scs->static_config.qp == MAX_QP_VALUE && scs->static_config.extended_crf_qindex_offset) {
-        pcs->lambda_weight += scs->static_config.extended_crf_qindex_offset * 28;
+    if (scs->static_config.qp == MAX_QP_VALUE && active_ext_crf_qindex_offset) {
+        pcs->lambda_weight += active_ext_crf_qindex_offset * 28;
     }
 
     uint8_t dlf_level = 0;
@@ -10437,12 +10473,30 @@ void svt_aom_sig_deriv_mode_decision_config_allintra(SequenceControlSet* scs, Pi
             pcs->lambda_weight = 150;
         }
     }
+
+    uint32_t active_ext_crf_qindex_offset = scs->static_config.extended_crf_qindex_offset;
+    if (scs->enable_qp_scaling_flag && scs->static_config.quality_zones && scs->static_config.num_zones > 0) {
+        for (uint16_t i = 0; i < scs->static_config.num_zones; i++) {
+            if (ppcs->picture_number >= scs->static_config.quality_zones[i].start_frame &&
+                ppcs->picture_number <= scs->static_config.quality_zones[i].end_frame) {
+                int zone_baseq = scs->static_config.quality_zones[i].zone_baseq;
+                int zone_qsidx = scs->static_config.quality_zones[i].zone_qsidx;
+                if (zone_baseq >= MAX_QP_VALUE) {
+                    active_ext_crf_qindex_offset = (zone_baseq - MAX_QP_VALUE) * 4 + zone_qsidx;
+                } else if (zone_baseq >= 0) {
+                    active_ext_crf_qindex_offset = 0;
+                }
+                break;
+            }
+        }
+    }
+
     // Extended CRF range (63.25 - 70), increase lambda weight toward further bit saving
     // Max lambda weight increase: 28 * 28 = 784
     // The multiplier of "28" was derived empirically to allow a smooth bitrate decrease as
     // CRF increases from 63.25 (extended_crf_qindex_offset = 1) to 70 (extended_crf_qindex_offset = 4 * 7)
-    if (scs->static_config.qp == MAX_QP_VALUE && scs->static_config.extended_crf_qindex_offset) {
-        pcs->lambda_weight += scs->static_config.extended_crf_qindex_offset * 28;
+    if (scs->static_config.qp == MAX_QP_VALUE && active_ext_crf_qindex_offset) {
+        pcs->lambda_weight += active_ext_crf_qindex_offset * 28;
     }
     // Set the dlf level
     uint8_t dlf_level = 0;

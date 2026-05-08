@@ -495,17 +495,26 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     if (ppcs->qp_on_the_fly) {
         new_qindex = quantizer_to_qindex[ppcs->picture_qp];
     } else {
-        int32_t zone_qindex = -1;
-        int     zone_baseq  = -1;
-        int     zone_qsidx  = -1;
+        int     active_ext_crf_qindex_offset = scs->static_config.extended_crf_qindex_offset;
+        bool    active_qp_is_max = (scs->static_config.qp == MAX_QP_VALUE);
         if (scs->enable_qp_scaling_flag) {
+            int32_t zone_qindex = -1;
             if (scs->static_config.quality_zones) {
+                int zone_baseq  = -1;
+                int zone_qsidx  = -1;
                 get_zone_quality_for_frame(scs->static_config.quality_zones,
                                             scs->static_config.num_zones,
                                             pcs->picture_number,
                                             &zone_baseq,
                                             &zone_qsidx);
                 if (zone_baseq >= 0) {
+                    if (zone_baseq >= MAX_QP_VALUE) {
+                        active_ext_crf_qindex_offset = (zone_baseq - MAX_QP_VALUE) * 4 + zone_qsidx;
+                        active_qp_is_max = true;
+                    } else {
+                        active_ext_crf_qindex_offset = 0;
+                        active_qp_is_max = false;
+                    }
                     zone_baseq  = clamp_qp(scs, zone_baseq);
                     zone_qindex = clamp_qindex(scs, quantizer_to_qindex[zone_baseq] + zone_qsidx);
                 }
@@ -536,11 +545,8 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
         }
 
         // Extended CRF range (63.25 - 70), add offset to compress QP scaling
-        if (scs->static_config.quality_zones && zone_baseq == MAX_QP_VALUE && zone_qsidx > 0) {
-            new_qindex += (MAXQ - new_qindex) * zone_qsidx / 56;
-            new_qindex = clamp_qindex(scs, new_qindex);
-        } else if (scs->static_config.qp == MAX_QP_VALUE && scs->static_config.extended_crf_qindex_offset) {
-            new_qindex += (MAXQ - new_qindex) * scs->static_config.extended_crf_qindex_offset / 56;
+        if (active_qp_is_max && active_ext_crf_qindex_offset) {
+            new_qindex += (MAXQ - new_qindex) * active_ext_crf_qindex_offset / 56;
             new_qindex = clamp_qindex(scs, new_qindex);
         }
 
