@@ -648,6 +648,7 @@ static void derive_intra_coeff_level(PictureControlSet* pcs) {
 }
 
 static void derive_inter_coeff_level(PictureControlSet* pcs) {
+#if !OPT_COEFF_LEVEL
     // Derive the input nois level
     EbPictureBufferDesc* input_pic = pcs->ppcs->enhanced_pic;
 
@@ -658,7 +659,8 @@ static void derive_inter_coeff_level(PictureControlSet* pcs) {
                                                        input_pic->height,
                                                        input_pic->y_stride);
 
-    noise_level_fp16             = svt_aom_noise_log1p_fp16(noise_level_fp16);
+    noise_level_fp16 = svt_aom_noise_log1p_fp16(noise_level_fp16);
+#endif
     uint64_t cmplx               = pcs->ppcs->norm_me_dist / MAX(1, pcs->scs->static_config.qp);
     uint64_t coeff_vlow_level_th = COEFF_LVL_INTER_TH_0;
     uint64_t coeff_low_level_th  = COEFF_LVL_INTER_TH_1;
@@ -677,6 +679,7 @@ static void derive_inter_coeff_level(PictureControlSet* pcs) {
         coeff_high_level_th = (uint64_t)((double)coeff_high_level_th * 1.2);
     }
 
+#if !OPT_COEFF_LEVEL
     if (noise_level_fp16 < 26572 /*FLOAT2FP(log1p(0.5), 16, int32_t)*/) {
         coeff_vlow_level_th = (uint64_t)((double)coeff_vlow_level_th * 0.7);
         coeff_low_level_th  = (uint64_t)((double)coeff_low_level_th * 0.7);
@@ -686,6 +689,7 @@ static void derive_inter_coeff_level(PictureControlSet* pcs) {
         coeff_low_level_th  = (uint64_t)((double)coeff_low_level_th * 1.05);
         coeff_high_level_th = (uint64_t)((double)coeff_high_level_th * 1.05);
     }
+#endif
 
     pcs->coeff_lvl = NORMAL_LVL;
     if (cmplx < coeff_vlow_level_th) {
@@ -916,7 +920,11 @@ void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
         pcs->coeff_lvl = INVALID_LVL;
         if (scs->allintra) {
             derive_intra_coeff_level(pcs);
+#if TUNE_SIMPLIFY_SETTINGS
+        } else if (!scs->static_config.rtc && pcs->slice_type != I_SLICE) {
+#else
         } else if (!scs->static_config.rtc && pcs->slice_type != I_SLICE && !pcs->ppcs->sc_class1) {
+#endif
             derive_inter_coeff_level(pcs);
         }
         // -------
@@ -988,8 +996,20 @@ void* svt_aom_mode_decision_configuration_kernel(void* input_ptr) {
         }
         CdefSearchControls* cdef_ctrls = &pcs->ppcs->cdef_search_ctrls;
         const uint8_t       skip_perc  = pcs->ref_skip_percentage;
+#if OPT_CDEF_SKIP_TH
+        // Adjust skip_th by QP: at low QP lower the threshold (skip CDEF more — picture already clean),
+        // at high QP raise it (keep CDEF — it helps with compression artifacts)
+        uint8_t cdef_skip_th = 0;
+        if (cdef_ctrls->skip_th) {
+            cdef_skip_th = (uint8_t)CLIP3(
+                25, 100, (int)cdef_ctrls->skip_th + ((int)pcs->ppcs->frm_hdr.quantization_params.base_q_idx - 128) / 4);
+        }
+        if (me_based_cdef_skip(pcs) || (cdef_ctrls->skip_th && skip_perc >= cdef_skip_th) ||
+            (scs->vq_ctrls.sharpness_ctrls.cdef && pcs->ppcs->is_noise_level)) {
+#else
         if (me_based_cdef_skip(pcs) || (skip_perc > 75 && cdef_ctrls->use_skip_detector) ||
             (scs->vq_ctrls.sharpness_ctrls.cdef && pcs->ppcs->is_noise_level)) {
+#endif
             pcs->ppcs->cdef_level = 0;
         } else if (cdef_ctrls->use_reference_cdef_fs || cdef_ctrls->search_best_ref_fs) {
             update_cdef_filters_on_ref_info(pcs);
