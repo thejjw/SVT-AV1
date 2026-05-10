@@ -24,6 +24,7 @@
 #include <array>
 #include <cstdint>
 #include "gtest/gtest.h"
+#include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
 #include "random.hpp"
@@ -119,15 +120,7 @@ using HbdVarianceParam = std::tuple<uint32_t,            /**< width */
  */
 class HbdVarianceTest : public ::testing::TestWithParam<HbdVarianceParam> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(HbdVarianceTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(HbdVarianceTest)
 
     template <int times>
     void run_zero_test() {

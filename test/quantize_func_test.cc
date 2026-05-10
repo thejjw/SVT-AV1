@@ -67,15 +67,7 @@ constexpr int kTestNum = 1000;
 template <typename ParamType, typename FuncType>
 class QuantizeTest : public ::testing::TestWithParam<ParamType> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(QuantizeTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(QuantizeTest)
 
     QuantizeTest() {
         PictureParentControlSet pcs;

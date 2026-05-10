@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include "aligned_allocator.hpp"
 #include "random.hpp"
 #include "util.h"
 #include "common_utils.h"
@@ -36,15 +37,7 @@ using PredParams = tuple<FilterIntraMode, TxSize, FilterIntraPredictorFunc>;
 
 class FilterIntraPredTest : public ::testing::TestWithParam<PredParams> {
   public:
-    void* operator new(size_t size) {
-        if (void* ptr = svt_aom_memalign(alignof(FilterIntraPredTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void* ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(FilterIntraPredTest)
 
   protected:
     void run_test(size_t test_num) {

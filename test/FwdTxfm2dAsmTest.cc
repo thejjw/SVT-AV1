@@ -24,9 +24,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstdlib>
-#include <new>
 
+#include "aligned_allocator.hpp"
 #include "definitions.h"
 #include "random.hpp"
 #include "util.h"
@@ -266,15 +265,7 @@ constexpr FwdTxfm2dFunc fwd_txfm_2d_N2_neon_func[TX_SIZES_ALL] = {
  */
 class FwdTxfm2dAsmTest : public ::testing::TestWithParam<FwdTxfm2dAsmParam> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(FwdTxfm2dAsmTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(FwdTxfm2dAsmTest)
 
     FwdTxfm2dAsmTest() {
         const auto total_size = width_ * height_;
