@@ -113,7 +113,7 @@ diff_output=$(
     if git diff "$MERGE_BASE" -- "$@" | grep -qaxv '.*'; then
         echo "Warning: Invalid utf-8 detected in pre-image, clang-format might not be accurate" >&2
     fi
-    git diff "$MERGE_BASE" -- "$@" | iconv -c -t UTF-8 | python3 "$REPO_DIR/test/clang-format-diff.py" -p1
+    git diff -U0 "$MERGE_BASE" -- "$@" | iconv -c -t UTF-8 | python3 "$REPO_DIR/test/clang-format-diff.py" -p1
 ) || true
 if [ -n "$diff_output" ]; then
     if [ -n "$CI" ]; then
