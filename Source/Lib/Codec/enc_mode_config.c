@@ -1589,7 +1589,6 @@ static void set_cdef_search_controls(PictureParentControlSet* pcs, uint8_t cdef_
         // Primary-only: no secondary strength candidates
         cdef_ctrls->enabled                      = 1;
         cdef_ctrls->first_pass_fs_num            = 2;
-        second_pass_fs_num                       = 0;
         cdef_ctrls->default_second_pass_fs_num   = 0;
         cdef_ctrls->default_first_pass_fs[0]     = pf_gi[0];
         cdef_ctrls->default_first_pass_fs[1]     = pf_gi[15];
