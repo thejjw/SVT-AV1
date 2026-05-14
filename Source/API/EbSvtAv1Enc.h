@@ -982,12 +982,33 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is 1. */
     bool enable_tf_key;
 
+    /**
+     * @brief Max Intra Bitrate Percentage
+     *
+     * Maximum bitrate for intra frames, expressed as a percentage of the
+     * target bitrate. 0 means no limit.
+     *
+     * Default is 300.
+     */
+    uint32_t max_intra_bitrate_pct;
+
+    /**
+     * @brief Max Inter Bitrate Percentage
+     *
+     * Maximum bitrate for inter frames, expressed as a percentage of the
+     * target bitrate. 0 means no limit.
+     *
+     * Default is 0.
+     */
+    uint32_t max_inter_bitrate_pct;
+
     // clang-format off
     /* Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct */
     uint8_t padding[128
         - sizeof(PredStructure) + sizeof (uint8_t) // pred_strucutre type was changed from uint8_t to PredStructure
         - sizeof(int) // This was added to take into account the new hbd_mds field while keeping previous ABI compat
         - sizeof(bool) // add the ability to shut MCTF for key frames
+        - sizeof(uint32_t) * 2 // max intra/inter bitrates
     ];
     // clang-format on
 } EbSvtAv1EncConfiguration;

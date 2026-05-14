@@ -4603,6 +4603,8 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
         scs->static_config.over_shoot_pct = 25;
     }
     scs->static_config.mbr_over_shoot_pct       = config_struct->mbr_over_shoot_pct;
+    scs->static_config.max_intra_bitrate_pct    = config_struct->max_intra_bitrate_pct;
+    scs->static_config.max_inter_bitrate_pct    = config_struct->max_inter_bitrate_pct;
     scs->static_config.gop_constraint_rc        = config_struct->gop_constraint_rc;
     scs->static_config.maximum_buffer_size_ms   = config_struct->maximum_buffer_size_ms;
     scs->static_config.starting_buffer_level_ms = config_struct->starting_buffer_level_ms;
@@ -5507,10 +5509,10 @@ static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType* input_ptr, S
         } else if (node->node_type == RATE_CHANGE_EVENT) {
             SvtAv1RateInfo* node_data = (SvtAv1RateInfo*)node->data;
             if ((scs->static_config.target_bit_rate != node_data->target_bit_rate) &&
-                !((scs->static_config.pred_structure == LOW_DELAY) &&
-                  (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR))) {
+                !(scs->static_config.rtc && scs->static_config.pred_structure == LOW_DELAY &&
+                  scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR)) {
                 input_ptr->flags = EB_BUFFERFLAG_EOS;
-                SVT_ERROR("TBR change on the fly not supported for any mode other than Low-Delay CBR\n");
+                SVT_ERROR("TBR change on the fly not supported for any mode other than RTC Low-Delay CBR\n");
                 return EB_ErrorBadParameter;
             }
             if (node_data->seq_qp != 0) {
