@@ -15,7 +15,9 @@
 
 #include "svt_malloc.h"
 #include <cstddef>
+#include <memory>
 #include <new>
+#include <vector>
 
 namespace svt_av1_test_tool {
 
@@ -71,6 +73,25 @@ bool operator!=(const aligned_allocator<T> &, const aligned_allocator<U> &) {
     void operator delete(void *ptr) noexcept {                     \
         svt_aom_free(ptr);                                         \
     }
+
+/**
+ * @brief A vector that provides a constructor that only takes size.
+ * Useful for defining a class member vector with a size, but stores an integer
+ * type. This is mainly to prioritize the size constructor over an
+ * initializer_list.
+ *
+ * @tparam T type to store in the vector
+ * @tparam Allocator allocator type to use for the vector
+ */
+template <typename T, typename Allocator = std::allocator<T>>
+struct SizeOnlyVec : public std::vector<T, Allocator> {
+    // Constructor so we don't have to specify the allocator every time we
+    // declare a vector. Similar to what we have in ResizeTest.cc
+    explicit SizeOnlyVec(size_t size, const T &init_value = T(),
+                         const Allocator &allocator = Allocator())
+        : std::vector<T, Allocator>(size, init_value, allocator) {
+    }
+};
 
 }  // namespace svt_av1_test_tool
 

@@ -24,7 +24,6 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <cstdint>
-#include <vector>
 #include "TestEnv.h"
 #include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
@@ -36,6 +35,7 @@
 namespace {
 using std::make_tuple;
 using svt_av1_test_tool::aligned_allocator;
+using svt_av1_test_tool::SizeOnlyVec;
 using svt_av1_test_tool::SVTRandom;
 
 constexpr auto min_test_times = 10;
@@ -167,17 +167,7 @@ class ResizePlaneTest : public ::testing::TestWithParam<ResizeTestParam> {
     const uint16_t scaled_height_{
         svt_aom_calc_scaled_size_helper(src_height_, denom_)};
 
-    struct SampleVector
-        : public std::vector<Sample, aligned_allocator<Sample>> {
-        // Constructor so we don't have to specify the allocator every time we
-        // declare a vector.
-        explicit SampleVector(size_t size, const Sample &init_value = Sample(),
-                              const aligned_allocator<Sample> &allocator =
-                                  aligned_allocator<Sample>())
-            : std::vector<Sample, aligned_allocator<Sample>>(size, init_value,
-                                                             allocator) {
-        }
-    };
+    using SampleVector = SizeOnlyVec<Sample, aligned_allocator<Sample>>;
 
     SampleVector src_{std::size_t(src_stride_ * src_height_)};
     SampleVector scaled_ref_{std::size_t(src_stride_ * src_height_), ref_stuff};

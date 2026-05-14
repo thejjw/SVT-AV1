@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <memory>
 #include <set>
 #include <vector>
 
@@ -39,6 +38,7 @@
 
 namespace {
 using svt_av1_test_tool::aligned_allocator;
+using svt_av1_test_tool::SizeOnlyVec;
 using svt_av1_test_tool::SVTRandom;
 
 /**
@@ -409,17 +409,6 @@ class Av1KMeansDim
     SVTRandom rnd8_{0, ((1 << 8) - 1)};
     const FuncType func_ref_{std::get<0>(TEST_GET_PARAM(2))};
     const FuncType func_tst_{std::get<1>(TEST_GET_PARAM(2))};
-
-    template <typename T>
-    struct SizeOnlyVec : public std::vector<T, std::allocator<T>> {
-        // Constructor so we don't have to specify the allocator every time we
-        // declare a vector. Similar to what we have in ResizeTest.cc
-        explicit SizeOnlyVec(
-            size_t size, const T& init_value = T(),
-            const std::allocator<T>& allocator = std::allocator<T>())
-            : std::vector<T, std::allocator<T>>(size, init_value, allocator) {
-        }
-    };
 
     SizeOnlyVec<int> centroids_ref_{std::size_t{centroids_size}};
     SizeOnlyVec<int> centroids_tst_{std::size_t{centroids_size}};
