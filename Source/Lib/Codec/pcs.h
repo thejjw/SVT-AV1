@@ -1132,6 +1132,13 @@ typedef struct PictureParentControlSet {
     bool     seq_param_changed;
     bool     bitrate_changed;
     bool     frame_rate_changed;
+    // Runtime bitrate and frame rate values that may be adjusted mid-encoding
+    // via RATE_CHANGE_EVENT / FRAME_RATE_CHANGE_EVENT. These are per-frame
+    // snapshots stamped by resource coordination so downstream threads (RC)
+    // read thread-safe per-PCS values instead of the shared SCS.
+    uint32_t target_bit_rate;
+    uint32_t frame_rate_numerator;
+    uint32_t frame_rate_denominator;
     uint64_t norm_me_dist;
     uint8_t  tpl_params_ready;
     bool     is_startup_gop;
@@ -1216,7 +1223,7 @@ EbErrorType svt_aom_picture_parent_control_set_creator(EbPtr* object_dbl_ptr, Eb
 EbErrorType svt_aom_me_creator(EbPtr* object_dbl_ptr, EbPtr object_init_data_ptr);
 EbErrorType svt_aom_me_sb_results_ctor(MeSbResults* obj_ptr, PictureControlSetInitData* init_data_ptr);
 EbErrorType ppcs_update_param(PictureParentControlSet* ppcs);
-EbErrorType pcs_update_param(PictureControlSet* pcs);
+EbErrorType pcs_update_param(PictureControlSet* pcs, int8_t enc_mode);
 EbErrorType me_update_param(MotionEstimationData* me_data, struct SequenceControlSet* scs);
 EbErrorType recon_coef_update_param(EncDecSet* recon_coef, struct SequenceControlSet* scs);
 bool        svt_aom_is_pic_skipped(PictureParentControlSet* pcs);

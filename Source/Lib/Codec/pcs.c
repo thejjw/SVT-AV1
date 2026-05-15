@@ -369,7 +369,7 @@ uint32_t svt_aom_get_out_buffer_size(uint32_t picture_width, uint32_t picture_he
 /*
 pcs_update_param: update the parameters in PictureParentControlSet for changing the resolution on the fly
 */
-EbErrorType pcs_update_param(PictureControlSet* pcs) {
+EbErrorType pcs_update_param(PictureControlSet* pcs, int8_t enc_mode) {
     SequenceControlSet* scs      = pcs->scs;
     const bool          rtc_tune = scs->static_config.rtc;
     const bool          allintra = scs->allintra;
@@ -397,17 +397,16 @@ EbErrorType pcs_update_param(PictureControlSet* pcs) {
     if ((is_16bit) || (scs->is_16bit_pipeline)) {
         svt_picture_buffer_desc_update(pcs->input_frame16bit, (EbPtr)&coeff_buffer_desc_init_data);
     }
-    if (allintra ? svt_aom_get_enable_restoration_allintra(scs->static_config.enc_mode,
-                                                           scs->static_config.enable_restoration_filtering)
+    if (allintra ? svt_aom_get_enable_restoration_allintra(enc_mode, scs->static_config.enable_restoration_filtering)
 #if TUNE_SIMPLIFY_SETTINGS
             : rtc_tune ? svt_aom_get_enable_restoration_rtc(
 #else
-            : rtc_tune ? svt_aom_get_enable_restoration_rtc(scs->static_config.enc_mode,
+            : rtc_tune ? svt_aom_get_enable_restoration_rtc(enc_mode,
 #endif
                              scs->static_config.enable_restoration_filtering,
                              scs->input_resolution,
                              scs->static_config.fast_decode)
-                       : svt_aom_get_enable_restoration_default(scs->static_config.enc_mode,
+                       : svt_aom_get_enable_restoration_default(enc_mode,
                                                                 scs->static_config.enable_restoration_filtering,
                                                                 scs->input_resolution,
                                                                 scs->static_config.fast_decode)) {
@@ -1425,19 +1424,6 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
     object_ptr->undershoot_seen = 0;
     object_ptr->low_cr_seen     = 0;
     EB_CREATE_MUTEX(object_ptr->pcs_total_rate_mutex);
-    ResolutionRange resolution;
-    svt_aom_derive_input_resolution(&resolution, init_data_ptr->picture_width * init_data_ptr->picture_height);
-    object_ptr->enable_me_16x16 = svt_aom_get_enable_me_16x16(init_data_ptr->enc_mode);
-
-    // 8x8 can only be used if 16x16 is enabled
-    object_ptr->enable_me_8x8 = object_ptr->enable_me_16x16
-#if TUNE_SIMPLIFY_SETTINGS
-        ? svt_aom_get_enable_me_8x8(init_data_ptr->enc_mode, resolution, init_data_ptr->static_config.rtc)
-#else
-        ? svt_aom_get_enable_me_8x8(
-              init_data_ptr->enc_mode, resolution, init_data_ptr->static_config.rtc, init_data_ptr->use_flat_ipp)
-#endif
-        : 0;
     EB_NEW(object_ptr->dg_detector, svt_aom_dg_detector_seg_ctor);
     return return_error;
 }
