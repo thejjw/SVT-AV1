@@ -505,6 +505,52 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             config->fast_decode);
         return_error = EB_ErrorBadParameter;
     }
+#if FTR_TUNE_VMAF
+    if (config->tune > TUNE_VMAF) {
+        SVT_ERROR(
+            "Invalid tune flag [0 - 5, 0 for VQ, 1 for PSNR, 2 for SSIM, 3 for IQ, 4 for MS_SSIM, and 5 for VMAF], "
+            "your input: "
+            "%d\n",
+            config->tune);
+        return_error = EB_ErrorBadParameter;
+    }
+    // RC: SSIM, IQ, MS_SSIM, VMAF -> CRF only (VBR, CBR not supported)
+    if (config->tune == TUNE_SSIM || config->tune == TUNE_IQ || config->tune == TUNE_MS_SSIM ||
+        config->tune == TUNE_VMAF) {
+        if (config->rate_control_mode != 0) {
+            SVT_ERROR("Tune %s only supports CRF rate control mode\n",
+                      config->tune == TUNE_SSIM       ? "SSIM"
+                          : config->tune == TUNE_IQ   ? "IQ"
+                          : config->tune == TUNE_VMAF ? "VMAF"
+                                                      : "MS_SSIM");
+            return_error = EB_ErrorBadParameter;
+        }
+    }
+
+    // pred_struct: SSIM, MS_SSIM -> ALL_INTRA and RA only (LOW_DELAY not supported)
+    if (config->tune == TUNE_SSIM || config->tune == TUNE_MS_SSIM) {
+        if (config->pred_structure == LOW_DELAY) {
+            SVT_ERROR("Tune %s only supports all-intra and random access prediction structures\n",
+                      config->tune == TUNE_SSIM ? "SSIM" : "MS_SSIM");
+            return_error = EB_ErrorBadParameter;
+        }
+    }
+
+    // pred_struct: VMAF -> RA only (ALL_INTRA and LOW_DELAY not supported)
+    if (config->tune == TUNE_VMAF && (config->pred_structure == ALL_INTRA || config->pred_structure == LOW_DELAY)) {
+        SVT_ERROR("Tune VMAF only supports random access prediction structure\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
+    // pred_struct: IQ -> ALL_INTRA and LOW_DELAY only (RA not supported); LOW_DELAY is experimental
+    if (config->tune == TUNE_IQ && config->pred_structure == RANDOM_ACCESS) {
+        SVT_ERROR("Tune IQ only supports all-intra and low delay (experimental) prediction structures\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (config->tune == TUNE_IQ && config->pred_structure == LOW_DELAY) {
+        SVT_WARN("Tune IQ with low delay prediction structure is experimental\n");
+    }
+#else
     if (config->tune > TUNE_MS_SSIM) {
         SVT_ERROR(
             "Invalid tune flag [0 - 4, 0 for VQ, 1 for PSNR, 2 for SSIM, 3 for IQ, and 4 for MS_SSIM], your input: "
@@ -521,6 +567,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             return_error = EB_ErrorBadParameter;
         }
     }
+#endif
 
     if (config->superres_mode > SUPERRES_AUTO) {
         SVT_ERROR("invalid superres-mode %d, should be in the range [%d - %d]\n",
@@ -1078,6 +1125,20 @@ void svt_av1_print_lib_params(SequenceControlSet* scs) {
                 : config->encoder_color_format == EB_YUV444 ? "YUV444"
                                                             : "Unknown color format");
 
+#if FTR_TUNE_VMAF
+        SVT_INFO("SVT [config]: preset / tune / pred struct \t\t\t\t\t: %d / %s / %s\n",
+                 config->enc_mode,
+                 config->tune == TUNE_VQ            ? "VQ"
+                     : config->tune == TUNE_PSNR    ? "PSNR"
+                     : config->tune == TUNE_SSIM    ? "SSIM"
+                     : config->tune == TUNE_MS_SSIM ? "MS_SSIM"
+                     : config->tune == TUNE_VMAF    ? "VMAF"
+                                                    : "IQ",
+                 config->pred_structure == LOW_DELAY           ? "low delay"
+                     : config->pred_structure == RANDOM_ACCESS ? "random access"
+                     : config->pred_structure == ALL_INTRA     ? "all intra"
+                                                               : "Unknown pred structure");
+#else
         SVT_INFO("SVT [config]: preset / tune / pred struct \t\t\t\t\t: %d / %s / %s\n",
                  config->enc_mode,
                  config->tune == TUNE_VQ            ? "VQ"
@@ -1089,6 +1150,7 @@ void svt_av1_print_lib_params(SequenceControlSet* scs) {
                      : config->pred_structure == RANDOM_ACCESS ? "random access"
                      : config->pred_structure == ALL_INTRA     ? "all intra"
                                                                : "Unknown pred structure");
+#endif
         SVT_INFO(
             "SVT [config]: gop size / mini-gop size / key-frame type \t\t\t: "
             "%d / %d / %s\n",
