@@ -1986,7 +1986,25 @@ static void recode_loop_decision_maker(PictureControlSet* pcs, SequenceControlSe
     RATE_CONTROL* const      rc      = &(enc_ctx->rc);
     bool                     loop    = false;
     FrameHeader*             frm_hdr = &ppcs->frm_hdr;
-    int32_t                  q       = frm_hdr->quantization_params.base_q_idx;
+
+    // RTC CBR path: use VBV-based recode decision
+    if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR && scs->static_config.rtc) {
+        if (svt_av1_rc_recode_decision_rtc_cbr(pcs)) {
+            ppcs->picture_qp = (uint8_t)CLIP3((int32_t)scs->static_config.min_qp_allowed,
+                                              (int32_t)scs->static_config.max_qp_allowed,
+                                              (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
+            ppcs->loop_count++;
+            frm_hdr->delta_q_params.delta_q_present = 0;
+            for (int sb_addr = 0; sb_addr < pcs->sb_total_count; ++sb_addr) {
+                pcs->sb_ptr_array[sb_addr]->qindex = frm_hdr->quantization_params.base_q_idx;
+            }
+            *do_recode = true;
+        }
+        return;
+    }
+
+    // VBR / capped-CRF path
+    int32_t q = frm_hdr->quantization_params.base_q_idx;
     if (ppcs->loop_count == 0) {
         ppcs->q_low  = ppcs->bottom_index;
         ppcs->q_high = ppcs->top_index;
@@ -2722,6 +2740,7 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
     ed_ctx->tot_skip_coded_area     = 0;
     ed_ctx->tot_hp_coded_area       = 0;
     ed_ctx->tot_cnt_zero_mv         = 0;
+    ed_ctx->tot_total_rate          = 0;
     // Bypass encdec for the first pass
     if (svt_aom_is_pic_skipped(pcs->ppcs)) {
         svt_release_object(pcs->ppcs->me_data_wrapper);
@@ -3176,6 +3195,7 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
         pcs->skip_coded_area += (uint32_t)ed_ctx->tot_skip_coded_area;
         pcs->hp_coded_area += (uint32_t)ed_ctx->tot_hp_coded_area;
         pcs->avg_cnt_zeromv += (uint32_t)ed_ctx->tot_cnt_zero_mv;
+        pcs->ppcs->pcs_total_rate += ed_ctx->tot_total_rate;
         // Accumulate block selection
         pcs->enc_dec_coded_sb_count += (uint32_t)ed_ctx->coded_sb_count;
         bool last_sb_flag = (pcs->sb_total_count == pcs->enc_dec_coded_sb_count);
@@ -3183,8 +3203,7 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
 
         if (last_sb_flag) {
             bool do_recode = false;
-            if ((scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.max_bit_rate != 0) &&
-                scs->enc_ctx->recode_loop != DISALLOW_RECODE) {
+            if (scs->enc_ctx->recode_loop != DISALLOW_RECODE) {
                 recode_loop_decision_maker(pcs, scs, &do_recode);
             }
 
