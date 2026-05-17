@@ -1,4 +1,4 @@
-﻿#include "enc_mode_config.h"
+#include "enc_mode_config.h"
 #include <stdlib.h>
 
 #include "rd_cost.h"
