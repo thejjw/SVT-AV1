@@ -950,14 +950,21 @@ typedef char PartitionContextType;
 #define PARTITION_BLOCK_SIZES 5
 #define PARTITION_CONTEXTS (PARTITION_BLOCK_SIZES * PARTITION_PLOFFSET)
 
-// block transform size
-#ifdef _MSC_VER
-typedef uint8_t TxSize;
-
-enum ATTRIBUTE_PACKED {
+// Macro to enforce 1 byte enum similar to UENUM1BYTE, but while also making sure that the enum and
+// values are linked when compiling the unit tests. Otherwise, MSVC will complain about trying to
+// convert an Unnamed-Enum or something to TxSize.
+#ifdef __cplusplus
+#define PACKED_ENUM(enumvar) enum enumvar : uint8_t
 #else
-typedef enum ATTRIBUTE_PACKED {
+// The reason why this isn't something like `typedef enum ATTRIBUTE_PACKED ... enumvar` is because
+// GCC will complain at the linking stage with LTO that TxSize != TxSize when compling the unittests
+// since from GCC's perspective, `enum ATTRIBUTE_PACKED` is not the same as `enum enumvar: uint8_t`.
+#define PACKED_ENUM(enumvar) \
+    typedef uint8_t enumvar; \
+    enum ATTRIBUTE_PACKED
 #endif
+// block transform size
+PACKED_ENUM(TxSize){
     TX_4X4, // 4x4 transform
     TX_8X8, // 8x8 transform
     TX_16X16, // 16x16 transform
@@ -981,12 +988,7 @@ typedef enum ATTRIBUTE_PACKED {
     TX_SIZES         = TX_4X8, // Does NOT include rectangular transforms
     TX_SIZES_LARGEST = TX_64X64,
     TX_INVALID       = 255 // Invalid transform size
-
-#ifdef _MSC_VER
 };
-#else
-} TxSize;
-#endif
 
 // TranLow  is the datatype used for final transform coefficients.
 typedef int32_t TranLow;
@@ -1024,13 +1026,8 @@ typedef enum ATTRIBUTE_PACKED {
     TX_TYPES_1D,
 } TxType1D;
 
-#ifdef _MSC_VER
-typedef uint8_t TxType;
+PACKED_ENUM(TxType){
 
-enum ATTRIBUTE_PACKED {
-#else
-typedef enum ATTRIBUTE_PACKED {
-#endif
     DCT_DCT, // DCT  in both horizontal and vertical
     ADST_DCT, // ADST in vertical, DCT in horizontal
     DCT_ADST, // DCT  in vertical, ADST in horizontal
@@ -1049,11 +1046,7 @@ typedef enum ATTRIBUTE_PACKED {
     H_FLIPADST,
     TX_TYPES,
     INVALID_TX_TYPE,
-#ifdef _MSC_VER
 };
-#else
-} TxType;
-#endif
 
 #define MAX_TX_TYPE_GROUP 6
 static const TxType tx_type_group[MAX_TX_TYPE_GROUP][TX_TYPES] = {{DCT_DCT, INVALID_TX_TYPE},
