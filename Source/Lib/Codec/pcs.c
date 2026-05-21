@@ -153,7 +153,6 @@ static void picture_control_set_dctor(EbPtr p) {
     EB_DELETE_PTR_ARRAY(obj->cr_dc_sign_level_coeff_na, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->cb_dc_sign_level_coeff_na, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->txfm_context_array, tile_cnt);
-    EB_DELETE_PTR_ARRAY(obj->segmentation_id_pred_array, tile_cnt);
     EB_DELETE(obj->segmentation_neighbor_map); // Jing, double check here
     EB_DELETE_PTR_ARRAY(obj->ep_luma_recon_na_16bit, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_cb_recon_na_16bit, tile_cnt);
@@ -225,7 +224,6 @@ typedef struct InitData {
     uint32_t            max_picture_height;
     uint32_t            unit_size;
     uint8_t             granularity_normal;
-    uint8_t             granularity_top_left;
     uint8_t             type_mask;
 } InitData;
 
@@ -239,7 +237,6 @@ static EbErrorType create_neighbor_array_units(InitData* data, size_t count) {
                data[i].max_picture_height,
                data[i].unit_size,
                data[i].granularity_normal,
-               data[i].granularity_top_left,
                data[i].type_mask);
     }
     return EB_ErrorNone;
@@ -628,8 +625,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     &object_ptr->mdleaf_partition_na[depth][tile_idx],
                     na_max_pic_w,
                     na_max_pic_h,
-                    sizeof(struct PartitionContext),
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
+                    sizeof(PartitionContextType),
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
@@ -640,7 +636,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_h,
                     sizeof(uint8_t),
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
                 // for each 4x4
@@ -649,7 +644,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_w,
                     na_max_pic_h,
                     sizeof(uint8_t),
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
@@ -660,7 +654,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_h,
                     sizeof(uint8_t),
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
                 // for each 4x4
@@ -670,7 +663,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_h,
                     sizeof(uint8_t),
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
                 {
@@ -678,7 +670,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_w,
                     na_max_pic_h,
                     sizeof(TXFM_CONTEXT),
-                    PU_NEIGHBOR_ARRAY_GRANULARITY,
                     PU_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
                 },
@@ -696,7 +687,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                         na_max_pic_h,
                         sizeof(uint8_t),
                         SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                     },
                     {
@@ -704,7 +694,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                         na_max_pic_w,
                         na_max_pic_h,
                         sizeof(uint8_t),
-                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                     },
@@ -714,7 +703,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                         na_max_pic_h,
                         sizeof(uint8_t),
                         SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                     },
                     {
@@ -723,7 +711,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                         na_max_pic_h >> subsampling_y,
                         sizeof(uint8_t),
                         SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                     },
                     {
@@ -731,7 +718,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                         na_max_pic_w >> subsampling_x,
                         na_max_pic_h >> subsampling_y,
                         sizeof(uint8_t),
-                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                         NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                     }
@@ -749,7 +735,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                                        na_max_pic_h,
                                        sizeof(uint16_t),
                                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                                       SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    },
                                    {
@@ -757,7 +742,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                                        na_max_pic_w,
                                        na_max_pic_h,
                                        sizeof(uint16_t),
-                                       SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    },
@@ -767,7 +751,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                                        na_max_pic_h,
                                        sizeof(uint16_t),
                                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                                       SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    },
                                    {
@@ -776,7 +759,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                                        na_max_pic_h >> subsampling_y,
                                        sizeof(uint16_t),
                                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                                       SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    },
                                    {
@@ -784,7 +766,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                                        na_max_pic_w >> subsampling_x,
                                        na_max_pic_h >> subsampling_y,
                                        sizeof(uint16_t),
-                                       SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                                        NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                                    }};
@@ -814,7 +795,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     EB_ALLOC_PTR_ARRAY(object_ptr->cr_dc_sign_level_coeff_na, total_tile_cnt);
     EB_ALLOC_PTR_ARRAY(object_ptr->cb_dc_sign_level_coeff_na, total_tile_cnt);
     EB_ALLOC_PTR_ARRAY(object_ptr->txfm_context_array, total_tile_cnt);
-    EB_ALLOC_PTR_ARRAY(object_ptr->segmentation_id_pred_array, total_tile_cnt);
     if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
         EB_ALLOC_PTR_ARRAY(object_ptr->ep_luma_recon_na_16bit, total_tile_cnt);
         EB_ALLOC_PTR_ARRAY(object_ptr->ep_cb_recon_na_16bit, total_tile_cnt);
@@ -829,7 +809,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_FULL_MASK,
             },
             {
@@ -837,7 +816,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_w >> subsampling_x,
                 na_max_pic_h >> subsampling_y,
                 sizeof(uint8_t),
-                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                 SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_FULL_MASK,
             },
@@ -848,7 +826,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h >> subsampling_y,
                 sizeof(uint8_t),
                 SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_FULL_MASK,
             },
             // for each 4x4
@@ -857,7 +834,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_w,
                 na_max_pic_h,
                 sizeof(uint8_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -868,7 +844,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
             // for each 4x4
@@ -877,7 +852,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_w,
                 na_max_pic_h,
                 sizeof(uint8_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -888,7 +862,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
             // for each 4x4
@@ -897,7 +870,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_w,
                 na_max_pic_h,
                 sizeof(uint8_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -908,7 +880,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
             // Encode pass partition neighbor array
@@ -916,8 +887,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 &object_ptr->ep_partition_context_na[tile_idx],
                 na_max_pic_w,
                 na_max_pic_h,
-                sizeof(struct PartitionContext),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                sizeof(PartitionContextType),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -926,8 +896,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 &object_ptr->ep_txfm_context_na[tile_idx],
                 na_max_pic_w,
                 na_max_pic_h,
-                sizeof(struct PartitionContext),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                sizeof(TXFM_CONTEXT),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -936,8 +905,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 &object_ptr->partition_context_na[tile_idx],
                 na_max_pic_w,
                 na_max_pic_h,
-                sizeof(struct PartitionContext),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                sizeof(PartitionContextType),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -948,7 +916,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
             // for each 4x4
@@ -957,7 +924,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_w,
                 na_max_pic_h,
                 sizeof(uint8_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
@@ -968,7 +934,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(uint8_t),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
             },
             {
@@ -977,17 +942,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                 na_max_pic_h,
                 sizeof(TXFM_CONTEXT),
                 PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
                 NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
-            },
-            {
-                &object_ptr->segmentation_id_pred_array[tile_idx],
-                na_max_pic_w,
-                na_max_pic_h,
-                sizeof(uint8_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
             },
         };
         return_error = create_neighbor_array_units(data0, DIM(data0));
@@ -1003,7 +958,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_h,
                     sizeof(uint16_t),
                     SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                 },
                 {
@@ -1012,7 +966,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_h >> subsampling_y,
                     sizeof(uint16_t),
                     SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                 },
                 {
@@ -1020,7 +973,6 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
                     na_max_pic_w >> subsampling_x,
                     na_max_pic_h >> subsampling_y,
                     sizeof(uint16_t),
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                     SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
                     NEIGHBOR_ARRAY_UNIT_FULL_MASK,
                 },
