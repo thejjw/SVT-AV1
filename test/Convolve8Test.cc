@@ -16,7 +16,7 @@
 #include "definitions.h"
 #include "filter.h"
 #include "inter_prediction.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_time.h"
 #include "util.h"
 #include "utility.h"

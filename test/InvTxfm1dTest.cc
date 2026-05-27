@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <new>
 
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "gtest/gtest.h"
 

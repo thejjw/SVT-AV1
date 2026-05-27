@@ -14,6 +14,7 @@
 #include "definitions.h"
 #include "md_process.h"
 #include "aom_dsp_rtcd.h"
+#include "pic_analysis_process.h"
 
 #define DIVIDE_AND_ROUND(x, y) (((x) + ((y) >> 1)) / (y))
 
@@ -324,9 +325,6 @@ static void palette_rd_y(PaletteInfo* palette_info, uint8_t* palette_size_array,
     extend_palette_color_map(color_map, cols, rows, block_width, block_height);
 }
 
-int svt_av1_count_colors(const uint8_t* src, int stride, int rows, int cols, int* val_count);
-int svt_av1_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, int bit_depth, int* val_count);
-
 static void cache_based_centroid_refinement(int* data, int rows, int cols, int n, int* centroids,
                                             uint8_t* color_idx_map, uint16_t* color_cache, int n_cache) {
     const int total = rows * cols;
@@ -406,9 +404,9 @@ void search_palette_luma(PictureControlSet* pcs, ModeDecisionContext* ctx, Palet
     unsigned bit_depth = pcs->ppcs->scs->encoder_bit_depth;
 
     if (is16bit) {
-        colors = svt_av1_count_colors_highbd((uint16_t*)src, src_stride, rows, cols, bit_depth, count_buf);
+        colors = svt_aom_count_colors_highbd((uint16_t*)src, src_stride, rows, cols, bit_depth, count_buf);
     } else {
-        colors = svt_av1_count_colors(src, src_stride, rows, cols, count_buf);
+        colors = svt_aom_count_colors(src, src_stride, rows, cols, count_buf);
     }
 
     if (colors <= 1 || colors > 64) {

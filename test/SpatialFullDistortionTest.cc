@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright(c) 2019 Intel Corporation
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
@@ -14,7 +14,7 @@
 #include <array>
 #include <cstdio>
 #include <vector>
-#include "random.h"
+#include "random.hpp"
 #include "definitions.h"
 #include "pic_operators.h"
 #include "unit_test_utility.h"

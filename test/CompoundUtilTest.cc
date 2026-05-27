@@ -32,9 +32,9 @@
 #include <array>
 #include "definitions.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "convolve.h"
-#include "svt_malloc.h"
+#include "aligned_allocator.hpp"
 #include "util.h"
 #include "enc_inter_prediction.h"
 
@@ -48,15 +48,7 @@ template <typename SrcSample, typename DstSample, typename BlendTestParam,
           int bd, bool is_d16 = false, bool no_sub = false>
 class CompBlendTest : public ::testing::TestWithParam<BlendTestParam> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(CompBlendTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(CompBlendTest)
 
     void run_test() {
         constexpr auto iterations = 1000;

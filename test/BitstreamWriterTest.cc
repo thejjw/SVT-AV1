@@ -25,7 +25,7 @@
 #include "bitstream_unit.h"
 #include "bitreader.h"
 #include "gtest/gtest.h"
-#include "random.h"
+#include "random.hpp"
 
 #ifdef max
 #undef max

@@ -9,11 +9,11 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <ostream>
-
-#include "aom_dsp_rtcd.h"
+#include <utility>
+#include "common_dsp_rtcd.h"
 #include "test/acm_random.h"
-#include "util.h"
 
 namespace {
 
@@ -52,9 +52,7 @@ void ReferenceHadamard4x4(const int16_t *a, int a_stride, OutputType *b) {
     // Extra transpose to match C and SSE2 behavior(i.e., svt_aom_hadamard_4x4).
     for (int i = 0; i < 4; i++) {
         for (int j = i + 1; j < 4; j++) {
-            OutputType temp = b[j * 4 + i];
-            b[j * 4 + i] = b[i * 4 + j];
-            b[i * 4 + j] = temp;
+            std::swap(b[j * 4 + i], b[i * 4 + j]);
         }
     }
 }
@@ -160,109 +158,75 @@ void ReferenceHadamard32x32(const int16_t *a, int a_stride, OutputType *b) {
 
 template <typename OutputType>
 void ReferenceHadamard(const int16_t *a, int a_stride, OutputType *b, int bwh) {
-    if (bwh == 32) {
-        ReferenceHadamard32x32(a, a_stride, b);
-    } else if (bwh == 16) {
-        ReferenceHadamard16x16(a, a_stride, b);
-    } else if (bwh == 8) {
-        ReferenceHadamard8x8(a, a_stride, b);
-    } else if (bwh == 4) {
-        ReferenceHadamard4x4(a, a_stride, b);
-    } else {
+    switch (bwh) {
+    case 32: ReferenceHadamard32x32(a, a_stride, b); break;
+    case 16: ReferenceHadamard16x16(a, a_stride, b); break;
+    case 8: ReferenceHadamard8x8(a, a_stride, b); break;
+    case 4: ReferenceHadamard4x4(a, a_stride, b); break;
+    default:
         GTEST_FAIL() << "Invalid Hadamard transform size " << bwh << std::endl;
+        break;
     }
 }
 
-template <typename HadamardFuncType>
-struct FuncWithSize {
-    explicit FuncWithSize(HadamardFuncType f, int s) : func(f), block_size(s) {
-    }
-    HadamardFuncType func;
-    int block_size;
+struct HadamardFuncWithSize {
+    const HadamardFunc func;
+    const int block_size;
 };
 
-using HadamardFuncWithSize = FuncWithSize<HadamardFunc>;
-
-template <typename HadamardFuncType>
-std::ostream &operator<<(std::ostream &os,
-                         const FuncWithSize<HadamardFuncType> &hfs) {
-    return os << "block size: " << hfs.block_size;
-}
-
-template <typename OutputType, typename HadamardFuncType>
-class HadamardTestBase
-    : public ::testing::TestWithParam<FuncWithSize<HadamardFuncType>> {
+class HadamardTestBase : public ::testing::TestWithParam<HadamardFuncWithSize> {
   public:
-    explicit HadamardTestBase(const FuncWithSize<HadamardFuncType> &func_param)
-        : bwh_(func_param.block_size),
-          block_size_(bwh_ * bwh_),
-          h_func_(func_param.func) {
-    }
-
-    virtual void SetUp() {
-        rnd_.Reset(ACMRandom::DeterministicSeed());
-    }
-
     virtual int16_t Rand() = 0;
 
+    static constexpr int kMaxBlockSize = 32 * 32;
+
     void CompareReferenceRandom() {
-        const int kMaxBlockSize = 32 * 32;
-        DECLARE_ALIGNED(16, int16_t, a[kMaxBlockSize]);
-        DECLARE_ALIGNED(16, OutputType, b[kMaxBlockSize]);
-        memset(a, 0, sizeof(a));
-        memset(b, 0, sizeof(b));
+        alignas(16) std::array<int16_t, kMaxBlockSize> a{};
+        alignas(16) std::array<int32_t, kMaxBlockSize> b{};
+        std::array<int32_t, kMaxBlockSize> b_ref{};
 
-        OutputType b_ref[kMaxBlockSize];
-        memset(b_ref, 0, sizeof(b_ref));
+        std::generate_n(a.begin(), block_size_, [&]() { return Rand(); });
 
-        for (int i = 0; i < block_size_; ++i)
-            a[i] = Rand();
-
-        ReferenceHadamard(a, bwh_, b_ref, bwh_);
-        h_func_(a, bwh_, b);
+        ReferenceHadamard(a.data(), bwh_, b_ref.data(), bwh_);
+        h_func_(a.data(), bwh_, b.data());
 
         // The order of the output is not important. Sort before checking.
-        std::sort(b, b + block_size_);
-        std::sort(b_ref, b_ref + block_size_);
-        EXPECT_EQ(memcmp(b, b_ref, sizeof(b)), 0);
+        std::sort(b.begin(), b.begin() + block_size_);
+        std::sort(b_ref.begin(), b_ref.begin() + block_size_);
+        EXPECT_EQ(b, b_ref);
     }
 
     void VaryStride() {
-        const int kMaxBlockSize = 32 * 32;
-        DECLARE_ALIGNED(16, int16_t, a[kMaxBlockSize * 8]);
-        DECLARE_ALIGNED(16, OutputType, b[kMaxBlockSize]);
-        memset(a, 0, sizeof(a));
-        for (int i = 0; i < block_size_ * 8; ++i)
-            a[i] = Rand();
+        alignas(16) std::array<int16_t, kMaxBlockSize * 8> a{};
+        alignas(16) std::array<int32_t, kMaxBlockSize> b{};
+        std::generate_n(a.begin(), block_size_ * 8, [&]() { return Rand(); });
 
-        OutputType b_ref[kMaxBlockSize];
+        std::array<int32_t, kMaxBlockSize> b_ref{};
         for (int i = 8; i < 64; i += 8) {
-            memset(b, 0, sizeof(b));
-            memset(b_ref, 0, sizeof(b_ref));
+            std::fill_n(b.begin(), block_size_, 0);
+            std::fill_n(b_ref.begin(), block_size_, 0);
 
-            ReferenceHadamard(a, i, b_ref, bwh_);
-            h_func_(a, i, b);
+            ReferenceHadamard(a.data(), i, b_ref.data(), bwh_);
+            h_func_(a.data(), i, b.data());
 
             // The order of the output is not important. Sort before checking.
-            std::sort(b, b + block_size_);
-            std::sort(b_ref, b_ref + block_size_);
-            EXPECT_EQ(0, memcmp(b, b_ref, sizeof(b)));
+            std::sort(b.begin(), b.begin() + block_size_);
+            std::sort(b_ref.begin(), b_ref.begin() + block_size_);
+            EXPECT_EQ(b, b_ref);
         }
     }
 
-    ACMRandom rnd_;
+    ACMRandom rnd_{ACMRandom::DeterministicSeed()};
 
   private:
-    int bwh_;
-    int block_size_;
-    HadamardFuncType h_func_;
+    const int bwh_{GetParam().block_size};
+    const int block_size_{bwh_ * bwh_};
+    const HadamardFunc h_func_{GetParam().func};
 };
 
-class HadamardLowbdTest : public HadamardTestBase<int32_t, HadamardFunc> {
+class HadamardLowbdTest : public HadamardTestBase {
   public:
-    HadamardLowbdTest() : HadamardTestBase(GetParam()) {
-    }
-    virtual int16_t Rand() {
+    virtual int16_t Rand() override {
         return rnd_.Rand9Signed();
     }
 };
@@ -277,39 +241,35 @@ TEST_P(HadamardLowbdTest, VaryStride) {
 
 INSTANTIATE_TEST_SUITE_P(
     C, HadamardLowbdTest,
-    ::testing::Values(HadamardFuncWithSize(&svt_aom_hadamard_4x4_c, 4),
-                      HadamardFuncWithSize(&svt_aom_hadamard_8x8_c, 8),
-                      HadamardFuncWithSize(&svt_aom_hadamard_16x16_c, 16),
-                      HadamardFuncWithSize(&svt_aom_hadamard_32x32_c, 32)));
+    ::testing::Values(HadamardFuncWithSize{&svt_aom_hadamard_4x4_c, 4},
+                      HadamardFuncWithSize{&svt_aom_hadamard_8x8_c, 8},
+                      HadamardFuncWithSize{&svt_aom_hadamard_16x16_c, 16},
+                      HadamardFuncWithSize{&svt_aom_hadamard_32x32_c, 32}));
 
 #ifdef ARCH_X86_64
 INSTANTIATE_TEST_SUITE_P(
     AVX2, HadamardLowbdTest,
-    ::testing::Values(HadamardFuncWithSize(&svt_aom_hadamard_4x4_sse2, 4),
-                      HadamardFuncWithSize(&svt_aom_hadamard_8x8_sse2, 8),
-                      HadamardFuncWithSize(&svt_aom_hadamard_16x16_avx2, 16),
-                      HadamardFuncWithSize(&svt_aom_hadamard_32x32_avx2, 32)));
+    ::testing::Values(HadamardFuncWithSize{&svt_aom_hadamard_4x4_sse2, 4},
+                      HadamardFuncWithSize{&svt_aom_hadamard_8x8_sse2, 8},
+                      HadamardFuncWithSize{&svt_aom_hadamard_16x16_avx2, 16},
+                      HadamardFuncWithSize{&svt_aom_hadamard_32x32_avx2, 32}));
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
 INSTANTIATE_TEST_SUITE_P(
     NEON, HadamardLowbdTest,
-    ::testing::Values(HadamardFuncWithSize(&svt_aom_hadamard_4x4_neon, 4),
-                      HadamardFuncWithSize(&svt_aom_hadamard_8x8_neon, 8),
-                      HadamardFuncWithSize(&svt_aom_hadamard_16x16_neon, 16),
-                      HadamardFuncWithSize(&svt_aom_hadamard_32x32_neon, 32)));
+    ::testing::Values(HadamardFuncWithSize{&svt_aom_hadamard_4x4_neon, 4},
+                      HadamardFuncWithSize{&svt_aom_hadamard_8x8_neon, 8},
+                      HadamardFuncWithSize{&svt_aom_hadamard_16x16_neon, 16},
+                      HadamardFuncWithSize{&svt_aom_hadamard_32x32_neon, 32}));
 #endif  // ARCH_AARCH64
 
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
-class HadamardHighbdTest : public HadamardTestBase<int32_t, HadamardFunc> {
+class HadamardHighbdTest : public HadamardTestBase {
   protected:
-    HadamardHighbdTest() : HadamardTestBase(GetParam()) {
-    }
     // Use values between -4095 (0xF001) and 4095 (0x0FFF)
-    int16_t Rand() override {
-        int16_t src = rnd_.Rand12();
-        int16_t pred = rnd_.Rand12();
-        return src - pred;
+    virtual int16_t Rand() override {
+        return rnd_.Rand12() - rnd_.Rand12();
     }
 };
 
@@ -321,20 +281,20 @@ TEST_P(HadamardHighbdTest, VaryStride) {
     VaryStride();
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    C, HadamardHighbdTest,
-    ::testing::Values(HadamardFuncWithSize(&svt_aom_highbd_hadamard_8x8_c, 8)));
+INSTANTIATE_TEST_SUITE_P(C, HadamardHighbdTest,
+                         ::testing::Values(HadamardFuncWithSize{
+                             &svt_aom_highbd_hadamard_8x8_c, 8}));
 
 #if ARCH_X86_64
 INSTANTIATE_TEST_SUITE_P(AVX2, HadamardHighbdTest,
-                         ::testing::Values(HadamardFuncWithSize(
-                             &svt_aom_highbd_hadamard_8x8_avx2, 8)));
+                         ::testing::Values(HadamardFuncWithSize{
+                             &svt_aom_highbd_hadamard_8x8_avx2, 8}));
 #endif  // ARCH_X86_64
 
 #if ARCH_AARCH64
 INSTANTIATE_TEST_SUITE_P(NEON, HadamardHighbdTest,
-                         ::testing::Values(HadamardFuncWithSize(
-                             &svt_aom_highbd_hadamard_8x8_neon, 8)));
+                         ::testing::Values(HadamardFuncWithSize{
+                             &svt_aom_highbd_hadamard_8x8_neon, 8}));
 #endif  // ARCH_AARCH64
 
 #endif  // CONFIG_ENABLE_HIGH_BIT_DEPTH

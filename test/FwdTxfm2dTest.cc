@@ -30,7 +30,7 @@
 #include "definitions.h"
 #include "transforms.h"
 
-#include "random.h"
+#include "random.hpp"
 #include "TxfmRef.h"
 #include "util.h"
 #include "TxfmCommon.h"

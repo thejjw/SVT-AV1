@@ -17,6 +17,10 @@
 #include "pcs.h"
 #include "sequence_control_set.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /***************************************
  * Extern Function Declaration
  ***************************************/
@@ -30,5 +34,12 @@ void svt_aom_downsample_filtering_input_picture(PictureParentControlSet* pcs, Eb
                                                 EbPictureBufferDesc* sixteenth_picture_ptr);
 
 void svt_aom_pad_input_pictures(SequenceControlSet* scs, EbPictureBufferDesc* input_pic);
+
+int svt_aom_count_colors(const uint8_t* src, int stride, int rows, int cols, int* val_count);
+int svt_aom_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, int bit_depth, int* val_count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // EbPictureAnalysis_h

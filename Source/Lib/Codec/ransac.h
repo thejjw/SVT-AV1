@@ -19,6 +19,10 @@
 
 #include "global_motion.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MIN_INLIER_PROB 0.1
 
 static const double kIdentityParams[MAX_PARAMDIM] = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
@@ -61,4 +65,8 @@ typedef struct {
 
 bool svt_aom_ransac(const Correspondence* matched_points, int npoints, TransformationType type,
                     MotionModel* motion_models, int num_desired_motions, bool* mem_alloc_failed);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 #endif // AOM_AV1_ENCODER_RANSAC_H_

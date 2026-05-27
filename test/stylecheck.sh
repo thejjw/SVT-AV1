@@ -35,6 +35,9 @@ echo "Checking for carriage returns" >&2
 echo "Checking for trailing spaces" >&2
 ! git -C "$REPO_DIR" --no-pager grep -InP " $" -- "$@" || ret=1
 
+echo "Checking for UTF-8 BOM" >&2
+! git -C "$REPO_DIR" --no-pager grep -IlP "^\xEF\xBB\xBF" -- "$@" || ret=1
+
 # Test only "new" commits, that is, commits that are not upstream on
 # the default branch.
 if git -C "$REPO_DIR" fetch -q "${CI_REPOSITORY_URL:-https://gitlab.com/AOMediaCodec/SVT-AV1.git}" "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-HEAD}"; then
@@ -103,42 +106,31 @@ if ! type python3 > /dev/null 2>&1; then
     exit "${ret:-0}"
 fi
 
-CLANG_FORMAT_URL=https://raw.githubusercontent.com/llvm/llvm-project/main/clang/tools/clang-format/clang-format-diff.py
-
-if test -f /usr/share/clang/clang-format-diff.py; then
-    CLANG_FORMAT_DIFF="/usr/share/clang/clang-format-diff.py"
-else
-    if ! test -f "$REPO_DIR/test/clang-format-diff.py"; then
-        curl -ls -o "$REPO_DIR/test/clang-format-diff.py" "$CLANG_FORMAT_URL" > /dev/null ||
-            wget -q -O "$REPO_DIR/test/clang-format-diff.py" "$CLANG_FORMAT_URL" > /dev/null
-    fi
-    CLANG_FORMAT_DIFF="$REPO_DIR/test/clang-format-diff.py"
-fi
-
-if ! test -f "$CLANG_FORMAT_DIFF"; then
-    echo "WARNING: clang-format-diff.py not found, can't continue" >&2
-    exit "${ret:-0}"
-fi
+# CLANG_FORMAT_URL=https://raw.githubusercontent.com/llvm/llvm-project/main/clang/tools/clang-format/clang-format-diff.py
 
 diff_output=$(
     cd "$REPO_DIR"
     if git diff "$MERGE_BASE" -- "$@" | grep -qaxv '.*'; then
         echo "Warning: Invalid utf-8 detected in pre-image, clang-format might not be accurate" >&2
     fi
-    git diff "$MERGE_BASE" -- "$@" | iconv -c -t UTF-8 | python3 "$CLANG_FORMAT_DIFF" -p1
+    git diff -U0 "$MERGE_BASE" -- "$@" | iconv -c -t UTF-8 | python3 "$REPO_DIR/test/clang-format-diff.py" -p1
 ) || true
 if [ -n "$diff_output" ]; then
+    if [ -n "$CI" ]; then
+        exec 2>&1
+    fi
+
     cat >&2 << 'FOE'
 clang-format check failed!
 Please run inside a posix compatible shell with git and amend or commit the
 results or pipe the output of this script into `git apply -p0`
-git apply -p0 <<'EOF'
+git apply -p0 <<'CLANG_FORMAT_DIFF'
 FOE
     cat << FOE
 $diff_output
 FOE
     cat >&2 << 'FOE'
-EOF
+CLANG_FORMAT_DIFF
 FOE
     ret=1
 fi

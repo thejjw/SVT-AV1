@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 #include "temporal_filtering.h"
 #include "util.h"
-#include "random.h"
+#include "random.hpp"
 #include "utility.h"
 #include "unit_test_utility.h"
 #include "utility.h"

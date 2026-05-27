@@ -40,13 +40,12 @@ struct scale_factors;
 
 static INLINE ConvolveParams get_conv_params_no_round(int32_t ref, int32_t do_average, int32_t plane, ConvBufType* dst,
                                                       int32_t dst_stride, int32_t is_compound, int32_t bd) {
-    (void)plane;
-    (void)ref;
     ConvolveParams conv_params;
-    // conv_params.ref = ref;
+    conv_params.ref        = ref;
     conv_params.do_average = do_average;
     assert(IMPLIES(do_average, is_compound));
-    conv_params.is_compound   = is_compound;
+    conv_params.dst           = dst;
+    conv_params.dst_stride    = dst_stride;
     conv_params.round_0       = ROUND0_BITS;
     conv_params.round_1       = is_compound ? COMPOUND_ROUND1_BITS : 2 * FILTER_BITS - conv_params.round_0;
     const int32_t intbufrange = bd + FILTER_BITS - conv_params.round_0 + 2;
@@ -57,10 +56,13 @@ static INLINE ConvolveParams get_conv_params_no_round(int32_t ref, int32_t do_av
             conv_params.round_1 -= intbufrange - 16;
         }
     }
-    conv_params.dst        = dst;
-    conv_params.dst_stride = dst_stride;
-    // conv_params.plane = plane;
+    conv_params.plane            = plane;
+    conv_params.is_compound      = is_compound;
     conv_params.use_jnt_comp_avg = 0;
+
+    conv_params.fwd_offset            = 0;
+    conv_params.bck_offset            = 0;
+    conv_params.use_dist_wtd_comp_avg = 0;
 
     return conv_params;
 }

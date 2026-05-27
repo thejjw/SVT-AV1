@@ -28,7 +28,7 @@
 #include <array>
 #include "aom_dsp_rtcd.h"
 #include "common_utils.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 namespace {
 using svt_av1_test_tool::SVTRandom;

@@ -13,10 +13,10 @@
 #include "gtest/gtest.h"
 #include <array>
 #include <cstdint>
-#include <cstdlib>
+#include "aligned_allocator.hpp"
 #include "common_dsp_rtcd.h"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "aom_dsp_rtcd.h"
 #include "unit_test_utility.h"
@@ -36,15 +36,7 @@ constexpr bool is_tx_type_imp_64x64(const TxType tx_type) {
 template <typename Params>
 class InvTxfm2dAsmTestBase : public ::testing::TestWithParam<Params> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(InvTxfm2dAsmTestBase), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(InvTxfm2dAsmTestBase)
 
   protected:
     // clear the coeffs according to eob position, note the coeffs are

@@ -14,11 +14,11 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
-#include <memory>
 #include <vector>
+#include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
 #include "md_config_process.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "definitions.h"
 #include "pcs.h"
@@ -26,50 +26,8 @@
 
 namespace {
 using std::make_tuple;
+using svt_av1_test_tool::aligned_allocator;
 using svt_av1_test_tool::SVTRandom;
-
-template <typename T>
-class aligned_allocator {
-  public:
-    using value_type = T;
-    using pointer = T *;
-    using const_pointer = const T *;
-    using reference = T &;
-    using const_reference = const T &;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
-
-    aligned_allocator() noexcept = default;
-
-    template <typename U>
-    explicit aligned_allocator(const aligned_allocator<U> &) noexcept {
-    }
-
-    template <typename U>
-    struct rebind {
-        using other = aligned_allocator<U>;
-    };
-
-    static pointer allocate(size_type n, const void * = nullptr) {
-        if (T *ptr = reinterpret_cast<T *>(svt_aom_memalign(32, n * sizeof(T))))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    static void deallocate(pointer ptr, size_type) noexcept {
-        svt_aom_free(ptr);
-    }
-};
-
-template <typename T, typename U>
-bool operator==(const aligned_allocator<T> &, const aligned_allocator<U> &) {
-    return true;
-}
-
-template <typename T, typename U>
-bool operator!=(const aligned_allocator<T> &, const aligned_allocator<U> &) {
-    return false;
-}
 
 #define QUAN_PARAM_LIST                                                      \
     const TranLow *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr,    \
@@ -109,15 +67,7 @@ constexpr int kTestNum = 1000;
 template <typename ParamType, typename FuncType>
 class QuantizeTest : public ::testing::TestWithParam<ParamType> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(QuantizeTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(QuantizeTest)
 
     QuantizeTest() {
         PictureParentControlSet pcs;

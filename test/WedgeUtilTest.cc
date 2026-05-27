@@ -25,11 +25,11 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <array>
+#include "aligned_allocator.hpp"
 #include "common_dsp_rtcd.h"
 #include "common_utils.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
-#include "svt_malloc.h"
+#include "random.hpp"
 #include "util.h"
 
 using svt_av1_test_tool::SVTRandom;
@@ -38,15 +38,7 @@ namespace {
 // Choose the mask sign for a compound predictor.
 class WedgeUtilTest : public ::testing::Test {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(WedgeUtilTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(WedgeUtilTest)
 
   protected:
     alignas(32) std::array<uint8_t, MAX_SB_SQUARE> m{}; /* mask */

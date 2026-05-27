@@ -35,10 +35,10 @@
  *
  ******************************************************************************/
 #include <array>
-#include <cstdlib>
 #include "gtest/gtest.h"
+#include "aligned_allocator.hpp"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "convolve.h"
 
@@ -103,15 +103,7 @@ template <typename Sample, typename FuncType, typename ConvolveParam,
           bool is_jnt = false>
 class AV1ConvolveTest : public ::testing::TestWithParam<ConvolveParam> {
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(AV1ConvolveTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(AV1ConvolveTest)
 
     virtual void run_convolve(int offset_r, int offset_c, int src_stride,
                               int dst_stride, int w, int h,

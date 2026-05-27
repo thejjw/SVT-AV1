@@ -26,20 +26,17 @@
 
 #include "gtest/gtest.h"
 
+#include "TestEnv.h"
 #include "definitions.h"
 #include "transforms.h"
 #include "util.h"
 #include "aom_dsp_rtcd.h"
 #include "TxfmCommon.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_time.h"
 #include "encode_txb_ref_c.h"
 
 using svt_av1_test_tool::SVTRandom;  // to generate the random
-
-/** setup_test_env and reset_test_env are implemented in test/TestEnv.c */
-extern "C" void setup_test_env();
-extern "C" void reset_test_env();
 
 namespace {
 

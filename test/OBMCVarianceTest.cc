@@ -21,51 +21,34 @@
  *
  ******************************************************************************/
 #include "gtest/gtest.h"
+#include <algorithm>
+#include <array>
+#include "aligned_allocator.hpp"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "definitions.h"
+#include "random.hpp"
 #include "util.h"
-#include "utility.h"
 #include "filter.h"
 
 #include "enc_inter_prediction.h"
 
-using std::tuple;
-using svt_av1_test_tool::SVTRandom;  // to generate the random
-
 namespace {
 #if CONFIG_ENABLE_OBMC
-static const int MaskMax = 64;
+using svt_av1_test_tool::SVTRandom;  // to generate the random
+constexpr int MaskMax = 64;
 
 using ObmcVarFunc = unsigned int (*)(const uint8_t *pre, int pre_stride,
                                      const int32_t *wsrc, const int32_t *mask,
                                      unsigned int *sse);
-using ObmcVarParam = tuple<ObmcVarFunc, ObmcVarFunc>;
+using ObmcVarParam = std::tuple<ObmcVarFunc, ObmcVarFunc>;
 
 class OBMCVarianceTest : public ::testing::TestWithParam<ObmcVarParam> {
   public:
-    OBMCVarianceTest()
-        : rnd_(8, false),
-          rnd_msk_(0, MaskMax * MaskMax + 1),
-          func_ref_(TEST_GET_PARAM(0)),
-          func_tst_(TEST_GET_PARAM(1)) {
-        pre_ = reinterpret_cast<uint8_t *>(svt_aom_memalign(32, MAX_SB_SQUARE));
-        wsrc_buf_ = reinterpret_cast<int32_t *>(
-            svt_aom_memalign(32, MAX_SB_SQUARE * sizeof(int32_t)));
-        mask_buf_ = reinterpret_cast<int32_t *>(
-            svt_aom_memalign(32, MAX_SB_SQUARE * sizeof(int32_t)));
-    }
-
-    ~OBMCVarianceTest() {
-        if (pre_)
-            svt_aom_free(pre_);
-        if (wsrc_buf_)
-            svt_aom_free(wsrc_buf_);
-        if (mask_buf_)
-            svt_aom_free(mask_buf_);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(OBMCVarianceTest)
 
   protected:
-    void run_test(size_t test_num) {
+    template <size_t test_num>
+    void run_test() {
         for (size_t i = 0; i < test_num; i++) {
             for (size_t j = 0; j < MAX_SB_SQUARE; j++) {
                 pre_[j] = rnd_.random();
@@ -74,10 +57,16 @@ class OBMCVarianceTest : public ::testing::TestWithParam<ObmcVarParam> {
             }
 
             unsigned int sse_ref = 0, sse_tst = 0;
-            uint32_t var_ref =
-                func_ref_(pre_, MAX_SB_SIZE, wsrc_buf_, mask_buf_, &sse_ref);
-            uint32_t var_tst =
-                func_tst_(pre_, MAX_SB_SIZE, wsrc_buf_, mask_buf_, &sse_tst);
+            uint32_t var_ref = func_ref_(pre_.data(),
+                                         MAX_SB_SIZE,
+                                         wsrc_buf_.data(),
+                                         mask_buf_.data(),
+                                         &sse_ref);
+            uint32_t var_tst = func_tst_(pre_.data(),
+                                         MAX_SB_SIZE,
+                                         wsrc_buf_.data(),
+                                         mask_buf_.data(),
+                                         &sse_tst);
 
             ASSERT_EQ(var_tst, var_ref) << "compare var error";
             ASSERT_EQ(sse_tst, sse_ref) << "compare sse error";
@@ -85,17 +74,17 @@ class OBMCVarianceTest : public ::testing::TestWithParam<ObmcVarParam> {
     }
 
   protected:
-    SVTRandom rnd_;
-    SVTRandom rnd_msk_;
-    ObmcVarFunc func_ref_;
-    ObmcVarFunc func_tst_;
-    uint8_t *pre_;
-    int32_t *wsrc_buf_;
-    int32_t *mask_buf_;
+    SVTRandom rnd_{8, false};
+    SVTRandom rnd_msk_{0, MaskMax *MaskMax + 1};
+    const ObmcVarFunc func_ref_{TEST_GET_PARAM(0)};
+    const ObmcVarFunc func_tst_{TEST_GET_PARAM(1)};
+    alignas(32) std::array<uint8_t, MAX_SB_SQUARE> pre_{};
+    alignas(32) std::array<int32_t, MAX_SB_SQUARE> wsrc_buf_{};
+    alignas(32) std::array<int32_t, MAX_SB_SQUARE> mask_buf_{};
 };
 
 TEST_P(OBMCVarianceTest, RunCheckOutput) {
-    run_test(1000);
+    run_test<1000>();
 };
 
 #define OBMC_VAR_FUNC(W, H, opt) svt_aom_obmc_variance##W##x##H##_##opt
@@ -136,35 +125,16 @@ using ObmcSubPixVarFunc = unsigned int (*)(const uint8_t *pre, int pre_stride,
                                            const int32_t *wsrc,
                                            const int32_t *mask,
                                            unsigned int *sse);
-using ObmcSubPixVarParam = tuple<ObmcSubPixVarFunc, ObmcSubPixVarFunc>;
+using ObmcSubPixVarParam = std::tuple<ObmcSubPixVarFunc, ObmcSubPixVarFunc>;
 
 class OBMCSubPixelVarianceTest
     : public ::testing::TestWithParam<ObmcSubPixVarParam> {
   public:
-    OBMCSubPixelVarianceTest()
-        : rnd_(8, false),
-          rnd_msk_(0, MaskMax * MaskMax + 1),
-          rnd_offset_(0, BIL_SUBPEL_SHIFTS - 1),
-          func_ref_(TEST_GET_PARAM(0)),
-          func_tst_(TEST_GET_PARAM(1)) {
-        pre_ = reinterpret_cast<uint8_t *>(svt_aom_memalign(32, MAX_SB_SQUARE));
-        wsrc_buf_ = reinterpret_cast<int32_t *>(
-            svt_aom_memalign(32, MAX_SB_SQUARE * sizeof(int32_t)));
-        mask_buf_ = reinterpret_cast<int32_t *>(
-            svt_aom_memalign(32, MAX_SB_SQUARE * sizeof(int32_t)));
-    }
-
-    ~OBMCSubPixelVarianceTest() {
-        if (pre_)
-            svt_aom_free(pre_);
-        if (wsrc_buf_)
-            svt_aom_free(wsrc_buf_);
-        if (mask_buf_)
-            svt_aom_free(mask_buf_);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(OBMCSubPixelVarianceTest)
 
   protected:
-    void run_test(size_t test_num) {
+    template <size_t test_num>
+    void run_test() {
         for (size_t i = 0; i < test_num; i++) {
             for (size_t j = 0; j < MAX_SB_SQUARE; j++) {
                 pre_[j] = rnd_.random();
@@ -172,22 +142,22 @@ class OBMCSubPixelVarianceTest
                 mask_buf_[j] = rnd_msk_.random();
             }
 
-            int offset_x = rnd_offset_.random();
-            int offset_y = rnd_offset_.random();
+            const int offset_x = rnd_offset_.random();
+            const int offset_y = rnd_offset_.random();
             unsigned int sse_ref = 0, sse_tst = 0;
-            uint32_t var_ref = func_ref_(pre_,
+            uint32_t var_ref = func_ref_(pre_.data(),
                                          MAX_SB_SIZE,
                                          offset_x,
                                          offset_y,
-                                         wsrc_buf_,
-                                         mask_buf_,
+                                         wsrc_buf_.data(),
+                                         mask_buf_.data(),
                                          &sse_ref);
-            uint32_t var_tst = func_tst_(pre_,
+            uint32_t var_tst = func_tst_(pre_.data(),
                                          MAX_SB_SIZE,
                                          offset_x,
                                          offset_y,
-                                         wsrc_buf_,
-                                         mask_buf_,
+                                         wsrc_buf_.data(),
+                                         mask_buf_.data(),
                                          &sse_tst);
 
             ASSERT_EQ(var_tst, var_ref)
@@ -200,18 +170,18 @@ class OBMCSubPixelVarianceTest
     }
 
   protected:
-    SVTRandom rnd_;
-    SVTRandom rnd_msk_;
-    SVTRandom rnd_offset_;
-    ObmcSubPixVarFunc func_ref_;
-    ObmcSubPixVarFunc func_tst_;
-    uint8_t *pre_;
-    int32_t *wsrc_buf_;
-    int32_t *mask_buf_;
+    SVTRandom rnd_{8, false};
+    SVTRandom rnd_msk_{0, MaskMax *MaskMax + 1};
+    SVTRandom rnd_offset_{0, BIL_SUBPEL_SHIFTS - 1};
+    const ObmcSubPixVarFunc func_ref_{TEST_GET_PARAM(0)};
+    const ObmcSubPixVarFunc func_tst_{TEST_GET_PARAM(1)};
+    alignas(32) std::array<uint8_t, MAX_SB_SQUARE> pre_{};
+    alignas(32) std::array<int32_t, MAX_SB_SQUARE> wsrc_buf_{};
+    alignas(32) std::array<int32_t, MAX_SB_SQUARE> mask_buf_{};
 };
 
 TEST_P(OBMCSubPixelVarianceTest, RunCheckOutput) {
-    run_test(1000);
+    run_test<1000>();
 };
 
 #define OBMC_SUB_PIX_VAR_FUNC(W, H, opt) \
@@ -234,56 +204,24 @@ INSTANTIATE_TEST_SUITE_P(NEON, OBMCSubPixelVarianceTest,
 using CalcTargetWeightedPredFn = void (*)(uint8_t, MacroBlockD *, int, uint8_t,
                                           MbModeInfo *, void *);
 using CalcTargetWeightedPredParam =
-    tuple<int, CalcTargetWeightedPredFn, CalcTargetWeightedPredFn>;
+    std::tuple<int, CalcTargetWeightedPredFn, CalcTargetWeightedPredFn>;
 
 class CalcTargetWeightedPredTest
     : public ::testing::TestWithParam<CalcTargetWeightedPredParam> {
-  public:
-    CalcTargetWeightedPredTest()
-        : rnd_(10, false),
-          width_(TEST_GET_PARAM(0)),
-          func_ref_(TEST_GET_PARAM(1)),
-          func_tst_(TEST_GET_PARAM(2)) {
-        mask_buf_ref = reinterpret_cast<int32_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(int32_t)));
-        mask_buf_tst = reinterpret_cast<int32_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(int32_t)));
-        wsrc_buf_ref = reinterpret_cast<int32_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(int32_t)));
-        wsrc_buf_tst = reinterpret_cast<int32_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(int32_t)));
-        tmp_ref = reinterpret_cast<uint8_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(uint8_t)));
-        tmp_tst = reinterpret_cast<uint8_t *>(
-            malloc(2 * MAX_SB_SQUARE * sizeof(uint8_t)));
-
-        stride = MAX_SB_SIZE;
-    }
-
-    ~CalcTargetWeightedPredTest() {
-        if (mask_buf_ref)
-            free(mask_buf_ref);
-        if (mask_buf_tst)
-            free(mask_buf_tst);
-        if (wsrc_buf_ref)
-            free(wsrc_buf_ref);
-        if (wsrc_buf_tst)
-            free(wsrc_buf_tst);
-        if (tmp_ref)
-            free(tmp_ref);
-        if (tmp_tst)
-            free(tmp_tst);
-    }
-
   protected:
+    template <size_t test_num = 10>
     void run_test() {
-        uint32_t test_num = 10;
-
         xd.n4_w = 5 + (width_ >> MI_SIZE_LOG2);
-        calc_target_weighted_pred_ctxt ctxt_ref = {
-            mask_buf_ref, wsrc_buf_ref, tmp_ref, stride, width_};
-        calc_target_weighted_pred_ctxt ctxt_tst = {
-            mask_buf_tst, wsrc_buf_tst, tmp_tst, stride, width_};
+        calc_target_weighted_pred_ctxt ctxt_ref = {mask_buf_ref.data(),
+                                                   wsrc_buf_ref.data(),
+                                                   tmp_ref.data(),
+                                                   stride,
+                                                   width_};
+        calc_target_weighted_pred_ctxt ctxt_tst = {mask_buf_tst.data(),
+                                                   wsrc_buf_tst.data(),
+                                                   tmp_tst.data(),
+                                                   stride,
+                                                   width_};
         for (uint32_t i = 0; i < test_num; i++) {
             for (uint32_t j = 0; j < 2 * MAX_SB_SQUARE; j++) {
                 mask_buf_ref[j] = mask_buf_tst[j] = rnd_.random();
@@ -294,42 +232,45 @@ class CalcTargetWeightedPredTest
             func_ref_(0, &xd, 0, size, NULL, &ctxt_ref);
             func_tst_(0, &xd, 0, size, NULL, &ctxt_tst);
 
-            if (memcmp(mask_buf_ref,
-                       mask_buf_tst,
-                       sizeof(int32_t) * 2 * MAX_SB_SQUARE) != 0) {
-                for (uint32_t j = 0; j < 2 * MAX_SB_SQUARE; j++)
-                    ASSERT_EQ(mask_buf_ref[j], mask_buf_tst[j])
-                        << "Mismatch for mask_buf at idx " << j;
+            auto mismatch_mask = std::mismatch(
+                mask_buf_ref.begin(), mask_buf_ref.end(), mask_buf_tst.begin());
+            if (mismatch_mask.first != mask_buf_ref.end()) {
+                size_t idx =
+                    std::distance(mask_buf_ref.begin(), mismatch_mask.first);
+                ASSERT_EQ(*mismatch_mask.first, *mismatch_mask.second)
+                    << "Mismatch for mask_buf at idx " << idx;
             }
-            if (memcmp(wsrc_buf_ref,
-                       wsrc_buf_tst,
-                       sizeof(int32_t) * 2 * MAX_SB_SQUARE) != 0) {
-                for (uint32_t j = 0; j < 2 * MAX_SB_SQUARE; j++)
-                    ASSERT_EQ(wsrc_buf_ref[j], wsrc_buf_tst[j])
-                        << "Mismatch for wsrc_buf at idx " << j;
+            auto mismatch_wsrc = std::mismatch(
+                wsrc_buf_ref.begin(), wsrc_buf_ref.end(), wsrc_buf_tst.begin());
+            if (mismatch_wsrc.first != wsrc_buf_ref.end()) {
+                size_t idx =
+                    std::distance(wsrc_buf_ref.begin(), mismatch_wsrc.first);
+                ASSERT_EQ(*mismatch_wsrc.first, *mismatch_wsrc.second)
+                    << "Mismatch for wsrc_buf at idx " << idx;
             }
-            if (memcmp(tmp_ref, tmp_tst, sizeof(uint8_t) * 2 * MAX_SB_SQUARE) !=
-                0) {
-                for (uint32_t j = 0; j < 2 * MAX_SB_SQUARE; j++)
-                    ASSERT_EQ(tmp_ref[j], tmp_tst[j])
-                        << "Mismatch for tmp at idx " << j;
+            auto mismatch_tmp =
+                std::mismatch(tmp_ref.begin(), tmp_ref.end(), tmp_tst.begin());
+            if (mismatch_tmp.first != tmp_ref.end()) {
+                size_t idx = std::distance(tmp_ref.begin(), mismatch_tmp.first);
+                ASSERT_EQ(*mismatch_tmp.first, *mismatch_tmp.second)
+                    << "Mismatch for tmp at idx " << idx;
             }
         }
     }
 
   protected:
-    SVTRandom rnd_;
-    int width_;
-    CalcTargetWeightedPredFn func_ref_;
-    CalcTargetWeightedPredFn func_tst_;
-    MacroBlockD xd;
-    int32_t *mask_buf_ref;
-    int32_t *mask_buf_tst;
-    int32_t *wsrc_buf_ref;
-    int32_t *wsrc_buf_tst;
-    uint8_t *tmp_ref;
-    uint8_t *tmp_tst;
-    int stride;
+    SVTRandom rnd_{10, false};
+    const int width_{TEST_GET_PARAM(0)};
+    const CalcTargetWeightedPredFn func_ref_{TEST_GET_PARAM(1)};
+    const CalcTargetWeightedPredFn func_tst_{TEST_GET_PARAM(2)};
+    MacroBlockD xd{};
+    std::array<int32_t, 2 * MAX_SB_SQUARE> mask_buf_ref{};
+    std::array<int32_t, 2 * MAX_SB_SQUARE> mask_buf_tst{};
+    std::array<int32_t, 2 * MAX_SB_SQUARE> wsrc_buf_ref{};
+    std::array<int32_t, 2 * MAX_SB_SQUARE> wsrc_buf_tst{};
+    std::array<uint8_t, 2 * MAX_SB_SQUARE> tmp_ref{};
+    std::array<uint8_t, 2 * MAX_SB_SQUARE> tmp_tst{};
+    const int stride{MAX_SB_SIZE};
 };
 
 using CalcTargetWeightedPredTestAbove = CalcTargetWeightedPredTest;
@@ -346,7 +287,7 @@ TEST_P(CalcTargetWeightedPredTestLeft, RunCheckOutput) {
     run_test();
 };
 
-static const int overlap_tab[] = {2, 4, 8, 16, 32};
+constexpr int overlap_tab[] = {2, 4, 8, 16, 32};
 
 #ifdef ARCH_X86_64
 INSTANTIATE_TEST_SUITE_P(

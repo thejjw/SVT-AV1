@@ -25,7 +25,7 @@
 #include "gtest/gtest.h"
 #include "enc_intra_prediction.h"
 #include "aom_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 /**

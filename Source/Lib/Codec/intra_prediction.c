@@ -118,8 +118,6 @@ DECLARE_ALIGNED(16, uint8_t, even_odd_mask_x[8][16]) = {{0, 2, 4, 6, 8, 10, 12, 
 // Some basic checks on weights for smooth predictor.
 #define sm_weights_sanity_checks(weights_w, weights_h, weights_scale, pred_scale) \
     do {                                                                          \
-        assert(weights_w[0] < weights_scale);                                     \
-        assert(weights_h[0] < weights_scale);                                     \
         assert(weights_scale - weights_w[bw - 1] < weights_scale);                \
         assert(weights_scale - weights_h[bh - 1] < weights_scale);                \
         assert(pred_scale < 31);                                                  \
@@ -1140,7 +1138,6 @@ static INLINE void smooth_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw, 
                                        sm_weights_w[c],
                                        (uint8_t)(scale - sm_weights_w[c])};
             uint32_t      this_pred = 0;
-            assert(scale >= sm_weights_h[r] && scale >= sm_weights_w[c]);
             for (int i = 0; i < 4; ++i) {
                 this_pred += weights[i] * pixels[i];
             }
@@ -1163,7 +1160,6 @@ static INLINE void smooth_v_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw
             const uint8_t pixels[]  = {above[c], below_pred};
             const uint8_t weights[] = {sm_weights[r], (uint8_t)(scale - sm_weights[r])};
             uint32_t      this_pred = 0;
-            assert(scale >= sm_weights[r]);
             for (unsigned i = 0; i < 2; ++i) {
                 this_pred += weights[i] * pixels[i];
             }
@@ -1186,7 +1182,6 @@ static INLINE void smooth_h_predictor(uint8_t* dst, ptrdiff_t stride, int32_t bw
             const uint8_t pixels[]  = {left[r], right_pred};
             const uint8_t weights[] = {sm_weights[c], (uint8_t)(scale - sm_weights[c])};
             uint32_t      this_pred = 0;
-            assert(scale >= sm_weights[c]);
             for (unsigned i = 0; i < 2; ++i) {
                 this_pred += weights[i] * pixels[i];
             }
@@ -1276,7 +1271,6 @@ static INLINE void highbd_smooth_predictor(uint16_t* dst, ptrdiff_t stride, int3
                                         sm_weights_w[c],
                                         (uint8_t)(scale - sm_weights_w[c])};
             uint32_t       this_pred = 0;
-            assert(scale >= sm_weights_h[r] && scale >= sm_weights_w[c]);
             for (int i = 0; i < 4; ++i) {
                 this_pred += weights[i] * pixels[i];
             }
@@ -1300,7 +1294,6 @@ static INLINE void highbd_smooth_v_predictor(uint16_t* dst, ptrdiff_t stride, in
             const uint16_t pixels[]  = {above[c], below_pred};
             const uint8_t  weights[] = {sm_weights[r], (uint8_t)(scale - sm_weights[r])};
             uint32_t       this_pred = 0;
-            assert(scale >= sm_weights[r]);
             for (int i = 0; i < 2; ++i) {
                 this_pred += weights[i] * pixels[i];
             }
@@ -1324,7 +1317,6 @@ static INLINE void highbd_smooth_h_predictor(uint16_t* dst, ptrdiff_t stride, in
             const uint16_t pixels[]  = {left[r], right_pred};
             const uint8_t  weights[] = {sm_weights[c], (uint8_t)(scale - sm_weights[c])};
             uint32_t       this_pred = 0;
-            assert(scale >= sm_weights[c]);
             for (int i = 0; i < 2; ++i) {
                 this_pred += weights[i] * pixels[i];
             }

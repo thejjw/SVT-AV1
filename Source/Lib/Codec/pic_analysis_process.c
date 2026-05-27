@@ -862,7 +862,7 @@ void svt_aom_pad_picture_to_multiple_of_sb_dimensions(EbPictureBufferDesc* input
                              input_padded_pic->border);
 }
 
-int svt_av1_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, int bit_depth, int* val_count) {
+int svt_aom_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, int bit_depth, int* val_count) {
     assert(bit_depth <= 12);
     const int max_pix_val = 1 << bit_depth;
     // const uint16_t *src = CONVERT_TO_SHORTPTR(src8);
@@ -886,7 +886,7 @@ int svt_av1_count_colors_highbd(uint16_t* src, int stride, int rows, int cols, i
     return n;
 }
 
-int svt_av1_count_colors(const uint8_t* src, int stride, int rows, int cols, int* val_count) {
+int svt_aom_count_colors(const uint8_t* src, int stride, int rows, int cols, int* val_count) {
     const int max_pix_val = 1 << 8;
     memset(val_count, 0, max_pix_val * sizeof(val_count[0]));
     for (int r = 0; r < rows; ++r) {

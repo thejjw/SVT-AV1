@@ -1,4 +1,4 @@
-﻿[Top level](../README.md)
+[Top level](../README.md)
 
 # Compound Mode Prediction Appendix
 

@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include "definitions.h"
 #include "VideoSource.h"
-#include "random.h"
+#include "random.hpp"
 
 using namespace svt_av1_video_source;
 VideoSource::VideoSource(const VideoColorFormat format, const uint32_t width,

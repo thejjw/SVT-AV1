@@ -16,7 +16,7 @@
 #include "unit_test_utility.h"
 #include "highbd_intra_prediction_tests.h"
 #include <immintrin.h>
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 
 #if EN_AVX512_SUPPORT

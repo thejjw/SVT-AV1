@@ -36,7 +36,7 @@
 #include "enc_intra_prediction.h"
 #include "unit_test_utility.h"
 #include "utility.h"
-#include "random.h"
+#include "random.hpp"
 #include "util.h"
 #include "common_dsp_rtcd.h"
 #include "aom_dsp_rtcd.h"

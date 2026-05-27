@@ -15,7 +15,7 @@
 #include "aom_dsp_rtcd.h"
 #include "common_dsp_rtcd.h"
 #include "definitions.h"
-#include "random.h"
+#include "random.hpp"
 #include "svt_time.h"
 #include "util.h"
 #include "utility.h"

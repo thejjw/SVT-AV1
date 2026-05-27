@@ -25,9 +25,9 @@
 #include <algorithm>
 #include <array>
 #include <tuple>
+#include "aligned_allocator.hpp"
 #include "common_dsp_rtcd.h"
-#include "random.h"
-#include "svt_malloc.h"
+#include "random.hpp"
 
 namespace {
 using std::make_tuple;
@@ -87,15 +87,7 @@ class AV1IntraPredTest : public ::testing::TestWithParam<TupleType> {
     }
 
   public:
-    void *operator new(size_t size) {
-        if (void *ptr = svt_aom_memalign(alignof(AV1IntraPredTest), size))
-            return ptr;
-        throw std::bad_alloc();
-    }
-
-    void operator delete(void *ptr) {
-        svt_aom_free(ptr);
-    }
+    DEFINE_ALIGNED_NEW_DELETE(AV1IntraPredTest)
 
     void RunTest() {
         SVTRandom rnd{0, (1 << bd) - 1};

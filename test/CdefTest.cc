@@ -32,7 +32,7 @@
 #include "aom_dsp_rtcd.h"
 #include "enc_cdef.h"
 #include "util.h"
-#include "random.h"
+#include "random.hpp"
 #include "unit_test_utility.h"
 #include "utility.h"
 

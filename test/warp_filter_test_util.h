@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 #include "common_dsp_rtcd.h"
-#include "random.h"
+#include "random.hpp"
 
 namespace libaom_test {
 
