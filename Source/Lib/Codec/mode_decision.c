@@ -3136,7 +3136,8 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
                     svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
                     dv_cand[*num_dv_cand] = dv;
                     (*num_dv_cand)++;
-                    x->mv_limits = tmp_mv_limits;
+                    ctx->intrabc_last_dv = pred_mv;
+                    x->mv_limits         = tmp_mv_limits;
                     continue;
                 }
             }
@@ -3160,7 +3161,8 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
             dv_cand[*num_dv_cand] = dv;
             (*num_dv_cand)++;
 
-            x->best_mv = best_hash_mv;
+            x->best_mv           = best_hash_mv;
+            ctx->intrabc_last_dv = best_hash_mv;
         }
         // Fallback when the hash produced no candidate (hash miss, or block too big to hash):
         //   mode 0 = full diamond search (heavy levels)
@@ -3173,11 +3175,14 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
                 svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
                 inject = true;
             } else if (ic->hash_miss_mode == 1) {
-                // Screen-content DVs are spatially coherent, so the neighbour-derived predictor is
-                // usually a good match. Inject it (gated by a per-pixel SAD budget) instead of
-                // searching — recovers most of the diamond's gain for a couple of SADs per block.
-                Mv pred_mv;
-                if (svt_av1_intrabc_pred_first(x, bsize, &mvp_full, ic->bvp_th, &pred_mv)) {
+                // Screen-content DVs are spatially coherent, so neighbour/recent predictors are
+                // usually good matches. Evaluate a few — neighbour DV, second predictor, and the
+                // frame's last-used DV (dominant offset) — in one sad_x4d call and inject the best
+                // (gated by a per-pixel SAD budget), instead of searching.
+                const Mv nearmv_fp = {{(int16_t)(nearmv.x >> 3), (int16_t)(nearmv.y >> 3)}};
+                const Mv cands[4]  = {mvp_full, nearmv_fp, ctx->intrabc_last_dv, mvp_full};
+                Mv       pred_mv;
+                if (svt_av1_intrabc_pred_best4(x, bsize, cands, ic->bvp_th, &pred_mv)) {
                     x->best_mv = pred_mv;
                     inject     = true;
                 }
@@ -3188,6 +3193,7 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
                     svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
                     dv_cand[*num_dv_cand] = dv;
                     (*num_dv_cand)++;
+                    ctx->intrabc_last_dv = x->best_mv;
                 }
             }
         }

@@ -1116,6 +1116,7 @@ typedef struct ModeDecisionContext {
     uint8_t              mds_subres_step;
     FilterIntraCtrls     filter_intra_ctrls;
     uint8_t              md_allow_intrabc;
+    Mv                   intrabc_last_dv; // Last DV chosen by the IntraBC search; seeds the BVP fallback (dominant-offset predictor). 0 = none.
     uint8_t              md_palette_level;
     DepthRemovalCtrls    depth_removal_ctrls;
     DepthRefinementCtrls depth_refinement_ctrls;

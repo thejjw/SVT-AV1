@@ -224,6 +224,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     uint32_t   buffer_index;
     uint32_t   cand_index;
 
+    ctx->intrabc_last_dv.as_int = 0; // no last DV yet (seeds the RTC IntraBC BVP fallback)
     ctx->init_max_block_cnt     = max_block_cnt;
     uint32_t block_max_count_sb = max_block_cnt;
 
