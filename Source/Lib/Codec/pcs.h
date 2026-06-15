@@ -646,7 +646,8 @@ typedef struct IntrabcCtrls {
     bool     pred_first; // Evaluate the (AV1-normative) DV predictor first; on a near-exact match, take it and skip the hash + full-pixel search
     uint16_t pred_exit_th; // Per-pixel SAD budget to accept the predictor early (0 = exact match only)
     uint8_t local_search_sb; // Generic search-range cap: limit the DV search to the current + N left/above superblocks (0 = full legal range)
-    bool hash_only; // Skip the full-pixel (diamond) fallback on a hash miss — rely on hash + predictor exact matches only (near-free; the diamond is ~90% of the per-keyframe DV-search cost)
+    uint8_t hash_miss_mode; // On a hash miss: 0 = full diamond search; 1 = inject the SAD-gated predicted DV (block-vector prediction — near-free, no search); 2 = skip
+    uint16_t bvp_th; // Per-pixel SAD budget for the BVP fallback (hash_miss_mode==1); larger accepts looser predictor matches
 } IntrabcCtrls;
 
 typedef struct PaletteCtrls {

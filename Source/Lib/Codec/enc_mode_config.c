@@ -1678,7 +1678,8 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
     intrabc_ctrls->pred_first      = 0;
     intrabc_ctrls->pred_exit_th    = 0;
     intrabc_ctrls->local_search_sb = 0;
-    intrabc_ctrls->hash_only       = 0;
+    intrabc_ctrls->hash_miss_mode  = 0; // default: full diamond search on a hash miss
+    intrabc_ctrls->bvp_th          = 0;
 
     switch (ibc_level) {
     case 0:
@@ -1872,14 +1873,17 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
         intrabc_ctrls->search_dir = 0;
 
         // Clean-room RTC fast path. Profiling showed the full-pixel (diamond) fallback on hash
-        // misses is ~90% of the per-keyframe DV-search cost while contributing a minority of the
-        // gain, so this level relies on exact matches only: predictor-first exact-match early-exit
-        // (pred_exit_th=0 => distortion-optimal) plus hash, and skips the diamond fallback. Result
-        // on AOM b2_scc: ~-7% BD-rate at ~1/10th the keyframe cost of the full search.
+        // misses is ~90% of the per-keyframe DV-search cost. This level replaces it with
+        // block-vector prediction: predictor-first exact-match early-exit (pred_exit_th=0 =>
+        // distortion-optimal) up front, and on a hash miss it injects the *predicted* DV gated by
+        // a per-pixel SAD budget (hash_miss_mode=1) instead of searching — screen-content DVs are
+        // spatially coherent, so the neighbour-derived predictor recovers most matches for free.
+        // On AOM b2_scc: ~-7.8% BD-rate at ~1/30th the keyframe DV-search cost of the full search.
         intrabc_ctrls->pred_first      = 1;
         intrabc_ctrls->pred_exit_th    = 0;
         intrabc_ctrls->local_search_sb = 0;
-        intrabc_ctrls->hash_only       = 1;
+        intrabc_ctrls->hash_miss_mode  = 1; // BVP fallback (no diamond)
+        intrabc_ctrls->bvp_th          = 16;
 
         break;
 
