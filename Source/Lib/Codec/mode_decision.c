@@ -3162,18 +3162,33 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
 
             x->best_mv = best_hash_mv;
         }
-        // Full-pixel (diamond) fallback if hash didn't produce a candidate. Skipped on the
-        // hash-only RTC level: the diamond is ~90% of the per-keyframe DV-search cost and the
-        // blocks that miss the hash rarely have a good IntraBC match anyway.
-        else if (!pcs->ppcs->intrabc_ctrls.hash_only) {
-            svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
-
-            Mv dv = {{x->best_mv.x * 8, x->best_mv.y * 8}};
-
-            if (!mv_check_bounds(&x->mv_limits, dv) &&
-                svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
-                dv_cand[*num_dv_cand] = dv;
-                (*num_dv_cand)++;
+        // Fallback when the hash produced no candidate (hash miss, or block too big to hash):
+        //   mode 0 = full diamond search (heavy levels)
+        //   mode 1 = inject the SAD-gated predicted DV — block-vector prediction, no search (RTC)
+        //   mode 2 = skip
+        else {
+            const IntrabcCtrls* ic     = &pcs->ppcs->intrabc_ctrls;
+            bool                inject = false;
+            if (ic->hash_miss_mode == 0) {
+                svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
+                inject = true;
+            } else if (ic->hash_miss_mode == 1) {
+                // Screen-content DVs are spatially coherent, so the neighbour-derived predictor is
+                // usually a good match. Inject it (gated by a per-pixel SAD budget) instead of
+                // searching — recovers most of the diamond's gain for a couple of SADs per block.
+                Mv pred_mv;
+                if (svt_av1_intrabc_pred_first(x, bsize, &mvp_full, ic->bvp_th, &pred_mv)) {
+                    x->best_mv = pred_mv;
+                    inject     = true;
+                }
+            }
+            if (inject) {
+                Mv dv = {{x->best_mv.x * 8, x->best_mv.y * 8}};
+                if (!mv_check_bounds(&x->mv_limits, dv) &&
+                    svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
+                    dv_cand[*num_dv_cand] = dv;
+                    (*num_dv_cand)++;
+                }
             }
         }
 
