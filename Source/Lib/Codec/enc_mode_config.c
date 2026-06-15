@@ -2305,9 +2305,11 @@ void svt_aom_sig_deriv_multi_processes_rtc(SequenceControlSet* scs, PictureParen
     // frame, so the strict sc_class5 gate avoids hurting non-screen keyframes.
     if (scs->static_config.enable_intrabc && is_islice && sc_class5) {
 #if RTC_INTRABC_PRED_FIRST
-        // M0-M6 (more budget): full hash + diamond search (~-10% BD-rate).
-        // M7-M8 (tightest RTC budget): near-free hash-only level (~-7% at ~1/10th the cost).
-        intrabc_level = enc_mode <= ENC_M6 ? 6 : RTC_INTRABC_LEVEL;
+        // RTC clamps every preset to a minimum internal enc_mode of M7 (presets <=7 all run as
+        // M7), and screen-content tools are off at M9+, so RTC screen content is always M7-M8.
+        // Use the near-free multi-predictor BVP level (~-8 to -9% BD-rate on AOM b2_scc, no
+        // regression, ~+1% encode time) across that whole range.
+        intrabc_level = RTC_INTRABC_LEVEL;
 #else
         intrabc_level = enc_mode <= ENC_M7 ? 6 : MAX_INTRABC_LEVEL;
 #endif
