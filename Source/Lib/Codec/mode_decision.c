@@ -3162,8 +3162,10 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
 
             x->best_mv = best_hash_mv;
         }
-        // Full-pixel fallback if hash didn't produce a candidate
-        else {
+        // Full-pixel (diamond) fallback if hash didn't produce a candidate. Skipped on the
+        // hash-only RTC level: the diamond is ~90% of the per-keyframe DV-search cost and the
+        // blocks that miss the hash rarely have a good IntraBC match anyway.
+        else if (!pcs->ppcs->intrabc_ctrls.hash_only) {
             svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
 
             Mv dv = {{x->best_mv.x * 8, x->best_mv.y * 8}};

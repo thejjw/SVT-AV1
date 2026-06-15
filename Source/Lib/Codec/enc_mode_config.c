@@ -1678,6 +1678,7 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
     intrabc_ctrls->pred_first      = 0;
     intrabc_ctrls->pred_exit_th    = 0;
     intrabc_ctrls->local_search_sb = 0;
+    intrabc_ctrls->hash_only       = 0;
 
     switch (ibc_level) {
     case 0:
@@ -1859,8 +1860,9 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
         intrabc_ctrls->nsq_parent_gating = 1;
         intrabc_ctrls->b4_parent_gating  = 1; // also gate 4x4 to cut work on keyframes
 
-        // Hash search settings (smallest)
-        intrabc_ctrls->max_block_size_hash = 8;
+        // Hash search settings. Hash up to 16x16 so medium blocks get a cheap exact match
+        // (the hash lookup is far cheaper than the diamond search those blocks would otherwise hit).
+        intrabc_ctrls->max_block_size_hash = 16;
         intrabc_ctrls->max_cand_per_bucket = 16;
 
         // Mesh search disabled
@@ -1869,12 +1871,15 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
         // Keep Left + Top so horizontal text/UI repetition is still found
         intrabc_ctrls->search_dir = 0;
 
-        // Clean-room RTC fast path: predictor-first exact-match early-exit + local window.
-        // pred_exit_th = 0 => accept the predictor only on an exact (distortion-free) match,
-        // so the early-exit never costs quality versus the hash/pixel search.
+        // Clean-room RTC fast path. Profiling showed the full-pixel (diamond) fallback on hash
+        // misses is ~90% of the per-keyframe DV-search cost while contributing a minority of the
+        // gain, so this level relies on exact matches only: predictor-first exact-match early-exit
+        // (pred_exit_th=0 => distortion-optimal) plus hash, and skips the diamond fallback. Result
+        // on AOM b2_scc: ~-7% BD-rate at ~1/10th the keyframe cost of the full search.
         intrabc_ctrls->pred_first      = 1;
         intrabc_ctrls->pred_exit_th    = 0;
-        intrabc_ctrls->local_search_sb = 4; // limit DV search to current + 4 neighbouring SBs
+        intrabc_ctrls->local_search_sb = 0;
+        intrabc_ctrls->hash_only       = 1;
 
         break;
 
@@ -2296,7 +2301,9 @@ void svt_aom_sig_deriv_multi_processes_rtc(SequenceControlSet* scs, PictureParen
     // frame, so the strict sc_class5 gate avoids hurting non-screen keyframes.
     if (scs->static_config.enable_intrabc && is_islice && sc_class5) {
 #if RTC_INTRABC_PRED_FIRST
-        intrabc_level = enc_mode <= ENC_M7 ? 6 : RTC_INTRABC_LEVEL;
+        // M0-M6 (more budget): full hash + diamond search (~-10% BD-rate).
+        // M7-M8 (tightest RTC budget): near-free hash-only level (~-7% at ~1/10th the cost).
+        intrabc_level = enc_mode <= ENC_M6 ? 6 : RTC_INTRABC_LEVEL;
 #else
         intrabc_level = enc_mode <= ENC_M7 ? 6 : MAX_INTRABC_LEVEL;
 #endif
