@@ -205,6 +205,33 @@ int svt_av1_get_mvpred_var(const IntraBcContext* x, const Mv best_mv, const Mv c
     }
 }
 
+// Clean-room predictor-first early exit for RTC IntraBC.
+// Evaluates the (AV1-normative) DV predictor's SAD directly. Screen content frequently
+// repeats at a constant displacement (scrolling, static UI, tiled backgrounds), so the
+// neighbour-derived predictor is often an exact match. When the predictor's per-pixel SAD
+// is within the budget (0 => exact match only, which is distortion-optimal), accept it and
+// signal the caller to skip the hash and full-pixel searches. This is a generic
+// predictor-first + zero-residual early-out (decades-old motion-estimation prior art) using
+// the existing AV1 DV predictor; it has no bitstream impact.
+// Returns 1 and writes *best_pred_mv (full-pel) when accepted, else 0.
+int svt_av1_intrabc_pred_first(IntraBcContext* x, BlockSize bsize, const Mv* mvp_full, uint16_t pred_exit_th,
+                               Mv* best_pred_mv) {
+    if (!is_mv_in(&x->mv_limits, *mvp_full)) {
+        return 0;
+    }
+    const AomVarianceFnPtr* fn_ptr  = &svt_aom_mefn_ptr[bsize];
+    const Buf2D* const      what    = &x->plane[0].src;
+    const Buf2D* const      in_what = &x->xdplane[0].pre[0];
+    const unsigned int      sad     = fn_ptr->sdf(
+        what->buf, what->stride, get_buf_from_mv(in_what, *mvp_full), in_what->stride);
+    const unsigned int area = (unsigned int)block_size_wide[bsize] * (unsigned int)block_size_high[bsize];
+    if (sad <= (unsigned int)pred_exit_th * area) {
+        *best_pred_mv = *mvp_full;
+        return 1;
+    }
+    return 0;
+}
+
 // Exhaustive motion search around a given centre position with a given
 // step size.
 static int exhaustive_mesh_search(IntraBcContext* x, Mv* ref_mv, Mv* best_mv, int range, int step, int sad_per_bit,

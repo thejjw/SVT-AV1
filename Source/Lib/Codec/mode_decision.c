@@ -3105,6 +3105,15 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         assert_release(x->mv_limits.row_min >= tmp_mv_limits.row_min);
         assert_release(x->mv_limits.row_max <= tmp_mv_limits.row_max);
 
+        // Clean-room generic search-range cap: keep the DV search local to the current +
+        // N neighbouring superblocks. A smaller, decoder-agnostic search window means a
+        // cheaper search and smaller (cheaper to code) DVs; the AV1 bitstream is unaffected.
+        if (pcs->ppcs->intrabc_ctrls.local_search_sb) {
+            const int win = (int)pcs->ppcs->intrabc_ctrls.local_search_sb * scs->seq_header.sb_mi_size * MI_SIZE;
+            x->mv_limits.col_min = MAX(x->mv_limits.col_min, -win);
+            x->mv_limits.row_min = MAX(x->mv_limits.row_min, -win);
+        }
+
         svt_av1_set_mv_search_range(&x->mv_limits, dv_ref);
 
         if (x->mv_limits.col_max < x->mv_limits.col_min || x->mv_limits.row_max < x->mv_limits.row_min) {
@@ -3115,6 +3124,23 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         mvp_full.x >>= 3;
         mvp_full.y >>= 3;
         x->best_mv.as_int = 0;
+
+        // Clean-room predictor-first early-exit: if the (AV1-normative) DV predictor is an
+        // exact / near-exact match (common for screen content: scrolling, static UI, tiled
+        // backgrounds), take it and skip the hash + full-pixel search for this direction.
+        if (pcs->ppcs->intrabc_ctrls.pred_first) {
+            Mv pred_mv;
+            if (svt_av1_intrabc_pred_first(x, bsize, &mvp_full, pcs->ppcs->intrabc_ctrls.pred_exit_th, &pred_mv)) {
+                Mv dv = {{pred_mv.x * 8, pred_mv.y * 8}};
+                if (!mv_check_bounds(&x->mv_limits, dv) &&
+                    svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
+                    dv_cand[*num_dv_cand] = dv;
+                    (*num_dv_cand)++;
+                    x->mv_limits = tmp_mv_limits;
+                    continue;
+                }
+            }
+        }
 
         // Hash Search
         const AomVarianceFnPtr* fn_ptr = &svt_aom_mefn_ptr[bsize];

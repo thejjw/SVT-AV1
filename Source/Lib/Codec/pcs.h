@@ -642,6 +642,10 @@ typedef struct IntrabcCtrls {
     MeshPattern mesh_patterns[MAX_MESH_STEP]; // Mesh search patterns
     bool        mesh_qp_scaling; // Scale mesh search ranges based on QP
     uint8_t     search_dir; // Search direction: 0 = Left + Top, 1 = Top only
+    // Clean-room RTC additions (encoder-side search heuristics; no bitstream impact):
+    bool     pred_first; // Evaluate the (AV1-normative) DV predictor first; on a near-exact match, take it and skip the hash + full-pixel search
+    uint16_t pred_exit_th; // Per-pixel SAD budget to accept the predictor early (0 = exact match only)
+    uint8_t local_search_sb; // Generic search-range cap: limit the DV search to the current + N left/above superblocks (0 = full legal range)
 } IntrabcCtrls;
 
 typedef struct PaletteCtrls {
