@@ -276,6 +276,70 @@ int svt_av1_intrabc_pred_best4(IntraBcContext* x, BlockSize bsize, const Mv cand
     return 0;
 }
 
+// Clean-room one-shot offset probe for the RTC IntraBC fallback (variant A).
+// Given a full-pel center DV that already qualified under the BVP budget, evaluate a small
+// fixed cloud of integer offsets around it — radius-1 ring first, then radius-2 — in one
+// pass (no iteration, unlike the diamond) and return the lowest-SAD point (possibly the
+// center). Screen-content matches frequently sit a few pixels off the spatially-predicted
+// DV; one cheap probe recovers part of what the per-invocation diamond would find, at a
+// fixed cost of ceil(npts/4) sad_x4d calls. Out-of-range offsets are skipped; x4d slots are
+// padded with the first valid address so all four reads are safe. No bitstream impact.
+void svt_av1_intrabc_probe_around(IntraBcContext* x, BlockSize bsize, Mv center, int npts, Mv* best) {
+    static const int8_t off[16][2] = {{1, 0},
+                                      {-1, 0},
+                                      {0, 1},
+                                      {0, -1},
+                                      {1, 1},
+                                      {1, -1},
+                                      {-1, 1},
+                                      {-1, -1},
+                                      {2, 0},
+                                      {-2, 0},
+                                      {0, 2},
+                                      {0, -2},
+                                      {2, 2},
+                                      {2, -2},
+                                      {-2, 2},
+                                      {-2, -2}};
+    if (npts > 16) {
+        npts = 16;
+    }
+    const AomVarianceFnPtr* fn_ptr  = &svt_aom_mefn_ptr[bsize];
+    const Buf2D* const      what    = &x->plane[0].src;
+    const Buf2D* const      in_what = &x->xdplane[0].pre[0];
+    Mv                      bestmv  = center;
+    unsigned int best_sad = fn_ptr->sdf(what->buf, what->stride, get_buf_from_mv(in_what, center), in_what->stride);
+    for (int base = 0; base < npts; base += 4) {
+        Mv             cand[4];
+        const uint8_t* addr[4];
+        int            nv = 0;
+        for (int k = 0; k < 4 && base + k < npts; ++k) {
+            Mv c = {{(int16_t)(center.x + off[base + k][0]), (int16_t)(center.y + off[base + k][1])}};
+            if (is_mv_in(&x->mv_limits, c)) {
+                cand[nv] = c;
+                addr[nv] = get_buf_from_mv(in_what, c);
+                ++nv;
+            }
+        }
+        if (!nv) {
+            continue;
+        }
+        for (int k = nv; k < 4; ++k) {
+            cand[k] = cand[0];
+            addr[k] = addr[0];
+        }
+        unsigned int sads[4];
+        fn_ptr->sdx4df(what->buf, what->stride, addr, in_what->stride, sads);
+        for (int k = 0; k < nv; ++k) {
+            if (sads[k] < best_sad) {
+                best_sad = sads[k];
+                bestmv   = cand[k];
+            }
+        }
+    }
+    *best = bestmv;
+}
+
 // Exhaustive motion search around a given centre position with a given
 // step size.
 static int exhaustive_mesh_search(IntraBcContext* x, Mv* ref_mv, Mv* best_mv, int range, int step, int sad_per_bit,
