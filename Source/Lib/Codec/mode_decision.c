@@ -3169,8 +3169,9 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         //   mode 1 = inject the SAD-gated predicted DV — block-vector prediction, no search (RTC)
         //   mode 2 = skip
         else {
-            const IntrabcCtrls* ic     = &pcs->ppcs->intrabc_ctrls;
-            bool                inject = false;
+            const IntrabcCtrls* ic        = &pcs->ppcs->intrabc_ctrls;
+            bool                inject    = false;
+            Mv                  pred_orig = {{0, 0}}; // pre-probe BVP pick (variant A fallback)
             if (ic->hash_miss_mode == 0) {
                 svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
                 inject = true;
@@ -3183,17 +3184,36 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
                 const Mv cands[4]  = {mvp_full, nearmv_fp, ctx->intrabc_last_dv, mvp_full};
                 Mv       pred_mv;
                 if (svt_av1_intrabc_pred_best4(x, bsize, cands, ic->bvp_th, &pred_mv)) {
+                    pred_orig = pred_mv;
+                    if (ic->probe_pts) {
+                        // One-shot integer-offset cloud around the best predictor (no iteration):
+                        // screen-content matches often sit a few px off the spatial predictor.
+                        Mv refined;
+                        svt_av1_intrabc_probe_around(x, bsize, pred_mv, ic->probe_pts, &refined);
+                        pred_mv = refined;
+                    }
                     x->best_mv = pred_mv;
                     inject     = true;
                 }
             }
             if (inject) {
-                Mv dv = {{x->best_mv.x * 8, x->best_mv.y * 8}};
-                if (!mv_check_bounds(&x->mv_limits, dv) &&
-                    svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
-                    dv_cand[*num_dv_cand] = dv;
-                    (*num_dv_cand)++;
-                    ctx->intrabc_last_dv = x->best_mv;
+                // Try the (possibly probed) DV; fall back to the pre-probe BVP DV if the probed
+                // point fails the AV1 DV-validity check, so the probe never costs a match.
+                Mv  tries[2];
+                int nt      = 0;
+                tries[nt++] = x->best_mv;
+                if (ic->hash_miss_mode == 1 && ic->probe_pts && pred_orig.as_int != x->best_mv.as_int) {
+                    tries[nt++] = pred_orig;
+                }
+                for (int t = 0; t < nt; ++t) {
+                    Mv dv = {{(int16_t)(tries[t].x * 8), (int16_t)(tries[t].y * 8)}};
+                    if (!mv_check_bounds(&x->mv_limits, dv) &&
+                        svt_aom_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) {
+                        dv_cand[*num_dv_cand] = dv;
+                        (*num_dv_cand)++;
+                        ctx->intrabc_last_dv = tries[t];
+                        break;
+                    }
                 }
             }
         }

@@ -1680,6 +1680,7 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
     intrabc_ctrls->local_search_sb = 0;
     intrabc_ctrls->hash_miss_mode  = 0; // default: full diamond search on a hash miss
     intrabc_ctrls->bvp_th          = 0;
+    intrabc_ctrls->probe_pts       = 0;
 
     switch (ibc_level) {
     case 0:
@@ -1884,6 +1885,10 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
         intrabc_ctrls->local_search_sb = 0;
         intrabc_ctrls->hash_miss_mode  = 1; // BVP fallback (no diamond)
         intrabc_ctrls->bvp_th          = 16;
+        // One-shot 12-point offset probe around the BVP pick: recovers screen-content matches that
+        // sit a few px off the spatial predictor. ~-2.7% BD-rate on the weakest b2_scc clip
+        // (Spreadsheet), neutral on the rest, ~0% CPU/latency/memory (720p..4K).
+        intrabc_ctrls->probe_pts = 12;
 
         break;
 
