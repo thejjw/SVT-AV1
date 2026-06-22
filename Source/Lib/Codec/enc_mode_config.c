@@ -1669,6 +1669,7 @@ static void svt_aom_set_dlf_controls(PictureParentControlSet* pcs, uint8_t dlf_l
 */
 #define MAX_INTRABC_LEVEL 7
 #define RTC_INTRABC_LEVEL 8 // Dedicated light level for RTC keyframes: hash<=8, no mesh, predictor-first early-exit, local search window
+#define FAST_SC_INTRABC_LEVEL 9 // Fast non-RTC screen content (M6-M8): level 5 with a larger (16) IntraBC hash
 #define RTC_INTRABC_CAND_HEADROOM 8 // Extra fast-candidate slots reserved for the RTC IntraBC DV candidates
 
 static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
@@ -1788,6 +1789,7 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
 
         break;
 
+    case FAST_SC_INTRABC_LEVEL: // shares level 5's config; only the hash size differs (set below)
     case 5:
 
         intrabc_ctrls->enabled = 1;
@@ -1811,6 +1813,13 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
 
         // Search direction(s)
         intrabc_ctrls->search_dir = 0;
+
+        // Fast-SC variant: hash medium blocks (up to 16x16) so they get a cheap exact match
+        // instead of falling to the diamond search. Keeps the diamond fallback and 4x4 (unlike
+        // the BVP-only RTC level), so it is a strict BD-rate win on M6-M8 screen content at iso
+        // speed and never regresses fine-detail SC.
+        if (ibc_level == FAST_SC_INTRABC_LEVEL)
+            intrabc_ctrls->max_block_size_hash = 16;
 
         break;
 
@@ -2111,7 +2120,8 @@ void svt_aom_sig_deriv_multi_processes_default(SequenceControlSet* scs, PictureP
             } else if (enc_mode <= ENC_M5) {
                 intrabc_level = 3;
             } else if (enc_mode <= ENC_M8) {
-                intrabc_level = 5;
+                // Fast non-RTC screen content: larger IntraBC hash (level 5 + hash 16).
+                intrabc_level = FAST_SC_INTRABC_LEVEL;
             } else if (enc_mode <= ENC_M9) {
                 intrabc_level = 6;
             } else {
