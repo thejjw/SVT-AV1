@@ -3105,9 +3105,8 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         assert_release(x->mv_limits.row_min >= tmp_mv_limits.row_min);
         assert_release(x->mv_limits.row_max <= tmp_mv_limits.row_max);
 
-        // Clean-room generic search-range cap: keep the DV search local to the current +
-        // N neighbouring superblocks. A smaller, decoder-agnostic search window means a
-        // cheaper search and smaller (cheaper to code) DVs; the AV1 bitstream is unaffected.
+        // Search-range cap: keep the DV search local to the current + N neighbouring superblocks
+        // for a cheaper search and smaller (cheaper to code) DVs.
         if (pcs->ppcs->intrabc_ctrls.local_search_sb) {
             const int win = (int)pcs->ppcs->intrabc_ctrls.local_search_sb * scs->seq_header.sb_mi_size * MI_SIZE;
             x->mv_limits.col_min = MAX(x->mv_limits.col_min, -win);
@@ -3125,9 +3124,8 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         mvp_full.y >>= 3;
         x->best_mv.as_int = 0;
 
-        // Clean-room predictor-first early-exit: if the (AV1-normative) DV predictor is an
-        // exact / near-exact match (common for screen content: scrolling, static UI, tiled
-        // backgrounds), take it and skip the hash + full-pixel search for this direction.
+        // Predictor-first early-exit: if the AV1 DV predictor is an exact/near-exact match, take it
+        // and skip the hash + full-pixel search for this direction.
         if (pcs->ppcs->intrabc_ctrls.pred_first) {
             Mv pred_mv;
             if (svt_av1_intrabc_pred_first(x, bsize, &mvp_full, pcs->ppcs->intrabc_ctrls.pred_exit_th, &pred_mv)) {
@@ -3176,10 +3174,9 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
                 svt_av1_full_pixel_search(pcs, x, bsize, &mvp_full, 0, x->sadperbit16, NULL, dv_ref);
                 inject = true;
             } else if (ic->hash_miss_mode == 1) {
-                // Screen-content DVs are spatially coherent, so neighbour/recent predictors are
-                // usually good matches. Evaluate a few — neighbour DV, second predictor, and the
-                // frame's last-used DV (dominant offset) — in one sad_x4d call and inject the best
-                // (gated by a per-pixel SAD budget), instead of searching.
+                // BVP fallback: evaluate neighbour DV, second predictor, and the frame's last-used
+                // DV in one sad_x4d call and inject the best (gated by a SAD budget) instead of
+                // searching.
                 const Mv nearmv_fp = {{(int16_t)(nearmv.x >> 3), (int16_t)(nearmv.y >> 3)}};
                 const Mv cands[4]  = {mvp_full, nearmv_fp, ctx->intrabc_last_dv, mvp_full};
                 Mv       pred_mv;

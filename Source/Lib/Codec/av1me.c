@@ -205,15 +205,9 @@ int svt_av1_get_mvpred_var(const IntraBcContext* x, const Mv best_mv, const Mv c
     }
 }
 
-// Clean-room predictor-first early exit for RTC IntraBC.
-// Evaluates the (AV1-normative) DV predictor's SAD directly. Screen content frequently
-// repeats at a constant displacement (scrolling, static UI, tiled backgrounds), so the
-// neighbour-derived predictor is often an exact match. When the predictor's per-pixel SAD
-// is within the budget (0 => exact match only, which is distortion-optimal), accept it and
-// signal the caller to skip the hash and full-pixel searches. This is a generic
-// predictor-first + zero-residual early-out (decades-old motion-estimation prior art) using
-// the existing AV1 DV predictor; it has no bitstream impact.
-// Returns 1 and writes *best_pred_mv (full-pel) when accepted, else 0.
+// Predictor-first early exit for RTC IntraBC: evaluate the AV1 DV predictor's SAD directly and, if
+// the per-pixel SAD is within the budget (0 => exact match only), accept it and skip the hash and
+// full-pixel searches. Returns 1 and writes *best_pred_mv (full-pel) when accepted, else 0.
 int svt_av1_intrabc_pred_first(IntraBcContext* x, BlockSize bsize, const Mv* mvp_full, uint16_t pred_exit_th,
                                Mv* best_pred_mv) {
     if (!is_mv_in(&x->mv_limits, *mvp_full)) {
@@ -232,11 +226,10 @@ int svt_av1_intrabc_pred_first(IntraBcContext* x, BlockSize bsize, const Mv* mvp
     return 0;
 }
 
-// Clean-room BVP candidate evaluation for the RTC IntraBC fallback.
-// Evaluates up to 4 candidate full-pel DVs (e.g. neighbour predictor, second predictor, the
-// frame's last-used DV) in a single sad_x4d call and returns the lowest-SAD candidate whose
-// per-pixel SAD is within the budget. Zero (self) and out-of-range candidates are excluded;
-// their x4d slots are padded with the first valid candidate so all 4 addresses are safe.
+// BVP candidate evaluation for the RTC IntraBC fallback: evaluate up to 4 full-pel DV candidates
+// (neighbour predictor, second predictor, frame's last-used DV) in a single sad_x4d call and return
+// the lowest-SAD one within the budget. Zero (self) and out-of-range candidates are excluded; their
+// x4d slots are padded with the first valid candidate so all 4 addresses are safe.
 // Returns 1 and writes *best (full-pel) when one qualifies, else 0.
 int svt_av1_intrabc_pred_best4(IntraBcContext* x, BlockSize bsize, const Mv cands[4], uint16_t pred_exit_th,
                                Mv* best) {
@@ -276,14 +269,10 @@ int svt_av1_intrabc_pred_best4(IntraBcContext* x, BlockSize bsize, const Mv cand
     return 0;
 }
 
-// Clean-room one-shot offset probe for the RTC IntraBC fallback (variant A).
-// Given a full-pel center DV that already qualified under the BVP budget, evaluate a small
-// fixed cloud of integer offsets around it — radius-1 ring first, then radius-2 — in one
-// pass (no iteration, unlike the diamond) and return the lowest-SAD point (possibly the
-// center). Screen-content matches frequently sit a few pixels off the spatially-predicted
-// DV; one cheap probe recovers part of what the per-invocation diamond would find, at a
-// fixed cost of ceil(npts/4) sad_x4d calls. Out-of-range offsets are skipped; x4d slots are
-// padded with the first valid address so all four reads are safe. No bitstream impact.
+// One-shot offset probe for the RTC IntraBC fallback (variant A): given a qualifying full-pel center
+// DV, evaluate a fixed cloud of integer offsets around it (radius-1 ring then radius-2) in one pass
+// and return the lowest-SAD point (possibly the center), at a fixed cost of ceil(npts/4) sad_x4d
+// calls. Out-of-range offsets are skipped; x4d slots are padded with the first valid address.
 void svt_av1_intrabc_probe_around(IntraBcContext* x, BlockSize bsize, Mv center, int npts, Mv* best) {
     static const int8_t off[16][2] = {{1, 0},
                                       {-1, 0},
