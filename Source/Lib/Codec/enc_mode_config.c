@@ -1668,7 +1668,8 @@ static void svt_aom_set_dlf_controls(PictureParentControlSet* pcs, uint8_t dlf_l
     set controls for intra block copy
 */
 #define MAX_INTRABC_LEVEL 7
-#define RTC_INTRABC_LEVEL 8 // Dedicated light level for RTC keyframes: hash<=8, no mesh, predictor-first early-exit, local search window
+#define RTC_INTRABC_LEVEL \
+    8 // Dedicated light level for RTC keyframes: hash<=8, no mesh, predictor-first early-exit, local search window
 #define FAST_SC_INTRABC_LEVEL 9 // Fast non-RTC screen content (M6-M8): level 5 with a larger (16) IntraBC hash
 #define RTC_INTRABC_CAND_HEADROOM 8 // Extra fast-candidate slots reserved for the RTC IntraBC DV candidates
 
@@ -1816,8 +1817,9 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
 
         // Fast-SC variant: hash medium blocks (up to 16x16) for a cheap exact match instead of the
         // diamond search. Keeps the diamond fallback and 4x4, unlike the BVP-only RTC level.
-        if (ibc_level == FAST_SC_INTRABC_LEVEL)
+        if (ibc_level == FAST_SC_INTRABC_LEVEL) {
             intrabc_ctrls->max_block_size_hash = 16;
+        }
 
         break;
 
@@ -2435,7 +2437,7 @@ void svt_aom_sig_deriv_multi_processes_rtc(SequenceControlSet* scs, PictureParen
         pcs->hbd_md = scs->enable_hbd_mode_decision;
     }
 
-    pcs->max_can_count                 = svt_aom_get_max_can_count(enc_mode, true);
+    pcs->max_can_count = svt_aom_get_max_can_count(enc_mode, true);
 #if RTC_INTRABC
     // The headroom in svt_aom_get_max_can_count() only enlarges the allocation. On frames that do
     // not use IntraBC, restore the baseline cap so the fast-candidate buffer partitioning (and the
