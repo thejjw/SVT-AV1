@@ -216,8 +216,7 @@ int svt_av1_intrabc_pred_first(IntraBcContext* x, BlockSize bsize, const Mv* mvp
     const AomVarianceFnPtr* fn_ptr  = &svt_aom_mefn_ptr[bsize];
     const Buf2D* const      what    = &x->plane[0].src;
     const Buf2D* const      in_what = &x->xdplane[0].pre[0];
-    const unsigned int      sad     = fn_ptr->sdf(
-        what->buf, what->stride, get_buf_from_mv(in_what, *mvp_full), in_what->stride);
+    const unsigned int sad = fn_ptr->sdf(what->buf, what->stride, get_buf_from_mv(in_what, *mvp_full), in_what->stride);
     const unsigned int area = (unsigned int)block_size_wide[bsize] * (unsigned int)block_size_high[bsize];
     if (sad <= (unsigned int)pred_exit_th * area) {
         *best_pred_mv = *mvp_full;
@@ -231,8 +230,7 @@ int svt_av1_intrabc_pred_first(IntraBcContext* x, BlockSize bsize, const Mv* mvp
 // the lowest-SAD one within the budget. Zero (self) and out-of-range candidates are excluded; their
 // x4d slots are padded with the first valid candidate so all 4 addresses are safe.
 // Returns 1 and writes *best (full-pel) when one qualifies, else 0.
-int svt_av1_intrabc_pred_best4(IntraBcContext* x, BlockSize bsize, const Mv cands[4], uint16_t pred_exit_th,
-                               Mv* best) {
+int svt_av1_intrabc_pred_best4(IntraBcContext* x, BlockSize bsize, const Mv cands[4], uint16_t pred_exit_th, Mv* best) {
     bool valid[4];
     int  pad = -1;
     for (int i = 0; i < 4; ++i) {

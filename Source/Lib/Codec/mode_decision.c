@@ -3108,7 +3108,7 @@ static void intra_bc_search(PictureControlSet* pcs, ModeDecisionContext* ctx, co
         // Search-range cap: keep the DV search local to the current + N neighbouring superblocks
         // for a cheaper search and smaller (cheaper to code) DVs.
         if (pcs->ppcs->intrabc_ctrls.local_search_sb) {
-            const int win = (int)pcs->ppcs->intrabc_ctrls.local_search_sb * scs->seq_header.sb_mi_size * MI_SIZE;
+            const int win        = (int)pcs->ppcs->intrabc_ctrls.local_search_sb * scs->seq_header.sb_mi_size * MI_SIZE;
             x->mv_limits.col_min = MAX(x->mv_limits.col_min, -win);
             x->mv_limits.row_min = MAX(x->mv_limits.row_min, -win);
         }
