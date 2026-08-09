@@ -37,6 +37,7 @@ set(all_files
     cdef_block_sse4_1.c
     cdef_filter_block_sse4_1.c
     cdef_sse4.c
+    cfl_sse4_1.c
     compute_sad_intrin_sse4_1.c
     palette_sse4_1.c
     transforms_sse4_1.c
