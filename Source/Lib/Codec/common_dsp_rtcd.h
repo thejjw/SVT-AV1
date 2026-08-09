@@ -2397,6 +2397,22 @@ void svt_aom_highbd_smooth_h_predictor_8x16_avx2(uint16_t *dst, ptrdiff_t y_stri
 void svt_aom_highbd_smooth_h_predictor_8x32_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_h_predictor_8x4_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_8x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_8x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_8x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_8x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_16x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_16x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_16x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_16x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_16x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_32x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_32x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_32x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_32x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_64x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_64x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_h_predictor_64x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_h_predictor_8x8_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
@@ -2443,6 +2459,22 @@ void svt_aom_highbd_smooth_predictor_8x16_avx2(uint16_t *dst, ptrdiff_t y_stride
 void svt_aom_highbd_smooth_predictor_8x32_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_predictor_8x4_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_8x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_8x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_8x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_8x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_16x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_16x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_16x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_16x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_16x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_32x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_32x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_32x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_32x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_64x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_64x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_predictor_64x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_predictor_8x8_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
@@ -2489,6 +2521,22 @@ void svt_aom_highbd_smooth_v_predictor_8x16_avx2(uint16_t *dst, ptrdiff_t y_stri
 void svt_aom_highbd_smooth_v_predictor_8x32_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_v_predictor_8x4_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_8x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_8x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_8x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_8x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_16x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_16x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_16x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_16x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_16x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_32x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_32x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_32x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_32x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_64x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_64x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_smooth_v_predictor_64x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_smooth_v_predictor_8x8_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
