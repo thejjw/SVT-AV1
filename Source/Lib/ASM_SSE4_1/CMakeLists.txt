@@ -41,6 +41,7 @@ set(all_files
     compute_sad_intrin_sse4_1.c
     palette_sse4_1.c
     transforms_sse4_1.c
+    convert_subtract_sse4_1.c
     corner_match_sse4.c
     encodetxb_sse4.c
     filterintra_sse4.c
