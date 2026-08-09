@@ -44,6 +44,7 @@ set(all_files
     corner_match_sse4.c
     encodetxb_sse4.c
     filterintra_sse4.c
+    dc_v_predictor_sse4_1.c
     highbd_convolve_2d_sse4.c
     highbd_dc_v_predictor_sse4_1.c
     highbd_fwd_txfm_sse4.c

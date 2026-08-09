@@ -2547,6 +2547,36 @@ void svt_aom_dc_predictor_8x8_sse2(uint8_t *dst, ptrdiff_t y_stride, const uint8
 void svt_aom_dc_predictor_16x16_sse2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
 
 void svt_aom_dc_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_32x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_32x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_64x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_64x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_128_predictor_64x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_32x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_32x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_64x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_64x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_left_predictor_64x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_32x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_32x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_64x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_64x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_top_predictor_64x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_32x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_32x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_64x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_64x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_dc_predictor_64x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_32x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_32x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_64x16_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_64x32_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_v_predictor_64x64_sse4_1(uint8_t *dst, ptrdiff_t stride, const uint8_t *above, const uint8_t *left);
 
 void svt_aom_dc_predictor_64x64_avx2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
 
