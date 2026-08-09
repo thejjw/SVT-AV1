@@ -1730,6 +1730,16 @@ void svt_av1_fwd_txfm2d_8x8_N4_sse4_1(int16_t *input, int32_t *output, uint32_t 
 void svt_get_proj_subspace_avx2(const uint8_t *src8, int width, int height, int src_stride, const uint8_t *dat8, int dat_stride, int use_highbitdepth, int32_t *flt0, int flt0_stride, int32_t *flt1, int flt1_stride, int *xq, const SgrParamsType *params);
 
 uint64_t svt_handle_transform16x64_avx2(int32_t *output);
+uint64_t svt_handle_transform16x64_sse4_1(int32_t *output);
+uint64_t svt_handle_transform32x64_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x16_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x32_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x64_sse4_1(int32_t *output);
+uint64_t svt_handle_transform16x64_N2_N4_sse4_1(int32_t *output);
+uint64_t svt_handle_transform32x64_N2_N4_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x16_N2_N4_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x32_N2_N4_sse4_1(int32_t *output);
+uint64_t svt_handle_transform64x64_N2_N4_sse4_1(int32_t *output);
 
 uint64_t svt_handle_transform32x64_avx2(int32_t *output);
 

@@ -501,16 +501,16 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_SSE41_AVX2_AVX512(svt_av1_fwd_txfm2d_64x16, svt_av1_fwd_txfm2d_64x16_c, svt_av1_fwd_txfm2d_64x16_sse4_1, svt_av1_fwd_txfm2d_64x16_avx2, svt_av1_fwd_txfm2d_64x16_avx512);
     SET_SSE41_AVX2_AVX512(svt_av1_fwd_txfm2d_64x32, svt_av1_fwd_txfm2d_64x32_c, svt_av1_fwd_txfm2d_64x32_sse4_1, svt_av1_fwd_txfm2d_64x32_avx2, svt_av1_fwd_txfm2d_64x32_avx512);
     SET_SSE41_AVX2_AVX512(svt_av1_fwd_txfm2d_64x64, svt_av1_transform_two_d_64x64_c, svt_av1_fwd_txfm2d_64x64_sse4_1, svt_av1_fwd_txfm2d_64x64_avx2, svt_av1_fwd_txfm2d_64x64_avx512);
-    SET_AVX2(svt_handle_transform16x64, svt_handle_transform16x64_c, svt_handle_transform16x64_avx2);
-    SET_AVX2(svt_handle_transform32x64, svt_handle_transform32x64_c, svt_handle_transform32x64_avx2);
-    SET_AVX2(svt_handle_transform64x16, svt_handle_transform64x16_c, svt_handle_transform64x16_avx2);
-    SET_AVX2(svt_handle_transform64x32, svt_handle_transform64x32_c, svt_handle_transform64x32_avx2);
-    SET_AVX2(svt_handle_transform64x64, svt_handle_transform64x64_c, svt_handle_transform64x64_avx2);
-    SET_AVX2(svt_handle_transform16x64_N2_N4, svt_handle_transform16x64_N2_N4_c, svt_handle_transform16x64_N2_N4_avx2);
-    SET_AVX2(svt_handle_transform32x64_N2_N4, svt_handle_transform32x64_N2_N4_c, svt_handle_transform32x64_N2_N4_avx2);
-    SET_AVX2(svt_handle_transform64x16_N2_N4, svt_handle_transform64x16_N2_N4_c, svt_handle_transform64x16_N2_N4_avx2);
-    SET_AVX2(svt_handle_transform64x32_N2_N4, svt_handle_transform64x32_N2_N4_c, svt_handle_transform64x32_N2_N4_avx2);
-    SET_AVX2(svt_handle_transform64x64_N2_N4, svt_handle_transform64x64_N2_N4_c, svt_handle_transform64x64_N2_N4_avx2);
+    SET_SSE41_AVX2(svt_handle_transform16x64, svt_handle_transform16x64_c, svt_handle_transform16x64_sse4_1, svt_handle_transform16x64_avx2);
+    SET_SSE41_AVX2(svt_handle_transform32x64, svt_handle_transform32x64_c, svt_handle_transform32x64_sse4_1, svt_handle_transform32x64_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x16, svt_handle_transform64x16_c, svt_handle_transform64x16_sse4_1, svt_handle_transform64x16_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x32, svt_handle_transform64x32_c, svt_handle_transform64x32_sse4_1, svt_handle_transform64x32_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x64, svt_handle_transform64x64_c, svt_handle_transform64x64_sse4_1, svt_handle_transform64x64_avx2);
+    SET_SSE41_AVX2(svt_handle_transform16x64_N2_N4, svt_handle_transform16x64_N2_N4_c, svt_handle_transform16x64_N2_N4_sse4_1, svt_handle_transform16x64_N2_N4_avx2);
+    SET_SSE41_AVX2(svt_handle_transform32x64_N2_N4, svt_handle_transform32x64_N2_N4_c, svt_handle_transform32x64_N2_N4_sse4_1, svt_handle_transform32x64_N2_N4_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x16_N2_N4, svt_handle_transform64x16_N2_N4_c, svt_handle_transform64x16_N2_N4_sse4_1, svt_handle_transform64x16_N2_N4_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x32_N2_N4, svt_handle_transform64x32_N2_N4_c, svt_handle_transform64x32_N2_N4_sse4_1, svt_handle_transform64x32_N2_N4_avx2);
+    SET_SSE41_AVX2(svt_handle_transform64x64_N2_N4, svt_handle_transform64x64_N2_N4_c, svt_handle_transform64x64_N2_N4_sse4_1, svt_handle_transform64x64_N2_N4_avx2);
 #if CONFIG_ENABLE_TX_PF_N2
     SET_SSE41(svt_av1_fwd_txfm2d_4x4_N2, svt_aom_transform_two_d_4x4_N2_c, svt_av1_fwd_txfm2d_4x4_N2_sse4_1);
     SET_SSE41_AVX2(svt_av1_fwd_txfm2d_4x8_N2, svt_av1_fwd_txfm2d_4x8_N2_c, svt_av1_fwd_txfm2d_4x8_N2_sse4_1, svt_av1_fwd_txfm2d_4x8_N2_avx2);
