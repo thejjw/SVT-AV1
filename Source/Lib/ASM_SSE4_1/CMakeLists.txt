@@ -50,6 +50,7 @@ set(all_files
     highbd_dc_v_predictor_sse4_1.c
     highbd_fwd_txfm_sse4.c
     highbd_inv_txfm_sse4.c
+    highbd_paeth_predictor_sse4_1.c
     highbd_jnt_convolve_sse4.c
     highbd_txfm_utility_sse4.h
     intrapred_16bit_intrin_sse4_1.c
