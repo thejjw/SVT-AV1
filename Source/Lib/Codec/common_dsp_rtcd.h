@@ -2304,6 +2304,13 @@ void svt_aom_highbd_h_predictor_16x16_sse2(uint16_t *dst, ptrdiff_t y_stride, co
 void svt_aom_highbd_h_predictor_16x32_sse2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_h_predictor_16x4_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_16x4_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_16x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_32x8_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_32x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_64x16_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_64x32_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
+void svt_aom_highbd_h_predictor_64x64_sse4_1(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
 void svt_aom_highbd_h_predictor_16x64_avx2(uint16_t *dst, ptrdiff_t y_stride, const uint16_t *above, const uint16_t *left, int32_t bd);
 
@@ -2894,6 +2901,7 @@ void svt_aom_h_predictor_8x8_sse2(uint8_t *dst, ptrdiff_t y_stride, const uint8_
 void svt_aom_h_predictor_16x16_sse2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
 
 void svt_aom_h_predictor_32x32_avx2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
+void svt_aom_h_predictor_32x32_sse4_1(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
 
 void svt_aom_h_predictor_64x64_sse2(uint8_t *dst, ptrdiff_t y_stride, const uint8_t *above, const uint8_t *left);
 

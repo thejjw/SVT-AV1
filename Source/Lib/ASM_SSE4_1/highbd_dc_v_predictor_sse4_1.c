@@ -106,3 +106,21 @@ HBD_SIZES(HBD_DC128_FN)
 HBD_SIZES(HBD_DCL_FN)
 HBD_SIZES(HBD_DCT_FN)
 HBD_SIZES(HBD_DC_FN)
+
+// H predictor: each row is a broadcast of left[r] (w a multiple of 8).
+static INLINE void hbd_h(uint16_t* dst, ptrdiff_t stride, int32_t w, int32_t h, const uint16_t* left) {
+    for (int32_t r = 0; r < h; r++, dst += stride) {
+        const __m128i v = _mm_set1_epi16((int16_t)left[r]);
+        for (int32_t c = 0; c < w; c += 8) _mm_storeu_si128((__m128i*)(dst + c), v);
+    }
+}
+
+#define HBD_H_FN(w, h)                                                                                        \
+    void svt_aom_highbd_h_predictor_##w##x##h##_sse4_1(uint16_t* dst, ptrdiff_t stride, const uint16_t* above,\
+                                                       const uint16_t* left, int32_t bd) {                    \
+        (void)above;                                                                                         \
+        (void)bd;                                                                                            \
+        hbd_h(dst, stride, w, h, left);                                                                       \
+    }
+
+HBD_H_FN(16, 4) HBD_H_FN(16, 64) HBD_H_FN(32, 8) HBD_H_FN(32, 64) HBD_H_FN(64, 16) HBD_H_FN(64, 32) HBD_H_FN(64, 64)

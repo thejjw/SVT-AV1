@@ -86,3 +86,13 @@ DCV_SIZES(DCV_DC128_FN)
 DCV_SIZES(DCV_DCL_FN)
 DCV_SIZES(DCV_DCT_FN)
 DCV_SIZES(DCV_DC_FN)
+
+// H predictor: each row is a broadcast of left[r]. Only 32x32 lacks an SSE tier.
+void svt_aom_h_predictor_32x32_sse4_1(uint8_t* dst, ptrdiff_t stride, const uint8_t* above, const uint8_t* left) {
+    (void)above;
+    for (int32_t r = 0; r < 32; r++, dst += stride) {
+        const __m128i v = _mm_set1_epi8((char)left[r]);
+        _mm_storeu_si128((__m128i*)dst, v);
+        _mm_storeu_si128((__m128i*)(dst + 16), v);
+    }
+}
