@@ -2217,12 +2217,16 @@ int64_t svt_av1_block_error_avx2(const TranLow *coeff, const TranLow *dqcoeff, i
 double svt_av1_compute_cross_correlation_sse4_1(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
 double svt_av1_compute_cross_correlation_avx2(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2, uint8_t match_sz);
 void svt_av1_k_means_dim1_avx2(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
+void svt_av1_k_means_dim1_sse4_1(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
 
 void svt_av1_k_means_dim2_avx2(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
+void svt_av1_k_means_dim2_sse4_1(const int* data, int* centroids, uint8_t* indices, int n, int k, int max_itr);
 
 void svt_av1_calc_indices_dim1_avx2(const int* data, const int* centroids, uint8_t* indices, int n, int k);
+void svt_av1_calc_indices_dim1_sse4_1(const int* data, const int* centroids, uint8_t* indices, int n, int k);
 
 void svt_av1_calc_indices_dim2_avx2(const int* data, const int* centroids, uint8_t* indices, int n, int k);
+void svt_av1_calc_indices_dim2_sse4_1(const int* data, const int* centroids, uint8_t* indices, int n, int k);
 
 void svt_ext_sad_calculation_8x8_16x16_avx2_intrin(uint8_t *src, uint32_t src_stride, uint8_t *ref,
     uint32_t ref_stride, uint32_t *p_best_sad_8x8,

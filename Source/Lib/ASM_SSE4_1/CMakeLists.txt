@@ -38,6 +38,7 @@ set(all_files
     cdef_filter_block_sse4_1.c
     cdef_sse4.c
     compute_sad_intrin_sse4_1.c
+    palette_sse4_1.c
     corner_match_sse4.c
     encodetxb_sse4.c
     filterintra_sse4.c
