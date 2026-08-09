@@ -1093,10 +1093,12 @@ RTCD_EXTERN void (*svt_memset)(void *dst_ptr, int c, size_t size);
 
 void svt_aom_hadamard_16x16_c(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
 void svt_aom_hadamard_16x16_avx2(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
+void svt_aom_hadamard_16x16_sse4_1(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff);
 RTCD_EXTERN void (*svt_aom_hadamard_16x16)(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
 
 void svt_aom_hadamard_32x32_c(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
 void svt_aom_hadamard_32x32_avx2(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
+void svt_aom_hadamard_32x32_sse4_1(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff);
 RTCD_EXTERN void (*svt_aom_hadamard_32x32)(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
 
 void svt_aom_hadamard_8x8_c(const int16_t* src_diff, ptrdiff_t src_stride, int32_t* coeff);
@@ -3153,6 +3155,7 @@ extern void svt_memcpy_intrin_sse (void  *dst_ptr, void  const *src_ptr, size_t 
 void svt_aom_hadamard_4x4_sse2(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff);
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
 void svt_aom_highbd_hadamard_8x8_avx2(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff);
+void svt_aom_highbd_hadamard_8x8_sse4_1(const int16_t *src_diff, ptrdiff_t src_stride, int32_t *coeff);
 #endif
 #endif
 
