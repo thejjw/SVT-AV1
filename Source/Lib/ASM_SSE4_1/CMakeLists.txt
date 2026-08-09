@@ -46,6 +46,7 @@ set(all_files
     encodetxb_sse4.c
     filterintra_sse4.c
     dc_v_predictor_sse4_1.c
+    dr_prediction_sse4_1.c
     highbd_convolve_2d_sse4.c
     highbd_dc_v_predictor_sse4_1.c
     highbd_fwd_txfm_sse4.c
