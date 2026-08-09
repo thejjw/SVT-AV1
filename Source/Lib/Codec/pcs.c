@@ -1291,7 +1291,8 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
         }
     }
 
-    object_ptr->r0 = 0;
+    // Match the per-picture reset in resource coordination.
+    object_ptr->r0 = 1.0;
 
     EB_MALLOC_ARRAY(object_ptr->rc_me_distortion, object_ptr->b64_total_count);
     EB_MALLOC_ARRAY(object_ptr->rc_me_allow_gm, object_ptr->b64_total_count);
