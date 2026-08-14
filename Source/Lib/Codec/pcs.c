@@ -1421,7 +1421,7 @@ EbErrorType me_update_param(MotionEstimationData* me_data, SequenceControlSet* s
 
 /*
 me_reset_carryover: a recycled MotionEstimationData still holds its previous tenant's output. Clear what
-a picture can read without having written it first. 
+a picture can read without having written it first.
 Only 2 fields have side effect now.
 */
 void me_reset_carryover(MotionEstimationData* me_data) {
