@@ -48,7 +48,7 @@ int tx_64[] = {DCT_DCT, IDTX};
 int bitDepth[] = {8, 10, 12};
 
 static void init_data(int16_t **input, int16_t **input_opt,
-                      uint32_t input_stride) {
+                      uint32_t input_stride, int bd) {
     TEST_ALLIGN_MALLOC(
         int16_t *, *input, sizeof(int16_t) * MAX_SB_SIZE * input_stride);
     TEST_ALLIGN_MALLOC(
@@ -56,6 +56,15 @@ static void init_data(int16_t **input, int16_t **input_opt,
     std::fill_n(*input, MAX_SB_SIZE * input_stride, 0);
     std::fill_n(*input_opt, MAX_SB_SIZE * input_stride, 0);
     svt_buf_random_s16(*input, MAX_SB_SIZE * input_stride);
+    // An 8-bit forward transform takes an 8-bit residual, so the input range is
+    // +/-255. The 8-bit kernels rely on it: they keep int16 intermediates,
+    // which only stay exact within that range. Higher bit depths use int32
+    // throughout and are left at the full random range.
+    if (bd == 8) {
+        for (size_t i = 0; i < MAX_SB_SIZE * input_stride; i++) {
+            (*input)[i] = (int16_t)AOMMAX(-255, AOMMIN(255, (*input)[i]));
+        }
+    }
     memcpy(*input_opt, *input, sizeof(**input) * MAX_SB_SIZE * input_stride);
 }
 
@@ -103,7 +112,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                 switch (loop) {
                 case 0:  // 16x16
                     for (int j = 0; j < 16; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -123,7 +132,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 1:  // 32x32
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -143,7 +152,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 2:  // 64x64
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -167,7 +176,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 3:  // 16x64
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -191,7 +200,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 4:  // 64x16
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -215,7 +224,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 5:  // 32x64
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -239,7 +248,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 6:  // 64x32
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -263,7 +272,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 7:  // 16x32
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](
@@ -283,7 +292,7 @@ TEST(AVX512_ForwardTransformTest, av1_frwd_txfm_kernels) {
                     break;
                 case 8:  // 32x16
                     for (int j = 0; j < 2; j++) {
-                        init_data(&input, &input_opt, stride);
+                        init_data(&input, &input_opt, stride, bitDepth[x]);
                         GTEST_ASSERT_TRUE(svt_buf_compare<int16_t>(
                             input, input_opt, MAX_SB_SIZE * stride));
                         av1_frwd_txfm_func_ptr_array_base[loop](

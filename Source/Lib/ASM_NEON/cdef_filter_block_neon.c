@@ -315,9 +315,10 @@ static inline uint8x8_t cdef_finalize8(int16x8_t sum, uint8x8_t row_u8, uint8x8_
     return vqmovun_s16(res);
 }
 
-void svt_av1_cdef_filter_block_8xn_8_native_neon(uint8_t* dst, int32_t dstride, const uint8_t* in, int32_t pri_strength,
-                                                 int32_t sec_strength, int32_t dir, int32_t damping,
-                                                 int32_t coeff_shift, uint8_t height, uint8_t subsampling_factor) {
+static void svt_av1_cdef_filter_block_8xn_8_native_neon(uint8_t* dst, int32_t dstride, const uint8_t* in,
+                                                        int32_t pri_strength, int32_t sec_strength, int32_t dir,
+                                                        int32_t damping, int32_t coeff_shift, uint8_t height,
+                                                        uint8_t subsampling_factor) {
     const int*    pri_taps    = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int*    sec_taps    = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
     const int32_t pri_damping = pri_strength ? AOMMAX(0, damping - get_msb(pri_strength)) : 0;
@@ -421,9 +422,10 @@ void svt_av1_cdef_filter_block_8xn_8_native_neon(uint8_t* dst, int32_t dstride, 
     }
 }
 
-void svt_av1_cdef_filter_block_4xn_8_native_neon(uint8_t* dst, int32_t dstride, const uint8_t* in, int32_t pri_strength,
-                                                 int32_t sec_strength, int32_t dir, int32_t damping,
-                                                 int32_t coeff_shift, uint8_t height, uint8_t subsampling_factor) {
+static void svt_av1_cdef_filter_block_4xn_8_native_neon(uint8_t* dst, int32_t dstride, const uint8_t* in,
+                                                        int32_t pri_strength, int32_t sec_strength, int32_t dir,
+                                                        int32_t damping, int32_t coeff_shift, uint8_t height,
+                                                        uint8_t subsampling_factor) {
     const int*    pri_taps    = svt_aom_eb_cdef_pri_taps[(pri_strength >> coeff_shift) & 1];
     const int*    sec_taps    = svt_aom_eb_cdef_sec_taps[(pri_strength >> coeff_shift) & 1];
     const int32_t pri_damping = pri_strength ? AOMMAX(0, damping - get_msb(pri_strength)) : 0;
