@@ -4380,12 +4380,17 @@ static void send_picture_out(SequenceControlSet* scs, PictureParentControlSet* p
             svt_block_on_semaphore(scs->ref_buffer_available_semaphore);
     }
 
-    for (uint32_t segment_index = 0; segment_index < pcs->me_segments_total_count; ++segment_index) {
+    // svt_post_full_object() below hands pcs to the motion estimation kernel.
+    // Snapshot everything the loop needs
+    const uint32_t   me_segments_total_count = pcs->me_segments_total_count;
+    EbObjectWrapper* pcs_wrapper             = pcs->p_pcs_wrapper_ptr;
+
+    for (uint32_t segment_index = 0; segment_index < me_segments_total_count; ++segment_index) {
         // Get Empty Results Object
         svt_get_empty_object(ctx->picture_decision_results_output_fifo_ptr, &out_results_wrapper);
 
         PictureDecisionResults* out_results = (PictureDecisionResults*)out_results_wrapper->object_ptr;
-        out_results->pcs_wrapper            = pcs->p_pcs_wrapper_ptr;
+        out_results->pcs_wrapper            = pcs_wrapper;
         out_results->segment_index          = segment_index;
         out_results->task_type              = TASK_PAME;
         //Post the Full Results Object
