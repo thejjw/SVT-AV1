@@ -1448,6 +1448,14 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(svt_initialize_buffer_32bits_sse2_intrin)));
 #endif  // ARCH_X86_64
 
+#ifdef ARCH_AARCH64
+INSTANTIATE_TEST_SUITE_P(
+    NEON, InitializeBuffer32,
+    ::testing::Combine(::testing::Values(0, 1, 2, 3, 4),
+                       ::testing::Values(0, 1, 2, 3),
+                       ::testing::Values(svt_initialize_buffer_32bits_neon)));
+#endif  // ARCH_AARCH64
+
 /**
  * @Brief Base class for SAD test. SADTestBasesad_16Bit handle test vector in
  * memory, provide SAD and SAD avg reference function
