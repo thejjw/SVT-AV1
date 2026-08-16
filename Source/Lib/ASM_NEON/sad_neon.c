@@ -226,3 +226,14 @@ void svt_ext_all_sad_calculation_8x8_16x16_neon(uint8_t* src, uint32_t src_strid
         }
     }
 }
+
+void svt_initialize_buffer_32bits_neon(uint32_t* pointer, uint32_t count128, uint32_t count32, uint32_t value) {
+    const uint32x4_t v = vdupq_n_u32(value);
+    for (uint32_t i = 0; i < count128; ++i) {
+        vst1q_u32(pointer, v);
+        pointer += 4;
+    }
+    for (uint32_t i = 0; i < count32; ++i) {
+        pointer[i] = value;
+    }
+}
