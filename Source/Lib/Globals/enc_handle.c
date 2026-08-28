@@ -399,7 +399,11 @@ static EbErrorType load_default_buffer_configuration_settings(SequenceControlSet
         min_child              = 1; // max_child is 1 for LD
         uint8_t max_refs       = dpb_frames;
         // For special, known, RPS structures and ref frame counts, we can reduce the number of ref buffers
-        if (scs->static_config.rtc && scs->static_config.hierarchical_levels == 0) {
+        // A session declaring max_hierarchical_levels may raise its MG size later
+        // via MG_SIZE_CHANGE_EVENT, so the flat-IPP shortcut would size the pools
+        // for layers it no longer has. Keep the full sizing for those sessions.
+        const bool mg_size_may_change = scs->static_config.max_hierarchical_levels > 0;
+        if (!mg_size_may_change && scs->static_config.rtc && scs->static_config.hierarchical_levels == 0) {
             max_refs = scs->mrp_ctrls.flat_max_refs;
             // For flat IPP the previous frame is always used as a reference. Therefore, that picture does
             // not require a special buffer for use as a TF ref.
@@ -2315,9 +2319,14 @@ EB_API EbErrorType svt_av1_enc_deinit(EbComponentType* svt_enc_component) {
             svt_av1_enc_send_picture(svt_enc_component, &(EbBufferHeaderType){.flags = EB_BUFFERFLAG_EOS});
         }
 
-        EbErrorType return_error = enc_drain_queue(svt_enc_component);
-        if (return_error != EB_ErrorNone) {
-            return return_error;
+        // If EOS never made it into the pipeline (pipeline buffers exhausted),
+        // no EOS packet will ever be produced and draining would pop from an
+        // empty output queue.
+        if (handle->eos_received) {
+            EbErrorType return_error = enc_drain_queue(svt_enc_component);
+            if (return_error != EB_ErrorNone) {
+                return return_error;
+            }
         }
     }
 
@@ -4801,6 +4810,9 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     // Ref-frame management: propagate caller's max-anchors hint (0 = disabled).
     scs->static_config.max_managed_refs = config_struct->max_managed_refs;
 
+    // Runtime MG-size change: propagate caller's ceiling (0 = MG size fixed).
+    scs->static_config.max_hierarchical_levels = config_struct->max_hierarchical_levels;
+
     // Override settings for Still IQ tune
     if (scs->static_config.tune == TUNE_IQ) {
         SVT_WARN(
@@ -5633,8 +5645,13 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType* svt_enc_component, 
     }
 
     // Get new Luma-8b buffer & a new (Chroma-8b + Luma-Chroma-2bit) buffers; Lib will release once done.
+    // svt_get_empty_object can fail without writing the out-param (single-thread
+    // mode returns instead of blocking), so every acquire below is checked and
+    // anything already held is released before returning.
     EbObjectWrapper* y8b_wrapper;
-    svt_get_empty_object(enc_handle_ptr->input_y8b_buffer_producer_fifo_ptr, &y8b_wrapper);
+    if (svt_get_empty_object(enc_handle_ptr->input_y8b_buffer_producer_fifo_ptr, &y8b_wrapper) != EB_ErrorNone) {
+        return EB_ErrorInsufficientResources;
+    }
     // if resolution has changed, and the y8b_wrapper settings do not match scs settings, update y8b_wrapper settings
     if (buffer_update_needed((EbBufferHeaderType*)y8b_wrapper->object_ptr, scs)) {
         svt_input_y8b_update((EbBufferHeaderType*)y8b_wrapper->object_ptr, scs);
@@ -5644,7 +5661,10 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType* svt_enc_component, 
 
     // svt_object_inc_live_count(y8b_wrapper, 1);
 
-    svt_get_empty_object(enc_handle_ptr->input_buffer_producer_fifo_ptr, &eb_wrapper_ptr);
+    if (svt_get_empty_object(enc_handle_ptr->input_buffer_producer_fifo_ptr, &eb_wrapper_ptr) != EB_ErrorNone) {
+        svt_release_object(y8b_wrapper);
+        return EB_ErrorInsufficientResources;
+    }
     // if resolution has changed, and the input_buffer settings do not match scs settings, update input_buffer settings
     if (buffer_update_needed((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, scs)) {
         svt_input_buffer_header_update((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, scs, true);
@@ -5653,8 +5673,6 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType* svt_enc_component, 
     //set live count to 1 to be decremented at the end of the encode in RC, and released
     //this would also allow low delay TF to retain pictures
     svt_object_inc_live_count(eb_wrapper_ptr, 1);
-
-    enc_handle_ptr->eos_received += p_buffer->flags & EB_BUFFERFLAG_EOS;
 
     // copy the Luma 8bit part into y8b buffer and the rest of samples into the regular buffer
     EbBufferHeaderType* lib_y8b_hdr = (EbBufferHeaderType*)y8b_wrapper->object_ptr;
@@ -5686,11 +5704,18 @@ EB_API EbErrorType svt_av1_enc_send_picture(EbComponentType* svt_enc_component, 
 
     //Take a new App-RessCoord command
     EbObjectWrapper* input_cmd_wrp;
-    svt_get_empty_object(enc_handle_ptr->input_cmd_producer_fifo_ptr, &input_cmd_wrp);
+    if (svt_get_empty_object(enc_handle_ptr->input_cmd_producer_fifo_ptr, &input_cmd_wrp) != EB_ErrorNone) {
+        svt_release_object(eb_wrapper_ptr);
+        svt_release_object(y8b_wrapper);
+        return EB_ErrorInsufficientResources;
+    }
     InputCommand* input_cmd_obj = (InputCommand*)input_cmd_wrp->object_ptr;
     //Fill the command with two picture buffers
     input_cmd_obj->eb_input_wrapper_ptr = eb_wrapper_ptr;
     input_cmd_obj->y8b_wrapper          = y8b_wrapper;
+    // Only now is EOS actually in the pipeline; recording it earlier would make
+    // deinit drain for a packet that was never going to be produced.
+    enc_handle_ptr->eos_received += p_buffer->flags & EB_BUFFERFLAG_EOS;
     //Send to Lib
     svt_post_full_object(input_cmd_wrp);
 
