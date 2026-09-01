@@ -209,7 +209,7 @@ void svt_av1_interpolate_core_neon(const uint8_t* const input, int in_length, ui
     }
 
     // Middle part: unclamped region [x1, x2], 8 outputs per iteration. Unlike
-    // down2_symeven, int_pel/sub_pel are data-dependent per output (a linear
+    // down2_symeven, int_pel/sub_pel are output-index-dependent (a linear
     // fixed-point step, not a fixed stride), so there's no fixed shared-load
     // pattern to exploit - each of the 8 lanes needs its own 8-byte input window
     // and its own 8-tap filter (selected by sub_pel), computed and reduced
