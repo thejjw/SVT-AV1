@@ -672,7 +672,8 @@ void svt_av1_loop_filter_frame(EbPictureBufferDesc* frame_buffer, PictureControl
     uint32_t            picture_height_in_sb = (pcs->ppcs->aligned_height + scs->sb_size - 1) / scs->sb_size;
 
     svt_av1_loop_filter_frame_init(&pcs->ppcs->frm_hdr, &pcs->ppcs->lf_info, plane_start, plane_end);
-    if ((pcs->ppcs->cdef_search_ctrls.enabled && !pcs->ppcs->cdef_search_ctrls.use_qp_strength &&
+    if ((pcs->ppcs->cdef_search_ctrls.enabled &&
+         pcs->ppcs->cdef_search_ctrls.qp_strength_level != CDEF_QP_STRENGTH_YUV &&
          !pcs->ppcs->cdef_search_ctrls.use_reference_cdef_fs) ||
         pcs->ppcs->enable_restoration || pcs->ppcs->is_ref || scs->static_config.recon_enabled ||
         scs->static_config.stat_report) {

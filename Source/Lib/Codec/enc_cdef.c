@@ -327,7 +327,7 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
     const uint32_t sb_size = scs->super_block_size;
     // Reuse the dlist/count computed by the search (SB=64 and the frame was actually searched).
     const bool use_dlist_cache = sb_size == 64 && !ppcs->cdef_search_ctrls.use_reference_cdef_fs &&
-        !ppcs->cdef_search_ctrls.use_qp_strength;
+        ppcs->cdef_search_ctrls.qp_strength_level < CDEF_QP_STRENGTH_YUV;
     int32_t        mi_wide_l2[3];
     int32_t        mi_high_l2[3];
     int32_t        xdec[3];
@@ -443,7 +443,8 @@ void svt_av1_cdef_frame(SequenceControlSet* scs, PictureControlSet* pcs) {
             const int32_t frame_bottom = (fbr == nvfb - 1);
             const int32_t frame_right  = (fbc == nhfb - 1);
 
-            int dirinit = !(ppcs->cdef_search_ctrls.use_reference_cdef_fs || ppcs->cdef_search_ctrls.use_qp_strength);
+            int dirinit = !(ppcs->cdef_search_ctrls.use_reference_cdef_fs ||
+                            ppcs->cdef_search_ctrls.qp_strength_level == CDEF_QP_STRENGTH_YUV);
             // When SB 128 is used, the search for certain blocks is skipped, so dir/var info is not generated
             // In those cases, must generate info here
             if (sb_size == 128) {
@@ -909,7 +910,7 @@ void finish_cdef_search(PictureControlSet* pcs) {
 
     CdefSearchControls* cdef_search_ctrls = &pcs->ppcs->cdef_search_ctrls;
 
-    if (cdef_search_ctrls->use_qp_strength) {
+    if (cdef_search_ctrls->qp_strength_level == CDEF_QP_STRENGTH_YUV) {
         const bool    allintra  = ppcs->scs->allintra;
         const uint8_t sc_class1 = ppcs->sc_class1;
         const uint8_t sc_class5 = ppcs->sc_class5;
@@ -930,11 +931,19 @@ void finish_cdef_search(PictureControlSet* pcs) {
     const int          first_pass_fs_num          = cdef_search_ctrls->first_pass_fs_num;
     const int          default_second_pass_fs_num = cdef_search_ctrls->default_second_pass_fs_num;
 
-    frm_hdr->cdef_params.cdef_bits           = 0;
-    ppcs->nb_cdef_strengths                  = 1;
-    frm_hdr->cdef_params.cdef_y_strength[0]  = cdef_search_ctrls->pred_y_f;
-    frm_hdr->cdef_params.cdef_uv_strength[0] = cdef_search_ctrls->pred_uv_f;
-    frm_hdr->cdef_params.cdef_damping        = CDEF_DAMPING_FROM_QP(frm_hdr->quantization_params.base_q_idx);
+    frm_hdr->cdef_params.cdef_bits          = 0;
+    ppcs->nb_cdef_strengths                 = 1;
+    frm_hdr->cdef_params.cdef_y_strength[0] = cdef_search_ctrls->pred_y_f;
+    if (cdef_search_ctrls->use_reference_cdef_fs && cdef_search_ctrls->qp_strength_level >= CDEF_QP_STRENGTH_UV) {
+        const bool allintra = ppcs->scs->allintra;
+        const int  sc       = allintra ? ppcs->sc_class5 : ppcs->sc_class1;
+        int        pred_y, pred_uv;
+        svt_pick_cdef_from_qp(ppcs, sc, &pred_y, &pred_uv);
+        frm_hdr->cdef_params.cdef_uv_strength[0] = pred_uv;
+    } else {
+        frm_hdr->cdef_params.cdef_uv_strength[0] = cdef_search_ctrls->pred_uv_f;
+    }
+    frm_hdr->cdef_params.cdef_damping = CDEF_DAMPING_FROM_QP(frm_hdr->quantization_params.base_q_idx);
 
     if (cdef_search_ctrls->use_reference_cdef_fs) {
         // nb_cdef_strengths==1 -> apply uses strength index 0 for every SB; no per-SB cdef_strength
