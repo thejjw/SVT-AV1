@@ -136,6 +136,7 @@ set(multi_arch_files
 if(HAVE_X86_PLATFORM)
   set(x86_arch_files
       noise_model_test.cc
+      sad_sse4_1_test.cc
       highbd_intra_prediction_tests.cc
       highbd_intra_prediction_tests.h
       FFTTest.cc

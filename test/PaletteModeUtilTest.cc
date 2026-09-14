@@ -589,6 +589,29 @@ INSTANTIATE_TEST_SUITE_P(
                        ::testing::ValuesIn(TEST_BLOCK_SIZES),
                        ::testing::ValuesIn(TEST_INDICES_FUNC_PAIRS)));
 
+std::tuple<av1_k_means_func, av1_k_means_func> TEST_FUNC_PAIRS_SSE4_1[] = {
+    std::make_tuple(svt_av1_k_means_dim1_c, svt_av1_k_means_dim1_sse4_1),
+    std::make_tuple(svt_av1_k_means_dim2_c, svt_av1_k_means_dim2_sse4_1)};
+
+std::tuple<av1_k_means_indices_func, av1_k_means_indices_func>
+    TEST_INDICES_FUNC_PAIRS_SSE4_1[] = {
+        std::make_tuple(svt_av1_calc_indices_dim1_c,
+                        svt_av1_calc_indices_dim1_sse4_1),
+        std::make_tuple(svt_av1_calc_indices_dim2_c,
+                        svt_av1_calc_indices_dim2_sse4_1)};
+
+INSTANTIATE_TEST_SUITE_P(
+    SSE4_1, Av1KMeansDimTest,
+    ::testing::Combine(::testing::ValuesIn(TEST_PATTERNS),
+                       ::testing::ValuesIn(TEST_BLOCK_SIZES),
+                       ::testing::ValuesIn(TEST_FUNC_PAIRS_SSE4_1)));
+
+INSTANTIATE_TEST_SUITE_P(
+    SSE4_1, Av1KMeansIndicesDimTest,
+    ::testing::Combine(::testing::ValuesIn(TEST_PATTERNS),
+                       ::testing::ValuesIn(TEST_BLOCK_SIZES),
+                       ::testing::ValuesIn(TEST_INDICES_FUNC_PAIRS_SSE4_1)));
+
 #endif  // ARCH_X86_64
 
 #if ARCH_AARCH64
