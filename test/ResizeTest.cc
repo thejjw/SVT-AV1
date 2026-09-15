@@ -718,7 +718,10 @@ class InterpolateCoreTest
           out_length_(std::get<1>(GetParam())),
           filter_(kInterpFilterTables[std::get<2>(GetParam())]),
           test_func_(std::get<3>(GetParam())),
-          rnd_(0, 255) {
+          rnd_(0, 255),
+          input_(nullptr),
+          ref_output_(nullptr),
+          tst_output_(nullptr) {
     }
 
     // The output buffers are over-allocated by kOverrunPad bytes and the pad
