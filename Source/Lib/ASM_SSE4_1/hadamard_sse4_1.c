@@ -64,19 +64,24 @@ void svt_aom_highbd_hadamard_8x8_sse4_1(const int16_t* src_diff, ptrdiff_t src_s
     __m128i t2 = _mm_unpacklo_epi64(b1, b5), t3 = _mm_unpackhi_epi64(b1, b5);
     __m128i t4 = _mm_unpacklo_epi64(b2, b6), t5 = _mm_unpackhi_epi64(b2, b6);
     __m128i t6 = _mm_unpacklo_epi64(b3, b7), t7 = _mm_unpackhi_epi64(b3, b7);
+
     // t0..t7 are exactly the C first-pass buffer rows (buffer[c*8 .. c*8+7]).
-    int16_t buffer[64];
-    _mm_storeu_si128((__m128i*)(buffer + 0), t0);
-    _mm_storeu_si128((__m128i*)(buffer + 8), t1);
-    _mm_storeu_si128((__m128i*)(buffer + 16), t2);
-    _mm_storeu_si128((__m128i*)(buffer + 24), t3);
-    _mm_storeu_si128((__m128i*)(buffer + 32), t4);
-    _mm_storeu_si128((__m128i*)(buffer + 40), t5);
-    _mm_storeu_si128((__m128i*)(buffer + 48), t6);
-    _mm_storeu_si128((__m128i*)(buffer + 56), t7);
+    union {
+        __m128i v[8];
+        int16_t buffer[64];
+    } u;
+
+    u.v[0] = t0;
+    u.v[1] = t1;
+    u.v[2] = t2;
+    u.v[3] = t3;
+    u.v[4] = t4;
+    u.v[5] = t5;
+    u.v[6] = t6;
+    u.v[7] = t7;
     // pass 2: identical to the C second pass (int32, stride 8), verbatim.
     for (int32_t idx = 0; idx < 8; ++idx) {
-        const int16_t* s  = buffer + idx;
+        const int16_t* s  = u.buffer + idx;
         int32_t        d0 = s[0 * 8] + s[1 * 8], d1 = s[0 * 8] - s[1 * 8];
         int32_t        d2 = s[2 * 8] + s[3 * 8], d3 = s[2 * 8] - s[3 * 8];
         int32_t        d4 = s[4 * 8] + s[5 * 8], d5 = s[4 * 8] - s[5 * 8];
