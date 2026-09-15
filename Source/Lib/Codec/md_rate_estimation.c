@@ -398,47 +398,76 @@ static void build_nmv_component_cost_table(int32_t* mvcost, const NmvComponent* 
         svt_aom_get_syntax_rate_from_cdf(class0_hp_cost, mvcomp->class0_hp_cdf, NULL);
         svt_aom_get_syntax_rate_from_cdf(hp_cost, mvcomp->hp_cdf, NULL);
     }
-    mvcost[0]        = 0;
-    int32_t bits_sum = 0; /* memoized sum_i bits_cost[i][bit_i(d)]; depends only on d */
-    for (v = 1; v <= MV_MAX; ++v) {
-        int32_t z, c, o, d, e, f, cost = 0;
-        z = v - 1;
-        c = svt_av1_get_mv_class(z, &o);
-        cost += class_cost[c];
-        d = (o >> 3); /* int32_t mv data */
-        f = (o >> 1) & 3; /* fractional pel mv data */
-        e = (o & 1); /* high precision mv data */
-        if (c == MV_CLASS_0) {
-            cost += class0_cost[d];
-        } else {
-            /* The low 3 bits of o are f/e, so d (= o>>3) is constant for 8 consecutive
-             * o values; the per-bit cost sum depends only on d, so recompute it once
-             * per d (when o hits a multiple of 8) and reuse it for the other 7. */
-            if ((o & 7) == 0) {
-                const int32_t b = c + CLASS0_BITS - 1; /* number of bits */
-                bits_sum        = 0;
-                for (i = 0; i < b; ++i) {
-                    bits_sum += bits_cost[i][((d >> i) & 1)];
-                }
-            }
-            cost += bits_sum;
-        }
+    mvcost[0] = 0;
+
+    const int32_t s0 = sign_cost[0], s1 = sign_cost[1];
+
+    /* MV_CLASS_0 indexes its fractional and high-precision tables by d, so it
+     * keeps the per-entry form. It is the first CLASS0_SIZE * 8 entries. */
+    for (v = 1; v <= CLASS0_SIZE * 8; ++v) {
+        int32_t       o;
+        const int32_t c = svt_av1_get_mv_class(v - 1, &o);
+        const int32_t d = o >> 3, f = (o >> 1) & 3, e = o & 1;
+        int32_t       cost = class_cost[c] + class0_cost[d];
         if (precision > MV_SUBPEL_NONE) {
-            if (c == MV_CLASS_0) {
-                cost += class0_fp_cost[d][f];
-            } else {
-                cost += fp_cost[f];
-            }
+            cost += class0_fp_cost[d][f];
             if (precision > MV_SUBPEL_LOW_PRECISION) {
-                if (c == MV_CLASS_0) {
-                    cost += class0_hp_cost[e];
-                } else {
-                    cost += hp_cost[e];
-                }
+                cost += class0_hp_cost[e];
             }
         }
-        mvcost[v]  = cost + sign_cost[0];
-        mvcost[-v] = cost + sign_cost[1];
+        mvcost[v]  = cost + s0;
+        mvcost[-v] = cost + s1;
+    }
+
+    /* Above MV_CLASS_0 the fractional and high-precision terms depend only on
+     * o & 7, so they are eight constants rather than a per-entry lookup. */
+    int32_t fpe[8];
+    for (int32_t k = 0; k < 8; ++k) {
+        int32_t t = 0;
+        if (precision > MV_SUBPEL_NONE) {
+            t += fp_cost[(k >> 1) & 3];
+            if (precision > MV_SUBPEL_LOW_PRECISION) {
+                t += hp_cost[k & 1];
+            }
+        }
+        fpe[k] = t;
+    }
+
+    /* The rest of the cost is class_cost[c] plus a sum over the set bits of d,
+     * which is a subset sum: building it for every d in a class by doubling
+     * costs 2^b adds in total rather than b per entry. */
+    int32_t tab[1 << (MV_CLASS_10 + CLASS0_BITS - 1)];
+    for (int32_t c = 1; c <= MV_CLASS_10; ++c) {
+        const int32_t b     = c + CLASS0_BITS - 1;
+        const int32_t nd    = 1 << b;
+        const int32_t zbase = 1 << (c + 3);
+
+        int32_t base0 = class_cost[c];
+        for (i = 0; i < b; ++i) {
+            base0 += bits_cost[i][0];
+        }
+        tab[0] = base0;
+        for (i = 0; i < b; ++i) {
+            const int32_t dlt  = bits_cost[i][1] - bits_cost[i][0];
+            const int32_t half = 1 << i;
+            for (int32_t m = 0; m < half; ++m) {
+                tab[m | half] = tab[m] + dlt;
+            }
+        }
+
+        for (int32_t d = 0; d < nd; ++d) {
+            const int32_t bs = tab[d];
+            const int32_t v0 = zbase + 8 * d + 1;
+            if (v0 > MV_MAX) {
+                break;
+            }
+            const int32_t n = (v0 + 7 > MV_MAX) ? (MV_MAX - v0 + 1) : 8;
+            for (int32_t k = 0; k < n; ++k) {
+                const int32_t cost = bs + fpe[k];
+                mvcost[v0 + k]     = cost + s0;
+                mvcost[-(v0 + k)]  = cost + s1;
+            }
+        }
     }
 }
 
