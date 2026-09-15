@@ -229,7 +229,7 @@ void svt_av1_interpolate_core_neon(const uint8_t* const input, int in_length, ui
             const int16x8_t src16  = vreinterpretq_s16_u16(vmovl_u8(src8));
             const int16x8_t filt16 = vld1q_s16(filter);
             const int32x4_t prod   = vaddq_s32(vmull_s16(vget_low_s16(src16), vget_low_s16(filt16)),
-                                               vmull_s16(vget_high_s16(src16), vget_high_s16(filt16)));
+                                             vmull_s16(vget_high_s16(src16), vget_high_s16(filt16)));
             sums[lane]             = vaddvq_s32(prod);
             y += delta;
         }
