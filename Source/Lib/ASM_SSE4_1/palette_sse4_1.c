@@ -17,13 +17,13 @@
 #include "utility.h"
 
 void svt_av1_calc_indices_dim1_sse4_1(const int* data, const int* centroids, uint8_t* indices, int n, int k) {
-    int results[MAX_SB_SQUARE];
+    __m128i results[MAX_SB_SQUARE / 4];
     memset(indices, 0, n * sizeof(uint8_t));
 
     __m128i c0 = _mm_set1_epi32(centroids[0]);
     for (int i = 0; i < n; i += 4) {
-        __m128i sub = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(data + i)), c0);
-        _mm_storeu_si128((__m128i*)(results + i), _mm_mullo_epi32(sub, sub));
+        __m128i sub    = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(data + i)), c0);
+        results[i / 4] = _mm_mullo_epi32(sub, sub);
     }
 
     for (int c = 1; c < k; c++) {
@@ -37,13 +37,13 @@ void svt_av1_calc_indices_dim1_sse4_1(const int* data, const int* centroids, uin
             const __m128i dst1 = _mm_mullo_epi32(s1, s1);
             const __m128i dst2 = _mm_mullo_epi32(s2, s2);
 
-            const __m128i prev1 = _mm_loadu_si128((const __m128i*)(results + i));
-            const __m128i prev2 = _mm_loadu_si128((const __m128i*)(results + i + 4));
+            const __m128i prev1 = results[i / 4];
+            const __m128i prev2 = results[i / 4 + 1];
             const __m128i cmp1  = _mm_cmpgt_epi32(prev1, dst1);
             const __m128i cmp2  = _mm_cmpgt_epi32(prev2, dst2);
 
-            _mm_storeu_si128((__m128i*)(results + i), _mm_blendv_epi8(prev1, dst1, cmp1));
-            _mm_storeu_si128((__m128i*)(results + i + 4), _mm_blendv_epi8(prev2, dst2, cmp2));
+            results[i / 4]     = _mm_blendv_epi8(prev1, dst1, cmp1);
+            results[i / 4 + 1] = _mm_blendv_epi8(prev2, dst2, cmp2);
 
             const __m128i iv1  = _mm_and_si128(idx_v, cmp1);
             const __m128i iv2  = _mm_and_si128(idx_v, cmp2);
@@ -57,13 +57,13 @@ void svt_av1_calc_indices_dim1_sse4_1(const int* data, const int* centroids, uin
 
 static INLINE int64_t calc_indices_dist_dim1_sse4_1(const int* data, const int* centroids, uint8_t* indices, unsigned n,
                                                     int k) {
-    int results[MAX_SB_SQUARE];
+    __m128i results[MAX_SB_SQUARE / 4];
     memset(indices, 0, n * sizeof(uint8_t));
 
     __m128i c0 = _mm_set1_epi32(centroids[0]);
     for (unsigned i = 0; i < n; i += 4) {
-        __m128i sub = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(data + i)), c0);
-        _mm_storeu_si128((__m128i*)(results + i), _mm_mullo_epi32(sub, sub));
+        __m128i sub    = _mm_sub_epi32(_mm_loadu_si128((const __m128i*)(data + i)), c0);
+        results[i / 4] = _mm_mullo_epi32(sub, sub);
     }
 
     for (int c = 1; c < k; c++) {
@@ -77,13 +77,13 @@ static INLINE int64_t calc_indices_dist_dim1_sse4_1(const int* data, const int* 
             const __m128i dst1 = _mm_mullo_epi32(s1, s1);
             const __m128i dst2 = _mm_mullo_epi32(s2, s2);
 
-            const __m128i prev1 = _mm_loadu_si128((const __m128i*)(results + i));
-            const __m128i prev2 = _mm_loadu_si128((const __m128i*)(results + i + 4));
+            const __m128i prev1 = results[i / 4];
+            const __m128i prev2 = results[i / 4 + 1];
             const __m128i cmp1  = _mm_cmpgt_epi32(prev1, dst1);
             const __m128i cmp2  = _mm_cmpgt_epi32(prev2, dst2);
 
-            _mm_storeu_si128((__m128i*)(results + i), _mm_blendv_epi8(prev1, dst1, cmp1));
-            _mm_storeu_si128((__m128i*)(results + i + 4), _mm_blendv_epi8(prev2, dst2, cmp2));
+            results[i / 4]     = _mm_blendv_epi8(prev1, dst1, cmp1);
+            results[i / 4 + 1] = _mm_blendv_epi8(prev2, dst2, cmp2);
 
             const __m128i iv1  = _mm_and_si128(idx_v, cmp1);
             const __m128i iv2  = _mm_and_si128(idx_v, cmp2);
@@ -96,7 +96,7 @@ static INLINE int64_t calc_indices_dist_dim1_sse4_1(const int* data, const int* 
 
     __m128i sum64 = _mm_setzero_si128();
     for (unsigned i = 0; i < n; i += 4) {
-        const __m128i prev = _mm_loadu_si128((const __m128i*)(results + i));
+        const __m128i prev = results[i / 4];
         sum64              = _mm_add_epi64(sum64, _mm_unpacklo_epi32(prev, _mm_setzero_si128()));
         sum64              = _mm_add_epi64(sum64, _mm_unpackhi_epi32(prev, _mm_setzero_si128()));
     }
@@ -160,14 +160,14 @@ static INLINE void dist2_4pts_sse4_1(const int* data, __m128i cent01, __m128i* o
 }
 
 void svt_av1_calc_indices_dim2_sse4_1(const int* data, const int* centroids, uint8_t* indices, int n, int k) {
-    int results[MAX_SB_SQUARE];
+    __m128i results[MAX_SB_SQUARE / 4];
     memset(indices, 0, n * sizeof(uint8_t));
 
     __m128i cent01 = _mm_set1_epi64x(*((const uint64_t*)&centroids[0]));
     for (int i = 0; i < n; i += 4) {
         __m128i dist;
         dist2_4pts_sse4_1(data + 2 * i, cent01, &dist);
-        _mm_storeu_si128((__m128i*)(results + i), dist);
+        results[i / 4] = dist;
     }
 
     for (int j = 1; j < k; ++j) {
@@ -178,13 +178,13 @@ void svt_av1_calc_indices_dim2_sse4_1(const int* data, const int* centroids, uin
             dist2_4pts_sse4_1(data + 2 * i, cent01, &dlo);
             dist2_4pts_sse4_1(data + 2 * (i + 4), cent01, &dhi);
 
-            const __m128i prev_lo = _mm_loadu_si128((const __m128i*)(results + i));
-            const __m128i prev_hi = _mm_loadu_si128((const __m128i*)(results + i + 4));
+            const __m128i prev_lo = results[i / 4];
+            const __m128i prev_hi = results[i / 4 + 1];
             const __m128i cmp_lo  = _mm_cmpgt_epi32(prev_lo, dlo);
             const __m128i cmp_hi  = _mm_cmpgt_epi32(prev_hi, dhi);
 
-            _mm_storeu_si128((__m128i*)(results + i), _mm_blendv_epi8(prev_lo, dlo, cmp_lo));
-            _mm_storeu_si128((__m128i*)(results + i + 4), _mm_blendv_epi8(prev_hi, dhi, cmp_hi));
+            results[i / 4]     = _mm_blendv_epi8(prev_lo, dlo, cmp_lo);
+            results[i / 4 + 1] = _mm_blendv_epi8(prev_hi, dhi, cmp_hi);
 
             const __m128i iv_lo = _mm_and_si128(idx_v, cmp_lo);
             const __m128i iv_hi = _mm_and_si128(idx_v, cmp_hi);
@@ -198,14 +198,14 @@ void svt_av1_calc_indices_dim2_sse4_1(const int* data, const int* centroids, uin
 
 static INLINE int64_t calc_indices_dist_dim2_sse4_1(const int* data, const int* centroids, uint8_t* indices, unsigned n,
                                                     int k) {
-    int results[MAX_SB_SQUARE];
+    __m128i results[MAX_SB_SQUARE / 4];
     memset(indices, 0, n * sizeof(uint8_t));
 
     __m128i cent01 = _mm_set1_epi64x(*((const uint64_t*)&centroids[0]));
     for (unsigned i = 0; i < n; i += 4) {
         __m128i dist;
         dist2_4pts_sse4_1(data + 2 * i, cent01, &dist);
-        _mm_storeu_si128((__m128i*)(results + i), dist);
+        results[i / 4] = dist;
     }
 
     for (int j = 1; j < k; ++j) {
@@ -216,13 +216,13 @@ static INLINE int64_t calc_indices_dist_dim2_sse4_1(const int* data, const int* 
             dist2_4pts_sse4_1(data + 2 * i, cent01, &dlo);
             dist2_4pts_sse4_1(data + 2 * (i + 4), cent01, &dhi);
 
-            const __m128i prev_lo = _mm_loadu_si128((const __m128i*)(results + i));
-            const __m128i prev_hi = _mm_loadu_si128((const __m128i*)(results + i + 4));
+            const __m128i prev_lo = results[i / 4];
+            const __m128i prev_hi = results[i / 4 + 1];
             const __m128i cmp_lo  = _mm_cmpgt_epi32(prev_lo, dlo);
             const __m128i cmp_hi  = _mm_cmpgt_epi32(prev_hi, dhi);
 
-            _mm_storeu_si128((__m128i*)(results + i), _mm_blendv_epi8(prev_lo, dlo, cmp_lo));
-            _mm_storeu_si128((__m128i*)(results + i + 4), _mm_blendv_epi8(prev_hi, dhi, cmp_hi));
+            results[i / 4]     = _mm_blendv_epi8(prev_lo, dlo, cmp_lo);
+            results[i / 4 + 1] = _mm_blendv_epi8(prev_hi, dhi, cmp_hi);
 
             const __m128i iv_lo = _mm_and_si128(idx_v, cmp_lo);
             const __m128i iv_hi = _mm_and_si128(idx_v, cmp_hi);
@@ -235,7 +235,7 @@ static INLINE int64_t calc_indices_dist_dim2_sse4_1(const int* data, const int* 
 
     __m128i sum64 = _mm_setzero_si128();
     for (unsigned i = 0; i < n; i += 4) {
-        const __m128i prev = _mm_loadu_si128((const __m128i*)(results + i));
+        const __m128i prev = results[i / 4];
         sum64              = _mm_add_epi64(sum64, _mm_unpacklo_epi32(prev, _mm_setzero_si128()));
         sum64              = _mm_add_epi64(sum64, _mm_unpackhi_epi32(prev, _mm_setzero_si128()));
     }
