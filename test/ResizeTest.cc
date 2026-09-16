@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "aom_dsp_rtcd.h"
 #include "definitions.h"
+#include "resize.h"
 #include "utility.h"
 #include "unit_test_utility.h"
 #include "random.h"
@@ -689,5 +690,127 @@ INSTANTIATE_TEST_SUITE_P(
                                          128, 255, 256, 257, 511, 512, 640,
                                          1024, 1920, 3840),
                        ::testing::Values(svt_av1_down2_symeven_neon)));
+#endif  // ARCH_AARCH64
+
+typedef void (*InterpolateCoreFunc)(const uint8_t *const input, int in_length,
+                                    uint8_t *output, int out_length,
+                                    const int16_t *interp_filters);
+
+// The 5 filter tables svt_av1_interpolate_core can be called with (chosen in
+// production by choose_interp_filter() based on the in/out length ratio, but
+// the kernel itself just uses whichever table the caller passes) - exercised
+// directly here so coverage doesn't depend on which in/out length ratios in
+// the parameter list happen to select which table.
+static const int16_t *const kInterpFilterTables[5] = {
+    &svt_aom_av1_filteredinterp_filters500[0][0],
+    &svt_aom_av1_filteredinterp_filters625[0][0],
+    &svt_aom_av1_filteredinterp_filters750[0][0],
+    &svt_aom_av1_filteredinterp_filters875[0][0],
+    &svt_av1_resize_filter_normative[0][0],
+};
+
+class InterpolateCoreTest
+    : public ::testing::TestWithParam<
+          std::tuple<int, int, int, InterpolateCoreFunc>> {
+  public:
+    InterpolateCoreTest()
+        : in_length_(std::get<0>(GetParam())),
+          out_length_(std::get<1>(GetParam())),
+          filter_(kInterpFilterTables[std::get<2>(GetParam())]),
+          test_func_(std::get<3>(GetParam())),
+          rnd_(0, 255),
+          input_(nullptr),
+          ref_output_(nullptr),
+          tst_output_(nullptr) {
+    }
+
+    // The output buffers are over-allocated by kOverrunPad bytes and the pad
+    // is sentinel-filled in run_case() below, to catch the 8-wide NEON store
+    // (or any bug in the middle-loop bound) writing past out_length_ even
+    // when the visible [0,out_length_) bytes still happen to match.
+    static const int kOverrunPad = 8;
+
+    void SetUp() override {
+        input_ = (uint8_t *)svt_aom_memalign(32, in_length_);
+        ASSERT_NE(input_, nullptr);
+        ref_output_ =
+            (uint8_t *)svt_aom_memalign(32, out_length_ + kOverrunPad);
+        ASSERT_NE(ref_output_, nullptr);
+        tst_output_ =
+            (uint8_t *)svt_aom_memalign(32, out_length_ + kOverrunPad);
+        ASSERT_NE(tst_output_, nullptr);
+    }
+
+    void TearDown() override {
+        svt_aom_free(input_);
+        svt_aom_free(ref_output_);
+        svt_aom_free(tst_output_);
+    }
+
+  protected:
+    void run_case() {
+        memset(ref_output_ + out_length_, 0xAA, kOverrunPad);
+        memset(tst_output_ + out_length_, 0xBB, kOverrunPad);
+
+        svt_av1_interpolate_core_c(
+            input_, in_length_, ref_output_, out_length_, filter_);
+        test_func_(input_, in_length_, tst_output_, out_length_, filter_);
+        for (int i = 0; i < out_length_; i++) {
+            ASSERT_EQ(ref_output_[i], tst_output_[i])
+                << "mismatch at output index " << i << " for in_length "
+                << in_length_ << " out_length " << out_length_;
+        }
+        for (int i = 0; i < kOverrunPad; i++) {
+            ASSERT_EQ(ref_output_[out_length_ + i], 0xAA)
+                << "overrun past out_length " << out_length_;
+            ASSERT_EQ(tst_output_[out_length_ + i], 0xBB)
+                << "overrun past out_length " << out_length_;
+        }
+    }
+
+    int in_length_;
+    int out_length_;
+    const int16_t *filter_;
+    InterpolateCoreFunc test_func_;
+    SVTRandom rnd_;
+    uint8_t *input_;
+    uint8_t *ref_output_;
+    uint8_t *tst_output_;
+};
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(InterpolateCoreTest);
+
+TEST_P(InterpolateCoreTest, MatchTestWithRandomValue) {
+    for (int t = 0; t < min_test_times; t++) {
+        for (int i = 0; i < in_length_; i++) {
+            input_[i] = (uint8_t)rnd_.random();
+        }
+        run_case();
+    }
+}
+
+TEST_P(InterpolateCoreTest, MatchTestWithZeroValue) {
+    memset(input_, 0, in_length_);
+    run_case();
+}
+
+TEST_P(InterpolateCoreTest, MatchTestWithMaxValue) {
+    memset(input_, 255, in_length_);
+    run_case();
+}
+
+TEST_P(InterpolateCoreTest, MatchTestWithAlternatingValue) {
+    for (int i = 0; i < in_length_; i++) {
+        input_[i] = (i & 1) ? 255 : 0;
+    }
+    run_case();
+}
+
+#ifdef ARCH_AARCH64
+INSTANTIATE_TEST_SUITE_P(
+    NEON, InterpolateCoreTest,
+    ::testing::Combine(::testing::Values(1, 2, 5, 7, 9, 64, 640, 1920, 3840),
+                       ::testing::Values(1, 2, 5, 7, 9, 64, 640, 1920, 3840),
+                       ::testing::Values(0, 1, 2, 3, 4),
+                       ::testing::Values(svt_av1_interpolate_core_neon)));
 #endif  // ARCH_AARCH64
 }  // namespace

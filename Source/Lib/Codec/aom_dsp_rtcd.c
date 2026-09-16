@@ -1047,7 +1047,7 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_NEON(svt_av1_calc_target_weighted_pred_left, svt_av1_calc_target_weighted_pred_left_c, svt_av1_calc_target_weighted_pred_left_neon);
 #endif
 #if CONFIG_ENABLE_RESIZE
-    SET_ONLY_C(svt_av1_interpolate_core, svt_av1_interpolate_core_c);
+    SET_NEON(svt_av1_interpolate_core, svt_av1_interpolate_core_c, svt_av1_interpolate_core_neon);
     SET_NEON(svt_av1_down2_symeven, svt_av1_down2_symeven_c, svt_av1_down2_symeven_neon);
 #if CONFIG_ENABLE_HIGH_BIT_DEPTH
     SET_ONLY_C(svt_av1_highbd_interpolate_core, svt_av1_highbd_interpolate_core_c);

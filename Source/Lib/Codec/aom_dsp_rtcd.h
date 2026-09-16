@@ -1469,6 +1469,9 @@ void svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_neon(
 
 void svt_av1_down2_symeven_neon(const uint8_t *const input, int length, uint8_t *output);
 
+void svt_av1_interpolate_core_neon(const uint8_t *const input, int in_length, uint8_t *output, int out_length,
+                                   const int16_t *interp_filters);
+
 void svt_ext_sad_calculation_32x32_64x64_neon(uint32_t *p_sad16x16, uint32_t *p_best_sad_32x32,
                                                 uint32_t *p_best_sad_64x64, uint32_t *p_best_mv32x32,
                                                 uint32_t *p_best_mv64x64, uint32_t mv, uint32_t *p_sad32x32);

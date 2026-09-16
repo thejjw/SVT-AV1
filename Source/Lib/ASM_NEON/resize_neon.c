@@ -147,3 +147,144 @@ void svt_av1_down2_symeven_neon(const uint8_t* const input, int length, uint8_t*
         *optr++ = clip_pixel(sum);
     }
 }
+
+void svt_av1_interpolate_core_neon(const uint8_t* const input, int in_length, uint8_t* output, int out_length,
+                                   const int16_t* interp_filters) {
+    const int32_t delta  = (((uint32_t)in_length << RS_SCALE_SUBPEL_BITS) + out_length / 2) / out_length;
+    const int32_t offset = in_length > out_length
+        ? (((int32_t)(in_length - out_length) << (RS_SCALE_SUBPEL_BITS - 1)) + out_length / 2) / out_length
+        : -(((int32_t)(out_length - in_length) << (RS_SCALE_SUBPEL_BITS - 1)) + out_length / 2) / out_length;
+    uint8_t*      optr   = output;
+    int           x, x1, x2, k, int_pel, sub_pel;
+    int32_t       y;
+
+    // Find x1/x2, the range of outputs whose 8-tap window never needs edge
+    // clamping - identical search to the C reference, so the boundary is
+    // bit-exact by construction.
+    x = 0;
+    y = offset + RS_SCALE_EXTRA_OFF;
+    while ((y >> RS_SCALE_SUBPEL_BITS) < (SUBPEL_TAPS / 2 - 1)) {
+        x++;
+        y += delta;
+    }
+    x1 = x;
+    x  = out_length - 1;
+    y  = delta * x + offset + RS_SCALE_EXTRA_OFF;
+    while ((y >> RS_SCALE_SUBPEL_BITS) + (int32_t)(SUBPEL_TAPS / 2) >= in_length) {
+        x--;
+        y -= delta;
+    }
+    x2 = x;
+
+    if (x1 > x2) {
+        // Short input/output: no room for an unclamped middle part - the whole
+        // output stays scalar, matching the C reference's short-input path.
+        // (The AVX2 kernel asserts x1<=x2 and skips this path entirely; that's
+        // not safe to copy here - see svt_av1_down2_symeven_avx2's heap-overflow
+        // for the same class of gap in a sibling resize kernel.)
+        for (x = 0, y = offset + RS_SCALE_EXTRA_OFF; x < out_length; ++x, y += delta) {
+            int_pel                     = y >> RS_SCALE_SUBPEL_BITS;
+            sub_pel                     = (y >> RS_SCALE_EXTRA_BITS) & RS_SUBPEL_MASK;
+            const int16_t* const filter = &interp_filters[sub_pel * SUBPEL_TAPS];
+            int                  sum    = 0;
+            for (k = 0; k < SUBPEL_TAPS; ++k) {
+                const int pk = int_pel - SUBPEL_TAPS / 2 + 1 + k;
+                sum += filter[k] * input[AOMMAX(AOMMIN(pk, in_length - 1), 0)];
+            }
+            *optr++ = clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
+        }
+        return;
+    }
+
+    // Initial part: left edge clamped, scalar - matches the C reference.
+    for (x = 0, y = offset + RS_SCALE_EXTRA_OFF; x < x1; ++x, y += delta) {
+        int_pel                     = y >> RS_SCALE_SUBPEL_BITS;
+        sub_pel                     = (y >> RS_SCALE_EXTRA_BITS) & RS_SUBPEL_MASK;
+        const int16_t* const filter = &interp_filters[sub_pel * SUBPEL_TAPS];
+        int                  sum    = 0;
+        for (k = 0; k < SUBPEL_TAPS; ++k) {
+            sum += filter[k] * input[AOMMAX(int_pel - SUBPEL_TAPS / 2 + 1 + k, 0)];
+        }
+        *optr++ = clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
+    }
+
+    // Middle part: unclamped region [x1, x2], 8 outputs per iteration. Unlike
+    // down2_symeven, int_pel/sub_pel are output-index-dependent (a linear
+    // fixed-point step, not a fixed stride), so there's no fixed shared-load
+    // pattern to exploit - each of the 8 lanes needs its own 8-byte input
+    // window and its own 8-tap filter (selected by sub_pel).
+    //
+    // Per-tap products and their reduction stay in 16-bit lanes as long as
+    // that's safe, only widening to 32-bit once it's not: every coefficient
+    // across the 5 filter tables this kernel is called with (see resize.c
+    // and super_res.c) falls in [-20, 128], so a single tap's product with
+    // an 8-bit pixel is at most 128*255 = 32640, and the worst-case 2-tap
+    // pairwise sum (0/255 chosen adversarially per tap sign) is at most
+    // 32640 and at least -5100 - both comfortably inside int16_t range.
+    // That's exactly what vpaddq_s16 below computes, so it can't overflow.
+    // Only the second reduction step (adding two already-16-bit-safe pairs
+    // together) needs 32-bit headroom, which vpaddlq_s16 provides by
+    // widening as it adds. This assumption is specific to today's 5 filter
+    // tables - a future caller passing a different filter table must be
+    // re-checked against this bound.
+    while (x + 8 <= x2 + 1) {
+        int16x8_t partial_sums[8];
+        for (int lane = 0; lane < 8; ++lane) {
+            int_pel                     = y >> RS_SCALE_SUBPEL_BITS;
+            sub_pel                     = (y >> RS_SCALE_EXTRA_BITS) & RS_SUBPEL_MASK;
+            const int16_t* const filter = &interp_filters[sub_pel * SUBPEL_TAPS];
+            // Safe unclamped 8-byte read: guaranteed in-bounds for x in
+            // [x1, x2] by the same x1/x2 search the C reference uses above.
+            const uint8x8_t src8   = vld1_u8(input + int_pel - SUBPEL_TAPS / 2 + 1);
+            const int16x8_t src16  = vreinterpretq_s16_u16(vmovl_u8(src8));
+            const int16x8_t filt16 = vld1q_s16(filter);
+            partial_sums[lane]     = vmulq_s16(src16, filt16);
+            y += delta;
+        }
+        // Reduce 8 taps -> 1 sum per lane without ever leaving vector
+        // registers: two lanes' worth of int16 products pair up per
+        // vpaddq_s16 call (lane A in the low half, lane B in the high
+        // half), then vpaddlq_s16 finishes each lane's reduction while
+        // widening to int32, and a final vpaddq_s32 packs 4 lanes' sums
+        // into one vector.
+        const int16x8_t r01     = vpaddq_s16(partial_sums[0], partial_sums[1]);
+        const int16x8_t r23     = vpaddq_s16(partial_sums[2], partial_sums[3]);
+        const int16x8_t r45     = vpaddq_s16(partial_sums[4], partial_sums[5]);
+        const int16x8_t r67     = vpaddq_s16(partial_sums[6], partial_sums[7]);
+        const int32x4_t sums_lo = vpaddq_s32(vpaddlq_s16(r01), vpaddlq_s16(r23));
+        const int32x4_t sums_hi = vpaddq_s32(vpaddlq_s16(r45), vpaddlq_s16(r67));
+        // Round + saturate to [0,65535] (vqrshrun_n_s32), then saturate to
+        // [0,255] (vqmovn_u16) - together bit-exact with the C reference's
+        // ROUND_POWER_OF_TWO(sum, FILTER_BITS) + clip_pixel per lane.
+        const uint16x4_t lo = vqrshrun_n_s32(sums_lo, FILTER_BITS);
+        const uint16x4_t hi = vqrshrun_n_s32(sums_hi, FILTER_BITS);
+        vst1_u8(optr, vqmovn_u16(vcombine_u16(lo, hi)));
+        optr += 8;
+        x += 8;
+    }
+
+    // Middle tail: fewer than 8 outputs left in [x, x2], scalar - matches the
+    // C reference exactly (same unclamped region, just not batched).
+    for (; x <= x2; ++x, y += delta) {
+        int_pel                     = y >> RS_SCALE_SUBPEL_BITS;
+        sub_pel                     = (y >> RS_SCALE_EXTRA_BITS) & RS_SUBPEL_MASK;
+        const int16_t* const filter = &interp_filters[sub_pel * SUBPEL_TAPS];
+        int                  sum    = 0;
+        for (k = 0; k < SUBPEL_TAPS; ++k) {
+            sum += filter[k] * input[int_pel - SUBPEL_TAPS / 2 + 1 + k];
+        }
+        *optr++ = clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
+    }
+
+    // End part: right edge clamped, scalar - matches the C reference.
+    for (; x < out_length; ++x, y += delta) {
+        int_pel                     = y >> RS_SCALE_SUBPEL_BITS;
+        sub_pel                     = (y >> RS_SCALE_EXTRA_BITS) & RS_SUBPEL_MASK;
+        const int16_t* const filter = &interp_filters[sub_pel * SUBPEL_TAPS];
+        int                  sum    = 0;
+        for (k = 0; k < SUBPEL_TAPS; ++k) {
+            sum += filter[k] * input[AOMMIN(int_pel - SUBPEL_TAPS / 2 + 1 + k, in_length - 1)];
+        }
+        *optr++ = clip_pixel(ROUND_POWER_OF_TWO(sum, FILTER_BITS));
+    }
+}
