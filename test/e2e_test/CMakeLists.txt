@@ -37,7 +37,9 @@ set(all_files
     SvtAv1E2EFramework.h
     SvtAv1E2EParamsTest.cc
     SvtAv1E2ETest.cc
+    SvtAv1FrameIdBitstreamTest.cc
     SvtAv1RefMgmtBitstreamTest.cc
+    SvtAv1RefSlotBitstreamTest.cc
     VideoFrame.h
     VideoSource.cc
     VideoSource.h

@@ -323,8 +323,10 @@ EbErrorType read_sequence_header_obu(Bitstrm *bs, SeqHeader *seq_header) {
     }
     if (seq_header->frame_id_numbers_present_flag) {
         seq_header->delta_frame_id_length = svt_aom_dec_get_bits(bs, 4) + 2;
-        seq_header->frame_id_length = svt_aom_dec_get_bits(bs, 3) + 1;
-        if (seq_header->frame_id_length - 1 > 16)
+        // additional_frame_id_length_minus_1 is an increment over
+        // delta_frame_id_length, not an absolute width (AV1 5.5.1).
+        seq_header->frame_id_length = svt_aom_dec_get_bits(bs, 3) + seq_header->delta_frame_id_length + 1;
+        if (seq_header->frame_id_length > 16)
             return EB_Corrupt_Frame;
     }
 
@@ -474,6 +476,8 @@ void SequenceHeaderParser::input_obu_data(const uint8_t *obu_data,
         stream_info->cdef_level = seg_header.cdef_level;
         stream_info->enable_restoration = seg_header.enable_restoration;
         stream_info->enable_superres = seg_header.enable_superres;
+        stream_info->frame_id_numbers_present_flag =
+            seg_header.frame_id_numbers_present_flag;
     }
 }
 }  // namespace svt_av1_e2e_tools
