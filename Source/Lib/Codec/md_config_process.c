@@ -716,8 +716,9 @@ static void update_cdef_filters_on_ref_info(PictureControlSet* pcs) {
             cdef_ctrls->pred_uv_f                  = 0;
             cdef_ctrls->first_pass_fs_num          = 0;
             cdef_ctrls->default_second_pass_fs_num = 0;
-            // Set cdef to off if pred is.
-            if ((cdef_ctrls->pred_y_f == 0) && (cdef_ctrls->pred_uv_f == 0)) {
+            // Keep CDEF enabled when QP strength will provide Y and/or UV after reference-Y reuse.
+            if ((cdef_ctrls->pred_y_f == 0) && (cdef_ctrls->pred_uv_f == 0) &&
+                cdef_ctrls->qp_strength_level == CDEF_QP_STRENGTH_OFF) {
                 pcs->ppcs->cdef_level = 0;
             }
         }

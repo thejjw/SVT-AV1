@@ -1090,6 +1090,10 @@ INSTANTIATE_TEST_SUITE_P(
     AVX2, AomSubtractBlockTest,
     ::testing::Combine(::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
                        ::testing::Values(svt_aom_subtract_block_avx2)));
+INSTANTIATE_TEST_SUITE_P(
+    SSE4_1, AomSubtractBlockTest,
+    ::testing::Combine(::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
+                       ::testing::Values(svt_aom_subtract_block_sse4_1)));
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64

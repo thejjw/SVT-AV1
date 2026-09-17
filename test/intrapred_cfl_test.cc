@@ -150,6 +150,8 @@ TEST_P(LbdCflPredTest, MatchTest) {
 #ifdef ARCH_X86_64
 INSTANTIATE_TEST_SUITE_P(AVX2, LbdCflPredTest,
                          ::testing::Values(svt_cfl_predict_lbd_avx2));
+INSTANTIATE_TEST_SUITE_P(SSE4_1, LbdCflPredTest,
+                         ::testing::Values(svt_cfl_predict_lbd_sse4_1));
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
@@ -167,6 +169,8 @@ TEST_P(HbdCflPredTest, MatchTest) {
 #ifdef ARCH_X86_64
 INSTANTIATE_TEST_SUITE_P(AVX2, HbdCflPredTest,
                          ::testing::Values(svt_cfl_predict_hbd_avx2));
+INSTANTIATE_TEST_SUITE_P(SSE4_1, HbdCflPredTest,
+                         ::testing::Values(svt_cfl_predict_hbd_sse4_1));
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64
@@ -214,7 +218,6 @@ class AomUpsampledPredTest
                                      NULL,
                                      0,
                                      0,
-                                     NULL,
                                      comp_pred_ref_.data(),
                                      width,
                                      height,
@@ -227,7 +230,6 @@ class AomUpsampledPredTest
                       NULL,
                       0,
                       0,
-                      NULL,
                       comp_pred_tst_.data(),
                       width,
                       height,
@@ -347,6 +349,11 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         ::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
         ::testing::Values(svt_cfl_luma_subsampling_420_lbd_avx2)));
+INSTANTIATE_TEST_SUITE_P(
+    SSE4_1, CflLumaSubsamplingLbdTest,
+    ::testing::Combine(
+        ::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
+        ::testing::Values(svt_cfl_luma_subsampling_420_lbd_sse4_1)));
 #endif
 
 #ifdef ARCH_AARCH64
@@ -410,6 +417,11 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         ::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
         ::testing::Values(svt_cfl_luma_subsampling_420_hbd_avx2)));
+INSTANTIATE_TEST_SUITE_P(
+    SSE4_1, CflLumaSubsamplingHbdTest,
+    ::testing::Combine(
+        ::testing::Range(BLOCK_4X4, BLOCK_SIZES_ALL),
+        ::testing::Values(svt_cfl_luma_subsampling_420_hbd_sse4_1)));
 #endif  // ARCH_X86_64
 
 #ifdef ARCH_AARCH64

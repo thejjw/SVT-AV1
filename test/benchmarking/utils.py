@@ -11,10 +11,12 @@
 
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import time
 from multiprocessing import cpu_count
+from typing import Any, Dict
 
 
 # read spec from very end of file name
@@ -93,7 +95,50 @@ def get_max_workers(max_workers: int) -> int:
     return min(max_workers, int(cpu_count() * 2))
 
 
-def get_cmd_times(cmd, passes=1, return_stderr=False):
+def parse_macos_time_l_metrics(stderr_text: str) -> Dict[str, Any]:
+    """Parse labeled `/usr/bin/time -l` metrics from combined stderr text."""
+    required_int_labels = {
+        "instructions_retired": "instructions retired",
+        "cycles": "cycles elapsed",
+        "max_rss_bytes": "maximum resident set size",
+    }
+    metrics: Dict[str, Any] = {}
+
+    time_re = re.compile(
+        r"(?P<real>[0-9]+(?:\.[0-9]+)?)\s+real\s+"
+        r"(?P<user>[0-9]+(?:\.[0-9]+)?)\s+user\s+"
+        r"(?P<sys>[0-9]+(?:\.[0-9]+)?)\s+sys"
+    )
+    int_re = re.compile(r"^\s*(?P<value>\d+)\s+(?P<label>.+?)\s*$")
+
+    for line in stderr_text.splitlines():
+        time_match = time_re.search(line)
+        if time_match:
+            metrics["real_time"] = float(time_match.group("real"))
+            metrics["user_time"] = float(time_match.group("user"))
+            metrics["system_time"] = float(time_match.group("sys"))
+            metrics["cpu_time"] = metrics["user_time"] + metrics["system_time"]
+            continue
+
+        int_match = int_re.match(line)
+        if not int_match:
+            continue
+        label = int_match.group("label")
+        for key, expected_label in required_int_labels.items():
+            if label == expected_label:
+                metrics[key] = int(int_match.group("value"))
+                break
+
+    missing = [key for key in ["real_time", "user_time", "system_time", "cpu_time"] if key not in metrics]
+    missing.extend(key for key in required_int_labels if key not in metrics)
+    if missing:
+        raise ValueError(f"missing /usr/bin/time -l metric(s): {', '.join(sorted(missing))}")
+    if metrics["instructions_retired"] <= 0:
+        raise ValueError("instructions_retired must be present and positive")
+    return metrics
+
+
+def get_cmd_times(cmd, passes=1, return_stderr=False, time_mode="posix"):
     """
     Execute command and return its execution time.
 
@@ -103,10 +148,31 @@ def get_cmd_times(cmd, passes=1, return_stderr=False):
         return_stderr: when True, return (time, stderr_of_last_run) so callers
             that need the program's stderr (e.g. to parse an encoder's PSNR
             summary) can get it without spending an extra run.
+        time_mode: "posix" preserves the existing `/usr/bin/time -p` loop;
+            "macos_time_l" runs one child under `/usr/bin/time -l` and returns
+            labeled counter metrics.
 
     Returns:
         Process time in seconds, or (time, stderr) when return_stderr is True.
+        In macos_time_l mode returns a metric dict whose cpu_time matches the
+        existing user+system timing convention.
     """
+
+    if time_mode == "macos_time_l":
+        if passes != 1:
+            raise ValueError("macos_time_l counter mode must run exactly one child")
+        run_cmd = ["/usr/bin/time", "-l", *shlex.split(cmd)]
+        res = subprocess.run(run_cmd, shell=False, capture_output=True, text=True)
+        stderr_text = res.stderr
+        if res.returncode != 0:
+            raise subprocess.CalledProcessError(
+                res.returncode, run_cmd, output=res.stdout, stderr=res.stderr
+            )
+        metrics = parse_macos_time_l_metrics(stderr_text)
+        return (metrics, stderr_text) if return_stderr else metrics
+
+    if time_mode != "posix":
+        raise ValueError(f"unknown time_mode: {time_mode}")
 
     # use system `time` command in POSIX format
     time_cmd = "/usr/bin/time -p"

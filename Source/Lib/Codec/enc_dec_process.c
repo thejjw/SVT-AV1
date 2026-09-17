@@ -3130,7 +3130,8 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
                         // Apply the loop filter
                         //Jing: Don't work for tile_parallel since the SB of bottom tile comes early than the bottom SB of top tile
 
-                        if ((pcs->ppcs->cdef_search_ctrls.enabled && !pcs->ppcs->cdef_search_ctrls.use_qp_strength &&
+                        if ((pcs->ppcs->cdef_search_ctrls.enabled &&
+                             pcs->ppcs->cdef_search_ctrls.qp_strength_level != CDEF_QP_STRENGTH_YUV &&
                              !pcs->ppcs->cdef_search_ctrls.use_reference_cdef_fs) ||
                             pcs->ppcs->enable_restoration || pcs->ppcs->is_ref || scs->static_config.recon_enabled ||
                             scs->static_config.stat_report) {
@@ -3223,15 +3224,15 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
                             pcs->ppcs->global_motion[frame];
                     }
                 }
-                svt_memcpy(pcs->ppcs->av1x->sgrproj_restore_cost,
-                           pcs->md_rate_est_ctx->sgrproj_restore_fac_bits,
-                           2 * sizeof(int32_t));
-                svt_memcpy(pcs->ppcs->av1x->switchable_restore_cost,
-                           pcs->md_rate_est_ctx->switchable_restore_fac_bits,
-                           3 * sizeof(int32_t));
-                svt_memcpy(pcs->ppcs->av1x->wiener_restore_cost,
-                           pcs->md_rate_est_ctx->wiener_restore_fac_bits,
-                           2 * sizeof(int32_t));
+                memcpy(pcs->ppcs->av1x->sgrproj_restore_cost,
+                       pcs->md_rate_est_ctx->sgrproj_restore_fac_bits,
+                       2 * sizeof(int32_t));
+                memcpy(pcs->ppcs->av1x->switchable_restore_cost,
+                       pcs->md_rate_est_ctx->switchable_restore_fac_bits,
+                       3 * sizeof(int32_t));
+                memcpy(pcs->ppcs->av1x->wiener_restore_cost,
+                       pcs->md_rate_est_ctx->wiener_restore_fac_bits,
+                       2 * sizeof(int32_t));
                 pcs->ppcs->av1x->rdmult =
                     ed_ctx->pic_full_lambda[(ed_ctx->bit_depth == EB_TEN_BIT) ? EB_10_BIT_MD : EB_8_BIT_MD];
                 if (pcs->ppcs->superres_total_recode_loop == 0) {

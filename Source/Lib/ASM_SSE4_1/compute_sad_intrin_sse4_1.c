@@ -2284,22 +2284,22 @@ void svt_ext_all_sad_calculation_8x8_16x16_sse4_1(uint8_t* src, uint32_t src_str
     tem_sum_1 = _mm_extract_epi32(s, k);                                \
     best_mv.x = mvx + (search_position_start_x + j + offset + k) * 8;   \
     best_mv.y = mvy + (search_position_start_y + i) * 8;                \
-    tem_sum_1 += svt_aom_fp_mv_err_cost(&best_mv, mv_cost_params);      \
+    tem_sum_1 += svt_aom_fp_mv_err_cost(best_mv, mv_cost_params);       \
     if (tem_sum_1 < low_sum) {                                          \
         low_sum = tem_sum_1;                                            \
         x_best  = mvx + (search_position_start_x + j + offset + k) * 8; \
         y_best  = mvy + (search_position_start_y + i) * 8;              \
     }
 
-#define UPDATE_BEST_PME_16(s, k)                                   \
-    tem_sum_1 = _mm_extract_epi16(s, k);                           \
-    best_mv.x = mvx + (search_position_start_x + j + k) * 8;       \
-    best_mv.y = mvy + (search_position_start_y + i) * 8;           \
-    tem_sum_1 += svt_aom_fp_mv_err_cost(&best_mv, mv_cost_params); \
-    if (tem_sum_1 < low_sum) {                                     \
-        low_sum = tem_sum_1;                                       \
-        x_best  = mvx + (search_position_start_x + j + k) * 8;     \
-        y_best  = mvy + (search_position_start_y + i) * 8;         \
+#define UPDATE_BEST_PME_16(s, k)                                  \
+    tem_sum_1 = _mm_extract_epi16(s, k);                          \
+    best_mv.x = mvx + (search_position_start_x + j + k) * 8;      \
+    best_mv.y = mvy + (search_position_start_y + i) * 8;          \
+    tem_sum_1 += svt_aom_fp_mv_err_cost(best_mv, mv_cost_params); \
+    if (tem_sum_1 < low_sum) {                                    \
+        low_sum = tem_sum_1;                                      \
+        x_best  = mvx + (search_position_start_x + j + k) * 8;    \
+        y_best  = mvy + (search_position_start_y + i) * 8;        \
     }
 
 void svt_pme_sad_loop_kernel_sse4_1(const svt_mv_cost_param* mv_cost_params,
@@ -3896,3 +3896,98 @@ void svt_ext_eight_sad_calculation_32x32_64x64_sse4_1(const uint32_t p_sad16x16[
         }
     }
 }
+
+/* ---- SSE4.1 SAD: width-specialized kernels, height as argument ---- */
+static INLINE uint32_t sad_hsum_sse4_1(__m128i s) {
+    return (uint32_t)(_mm_cvtsi128_si32(s) + _mm_extract_epi32(s, 2));
+}
+
+static INLINE uint32_t sad4xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    __m128i acc = _mm_setzero_si128();
+    for (int i = 0; i < h; ++i) {
+        int sv, rv;
+        memcpy(&sv, src, 4);
+        memcpy(&rv, ref, 4);
+        acc = _mm_add_epi32(acc, _mm_sad_epu8(_mm_cvtsi32_si128(sv), _mm_cvtsi32_si128(rv)));
+        src += ss;
+        ref += rs;
+    }
+    return (uint32_t)_mm_cvtsi128_si32(acc);
+}
+
+static INLINE uint32_t sad8xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    __m128i acc = _mm_setzero_si128();
+    for (int i = 0; i < h; ++i) {
+        acc = _mm_add_epi32(acc,
+                            _mm_sad_epu8(_mm_loadl_epi64((const __m128i*)src), _mm_loadl_epi64((const __m128i*)ref)));
+        src += ss;
+        ref += rs;
+    }
+    return (uint32_t)_mm_cvtsi128_si32(acc);
+}
+
+static INLINE uint32_t sadwxh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h, int w) {
+    __m128i acc = _mm_setzero_si128();
+    for (int i = 0; i < h; ++i) {
+        for (int x = 0; x < w; x += 16) {
+            acc = _mm_add_epi32(
+                acc,
+                _mm_sad_epu8(_mm_loadu_si128((const __m128i*)(src + x)), _mm_loadu_si128((const __m128i*)(ref + x))));
+        }
+        src += ss;
+        ref += rs;
+    }
+    return sad_hsum_sse4_1(acc);
+}
+
+static INLINE uint32_t sad16xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    return sadwxh_sse4_1(src, ss, ref, rs, h, 16);
+}
+
+static INLINE uint32_t sad32xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    return sadwxh_sse4_1(src, ss, ref, rs, h, 32);
+}
+
+static INLINE uint32_t sad64xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    return sadwxh_sse4_1(src, ss, ref, rs, h, 64);
+}
+
+static INLINE uint32_t sad128xh_sse4_1(const uint8_t* src, int ss, const uint8_t* ref, int rs, int h) {
+    return sadwxh_sse4_1(src, ss, ref, rs, h, 128);
+}
+
+#define SAD_WXH(w, h)                                                                                                \
+    uint32_t svt_aom_sad##w##x##h##_sse4_1(const uint8_t* src, int src_stride, const uint8_t* ref, int ref_stride) { \
+        return sad##w##xh_sse4_1(src, src_stride, ref, ref_stride, h);                                               \
+    }                                                                                                                \
+    void svt_aom_sad##w##x##h##x4d_sse4_1(const uint8_t*       src,                                                  \
+                                          int                  src_stride,                                           \
+                                          const uint8_t* const ref_array[4],                                         \
+                                          int                  ref_stride,                                           \
+                                          uint32_t             sad_array[4]) {                                       \
+        for (int i = 0; i < 4; ++i)                                                                                  \
+            sad_array[i] = sad##w##xh_sse4_1(src, src_stride, ref_array[i], ref_stride, h);                          \
+    }
+
+SAD_WXH(4, 4)
+SAD_WXH(4, 8)
+SAD_WXH(4, 16)
+SAD_WXH(8, 4)
+SAD_WXH(8, 8)
+SAD_WXH(8, 16)
+SAD_WXH(8, 32)
+SAD_WXH(16, 4)
+SAD_WXH(16, 8)
+SAD_WXH(16, 16)
+SAD_WXH(16, 32)
+SAD_WXH(16, 64)
+SAD_WXH(32, 8)
+SAD_WXH(32, 16)
+SAD_WXH(32, 32)
+SAD_WXH(32, 64)
+SAD_WXH(64, 16)
+SAD_WXH(64, 32)
+SAD_WXH(64, 64)
+SAD_WXH(64, 128)
+SAD_WXH(128, 64)
+SAD_WXH(128, 128)

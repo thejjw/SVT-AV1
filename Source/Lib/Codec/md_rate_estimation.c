@@ -399,38 +399,75 @@ static void build_nmv_component_cost_table(int32_t* mvcost, const NmvComponent* 
         svt_aom_get_syntax_rate_from_cdf(hp_cost, mvcomp->hp_cdf, NULL);
     }
     mvcost[0] = 0;
-    for (v = 1; v <= MV_MAX; ++v) {
-        int32_t z, c, o, d, e, f, cost = 0;
-        z = v - 1;
-        c = svt_av1_get_mv_class(z, &o);
-        cost += class_cost[c];
-        d = (o >> 3); /* int32_t mv data */
-        f = (o >> 1) & 3; /* fractional pel mv data */
-        e = (o & 1); /* high precision mv data */
-        if (c == MV_CLASS_0) {
-            cost += class0_cost[d];
-        } else {
-            const int32_t b = c + CLASS0_BITS - 1; /* number of bits */
-            for (i = 0; i < b; ++i) {
-                cost += bits_cost[i][((d >> i) & 1)];
-            }
-        }
+
+    const int32_t s0 = sign_cost[0], s1 = sign_cost[1];
+
+    /* MV_CLASS_0 indexes its fractional and high-precision tables by d, so it
+     * keeps the per-entry form. It is the first CLASS0_SIZE * 8 entries. */
+    for (v = 1; v <= CLASS0_SIZE * 8; ++v) {
+        int32_t       o;
+        const int32_t c = svt_av1_get_mv_class(v - 1, &o);
+        const int32_t d = o >> 3, f = (o >> 1) & 3, e = o & 1;
+        int32_t       cost = class_cost[c] + class0_cost[d];
         if (precision > MV_SUBPEL_NONE) {
-            if (c == MV_CLASS_0) {
-                cost += class0_fp_cost[d][f];
-            } else {
-                cost += fp_cost[f];
-            }
+            cost += class0_fp_cost[d][f];
             if (precision > MV_SUBPEL_LOW_PRECISION) {
-                if (c == MV_CLASS_0) {
-                    cost += class0_hp_cost[e];
-                } else {
-                    cost += hp_cost[e];
-                }
+                cost += class0_hp_cost[e];
             }
         }
-        mvcost[v]  = cost + sign_cost[0];
-        mvcost[-v] = cost + sign_cost[1];
+        mvcost[v]  = cost + s0;
+        mvcost[-v] = cost + s1;
+    }
+
+    /* Above MV_CLASS_0 the fractional and high-precision terms depend only on
+     * o & 7, so they are eight constants rather than a per-entry lookup. */
+    int32_t fpe[8];
+    for (int32_t k = 0; k < 8; ++k) {
+        int32_t t = 0;
+        if (precision > MV_SUBPEL_NONE) {
+            t += fp_cost[(k >> 1) & 3];
+            if (precision > MV_SUBPEL_LOW_PRECISION) {
+                t += hp_cost[k & 1];
+            }
+        }
+        fpe[k] = t;
+    }
+
+    /* The rest of the cost is class_cost[c] plus a sum over the set bits of d,
+     * which is a subset sum: building it for every d in a class by doubling
+     * costs 2^b adds in total rather than b per entry. */
+    int32_t tab[1 << (MV_CLASS_10 + CLASS0_BITS - 1)];
+    for (int32_t c = 1; c <= MV_CLASS_10; ++c) {
+        const int32_t b     = c + CLASS0_BITS - 1;
+        const int32_t nd    = 1 << b;
+        const int32_t zbase = 1 << (c + 3);
+
+        int32_t base0 = class_cost[c];
+        for (i = 0; i < b; ++i) {
+            base0 += bits_cost[i][0];
+        }
+        tab[0] = base0;
+        for (i = 0; i < b; ++i) {
+            const int32_t dlt  = bits_cost[i][1] - bits_cost[i][0];
+            const int32_t half = 1 << i;
+            for (int32_t m = 0; m < half; ++m) {
+                tab[m | half] = tab[m] + dlt;
+            }
+        }
+
+        for (int32_t d = 0; d < nd; ++d) {
+            const int32_t bs = tab[d];
+            const int32_t v0 = zbase + 8 * d + 1;
+            if (v0 > MV_MAX) {
+                break;
+            }
+            const int32_t n = (v0 + 7 > MV_MAX) ? (MV_MAX - v0 + 1) : 8;
+            for (int32_t k = 0; k < n; ++k) {
+                const int32_t cost = bs + fpe[k];
+                mvcost[v0 + k]     = cost + s0;
+                mvcost[-(v0 + k)]  = cost + s1;
+            }
+        }
     }
 }
 
@@ -678,9 +715,9 @@ static void update_mv_component_stats(int comp, NmvComponent* mvcomp, MvSubpelPr
 /*******************************************************************************
  * Updates all the mv stats/CDF for the current block
  ******************************************************************************/
-static void av1_update_mv_stats(const Mv* mv, const Mv* ref, NmvContext* mvctx, MvSubpelPrecision precision) {
-    const Mv          diff = {{mv->x - ref->x, mv->y - ref->y}};
-    const MvJointType j    = svt_av1_get_mv_joint(&diff);
+static void av1_update_mv_stats(const Mv mv, const Mv ref, NmvContext* mvctx, MvSubpelPrecision precision) {
+    const Mv          diff = {{mv.x - ref.x, mv.y - ref.y}};
+    const MvJointType j    = svt_av1_get_mv_joint(diff);
 
     update_cdf(mvctx->joints_cdf, j, MV_JOINTS);
 
@@ -1022,16 +1059,16 @@ void svt_aom_update_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, int mi_row
                 Mv ref_mv;
                 for (int ref = 0; ref < 1 + has_second_ref(&mbmi->block_mi); ++ref) {
                     ref_mv = blk_ptr->predmv[ref];
-                    av1_update_mv_stats(&mbmi->block_mi.mv[ref], &ref_mv, &fc->nmvc, allow_hp);
+                    av1_update_mv_stats(mbmi->block_mi.mv[ref], ref_mv, &fc->nmvc, allow_hp);
                 }
             } else if (mbmi->block_mi.mode == NEAREST_NEWMV || mbmi->block_mi.mode == NEAR_NEWMV) {
                 Mv ref_mv = blk_ptr->predmv[1];
                 Mv mv     = blk_ptr->block_mi.mv[1];
-                av1_update_mv_stats(&mv, &ref_mv, &fc->nmvc, allow_hp);
+                av1_update_mv_stats(mv, ref_mv, &fc->nmvc, allow_hp);
             } else if (mbmi->block_mi.mode == NEW_NEARESTMV || mbmi->block_mi.mode == NEW_NEARMV) {
                 Mv ref_mv = blk_ptr->predmv[0];
                 Mv mv     = blk_ptr->block_mi.mv[0];
-                av1_update_mv_stats(&mv, &ref_mv, &fc->nmvc, allow_hp);
+                av1_update_mv_stats(mv, ref_mv, &fc->nmvc, allow_hp);
             }
         }
     }

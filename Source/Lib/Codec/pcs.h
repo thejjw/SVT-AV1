@@ -553,6 +553,12 @@ typedef struct GmControls {
     CorrespondenceMethod correspondence_method;
 } GmControls;
 
+typedef enum CdefQpStrengthLevel {
+    CDEF_QP_STRENGTH_OFF,
+    CDEF_QP_STRENGTH_UV,
+    CDEF_QP_STRENGTH_YUV,
+} CdefQpStrengthLevel;
+
 typedef struct CdefSearchControls {
     uint8_t enabled;
     // Number of primary filters considered in the first pass. (luma and chroma)
@@ -588,8 +594,8 @@ typedef struct CdefSearchControls {
     uint8_t skip_th;
     // If true, skip UV filter search and force UV filters to take the chosen luma values
     bool uv_from_y;
-    // Enable QP-based CDEF strength prediction (bypass strength search)
-    bool use_qp_strength;
+    // Plane scope for QP-based strength prediction.
+    CdefQpStrengthLevel qp_strength_level;
 } CdefSearchControls;
 
 typedef struct CdefReconControls {

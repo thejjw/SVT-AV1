@@ -136,6 +136,7 @@ set(multi_arch_files
 if(HAVE_X86_PLATFORM)
   set(x86_arch_files
       noise_model_test.cc
+      sad_sse4_1_test.cc
       highbd_intra_prediction_tests.cc
       highbd_intra_prediction_tests.h
       FFTTest.cc
@@ -165,6 +166,7 @@ if(HAVE_X86_PLATFORM)
       $<TARGET_OBJECTS:ASM_SSE2>
       $<TARGET_OBJECTS:ASM_SSSE3>
       $<TARGET_OBJECTS:ASM_SSE4_1>
+      $<TARGET_OBJECTS:ASM_SSE4_2>
       $<TARGET_OBJECTS:ASM_AVX2>)
   if(ENABLE_AVX512)
     list(APPEND x86_arch_lib_list

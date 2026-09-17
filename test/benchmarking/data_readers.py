@@ -676,6 +676,13 @@ class DataReaders:
             "input_size",
             "output_size",
             "encoded_path",
+            # present only in explicit macOS /usr/bin/time -l counter mode
+            "real_time",
+            "user_time",
+            "system_time",
+            "instructions_retired",
+            "cycles",
+            "max_rss_bytes",
             # present only in SVT-only PSNR fast mode (encoder-reported PSNR)
             "psnr_y",
             "psnr_cb",
