@@ -205,7 +205,8 @@ void generate_lambda_scaling_factor(PictureParentControlSet* pcs, int64_t mc_dep
             int64_t   recrf_dist_sum   = 0;
             int64_t   mc_dep_delta_sum = 0;
             const int index            = row * num_cols + col;
-            for (int mi_row = row * num_mi_h; mi_row < (row + 1) * num_mi_h; mi_row += step) {
+            for (int mi_row = row * num_mi_h; pcs->pa_me_data->tpl_stats_valid && mi_row < (row + 1) * num_mi_h;
+                 mi_row += step) {
                 for (int mi_col = col * num_mi_w; mi_col < (col + 1) * num_mi_w; mi_col += step) {
                     if (mi_row >= cm->mi_rows || mi_col >= mi_cols_sr) {
                         continue;
@@ -1606,7 +1607,7 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
     int64_t       count      = 0;
     int64_t       max_dist   = 0;
 
-    for (int row = 0; row < cm->mi_rows; row += step) {
+    for (int row = 0; pcs->pa_me_data->tpl_stats_valid && row < cm->mi_rows; row += step) {
         for (int col = 0; col < mi_cols_sr; col += col_step_sr) {
             TplStats* tpl_stats_ptr =
                 pcs->pa_me_data->tpl_stats[(row >> shift) * (mi_cols_sr >> shift) + (col >> shift)];
@@ -1659,7 +1660,7 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
             const int row_step         = step;
 
             // loop all mb in the sb
-            for (int row = mi_row; row < mi_row + mi_high; row += row_step) {
+            for (int row = mi_row; pcs->pa_me_data->tpl_stats_valid && row < mi_row + mi_high; row += row_step) {
                 for (int col = mi_col_sr; col < mi_col_end_sr; col += col_step_sr) {
                     if (row >= mi_rows || col >= mi_cols_sr) {
                         continue;
@@ -1864,6 +1865,9 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
                        0,
                        (picture_width_in_mb) * sizeof(TplStats));
             }
+            // tpl_stats now belongs to this picture rather than the pooled object's previous tenant
+            pcs->tpl_group[frame_idx]->pa_me_data->tpl_stats_valid = true;
+
             tpl_on = pcs->tpl_valid_pic[frame_idx];
             if (tpl_on) {
                 tpl_mc_flow_dispenser(enc_ctx,
