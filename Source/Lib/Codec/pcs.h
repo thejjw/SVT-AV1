@@ -446,8 +446,8 @@ typedef struct MotionEstimationData {
     uint8_t      max_refs; // total max active references
     uint8_t      max_l0; // max active refs in L0
     TplStats**   tpl_stats;
-    // false until tpl_mc_flow() initialises tpl_stats for this picture; readers of tpl_stats must
-    // check it, because a pooled MotionEstimationData still holds the previous tenant's values
+    // False until tpl_mc_flow() fills tpl_stats for this picture; a pooled object still holds the
+    // previous tenant's stale values, lazy rewrite
     bool tpl_stats_valid;
 
     TplSrcStats* tpl_src_stats_buffer; // tpl src based stats

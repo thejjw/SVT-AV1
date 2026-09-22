@@ -1420,9 +1420,9 @@ EbErrorType me_update_param(MotionEstimationData* me_data, SequenceControlSet* s
 }
 
 /*
-me_reset_carryover: a recycled MotionEstimationData still holds its previous tenant's output. Clear what
-a picture can read without having written it first.
-tpl_stats and base_rdmult are the two that can be read without a preceding write now. 
+me_reset_carryover: a recycled MotionEstimationData still holds its previous tenant's output. tpl_stats and
+base_rdmult are the two fields a picture can read without a guard of its own, so clear them here; the other
+pooled TPL arrays are only read behind tpl_is_valid or blk_lambda_tuning.
 */
 void me_reset_carryover(MotionEstimationData* me_data) {
     me_data->tpl_stats_valid = false;
