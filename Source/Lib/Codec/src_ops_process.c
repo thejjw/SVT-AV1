@@ -200,13 +200,20 @@ void generate_lambda_scaling_factor(PictureParentControlSet* pcs, int64_t mc_dep
     const int    stride                = mi_cols_sr >> tpl_synth_size_offset;
     const double c                     = 1.2;
 
+    if (!pcs->pa_me_data->tpl_stats_valid) {
+        // mc_dep_cost_base is 0 without stats, so every block would take the default factor
+        for (int index = 0; index < num_rows * num_cols; index++) {
+            pcs->pa_me_data->tpl_rdmult_scaling_factors[index] = c;
+        }
+        return;
+    }
+
     for (int row = 0; row < num_rows; row++) {
         for (int col = 0; col < num_cols; col++) {
             int64_t   recrf_dist_sum   = 0;
             int64_t   mc_dep_delta_sum = 0;
             const int index            = row * num_cols + col;
-            for (int mi_row = row * num_mi_h; pcs->pa_me_data->tpl_stats_valid && mi_row < (row + 1) * num_mi_h;
-                 mi_row += step) {
+            for (int mi_row = row * num_mi_h; mi_row < (row + 1) * num_mi_h; mi_row += step) {
                 for (int mi_col = col * num_mi_w; mi_col < (col + 1) * num_mi_w; mi_col += step) {
                     if (mi_row >= cm->mi_rows || mi_col >= mi_cols_sr) {
                         continue;
@@ -1607,17 +1614,21 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
     int64_t       count      = 0;
     int64_t       max_dist   = 0;
 
-    for (int row = 0; pcs->pa_me_data->tpl_stats_valid && row < cm->mi_rows; row += step) {
-        for (int col = 0; col < mi_cols_sr; col += col_step_sr) {
-            TplStats* tpl_stats_ptr =
-                pcs->pa_me_data->tpl_stats[(row >> shift) * (mi_cols_sr >> shift) + (col >> shift)];
-            int64_t mc_dep_delta = RDCOST(
-                pcs->pa_me_data->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
-            recrf_dist_base_sum += tpl_stats_ptr->recrf_dist;
-            mc_dep_delta_base_sum += mc_dep_delta;
-            count++;
-            if (mc_dep_delta > max_dist) {
-                max_dist = mc_dep_delta;
+    const bool tpl_stats_valid = pcs->pa_me_data->tpl_stats_valid;
+
+    if (tpl_stats_valid) {
+        for (int row = 0; row < cm->mi_rows; row += step) {
+            for (int col = 0; col < mi_cols_sr; col += col_step_sr) {
+                TplStats* tpl_stats_ptr =
+                    pcs->pa_me_data->tpl_stats[(row >> shift) * (mi_cols_sr >> shift) + (col >> shift)];
+                int64_t mc_dep_delta = RDCOST(
+                    pcs->pa_me_data->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
+                recrf_dist_base_sum += tpl_stats_ptr->recrf_dist;
+                mc_dep_delta_base_sum += mc_dep_delta;
+                count++;
+                if (mc_dep_delta > max_dist) {
+                    max_dist = mc_dep_delta;
+                }
             }
         }
     }
@@ -1649,6 +1660,15 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
     const uint32_t picture_sb_height = (uint32_t)((pcs->aligned_height + scs->sb_size - 1) / scs->sb_size);
     const int32_t  mi_high           = sb_mi_sz; // sb size in 4x4 units
     const int32_t  mi_wide           = sb_mi_sz;
+
+    if (!tpl_stats_valid) {
+        // nothing to accumulate, so every SB would keep the neutral beta
+        for (uint32_t sb_index = 0; sb_index < picture_sb_width * picture_sb_height; sb_index++) {
+            pcs->pa_me_data->tpl_beta[sb_index] = 1.0;
+        }
+        return;
+    }
+
     for (uint32_t sb_y = 0; sb_y < picture_sb_height; ++sb_y) {
         for (uint32_t sb_x = 0; sb_x < picture_sb_width; ++sb_x) {
             uint16_t  mi_row           = pcs->sb_geom[sb_y * picture_sb_width + sb_x].org_y >> 2;
@@ -1660,7 +1680,7 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
             const int row_step         = step;
 
             // loop all mb in the sb
-            for (int row = mi_row; pcs->pa_me_data->tpl_stats_valid && row < mi_row + mi_high; row += row_step) {
+            for (int row = mi_row; row < mi_row + mi_high; row += row_step) {
                 for (int col = mi_col_sr; col < mi_col_end_sr; col += col_step_sr) {
                     if (row >= mi_rows || col >= mi_cols_sr) {
                         continue;
@@ -1865,7 +1885,7 @@ static EbErrorType tpl_mc_flow(EncodeContext* enc_ctx, SequenceControlSet* scs, 
                        0,
                        (picture_width_in_mb) * sizeof(TplStats));
             }
-            // tpl_stats now belongs to this picture rather than the pooled object's previous tenant
+            // tpl_stats now belongs to this picture, not the pooled object's previous tenant
             pcs->tpl_group[frame_idx]->pa_me_data->tpl_stats_valid = true;
 
             tpl_on = pcs->tpl_valid_pic[frame_idx];
