@@ -72,7 +72,7 @@ static INLINE double get_block_mean(const uint8_t* data, int32_t w, int32_t h, i
                                          int32_t         x_o,                                                       \
                                          int32_t         y_o,                                                       \
                                          int32_t         block_size_x,                                              \
-                                         int32_t         block_size_y) {                                                    \
+                                         int32_t         block_size_y) {                                            \
         const int32_t max_h      = AOMMIN(h - y_o, block_size_y);                                                   \
         const int32_t max_w      = AOMMIN(w - x_o, block_size_x);                                                   \
         double        noise_var  = 0;                                                                               \
@@ -594,11 +594,11 @@ int32_t svt_aom_flat_block_finder_run(const AomFlatBlockFinder* block_finder, co
                 // The weights are given in the following order:
                 //    [{var}, {ratio}, {trace}, {norm}, offset]
                 // with one of the most discriminative being simply the variance.
-                const double weights[5]              = {-6682, -0.2056, 13087, -12434, 2.5694};
-                const float  score                   = (float)(1.0 /
-                                            (1 +
-                                             exp(-(weights[0] * var + weights[1] * ratio + weights[2] * trace +
-                                                   weights[3] * norm + weights[4]))));
+                const double weights[5] = {-6682, -0.2056, 13087, -12434, 2.5694};
+                const float  score      = (float)(1.0 /
+                                                  (1 +
+                                                   exp(-(weights[0] * var + weights[1] * ratio + weights[2] * trace +
+                                                         weights[3] * norm + weights[4]))));
                 flat_blocks[by * num_blocks_w + bx]  = is_flat ? 255 : 0;
                 scores[by * num_blocks_w + bx].score = var > k_var_threshold ? score : 0;
                 scores[by * num_blocks_w + bx].index = by * num_blocks_w + bx;
@@ -728,7 +728,7 @@ void svt_aom_noise_model_free(AomNoiseModel* model) {
                                           int32_t               alt_stride,              \
                                           int32_t               x,                       \
                                           int32_t               y,                       \
-                                          double*               buffer) {                              \
+                                          double*               buffer) {                \
         for (int32_t i = 0; i < num_coords; ++i) {                                       \
             const int32_t x_i = x + coords[i][0], y_i = y + coords[i][1];                \
             buffer[i] = (double)data[y_i * stride + x_i] - denoised[y_i * stride + x_i]; \
@@ -844,7 +844,7 @@ static int32_t add_block_observations(AomNoiseModel* noise_model, int32_t c, con
             int32_t x_start = (bx > 0 && flat_blocks[by * num_blocks_w + bx - 1]) ? 0 : lag;
             int32_t y_end   = AOMMIN((h >> sub_log2[1]) - by * (block_size >> sub_log2[1]), block_size >> sub_log2[1]);
             int32_t x_end   = AOMMIN((w >> sub_log2[0]) - bx * (block_size >> sub_log2[0]) - lag,
-                                   (bx + 1 < num_blocks_w && flat_blocks[by * num_blocks_w + bx + 1])
+                                     (bx + 1 < num_blocks_w && flat_blocks[by * num_blocks_w + bx + 1])
                                          ? (block_size >> sub_log2[0])
                                          : ((block_size >> sub_log2[0]) - lag));
             for (int32_t y = y_start; y < y_end; ++y) {
@@ -922,16 +922,16 @@ static void add_noise_std_observations(AomNoiseModel* noise_model, int32_t c, co
                                                          y_o << sub_log2[1],
                                                          block_size,
                                                          noise_model->params.use_highbd);
-                const double noise_var = get_noise_var(data,
-                                                       denoised,
-                                                       stride,
-                                                       w >> sub_log2[0],
-                                                       h >> sub_log2[1],
-                                                       x_o,
-                                                       y_o,
-                                                       block_size >> sub_log2[0],
-                                                       block_size >> sub_log2[1],
-                                                       noise_model->params.use_highbd);
+                const double noise_var  = get_noise_var(data,
+                                                        denoised,
+                                                        stride,
+                                                        w >> sub_log2[0],
+                                                        h >> sub_log2[1],
+                                                        x_o,
+                                                        y_o,
+                                                        block_size >> sub_log2[0],
+                                                        block_size >> sub_log2[1],
+                                                        noise_model->params.use_highbd);
                 // We want to remove the part of the noise that came from being
                 // correlated with luma. Note that the noise solver for luma must
                 // have already been run.
@@ -1973,13 +1973,13 @@ static const float* get_half_cos_window(int32_t block_size) {
                                              int32_t   chroma_sub_w,                                                    \
                                              int32_t   chroma_sub_h,                                                    \
                                              int32_t   block_size,                                                      \
-                                             float     block_normalization) {                                               \
+                                             float     block_normalization) {                                           \
         for (int32_t y = 0; y < (h >> chroma_sub_h); ++y) {                                                             \
             for (int32_t x = 0; x < (w >> chroma_sub_w); ++x) {                                                         \
                 const int32_t result_idx = (y + (block_size >> chroma_sub_h)) * result_stride + x +                     \
                     (block_size >> chroma_sub_w);                                                                       \
                 INT_TYPE    new_val      = (INT_TYPE)AOMMIN(AOMMAX(result[result_idx] * block_normalization + 0.5f, 0), \
-                                                    block_normalization);                                       \
+                                                            block_normalization);                                       \
                 const float err          = -(((float)new_val) / block_normalization - result[result_idx]);              \
                 denoised[y * stride + x] = new_val;                                                                     \
                 if (x + 1 < (w >> chroma_sub_w)) {                                                                      \

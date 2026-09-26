@@ -903,11 +903,11 @@ void setup_ref_mv_list(PictureControlSet* pcs, const Av1Common* cm, MacroBlockD*
             refs[r].gm_mv[0].as_int = refs[r].gm_mv[1].as_int = 0;
         } else if (ref_frame < REF_FRAMES) {
             refs[r].gm_mv[0]        = svt_aom_gm_get_motion_vector_enc(&gm_params[ref_frame],
-                                                                frm_hdr->allow_high_precision_mv,
-                                                                bsize,
-                                                                mi_col,
-                                                                mi_row,
-                                                                frm_hdr->force_integer_mv);
+                                                                       frm_hdr->allow_high_precision_mv,
+                                                                       bsize,
+                                                                       mi_col,
+                                                                       mi_row,
+                                                                       frm_hdr->force_integer_mv);
             refs[r].gm_mv[1].as_int = 0;
         } else {
             refs[r].gm_mv[0] = svt_aom_gm_get_motion_vector_enc(&gm_params[refs[r].rf[0]],

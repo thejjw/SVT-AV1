@@ -499,17 +499,17 @@ void svt_av1_predict_intra_block(MacroBlockD* xd, BlockSize bsize, TxSize tx_siz
     bsize = svt_aom_scale_chroma_bsize(bsize, ss_x, ss_y);
 
     const int32_t have_top_right   = svt_aom_intra_has_top_right(seq_header_ptr->sb_size,
-                                                               bsize,
-                                                               mi_row,
-                                                               mi_col,
-                                                               have_top,
-                                                               right_available,
-                                                               partition,
-                                                               tx_size,
-                                                               row_off,
-                                                               col_off,
-                                                               ss_x,
-                                                               ss_y);
+                                                                 bsize,
+                                                                 mi_row,
+                                                                 mi_col,
+                                                                 have_top,
+                                                                 right_available,
+                                                                 partition,
+                                                                 tx_size,
+                                                                 row_off,
+                                                                 col_off,
+                                                                 ss_x,
+                                                                 ss_y);
     const int32_t have_bottom_left = svt_aom_intra_has_bottom_left(seq_header_ptr->sb_size,
                                                                    bsize,
                                                                    mi_row,

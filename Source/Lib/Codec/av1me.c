@@ -761,20 +761,20 @@ static unsigned int setup_obmc_center_error(const int32_t* mask, const Mv bestmv
         if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                           \
             Mv this_mv = {{c, r}};                                                        \
             thismse    = upsampled_obmc_pref_error(xd,                                    \
-                                                cm,                                    \
-                                                mi_row,                                \
-                                                mi_col,                                \
-                                                mask,                                  \
-                                                vfp,                                   \
-                                                z,                                     \
-                                                pre(y, y_stride, r, c),                \
-                                                y_stride,                              \
-                                                sp(c),                                 \
-                                                sp(r),                                 \
-                                                w,                                     \
-                                                h,                                     \
-                                                &sse,                                  \
-                                                use_accurate_subpel_search);           \
+                                                   cm,                                    \
+                                                   mi_row,                                \
+                                                   mi_col,                                \
+                                                   mask,                                  \
+                                                   vfp,                                   \
+                                                   z,                                     \
+                                                   pre(y, y_stride, r, c),                \
+                                                   y_stride,                              \
+                                                   sp(c),                                 \
+                                                   sp(r),                                 \
+                                                   w,                                     \
+                                                   h,                                     \
+                                                   &sse,                                  \
+                                                   use_accurate_subpel_search);           \
             if (lp)                                                                       \
                 v = svt_aom_mv_err_cost_light(this_mv, ref_mv);                           \
             else                                                                          \
@@ -933,7 +933,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext* ctx, IntraBcCo
             if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
                 Mv this_mv = {{tc, tr}};
                 thismse    = use_accurate_subpel_search
-                       ? (unsigned)upsampled_obmc_pref_error(xd,
+                    ? (unsigned)upsampled_obmc_pref_error(xd,
                                                           cm,
                                                           mi_row,
                                                           mi_col,
@@ -948,7 +948,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext* ctx, IntraBcCo
                                                           h,
                                                           &sse,
                                                           use_accurate_subpel_search)
-                       : vfp->osvf(pre(y, y_stride, tr, tc), y_stride, sp(tc), sp(tr), src_address, mask, &sse);
+                    : vfp->osvf(pre(y, y_stride, tr, tc), y_stride, sp(tc), sp(tr), src_address, mask, &sse);
                 if (lp) {
                     cost_array[idx] = thismse + svt_aom_mv_err_cost_light(this_mv, ref_mv);
                 } else {
@@ -974,7 +974,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext* ctx, IntraBcCo
         if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
             Mv this_mv = {{tc, tr}};
             thismse    = use_accurate_subpel_search
-                   ? (unsigned)upsampled_obmc_pref_error(xd,
+                ? (unsigned)upsampled_obmc_pref_error(xd,
                                                       cm,
                                                       mi_row,
                                                       mi_col,
@@ -989,7 +989,7 @@ int svt_av1_find_best_obmc_sub_pixel_tree_up(ModeDecisionContext* ctx, IntraBcCo
                                                       h,
                                                       &sse,
                                                       use_accurate_subpel_search)
-                   : vfp->osvf(pre(y, y_stride, tr, tc), y_stride, sp(tc), sp(tr), src_address, mask, &sse);
+                : vfp->osvf(pre(y, y_stride, tr, tc), y_stride, sp(tc), sp(tr), src_address, mask, &sse);
             if (lp) {
                 cost_array[4] = thismse + svt_aom_mv_err_cost_light(this_mv, ref_mv);
             } else {

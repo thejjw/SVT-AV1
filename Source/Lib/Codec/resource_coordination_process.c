@@ -741,9 +741,9 @@ static void update_new_param(SequenceControlSet* scs, int8_t enc_mode) {
     scs->static_config.source_width  = scs->max_input_luma_width;
     scs->static_config.source_height = scs->max_input_luma_height;
     scs->seq_header.max_frame_width  = scs->static_config.forced_max_frame_width > 0
-         ? scs->static_config.forced_max_frame_width
-         : scs->static_config.sframe_dist > 0 || scs->static_config.sframe_posi.sframe_posis ? 16384
-                                                                                             : scs->max_input_luma_width;
+        ? scs->static_config.forced_max_frame_width
+        : scs->static_config.sframe_dist > 0 || scs->static_config.sframe_posi.sframe_posis ? 16384
+                                                                                            : scs->max_input_luma_width;
     scs->seq_header.max_frame_height = scs->static_config.forced_max_frame_height > 0
         ? scs->static_config.forced_max_frame_height
         : scs->static_config.sframe_dist > 0 || scs->static_config.sframe_posi.sframe_posis
@@ -909,7 +909,7 @@ static void update_frame_event(PictureParentControlSet* pcs, uint64_t pic_num) {
             } else {
                 const uint32_t pid    = ((const SvtAv1RefFrameCmd*)node->data)->pic_id;
                 uint32_t*      target = (node->node_type == REF_STORE_EVENT) ? &pcs->ref_mgmt.store_id
-                         : (node->node_type == REF_CLEAR_EVENT)              ? &pcs->ref_mgmt.clear_id
+                    : (node->node_type == REF_CLEAR_EVENT)                   ? &pcs->ref_mgmt.clear_id
                                                                              : &pcs->ref_mgmt.use_id;
                 if (*target != 0) {
                     // Duplicate same-type events are caught synchronously
@@ -1170,9 +1170,9 @@ EbErrorType svt_aom_resource_coordination_kernel_iter(void* context) {
     // picture, 2. potential Overlay picture. In Picture Decision Process, where the overlay
     // frames are known, they extra pictures are released
     uint8_t        has_overlay                 = (scs->static_config.enable_overlays == false ||
-                           context_ptr->scs_instance->enc_ctx->initial_picture)
-                               ? 0
-                               : 1;
+                                                  context_ptr->scs_instance->enc_ctx->initial_picture)
+        ? 0
+        : 1;
     const int64_t  frame_skip_drain_bits       = context_ptr->pending_frame_skip_drain_bits;
     const uint32_t frame_skip_count            = context_ptr->pending_frame_skip_count;
     context_ptr->pending_frame_skip_drain_bits = 0;

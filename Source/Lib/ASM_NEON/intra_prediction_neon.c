@@ -2119,7 +2119,7 @@ static inline uint8x16_t negate_s8q(const uint8x16_t v) {
                                                 ptrdiff_t            stride,                                        \
                                                 const uint8_t* const top_row,                                       \
                                                 const uint8_t* const left_column,                                   \
-                                                const int            height) {                                                 \
+                                                const int            height) {                                      \
         const uint8_t        top_right   = top_row[(W) - 1];                                                        \
         const uint8_t        bottom_left = left_column[height - 1];                                                 \
         const uint8_t* const weights_y   = sm_weight_arrays + height;                                               \
@@ -2230,7 +2230,7 @@ SMOOTH_NXM_WIDE(64, 64)
                                              ptrdiff_t            stride,                                        \
                                              const uint8_t* const top_row,                                       \
                                              const uint8_t* const left_column,                                   \
-                                             const int            height) {                                                 \
+                                             const int            height) {                                      \
         const uint8_t top_right = top_row[(W) - 1];                                                              \
                                                                                                                  \
         const uint8x8_t top_right_v = vdup_n_u8(top_right);                                                      \
@@ -2292,7 +2292,7 @@ static inline uint8x16_t calculate_horizontal_weights_and_pred(const uint8x8_t l
                                                   ptrdiff_t            stride,       \
                                                   const uint8_t* const top_row,      \
                                                   const uint8_t* const left_column,  \
-                                                  const int            height) {                \
+                                                  const int            height) {     \
         const uint8_t top_right = top_row[(W) - 1];                                  \
                                                                                      \
         const uint8x8_t top_right_v = vdup_n_u8(top_right);                          \
@@ -2374,7 +2374,7 @@ SMOOTH_H_NXM_WIDE(64, 64)
                                              ptrdiff_t            stride,                                       \
                                              const uint8_t* const top_row,                                      \
                                              const uint8_t* const left_column,                                  \
-                                             const int            height) {                                                \
+                                             const int            height) {                                     \
         uint8x8_t            top_v;                                                                             \
         const uint8_t        bottom_left = left_column[height - 1];                                             \
         const uint8_t* const weights_y   = sm_weight_arrays + height;                                           \
@@ -2438,7 +2438,7 @@ static inline uint8x16_t calculate_vertical_weights_and_pred(const uint8x16_t to
                                                   ptrdiff_t            stride,                                         \
                                                   const uint8_t* const top_row,                                        \
                                                   const uint8_t* const left_column,                                    \
-                                                  const int            height) {                                                  \
+                                                  const int            height) {                                       \
         const uint8_t        bottom_left = left_column[height - 1];                                                    \
         const uint8_t* const weights_y   = sm_weight_arrays + height;                                                  \
                                                                                                                        \
@@ -2997,7 +2997,7 @@ static inline uint8x16_t select_paeth(const uint8x16_t top, const uint8x16_t lef
 /* Generate numbered and high/low versions of top_left_dist.*/
 #define TOP_LEFT_DIST(num)                                                                                       \
     const uint16x8_t top_left_##num##_dist_low  = vabdq_u16(vaddl_u8(vget_low_u8(top[num]), vget_low_u8(left)),  \
-                                                           top_left_x2);                                        \
+                                                            top_left_x2);                                        \
     const uint16x8_t top_left_##num##_dist_high = vabdq_u16(vaddl_u8(vget_high_u8(top[num]), vget_low_u8(left)), \
                                                             top_left_x2)
 

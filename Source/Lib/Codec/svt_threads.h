@@ -151,10 +151,10 @@ typedef void (*OnceFn)(void);
 #define DEFINE_ONCE_MUTEX(mutex_name)           \
     static EbHandle mutex_name = NULL;          \
     static void     deinit_##mutex_name(void) { \
-        if (mutex_name) {                   \
-            svt_destroy_mutex(mutex_name);  \
-            mutex_name = NULL;              \
-        }                                   \
+        if (mutex_name) {                       \
+            svt_destroy_mutex(mutex_name);      \
+            mutex_name = NULL;                  \
+        }                                       \
     }                                           \
     ONCE_ROUTINE(init_##mutex_name) {           \
         mutex_name = svt_create_mutex();        \

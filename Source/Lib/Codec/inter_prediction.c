@@ -369,8 +369,8 @@ void svt_av1_convolve_2d_sr_c(const uint8_t* src, int32_t src_stride, uint8_t* d
             }
             assert(0 <= sum && sum < (1 << (offset_bits + 2)));
             int16_t res             = (ConvBufType)(ROUND_POWER_OF_TWO(sum, conv_params->round_1) -
-                                        ((1 << (offset_bits - conv_params->round_1)) +
-                                         (1 << (offset_bits - conv_params->round_1 - 1))));
+                                                    ((1 << (offset_bits - conv_params->round_1)) +
+                                                     (1 << (offset_bits - conv_params->round_1 - 1))));
             dst[y * dst_stride + x] = (uint8_t)clip_pixel_highbd(ROUND_POWER_OF_TWO(res, bits), 8);
         }
     }

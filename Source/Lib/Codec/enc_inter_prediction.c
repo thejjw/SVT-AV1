@@ -424,13 +424,13 @@ int8_t svt_av1_wedge_sign_from_residuals_c(const int16_t* ds, const uint8_t* m, 
 static void pick_wedge(PictureControlSet* pcs, ModeDecisionContext* ctx, const BlockSize bsize, const uint8_t* const p0,
                        const int16_t* const residual1, const int16_t* const diff10, int8_t* const best_wedge_sign,
                        int8_t* const best_wedge_index) {
-    uint8_t              hbd_md      = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
-                                                                                           : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
-    uint32_t             full_lambda = hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
-    EbPictureBufferDesc* src_pic     = hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
-    const int            bw          = block_size_wide[bsize];
-    const int            bh          = block_size_high[bsize];
-    const int            N           = bw * bh;
+    uint8_t  hbd_md      = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
+                                                                               : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
+    uint32_t full_lambda = hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
+    EbPictureBufferDesc* src_pic = hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
+    const int            bw      = block_size_wide[bsize];
+    const int            bh      = block_size_high[bsize];
+    const int            N       = bw * bh;
     assert(N >= 64);
     int       rate;
     int64_t   dist;
@@ -540,8 +540,8 @@ static void pick_interinter_wedge(PictureControlSet* pcs, ModeDecisionContext* c
 static void pick_interinter_seg(PictureControlSet* pcs, ModeDecisionContext* ctx,
                                 InterInterCompoundData* interinter_comp, const BlockSize bsize, const uint8_t* const p0,
                                 const uint8_t* const p1, const int16_t* const residual1, const int16_t* const diff10) {
-    uint8_t           hbd_md      = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
-                                                                                        : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
+    uint8_t           hbd_md = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
+                                                                                   : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
     uint32_t          full_lambda = hbd_md ? ctx->full_lambda_md[EB_10_BIT_MD] : ctx->full_lambda_md[EB_8_BIT_MD];
     const int         bw          = block_size_wide[bsize];
     const int         bh          = block_size_high[bsize];
@@ -1462,10 +1462,10 @@ static INLINE void build_obmc_inter_pred_above(uint8_t is16bit, MacroBlockD* xd,
         }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
-                 : plane == 1                  ? ctxt->final_dst_stride_u
+            : plane == 1                       ? ctxt->final_dst_stride_u
                                                : ctxt->final_dst_stride_v;
         uint8_t* const dst        = plane == 0 ? &ctxt->final_dst_ptr_y[plane_col_pos]
-                   : plane == 1                ? &ctxt->final_dst_ptr_u[plane_col_pos]
+            : plane == 1                       ? &ctxt->final_dst_ptr_u[plane_col_pos]
                                                : &ctxt->final_dst_ptr_v[plane_col_pos];
 
         const int            tmp_stride = ctxt->adjacent_stride[plane];
@@ -1503,10 +1503,10 @@ static INLINE void build_obmc_inter_pred_left(uint8_t is16bit, MacroBlockD* xd, 
         }
 
         const int      dst_stride = plane == 0 ? ctxt->final_dst_stride_y
-                 : plane == 1                  ? ctxt->final_dst_stride_u
+            : plane == 1                       ? ctxt->final_dst_stride_u
                                                : ctxt->final_dst_stride_v;
         uint8_t* const dst        = plane == 0 ? &ctxt->final_dst_ptr_y[plane_row_pos * dst_stride]
-                   : plane == 1                ? &ctxt->final_dst_ptr_u[plane_row_pos * dst_stride]
+            : plane == 1                       ? &ctxt->final_dst_ptr_u[plane_row_pos * dst_stride]
                                                : &ctxt->final_dst_ptr_v[plane_row_pos * dst_stride];
 
         const int            tmp_stride = ctxt->adjacent_stride[plane];
@@ -1871,8 +1871,8 @@ void svt_aom_precompute_obmc_data(PictureControlSet* pcs, ModeDecisionContext* c
                                    ctx->obmc_conv_buf);
     ctx->obmc_neighbor_luma_pred_ready   = component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
             component_mask == PICTURE_BUFFER_DESC_LUMA_MASK
-          ? true
-          : ctx->obmc_neighbor_luma_pred_ready;
+        ? true
+        : ctx->obmc_neighbor_luma_pred_ready;
     ctx->obmc_neighbor_chroma_pred_ready = component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
             component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK
         ? true
@@ -2003,13 +2003,13 @@ static void model_rd_for_sb(PictureControlSet* pcs, EbPictureBufferDesc* predict
         int      input_offset = plane ? (ctx->blk_org_y >> ss_y) * input_pic->stride[plane] + (ctx->blk_org_x >> ss_x)
                                       : (ctx->blk_org_y) * input_pic->stride[plane] + (ctx->blk_org_x);
         uint64_t sse          = spatial_full_dist_type_fun(input_pic->buffer[plane],
-                                                  input_offset,
-                                                  input_pic->stride[plane],
-                                                  prediction_ptr->buffer[plane],
-                                                  0,
-                                                  prediction_ptr->stride[plane],
-                                                  plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
-                                                  plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight);
+                                                           input_offset,
+                                                           input_pic->stride[plane],
+                                                           prediction_ptr->buffer[plane],
+                                                           0,
+                                                           prediction_ptr->stride[plane],
+                                                           plane ? ctx->blk_geom->bwidth_uv : ctx->blk_geom->bwidth,
+                                                           plane ? ctx->blk_geom->bheight_uv : ctx->blk_geom->bheight);
         if (effective_ac_bias) {
             sse += get_svt_psy_full_dist(input_pic->buffer[plane],
                                          input_offset,
@@ -3553,9 +3553,9 @@ EbErrorType svt_aom_inter_prediction(SequenceControlSet* scs, PictureControlSet*
 
 #if CONFIG_ENABLE_INTER_COMPOUND
 bool svt_aom_calc_pred_masked_compound(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDecisionCandidate* cand) {
-    SequenceControlSet*  scs     = pcs->scs;
-    uint8_t              hbd_md  = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
-                                                                                       : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
+    SequenceControlSet* scs = pcs->scs;
+    uint8_t hbd_md          = SVT_EFFECTIVE_HBD_MD(ctx->hbd_md) == EB_DUAL_BIT_MD ? EB_8_BIT_MD
+                                                                                  : SVT_EFFECTIVE_HBD_MD(ctx->hbd_md);
     EbPictureBufferDesc* src_pic = hbd_md ? pcs->input_frame16bit : pcs->ppcs->enhanced_pic;
     uint32_t             bwidth  = ctx->blk_geom->bwidth;
     uint32_t             bheight = ctx->blk_geom->bheight;
@@ -3786,8 +3786,8 @@ EbErrorType svt_aom_inter_pu_prediction_av1_light_pd1(uint8_t hbd_md, ModeDecisi
     EbPictureBufferDesc* ref_pic_list1 = svt_aom_get_ref_pic_buffer(pcs, cand->block_mi.ref_frame[1]);
     //for light PD1 inter prediction is Luma only for MDS0 and Chroma only for MDS3
     uint32_t            component_mask     = ctx->md_stage == MD_STAGE_0 ? PICTURE_BUFFER_DESC_LUMA_MASK
-                       : ctx->lpd1_chroma_comp == COMPONENT_CHROMA       ? PICTURE_BUFFER_DESC_CHROMA_MASK
-                       : ctx->lpd1_chroma_comp == COMPONENT_CHROMA_CB    ? PICTURE_BUFFER_DESC_Cb_FLAG
+        : ctx->lpd1_chroma_comp == COMPONENT_CHROMA                      ? PICTURE_BUFFER_DESC_CHROMA_MASK
+        : ctx->lpd1_chroma_comp == COMPONENT_CHROMA_CB                   ? PICTURE_BUFFER_DESC_Cb_FLAG
                                                                          : PICTURE_BUFFER_DESC_Cr_FLAG;
     SequenceControlSet* scs                = pcs->scs;
     ScaleFactors        ref0_scale_factors = scs->sf_identity;

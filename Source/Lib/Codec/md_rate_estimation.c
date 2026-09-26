@@ -791,13 +791,13 @@ static AOM_INLINE void update_palette_cdf(MacroBlockD* xd, const MbModeInfo* con
  ******************************************************************************/
 static AOM_INLINE void sum_intra_stats(PictureControlSet* pcs, BlkStruct* blk_ptr, const int intraonly,
                                        const int mi_row, const int mi_col) {
-    MacroBlockD*            xd       = blk_ptr->av1xd;
-    const MbModeInfo* const mbmi     = xd->mi[0];
-    FRAME_CONTEXT*          fc       = xd->tile_ctx;
-    const PredictionMode    y_mode   = mbmi->block_mi.mode;
-    const BlockSize         bsize    = mbmi->bsize;
-    const int               bwidth   = block_size_wide[bsize];
-    const int               bheight  = block_size_high[bsize];
+    MacroBlockD*            xd      = blk_ptr->av1xd;
+    const MbModeInfo* const mbmi    = xd->mi[0];
+    FRAME_CONTEXT*          fc      = xd->tile_ctx;
+    const PredictionMode    y_mode  = mbmi->block_mi.mode;
+    const BlockSize         bsize   = mbmi->bsize;
+    const int               bwidth  = block_size_wide[bsize];
+    const int               bheight = block_size_high[bsize];
     assert(bsize < BLOCK_SIZES_ALL);
     assert(y_mode < 13);
 

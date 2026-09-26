@@ -265,11 +265,11 @@ static void set_hme_search_params(PictureParentControlSet* pcs, MeContext* me_ct
                                             &q_weight_denom,
                                             pcs->scs->static_config.qp);
     me_ctx->hme_l0_sa.sa_min.width  = MAX(8,
-                                         DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.width * q_weight, q_weight_denom));
+                                          DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.width * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_min.height = MAX(8,
                                           DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_min.height * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_max.width  = MAX(96,
-                                         DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.width * q_weight, q_weight_denom));
+                                          DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.width * q_weight, q_weight_denom));
     me_ctx->hme_l0_sa.sa_max.height = MAX(96,
                                           DIVIDE_AND_ROUND(me_ctx->hme_l0_sa.sa_max.height * q_weight, q_weight_denom));
     // Set the HME Level 1 and Level 2 refinement areas
@@ -2577,7 +2577,7 @@ void svt_aom_set_gm_controls(PictureParentControlSet* pcs, uint8_t gm_level) {
         gm_ctrls->ref_idx0_only           = 1;
         gm_ctrls->rfn_early_exit          = 1;
         gm_ctrls->correspondence_method   = pcs->input_resolution <= INPUT_SIZE_480p_RANGE ? MV_8x8
-              : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                            ? MV_16x16
+            : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                              ? MV_16x16
                                                                                            : MV_32x32;
         break;
     case 4:
@@ -2597,7 +2597,7 @@ void svt_aom_set_gm_controls(PictureParentControlSet* pcs, uint8_t gm_level) {
         gm_ctrls->ref_idx0_only           = 1;
         gm_ctrls->rfn_early_exit          = 1;
         gm_ctrls->correspondence_method   = pcs->input_resolution <= INPUT_SIZE_480p_RANGE ? MV_8x8
-              : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                            ? MV_16x16
+            : pcs->input_resolution <= INPUT_SIZE_1080p_RANGE                              ? MV_16x16
                                                                                            : MV_32x32;
         break;
     default:
@@ -2782,8 +2782,8 @@ void svt_aom_sig_deriv_pre_analysis_pcs(PictureParentControlSet* pcs) {
     svt_aom_derive_input_resolution(&resolution, scs->max_input_luma_width * scs->max_input_luma_height);
     pcs->enable_me_16x16 = svt_aom_get_enable_me_16x16(pcs->enc_mode);
     pcs->enable_me_8x8   = pcs->enable_me_16x16
-          ? svt_aom_get_enable_me_8x8(pcs->enc_mode, resolution, scs->static_config.rtc)
-          : 0;
+        ? svt_aom_get_enable_me_8x8(pcs->enc_mode, resolution, scs->static_config.rtc)
+        : 0;
 
     // Derive HME Flag
     // Set here to allocate resources for the downsampled pictures used in HME (generated in PictureAnalysis)
@@ -2889,9 +2889,9 @@ void svt_aom_sig_deriv_pre_analysis_scs(SequenceControlSet* scs, int8_t enc_mode
         svt_aom_derive_input_resolution(&fr_res,
                                         scs->max_initial_input_luma_width * scs->max_initial_input_luma_height);
         const uint8_t auto_en              = allintra ? svt_aom_get_enable_restoration_allintra(enc_mode, DEFAULT)
-                         : rtc_tune
-                         ? svt_aom_get_enable_restoration_rtc(DEFAULT, fr_res, scs->static_config.fast_decode)
-                         : svt_aom_get_enable_restoration_default(enc_mode, DEFAULT, fr_res, scs->static_config.fast_decode);
+            : rtc_tune
+            ? svt_aom_get_enable_restoration_rtc(DEFAULT, fr_res, scs->static_config.fast_decode)
+            : svt_aom_get_enable_restoration_default(enc_mode, DEFAULT, fr_res, scs->static_config.fast_decode);
         scs->seq_header.enable_restoration = (scs->static_config.enable_restoration_filtering && auto_en) ? 1 : 0;
     }
 #else
@@ -5342,7 +5342,7 @@ static void set_nsq_search_ctrls(PictureControlSet* pcs, ModeDecisionContext* ct
     nsq_search_ctrls->component_multiple_th = DIVIDE_AND_ROUND(nsq_search_ctrls->component_multiple_th * q_weight,
                                                                q_weight_denom);
     nsq_search_ctrls->nsq_split_cost_th     = DIVIDE_AND_ROUND(nsq_search_ctrls->nsq_split_cost_th * q_weight,
-                                                           q_weight_denom);
+                                                               q_weight_denom);
     int max_part0_to_part1_dev_offset       = 5;
     max_part0_to_part1_dev_offset = DIVIDE_AND_ROUND(max_part0_to_part1_dev_offset * q_weight, q_weight_denom);
     nsq_search_ctrls->max_part0_to_part1_dev = MAX(
@@ -6555,7 +6555,7 @@ static bool get_sb_tpl_intra_stats(PictureControlSet* pcs, ModeDecisionContext* 
         const uint32_t mb_origin_x     = ctx->sb_origin_x;
         const uint32_t mb_origin_y     = ctx->sb_origin_y;
         const int      tpl_blk_size    = ppcs->tpl_ctrls.dispenser_search_level == 0 ? 16
-                    : ppcs->tpl_ctrls.dispenser_search_level == 1                    ? 32
+            : ppcs->tpl_ctrls.dispenser_search_level == 1                            ? 32
                                                                                      : 64;
         // tpl_src_stats_buffer is created for 16x16 always, so TPL dispenser is for larger block sizes
         // the step between blocks must be adjusted

@@ -157,16 +157,16 @@ static AOM_FORCE_INLINE void warp_affine_horizontal(const uint8_t* ref8b, const 
                 src_1.val[1] = vshrq_n_u16(vreinterpretq_u16_u8(vzip2q_u8(src_1_2b, src_1_8b)), 6);    \
                                                                                                        \
                 src_1         = clamp_horizontal(src_1,                                                \
-                                         out_of_boundary_left,                                 \
-                                         out_of_boundary_right,                                \
-                                         ref2b,                                                \
-                                         ref8b,                                                \
-                                         iy,                                                   \
-                                         stride2b,                                             \
-                                         stride8b,                                             \
-                                         width,                                                \
-                                         indx0,                                                \
-                                         indx1);                                               \
+                                                 out_of_boundary_left,                                 \
+                                                 out_of_boundary_right,                                \
+                                                 ref2b,                                                \
+                                                 ref8b,                                                \
+                                                 iy,                                                   \
+                                                 stride2b,                                             \
+                                                 stride8b,                                             \
+                                                 width,                                                \
+                                                 indx0,                                                \
+                                                 indx1);                                               \
                 int16x8_t rv0 = vextq_s16(                                                             \
                     vreinterpretq_s16_u16(src_1.val[0]), vreinterpretq_s16_u16(src_1.val[1]), 0);      \
                 int16x8_t rv1 = vextq_s16(                                                             \
@@ -212,16 +212,16 @@ static AOM_FORCE_INLINE void warp_affine_horizontal(const uint8_t* ref8b, const 
                 src_1.val[1] = vshrq_n_u16(vreinterpretq_u16_u8(vzip2q_u8(src2b, src8b)), 6);          \
                                                                                                        \
                 src_1         = clamp_horizontal(src_1,                                                \
-                                         out_of_boundary_left,                                 \
-                                         out_of_boundary_right,                                \
-                                         ref2b,                                                \
-                                         ref8b,                                                \
-                                         iy,                                                   \
-                                         stride2b,                                             \
-                                         stride8b,                                             \
-                                         width,                                                \
-                                         indx0,                                                \
-                                         indx1);                                               \
+                                                 out_of_boundary_left,                                 \
+                                                 out_of_boundary_right,                                \
+                                                 ref2b,                                                \
+                                                 ref8b,                                                \
+                                                 iy,                                                   \
+                                                 stride2b,                                             \
+                                                 stride8b,                                             \
+                                                 width,                                                \
+                                                 indx0,                                                \
+                                                 indx1);                                               \
                 int16x8_t rv0 = vextq_s16(                                                             \
                     vreinterpretq_s16_u16(src_1.val[0]), vreinterpretq_s16_u16(src_1.val[1]), 0);      \
                 int16x8_t rv1 = vextq_s16(                                                             \

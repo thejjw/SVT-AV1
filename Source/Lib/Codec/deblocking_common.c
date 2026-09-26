@@ -819,10 +819,10 @@ static void mb_lpf_horizontal_edge_w(uint8_t* s, int p, const uint8_t* blimit, c
         const uint8_t p6 = s[-7 * p], p5 = s[-6 * p], p4 = s[-5 * p], p3 = s[-4 * p], p2 = s[-3 * p], p1 = s[-2 * p],
                       p0 = s[-p];
         const uint8_t q0 = s[0 * p], q1 = s[1 * p], q2 = s[2 * p], q3 = s[3 * p], q4 = s[4 * p], q5 = s[5 * p],
-                      q6   = s[6 * p];
-        const int8_t mask  = filter_mask(*limit, *blimit, p3, p2, p1, p0, q0, q1, q2, q3);
-        const int8_t flat  = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
-        const int8_t flat2 = flat_mask4(1, p6, p5, p4, p0, q0, q4, q5, q6);
+                      q6    = s[6 * p];
+        const int8_t  mask  = filter_mask(*limit, *blimit, p3, p2, p1, p0, q0, q1, q2, q3);
+        const int8_t  flat  = flat_mask4(1, p3, p2, p1, p0, q0, q1, q2, q3);
+        const int8_t  flat2 = flat_mask4(1, p6, p5, p4, p0, q0, q4, q5, q6);
 
         filter14(mask,
                  *thresh,
