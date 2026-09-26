@@ -1487,9 +1487,9 @@ void restoration_seg_search(int32_t* rst_tmpbuf, Yv12BufferConfig* org_fts, cons
 
     const int32_t plane_start = PLANE_Y;
     const int32_t plane_end   = ((cm->wn_filter_ctrls.enabled && cm->wn_filter_ctrls.use_chroma) ||
-                               (cm->sg_filter_ctrls.enabled && cm->sg_filter_ctrls.use_chroma))
-          ? PLANE_V
-          : PLANE_Y;
+                                 (cm->sg_filter_ctrls.enabled && cm->sg_filter_ctrls.use_chroma))
+        ? PLANE_V
+        : PLANE_Y;
 
     for (int32_t plane = plane_start; plane <= plane_end; ++plane) {
         RestUnitSearchInfo* rusi = pcs->rusi_picture[plane];
@@ -1563,8 +1563,8 @@ void rest_finish_search(PictureControlSet* pcs) {
     Av1Common* const         cm                   = pcs->ppcs->av1_cm;
     PictureParentControlSet* p_pcs_ptr            = pcs->ppcs;
     RestorationType          force_restore_type_d = (cm->wn_filter_ctrls.enabled)
-                 ? ((cm->sg_filter_ctrls.enabled) ? RESTORE_TYPES : RESTORE_WIENER)
-                 : ((cm->sg_filter_ctrls.enabled) ? RESTORE_SGRPROJ : RESTORE_NONE);
+        ? ((cm->sg_filter_ctrls.enabled) ? RESTORE_TYPES : RESTORE_WIENER)
+        : ((cm->sg_filter_ctrls.enabled) ? RESTORE_SGRPROJ : RESTORE_NONE);
     int32_t                  ntiles[2];
     for (int32_t is_uv = 0; is_uv < 2; ++is_uv) {
         ntiles[is_uv] = rest_tiles_in_plane(cm, is_uv);
@@ -1583,9 +1583,9 @@ void rest_finish_search(PictureControlSet* pcs) {
     RestSearchCtxt rsc;
     const int32_t  plane_start = PLANE_Y;
     const int32_t  plane_end   = ((cm->wn_filter_ctrls.enabled && cm->wn_filter_ctrls.use_chroma) ||
-                               (cm->sg_filter_ctrls.enabled && cm->sg_filter_ctrls.use_chroma))
-           ? PLANE_V
-           : PLANE_Y;
+                                  (cm->sg_filter_ctrls.enabled && cm->sg_filter_ctrls.use_chroma))
+        ? PLANE_V
+        : PLANE_Y;
 
     for (int32_t plane = plane_start; plane <= plane_end; ++plane) {
         //init rsc context for this plane

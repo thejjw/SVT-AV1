@@ -262,7 +262,7 @@ static INLINE void obmc_variance(const uint8_t* pre, int pre_stride, const int32
                                                               int            yoffset,                                \
                                                               const int32_t* wsrc,                                   \
                                                               const int32_t* mask,                                   \
-                                                              unsigned int*  sse) {                                   \
+                                                              unsigned int*  sse) {                                  \
         uint16_t fdata3[(H + 1) * W];                                                                                \
         uint8_t  temp2[H * W];                                                                                       \
                                                                                                                      \

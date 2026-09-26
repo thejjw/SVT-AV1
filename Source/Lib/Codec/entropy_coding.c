@@ -256,9 +256,9 @@ void svt_aom_get_txb_ctx(PictureControlSet* pcs, const int32_t plane,
     static const int8_t signs[3]    = {0, -1, 1};
     const int32_t       plane_shift = !!plane;
     int32_t             txb_w_unit  = MIN(eb_tx_size_wide_unit[tx_size],
-                             (int32_t)((pcs->ppcs->aligned_width >> plane_shift) - blk_org_x) >> 2);
+                                          (int32_t)((pcs->ppcs->aligned_width >> plane_shift) - blk_org_x) >> 2);
     int32_t             txb_h_unit  = MIN(eb_tx_size_high_unit[tx_size],
-                             (int32_t)((pcs->ppcs->aligned_height >> plane_shift) - blk_org_y) >> 2);
+                                          (int32_t)((pcs->ppcs->aligned_height >> plane_shift) - blk_org_y) >> 2);
 
     int16_t dc_sign = 0;
     int32_t top     = 0; /* OR-accumulation across neighbors */

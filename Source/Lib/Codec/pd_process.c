@@ -387,8 +387,8 @@ EbErrorType release_prev_picture_from_reorder_queue(EncodeContext* enc_ctx) {
     // Get the previous entry from the Picture Decision Reordering Queue (Entry N-1)
     // P.S. The previous entry in display order is needed for Scene Change Detection
     previous_entry_index     = (enc_ctx->picture_decision_reorder_queue_head_index == 0)
-            ? enc_ctx->picture_decision_reorder_queue_size - 1
-            : enc_ctx->picture_decision_reorder_queue_head_index - 1;
+        ? enc_ctx->picture_decision_reorder_queue_size - 1
+        : enc_ctx->picture_decision_reorder_queue_head_index - 1;
     queue_previous_entry_ptr = enc_ctx->picture_decision_reorder_queue[previous_entry_index];
 
     // SB activity classification based on (0,0) SAD & picture activity derivation
@@ -540,7 +540,7 @@ void dg_detector_hme_level0(PictureParentControlSet* ppcs, uint32_t seg_idx) {
             ->sixteenth_downsampled_picture_ptr;
 
     int16_t sa_width  = ppcs->input_resolution <= INPUT_SIZE_360p_RANGE ? 16
-         : ppcs->input_resolution <= INPUT_SIZE_480p_RANGE              ? 64
+        : ppcs->input_resolution <= INPUT_SIZE_480p_RANGE               ? 64
                                                                         : 128;
     int16_t sa_height = ppcs->input_resolution <= INPUT_SIZE_360p_RANGE ? 16
         : ppcs->input_resolution <= INPUT_SIZE_480p_RANGE               ? 64
@@ -1989,8 +1989,8 @@ static void av1_generate_rps_info(PictureParentControlSet* pcs, EncodeContext* e
 
         const uint8_t lay1_offset = scs->mrp_ctrls.ld_reduce_ref_buffs == 0 ? LAY1_OFF : 1;
         const uint8_t lay1_2_idx  = scs->mrp_ctrls.ld_reduce_ref_buffs == 2
-             ? 1
-             : lay1_offset + lay1_toggle; // the newest L1/2 picture in the DPB
+            ? 1
+            : lay1_offset + lay1_toggle; // the newest L1/2 picture in the DPB
         const uint8_t lay1_1_idx  = CIRC_DEC(
             lay1_2_idx, lay1_offset, lay1_offset + 2); // the middle L1/2 picture in the DPB
         const uint8_t lay1_0_idx = CIRC_DEC(
@@ -2066,8 +2066,8 @@ static void av1_generate_rps_info(PictureParentControlSet* pcs, EncodeContext* e
         const uint8_t base0_idx = CIRC_DEC(base1_idx, 0, 2); //the oldest L0 picture in the DPB
 
         const uint8_t  lay1_1_idx    = scs->mrp_ctrls.ld_reduce_ref_buffs == 2 ? !lay0_toggle
-                : scs->mrp_ctrls.ld_reduce_ref_buffs == 1                      ? LAY1_OFF
-                                                          : LAY1_OFF + lay1_toggle; //the newest L1 picture in the DPB
+            : scs->mrp_ctrls.ld_reduce_ref_buffs == 1                          ? LAY1_OFF
+                                                      : LAY1_OFF + lay1_toggle; //the newest L1 picture in the DPB
         const uint8_t  lay1_0_idx    = CIRC_DEC(lay1_1_idx, LAY1_OFF, LAY1_OFF + 1); //the oldest L1 picture in the DPB
         const uint8_t  lay2_idx      = LAY2_OFF; //the newest L2 picture in the DPB
         const uint8_t  long_base_idx = 7;
@@ -3822,22 +3822,22 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
 
         if (do_noise_est) {
             noise_level_fp16                 = svt_estimate_noise_fp16(y_buffer, // Y
-                                                       central_picture_ptr->width,
-                                                       central_picture_ptr->height,
-                                                       central_picture_ptr->y_stride);
+                                                                       central_picture_ptr->width,
+                                                                       central_picture_ptr->height,
+                                                                       central_picture_ptr->y_stride);
             noise_levels_log1p_fp16[PLANE_Y] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
         if (pcs->tf_ctrls.chroma_lvl) {
             noise_level_fp16                 = svt_estimate_noise_fp16(buffer_u, // U
-                                                       (central_picture_ptr->width >> ss_x),
-                                                       (central_picture_ptr->height >> ss_y),
-                                                       central_picture_ptr->u_stride);
+                                                                       (central_picture_ptr->width >> ss_x),
+                                                                       (central_picture_ptr->height >> ss_y),
+                                                                       central_picture_ptr->u_stride);
             noise_levels_log1p_fp16[PLANE_U] = svt_aom_noise_log1p_fp16(noise_level_fp16);
 
             noise_level_fp16                 = svt_estimate_noise_fp16(buffer_v, // V
-                                                       (central_picture_ptr->width >> ss_x),
-                                                       (central_picture_ptr->height >> ss_y),
-                                                       central_picture_ptr->v_stride);
+                                                                       (central_picture_ptr->width >> ss_x),
+                                                                       (central_picture_ptr->height >> ss_y),
+                                                                       central_picture_ptr->v_stride);
             noise_levels_log1p_fp16[PLANE_V] = svt_aom_noise_log1p_fp16(noise_level_fp16);
         }
     }
@@ -3975,7 +3975,7 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
                 uint32_t num_future_pics   = pcs->tf_ctrls.num_future_pics + (pcs->tf_ctrls.modulate_pics ? offset : 0);
                 num_future_pics            = MIN(pcs->tf_ctrls.max_num_future_pics, num_future_pics);
                 num_future_pics            = MIN((uint8_t)num_future_pics,
-                                      svt_aom_tf_max_ref_per_struct(pcs->hierarchical_levels, 0, 1));
+                                                 svt_aom_tf_max_ref_per_struct(pcs->hierarchical_levels, 0, 1));
                 uint32_t num_past_pics     = 0;
                 uint32_t pic_i;
                 //search reord-queue to get the future pictures
@@ -4298,12 +4298,12 @@ static void send_picture_out(SequenceControlSet* scs, PictureParentControlSet* p
             }
         } else {
             if (pcs->temporal_layer_index == 0 && pcs->ref_list0_count_try >= 3) {
-                EbPictureBufferDesc* ref_last_ds = ((EbPaReferenceObject*)pcs->ref_pa_pic_ptr_array[0][0]->object_ptr)
-                                                       ->sixteenth_downsampled_picture_ptr;
+                EbPictureBufferDesc* ref_last_ds  = ((EbPaReferenceObject*)pcs->ref_pa_pic_ptr_array[0][0]->object_ptr)
+                                                        ->sixteenth_downsampled_picture_ptr;
                 EbPictureBufferDesc* ref_last3_ds = ((EbPaReferenceObject*)pcs->ref_pa_pic_ptr_array[0][2]->object_ptr)
                                                         ->sixteenth_downsampled_picture_ptr;
-                uint64_t last_dist  = mrp_detector_hme_level0(pcs, ref_last_ds);
-                uint64_t last3_dist = mrp_detector_hme_level0(pcs, ref_last3_ds);
+                uint64_t             last_dist    = mrp_detector_hme_level0(pcs, ref_last_ds);
+                uint64_t             last3_dist   = mrp_detector_hme_level0(pcs, ref_last3_ds);
                 // Prune LAST3 when it is >= early_hme_l0_prune_th% worse than LAST.
                 if (last3_dist * 100 >= last_dist * mrp_ctrl->early_hme_l0_prune_th) {
                     pcs->ref_list0_count_try = MIN(pcs->ref_list0_count_try, 2);
@@ -4926,7 +4926,7 @@ static void init_pic_settings(SequenceControlSet* scs, PictureParentControlSet* 
     FrameHeader* frm_hdr        = &pcs->frm_hdr;
     pcs->allow_comp_inter_inter = pcs->slice_type != I_SLICE;
     frm_hdr->reference_mode     = pcs->slice_type == I_SLICE ? (ReferenceMode)0xFF
-            : svt_aom_is_incomp_mg_frame(pcs)                ? SINGLE_REFERENCE
+        : svt_aom_is_incomp_mg_frame(pcs)                    ? SINGLE_REFERENCE
                                                              : REFERENCE_MODE_SELECT;
 
     pcs->av1_cm->mi_cols = pcs->aligned_width >> MI_SIZE_LOG2;

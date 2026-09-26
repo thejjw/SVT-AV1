@@ -249,7 +249,7 @@ VARIANCE_WXH_NEON(128, 128, 14)
                                                           int            yoffset,    \
                                                           const uint8_t* ref,        \
                                                           int            ref_stride, \
-                                                          uint32_t*      sse) {           \
+                                                          uint32_t*      sse) {      \
         uint8_t tmp0[4 * (h + padding)];                                             \
         uint8_t tmp1[4 * h];                                                         \
         var_filter_block2d_bil_w4(src, tmp0, src_stride, 1, (h + padding), xoffset); \
@@ -297,7 +297,7 @@ static inline unsigned int var_w8_reduce(uint16x8_t src_sum, uint16x8_t ref_sum,
                                                                     int            shift,      \
                                                                     const uint8_t* ref,        \
                                                                     int64_t        ref_stride, \
-                                                                    unsigned int*  sse_out) {   \
+                                                                    unsigned int*  sse_out) {  \
         uint16x8_t src_sum = vdupq_n_u16(0);                                                   \
         uint16x8_t ref_sum = vdupq_n_u16(0);                                                   \
         uint32x4_t sse0    = vdupq_n_u32(0);                                                   \
@@ -326,7 +326,7 @@ FUSED_SUBPEL_VAR_8XH_X(6, load_interp_1_3_w8)
                                                                                         int            shift,      \
                                                                                         const uint8_t* ref,        \
                                                                                         int64_t        ref_stride, \
-                                                                                        unsigned int*  sse_out) {   \
+                                                                                        unsigned int*  sse_out) {  \
         uint16x8_t src_sum = vdupq_n_u16(0);                                                                       \
         uint16x8_t ref_sum = vdupq_n_u16(0);                                                                       \
         uint32x4_t sse0    = vdupq_n_u32(0);                                                                       \
@@ -446,7 +446,7 @@ static unsigned int sub_pixel_variance_8xh_neon(const uint8_t* src, int src_stri
                                                         int            yoffset,                           \
                                                         const uint8_t* ref,                               \
                                                         int            ref_stride,                        \
-                                                        unsigned int*  sse) {                              \
+                                                        unsigned int*  sse) {                             \
         return sub_pixel_variance_8xh_neon(src, src_stride, xoffset, yoffset, ref, ref_stride, (H), sse); \
     }
 
@@ -513,7 +513,7 @@ static inline int32_t var_wide_reduce(const uint16x8_t* src_sum, const uint16x8_
                                                                         int            shift,      \
                                                                         const uint8_t* ref,        \
                                                                         int64_t        ref_stride, \
-                                                                        unsigned int*  sse_out) {   \
+                                                                        unsigned int*  sse_out) {  \
         uint16x8_t src_sum[ACCUM(W)];                                                              \
         uint16x8_t ref_sum[ACCUM(W)];                                                              \
         uint32x4_t sse_lo[ACCUM(W)];                                                               \
@@ -562,7 +562,7 @@ static inline int32_t var_wide_reduce(const uint16x8_t* src_sum, const uint16x8_
                                                                                             int            shift,      \
                                                                                             const uint8_t* ref,        \
                                                                                             int64_t        ref_stride, \
-                                                                                            unsigned int*  sse_out) {   \
+                                                                                            unsigned int*  sse_out) {  \
         uint16x8_t src_sum[ACCUM(W)];                                                                                  \
         uint16x8_t ref_sum[ACCUM(W)];                                                                                  \
         uint32x4_t sse_lo[ACCUM(W)];                                                                                   \
@@ -622,7 +622,7 @@ static inline int32_t var_wide_reduce(const uint16x8_t* src_sum, const uint16x8_
                                                               const uint8_t* ref,                  \
                                                               int64_t        ref_stride,           \
                                                               unsigned int*  sse_out,              \
-                                                              unsigned int   offsets) {              \
+                                                              unsigned int   offsets) {            \
         const int  xoffset = offsets & 7;                                                          \
         const int  yoffset = (offsets >> 3) & 7;                                                   \
         uint16x8_t src_sum[ACCUM(W)];                                                              \
@@ -733,7 +733,7 @@ FUSED_SUBPEL_VARIANCE_WXH_FN_TABLE(128);
                                                             int            yoffset,                 \
                                                             const uint8_t* ref,                     \
                                                             int            ref_stride,              \
-                                                            unsigned int*  sse) {                    \
+                                                            unsigned int*  sse) {                   \
         if (xoffset == 0 && yoffset == 0) {                                                         \
             int sum;                                                                                \
             variance_##W##xh_neon(src, src_stride, ref, ref_stride, (H), sse, &sum);                \

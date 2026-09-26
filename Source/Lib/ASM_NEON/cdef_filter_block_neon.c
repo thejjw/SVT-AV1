@@ -1307,7 +1307,7 @@ static void cdef_filter_block_4xn_8_bounded_neon(uint8_t* dst, int32_t dstride, 
             (CACC) = constrain8x16(tap8, row8, (THR), (DAMP));                                         \
         } else {                                                                                       \
             av     = _rs ? vandq_u8((SGN) > 0 ? col16p[B] : col16n[B],                                 \
-                                bnd_row16_4(i, sub, (SGN) * dr_b[B], edge_top, edge_bottom, rows)) \
+                                    bnd_row16_4(i, sub, (SGN) * dr_b[B], edge_top, edge_bottom, rows)) \
                          : ((SGN) > 0 ? col16p[B] : col16n[B]);                                        \
             max8   = vmaxq_u8(max8, vandq_u8(tap8, av));                                               \
             min8   = vminq_u8(min8, vorrq_u8(tap8, vmvnq_u8(av)));                                     \
@@ -1382,7 +1382,7 @@ static void cdef_filter_block_4xn_8_bounded_neon(uint8_t* dst, int32_t dstride, 
             (CACC) = constrain8x16(tap8, row8, (THR), (DAMP));                                         \
         } else {                                                                                       \
             av     = _rs ? vandq_u8((SGN) > 0 ? col16p[B] : col16n[B],                                 \
-                                bnd_row16_2(i, sub, (SGN) * dr_b[B], edge_top, edge_bottom, rows)) \
+                                    bnd_row16_2(i, sub, (SGN) * dr_b[B], edge_top, edge_bottom, rows)) \
                          : ((SGN) > 0 ? col16p[B] : col16n[B]);                                        \
             max8   = vmaxq_u8(max8, vandq_u8(tap8, av));                                               \
             min8   = vminq_u8(min8, vorrq_u8(tap8, vmvnq_u8(av)));                                     \

@@ -477,7 +477,7 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     uint32_t tile_idx       = 0;
 
     uint32_t output_buffer_size   = svt_aom_get_out_buffer_size(init_data_ptr->picture_width,
-                                                              init_data_ptr->picture_height);
+                                                                init_data_ptr->picture_height);
     object_ptr->frame_width       = init_data_ptr->picture_width;
     object_ptr->frame_height      = init_data_ptr->picture_height;
     object_ptr->tile_row_count    = init_data_ptr->tile_row_count;
@@ -504,12 +504,12 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
     object_ptr->temp_lf_recon_pic                 = NULL;
     object_ptr->scaled_input_pic                  = NULL;
     bool enable_restoration                       = allintra
-                              ? svt_aom_get_enable_restoration_allintra(init_data_ptr->enc_mode,
+        ? svt_aom_get_enable_restoration_allintra(init_data_ptr->enc_mode,
                                                   init_data_ptr->static_config.enable_restoration_filtering)
-                              : rtc_tune ? svt_aom_get_enable_restoration_rtc(init_data_ptr->static_config.enable_restoration_filtering,
+        : rtc_tune ? svt_aom_get_enable_restoration_rtc(init_data_ptr->static_config.enable_restoration_filtering,
                                                         init_data_ptr->input_resolution,
                                                         init_data_ptr->static_config.fast_decode)
-                                         : svt_aom_get_enable_restoration_default(init_data_ptr->enc_mode,
+                   : svt_aom_get_enable_restoration_default(init_data_ptr->enc_mode,
                                                             init_data_ptr->static_config.enable_restoration_filtering,
                                                             init_data_ptr->input_resolution,
                                                             init_data_ptr->static_config.fast_decode);
@@ -1059,10 +1059,10 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
 
     object_ptr->disallow_4x4_all_frames = disallow_4x4;
     disallow_8x8                        = allintra ? MIN(disallow_8x8, svt_aom_get_disallow_8x8_allintra())
-                               : rtc_tune          ? MIN(disallow_8x8,
+        : rtc_tune ? MIN(disallow_8x8,
                          svt_aom_get_disallow_8x8_rtc(
                              init_data_ptr->enc_mode, init_data_ptr->picture_width, init_data_ptr->picture_height))
-                                                   : MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
+                   : MIN(disallow_8x8, svt_aom_get_disallow_8x8_default());
     object_ptr->disallow_8x8_all_frames = disallow_8x8;
     /* If 4x4 blocks are disallowed for all frames, the the MI blocks only need to be allocated for
     8x8 blocks.  The mi_grid will still be 4x4 so that the data can be accessed the same way throughout
@@ -1324,16 +1324,16 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
 
     EB_MALLOC_ARRAY(object_ptr->av1_cm->frame_to_show, 1);
 
-    object_ptr->av1_cm->use_highbitdepth                 = ((init_data_ptr->bit_depth > 8) ||
-                                            (SVT_EFFECTIVE_IS_16BIT_PIPELINE(init_data_ptr->is_16bit_pipeline)))
-                        ? 1
-                        : 0;
-    object_ptr->av1_cm->bit_depth                        = init_data_ptr->bit_depth;
-    object_ptr->av1_cm->color_format                     = init_data_ptr->color_format;
-    object_ptr->av1_cm->subsampling_x                    = subsampling_x;
-    object_ptr->av1_cm->subsampling_y                    = subsampling_y;
-    object_ptr->av1_cm->frm_size.frame_width             = init_data_ptr->picture_width - init_data_ptr->non_m8_pad_w;
-    object_ptr->av1_cm->frm_size.frame_height            = init_data_ptr->picture_height - init_data_ptr->non_m8_pad_h;
+    object_ptr->av1_cm->use_highbitdepth      = ((init_data_ptr->bit_depth > 8) ||
+                                                 (SVT_EFFECTIVE_IS_16BIT_PIPELINE(init_data_ptr->is_16bit_pipeline)))
+        ? 1
+        : 0;
+    object_ptr->av1_cm->bit_depth             = init_data_ptr->bit_depth;
+    object_ptr->av1_cm->color_format          = init_data_ptr->color_format;
+    object_ptr->av1_cm->subsampling_x         = subsampling_x;
+    object_ptr->av1_cm->subsampling_y         = subsampling_y;
+    object_ptr->av1_cm->frm_size.frame_width  = init_data_ptr->picture_width - init_data_ptr->non_m8_pad_w;
+    object_ptr->av1_cm->frm_size.frame_height = init_data_ptr->picture_height - init_data_ptr->non_m8_pad_h;
     object_ptr->av1_cm->frm_size.superres_upscaled_width = init_data_ptr->picture_width - init_data_ptr->non_m8_pad_w;
     ;
     object_ptr->av1_cm->frm_size.superres_upscaled_height = init_data_ptr->picture_height - init_data_ptr->non_m8_pad_h;

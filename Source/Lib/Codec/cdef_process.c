@@ -245,7 +245,7 @@ EbErrorType svt_aom_cdef_context_ctor(EbThreadContext* thread_ctx, const EbEncHa
 
     // Input/Output System Resource Manager FIFOs
     cdef_ctx->cdef_input_fifo_ptr  = svt_system_resource_get_consumer_fifo(enc_handle_ptr->dlf_results_resource_ptr,
-                                                                          index);
+                                                                           index);
     cdef_ctx->cdef_output_fifo_ptr = svt_system_resource_get_producer_fifo(enc_handle_ptr->cdef_results_resource_ptr,
                                                                            index);
 

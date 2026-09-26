@@ -482,11 +482,11 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
 
     // Alloc mds and pc_tree, which are used to track tested blocks in MD
     bool    disallow_4x4     = allintra ? svt_aom_get_disallow_4x4_allintra(enc_mode)
-               : rtc_tune               ? svt_aom_get_disallow_4x4_rtc()
+        : rtc_tune                      ? svt_aom_get_disallow_4x4_rtc()
                                         : svt_aom_get_disallow_4x4_default(enc_mode);
     bool    disallow_8x8     = allintra ? svt_aom_get_disallow_8x8_allintra()
-               : rtc_tune ? svt_aom_get_disallow_8x8_rtc(enc_mode, scs->max_input_luma_width, scs->max_input_luma_height)
-                          : svt_aom_get_disallow_8x8_default();
+        : rtc_tune ? svt_aom_get_disallow_8x8_rtc(enc_mode, scs->max_input_luma_width, scs->max_input_luma_height)
+                   : svt_aom_get_disallow_8x8_default();
     uint8_t min_bsize        = disallow_8x8 ? 16 : disallow_4x4 ? 8 : 4;
     int     blocks_per_depth = (sb_size / min_bsize) * (sb_size / min_bsize);
     int     blocks_to_alloc  = 0;
@@ -524,8 +524,8 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
             ci->max_height                  = blk_geom->bheight;
             ci->bit_depth                   = EB_THIRTYTWO_BIT;
             ci->color_format                = (blk_geom->bwidth > 4 && blk_geom->bheight > 4)
-                               ? EB_YUV420
-                               : EB_YUV444; // PW - must have at least 4x4 for chroma coeffs
+                ? EB_YUV420
+                : EB_YUV444; // PW - must have at least 4x4 for chroma coeffs
             ci->border                      = 0;
             ci->split_mode                  = false;
 
@@ -669,7 +669,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
 
     for (buffer_index = 0; buffer_index < ctx->max_nics_uv; ++buffer_index) {
         ctx->cand_bf_ptr_array[buffer_index] = &ctx->cand_bf_pool[buffer_index];
-        EbErrorType cbf_err                  = svt_aom_mode_decision_cand_bf_ctor(ctx->cand_bf_ptr_array[buffer_index],
+        EbErrorType cbf_err = svt_aom_mode_decision_cand_bf_ctor(ctx->cand_bf_ptr_array[buffer_index],
                                                                  &ctx->cand_pred_pool.descs[buffer_index],
                                                                  &ctx->cand_rec_coeff_pool.descs[buffer_index],
                                                                  &ctx->cand_quant_pool.descs[buffer_index],

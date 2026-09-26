@@ -328,8 +328,8 @@ static void av1_encode_loop(PictureControlSet* pcs, EncDecContext* ed_ctx, uint3
     const uint16_t tx_org_x = org_x - md_ctx->sb_origin_x;
     const uint16_t tx_org_y = org_y - md_ctx->sb_origin_y;
     const int32_t  seg_qp   = pcs->ppcs->frm_hdr.segmentation_params.segmentation_enabled
-           ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
-           : 0;
+        ? pcs->ppcs->frm_hdr.segmentation_params.feature_data[ed_ctx->blk_ptr->segment_id][SEG_LVL_ALT_Q]
+        : 0;
 
     uint32_t input_luma_offset, input_cb_offset, input_cr_offset;
     uint32_t pred_luma_offset, pred_cb_offset, pred_cr_offset;
@@ -915,8 +915,8 @@ static void perform_intra_coding_loop(PictureControlSet* pcs, EncDecContext* ed_
 
             // Copy neighbour arrays for intra prediction
             const PredictionMode mode              = (blk_ptr->block_mi.uv_mode == UV_CFL_PRED)
-                             ? (PredictionMode)UV_DC_PRED
-                             : (PredictionMode)blk_ptr->block_mi.uv_mode;
+                ? (PredictionMode)UV_DC_PRED
+                : (PredictionMode)blk_ptr->block_mi.uv_mode;
             const int            ang               = blk_ptr->block_mi.angle_delta[PLANE_TYPE_UV];
             const IntraSize      intra_size        = ang == 0 ? svt_aom_intra_unit[mode] : (IntraSize){2, 2};
             NeighborArrayUnit*   eb_uv_neigh_array = plane == 1 ? ep_cb_recon_na : ep_cr_recon_na;
@@ -1723,7 +1723,7 @@ static void update_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
         blk_ptr->av1xd->above_txfm_context = (TXFM_CONTEXT*)svt_aom_na_top_ptr_pu(pcs->ep_txfm_context_na[tile_idx],
                                                                                   ctx->blk_org_x);
         blk_ptr->av1xd->left_txfm_context  = (TXFM_CONTEXT*)svt_aom_na_left_ptr_pu(pcs->ep_txfm_context_na[tile_idx],
-                                                                                  ctx->blk_org_y);
+                                                                                   ctx->blk_org_y);
         svt_aom_tx_size_bits(pcs,
                              ctx->blk_ptr->segment_id,
                              md_ctx->md_rate_est_ctx,
@@ -1807,8 +1807,8 @@ static void encode_b(PictureControlSet* pcs, EncDecContext* ctx, BlkStruct* blk_
     be bypassed unless MD did not perform chroma (blk_skip_decision) or the block is an
     INTRA block (since the prediction at MD may not be conformant). */
     ctx->md_skip_blk         = md_ctx->blk_skip_decision
-                ? ((is_intra_mode(blk_ptr->block_mi.mode) || blk_ptr->block_has_coeff) ? 0 : 1)
-                : 0;
+        ? ((is_intra_mode(blk_ptr->block_mi.mode) || blk_ptr->block_has_coeff) ? 0 : 1)
+        : 0;
     blk_ptr->block_has_coeff = 0;
 
     if (is_inter_block(&blk_ptr->block_mi)) {

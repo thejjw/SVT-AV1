@@ -370,8 +370,8 @@ static inline void get_4_nz_map_contexts_hor(const uint8_t* levels, const int32_
                                              const ptrdiff_t* const offsets, uint8_t* coeff_contexts) {
     const int32_t    stride                         = 4 + TX_PAD_HOR;
     const int32_t    sig_coef_contexts_2d_x4_051010 = (SIG_COEF_CONTEXTS_2D + ((SIG_COEF_CONTEXTS_2D + 5) << 8) +
-                                                    ((SIG_COEF_CONTEXTS_2D + 10) << 16) +
-                                                    ((SIG_COEF_CONTEXTS_2D + 10) << 24));
+                                                       ((SIG_COEF_CONTEXTS_2D + 10) << 16) +
+                                                       ((SIG_COEF_CONTEXTS_2D + 10) << 24));
     const uint8x16_t pos_to_offset                  = vreinterpretq_u8_u32(vdupq_n_u32(sig_coef_contexts_2d_x4_051010));
 
     uint8x16_t count;

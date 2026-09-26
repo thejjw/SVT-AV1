@@ -210,7 +210,7 @@ static void create_me_context_and_picture_control(MotionEstimationContext_t* me_
     // set reference picture for alt-refs
     me_context_ptr->me_ctx->alt_ref_reference_ptr = (EbPaReferenceObject*)
                                                         picture_control_set_ptr_frame->pa_ref_pic_wrapper->object_ptr;
-    me_context_ptr->me_ctx->me_type = ME_MCTF;
+    me_context_ptr->me_ctx->me_type               = ME_MCTF;
 
     // set the buffers with the original, quarter and sixteenth pixels version of the source frame
     EbPaReferenceObject* src_object     = (EbPaReferenceObject*)centre_pcs->pa_ref_pic_wrapper->object_ptr;
@@ -598,11 +598,11 @@ static inline void svt_av1_calculate_decay_factor(uint32_t* tf_decay_factor_fp16
         *n_decay_fp10 = (decay_control_cu * (const_0dot7_fp16 + noise_levels_log1p_fp16[PLANE_U])) / ((int32_t)1 << 6);
         *(tf_decay_factor_fp16 +
           PLANE_U)    = (uint32_t)((((((int64_t)*n_decay_fp10) * ((int64_t)*n_decay_fp10))) * q_decay_fp8) >>
-                                shift_factor);
+                                   shift_factor);
         *n_decay_fp10 = (decay_control_cv * (const_0dot7_fp16 + noise_levels_log1p_fp16[PLANE_V])) / ((int32_t)1 << 6);
         *(tf_decay_factor_fp16 +
           PLANE_V)    = (uint32_t)((((((int64_t)*n_decay_fp10) * ((int64_t)*n_decay_fp10))) * q_decay_fp8) >>
-                                shift_factor);
+                                   shift_factor);
     }
 }
 
@@ -1159,21 +1159,21 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[1] = (((sum << 4) / bw_half) << 4) / bh_half;
     sum                      = calculate_squared_errors_sum_highbd(y_src + y_src_stride * (bh_half),
-                                              y_src_stride,
-                                              y_pre + y_pre_stride * (bh_half),
-                                              y_pre_stride,
-                                              bw_half,
-                                              bh_half,
-                                              shift_factor);
+                                                                   y_src_stride,
+                                                                   y_pre + y_pre_stride * (bh_half),
+                                                                   y_pre_stride,
+                                                                   bw_half,
+                                                                   bh_half,
+                                                                   shift_factor);
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[2] = (((sum << 4) / bw_half) << 4) / bh_half;
     sum                      = calculate_squared_errors_sum_highbd(y_src + y_src_stride * (bh_half) + bw_half,
-                                              y_src_stride,
-                                              y_pre + y_pre_stride * (bh_half) + bw_half,
-                                              y_pre_stride,
-                                              bw_half,
-                                              bh_half,
-                                              shift_factor);
+                                                                   y_src_stride,
+                                                                   y_pre + y_pre_stride * (bh_half) + bw_half,
+                                                                   y_pre_stride,
+                                                                   bw_half,
+                                                                   bh_half,
+                                                                   shift_factor);
     FP_ASSERT(sum <= (1 << (26)));
     window_error_quad_fp8[3] = (((sum << 4) / bw_half) << 4) / bh_half;
 
@@ -1730,11 +1730,11 @@ static void tf_64x64_sub_pel_search(PictureParentControlSet* pcs, MeContext* me_
     // Set the starting MV and distortion
     me_ctx->tf_64x64_block_error = INT_MAX;
     me_ctx->tf_64x64_mv_x        = (me_ctx->tf_use_pred_64x64_only_th == (uint8_t)~0)
-               ? me_ctx->search_results[0][0].hme_sc_x * 8
-               : (_MVXT(me_ctx->p_best_mv64x64[0])) * 8;
+        ? me_ctx->search_results[0][0].hme_sc_x * 8
+        : (_MVXT(me_ctx->p_best_mv64x64[0])) * 8;
     me_ctx->tf_64x64_mv_y        = (me_ctx->tf_use_pred_64x64_only_th == (uint8_t)~0)
-               ? me_ctx->search_results[0][0].hme_sc_y * 8
-               : (_MVYT(me_ctx->p_best_mv64x64[0])) * 8;
+        ? me_ctx->search_results[0][0].hme_sc_y * 8
+        : (_MVYT(me_ctx->p_best_mv64x64[0])) * 8;
 
     TF_SUBPEL_SEARCH_PARAMS tf_sp_param;
     tf_sp_param.subsampling_shift = pcs->tf_ctrls.sub_sampling_shift;

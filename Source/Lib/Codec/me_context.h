@@ -413,23 +413,23 @@ typedef struct MeContext {
     SearchInfo  prehme_data[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SEARCH_REGION_COUNT];
     PreHmeCtrls prehme_ctrl;
     int16_t     x_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t y_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    uint64_t hme_level0_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                           [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t x_hme_level1_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t y_hme_level1_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    uint64_t hme_level1_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                           [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t x_hme_level2_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    int16_t y_hme_level2_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                                      [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
-    uint64_t hme_level2_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
-                           [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    int16_t     y_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    uint64_t    hme_level0_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                              [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    int16_t     x_hme_level1_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    int16_t     y_hme_level1_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    uint64_t    hme_level1_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                              [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    int16_t     x_hme_level2_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    int16_t     y_hme_level2_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                                          [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+    uint64_t    hme_level2_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT]
+                              [EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     // ------- Context for Alt-Ref ME ------
     void* alt_ref_reference_ptr;
     // Open Loop ME
