@@ -1179,13 +1179,13 @@ void svt_av1_intrabc_hash_search(PictureControlSet* pcs, IntraBcContext* x, Bloc
         return;
     }
 
-    Iterator iterator = svt_av1_hash_get_first_iterator(ref_frame_hash, hash_value1);
+    const BlockHash* cands = svt_av1_hash_get_first(ref_frame_hash, hash_value1);
 
     const int mi_col = x_pos / MI_SIZE;
     const int mi_row = y_pos / MI_SIZE;
 
-    for (int i = 0; i < count; i++, svt_aom_iterator_increment(&iterator)) {
-        BlockHash ref_block_hash = *(BlockHash*)(svt_aom_iterator_get(&iterator));
+    for (int i = 0; i < count; i++) {
+        const BlockHash ref_block_hash = cands[i];
 
         if (hash_value2 != ref_block_hash.hash_value2) {
             continue;
