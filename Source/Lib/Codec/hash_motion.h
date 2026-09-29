@@ -40,11 +40,11 @@ typedef struct HashTable {
     uint32_t   entries_capacity;
 } HashTable;
 
-void        svt_av1_hash_table_destroy(HashTable* p_hash_table);
-EbErrorType svt_aom_rtime_alloc_svt_av1_hash_table_create(HashTable* p_hash_table);
-int32_t     svt_av1_hash_table_count(const HashTable* p_hash_table, uint32_t hash_value);
+void             svt_av1_hash_table_destroy(HashTable* p_hash_table);
+EbErrorType      svt_aom_rtime_alloc_svt_av1_hash_table_create(HashTable* p_hash_table);
+int32_t          svt_av1_hash_table_count(const HashTable* p_hash_table, uint32_t hash_value);
 const BlockHash* svt_av1_hash_get_first(const HashTable* p_hash_table, uint32_t hash_value);
-void        svt_av1_generate_block_2x2_hash_value(const Yv12BufferConfig* picture, uint32_t* pic_block_hash);
+void             svt_av1_generate_block_2x2_hash_value(const Yv12BufferConfig* picture, uint32_t* pic_block_hash);
 
 void svt_av1_generate_block_hash_value(const Yv12BufferConfig* picture, int block_size, uint32_t* src_pic_block_hash,
                                        uint32_t* dst_pic_block_hash);
