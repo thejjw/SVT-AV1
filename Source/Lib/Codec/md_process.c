@@ -224,6 +224,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
     uint32_t   buffer_index;
     uint32_t   cand_index;
 
+    ctx->intrabc_last_dv.as_int = 0; // no last DV yet (seeds the RTC IntraBC BVP fallback)
     ctx->init_max_block_cnt     = max_block_cnt;
     uint32_t block_max_count_sb = max_block_cnt;
 
@@ -769,6 +770,9 @@ void svt_aom_reset_mode_decision(SequenceControlSet* scs, ModeDecisionContext* c
     ctx->hbd_md = SVT_EFFECTIVE_HBD_MD(pcs->hbd_md);
     // Reset MD rate Estimation table to initial values by copying from md_rate_est_ctx
     ctx->md_rate_est_ctx = pcs->md_rate_est_ctx;
+    // Segments are dispatched to EncDec threads dynamically; scoping the last DV to the segment keeps
+    // the BVP fallback independent of the SB->thread mapping (deterministic at any --lp).
+    ctx->intrabc_last_dv.as_int = 0;
     // Reset CABAC Contexts
 
     // Reset Neighbor Arrays at start of new Segment / Picture
