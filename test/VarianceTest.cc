@@ -32,6 +32,7 @@
 #include "util.h"
 #include "gtest/gtest.h"
 #include "utility.h"
+#include "svt_time.h"
 
 using svt_av1_test_tool::SVTRandom;  // to generate the random
 namespace {
@@ -784,6 +785,64 @@ TEST_P(SubpelVarianceTest, Ref) {
 }
 TEST_P(SubpelVarianceTest, ExtremeRef) {
     ExtremeRefTest();
+}
+
+TEST_P(SubpelVarianceTest, DISABLED_Speed) {
+#if ARCH_AARCH64
+    svt_aom_setup_rtcd_internal(EB_CPU_FLAGS_NEON);
+#endif
+    SVTRandom rnd_(0, mask);
+    if (!use_high_bit_depth) {
+        for (int j = 0; j < block_size; j++)
+            src_[j] = rnd_.Rand8();
+        for (int j = 0; j < block_size + width + height + 1; j++)
+            ref_[j] = rnd_.Rand8();
+    } else {
+        for (int j = 0; j < block_size; j++)
+            CONVERT_TO_SHORTPTR(src_)[j] = rnd_.Rand16() & mask;
+        for (int j = 0; j < block_size + width + height + 1; j++)
+            CONVERT_TO_SHORTPTR(ref_)[j] = rnd_.Rand16() & mask;
+    }
+    const int num_loops = (1 << 26) / block_size;
+    // x_offset 0 and 4 have dedicated paths, so time them separately from
+    // the general bilinear offsets.
+    const char *const names[3] = {"0/4", "mixed", "bilinear"};
+    for (int kind = 0; kind < 3; ++kind) {
+        double time_ref = 0, time_tst = 0;
+        unsigned int sse1 = 0, sse2 = 0, var1 = 0, var2 = 0;
+        for (int x = 0; x < 8; ++x) {
+            for (int y = 0; y < 8; ++y) {
+                const int x_special = x == 0 || x == 4;
+                const int y_special = y == 0 || y == 4;
+                const int this_kind = x_special && y_special     ? 0
+                                      : (x_special || y_special) ? 1
+                                                                 : 2;
+                if (this_kind != kind)
+                    continue;
+                uint64_t start_s, start_us, end_s, end_us;
+                svt_av1_get_time(&start_s, &start_us);
+                for (int i = 0; i < num_loops; ++i)
+                    var1 += func_ref(ref_, width + 1, x, y, src_, width, &sse1);
+                svt_av1_get_time(&end_s, &end_us);
+                time_ref += svt_av1_compute_overall_elapsed_time_ms(
+                    start_s, start_us, end_s, end_us);
+                svt_av1_get_time(&start_s, &start_us);
+                for (int i = 0; i < num_loops; ++i)
+                    var2 += func_tst(ref_, width + 1, x, y, src_, width, &sse2);
+                svt_av1_get_time(&end_s, &end_us);
+                time_tst += svt_av1_compute_overall_elapsed_time_ms(
+                    start_s, start_us, end_s, end_us);
+            }
+        }
+        EXPECT_EQ(var1, var2);
+        printf("%3dx%-3d %-8s ref %8.2f ms  tst %8.2f ms  (%5.2fx)\n",
+               width,
+               height,
+               names[kind],
+               time_ref,
+               time_tst,
+               time_ref / time_tst);
+    }
 }
 
 #ifdef ARCH_X86_64
