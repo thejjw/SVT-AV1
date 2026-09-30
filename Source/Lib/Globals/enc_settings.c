@@ -218,6 +218,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         return_error = EB_ErrorBadParameter;
     }
 
+    if (config->tier > 1) {
+        SVT_ERROR("Tier must be 0 (Main) or 1 (High)\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
     if (scs->max_input_luma_width > 16384) {
         SVT_ERROR("Source Width must be less than or equal to 16384\n");
         return_error = EB_ErrorBadParameter;
