@@ -147,10 +147,11 @@ class CodingOptionTest : public SvtAv1E2ETestFramework {
             << "config profile: " << config->profile << "got "
             << stream_info->profile;
 
-        if (config->level >= 40)
+        if (config->level >= 40) {
             EXPECT_EQ(config->tier, stream_info->tier)
                 << "config tier: " << config->tier << " got "
                 << stream_info->tier;
+        }
 
         // Verify bit depth
         EXPECT_EQ(config->encoder_bit_depth, stream_info->bit_depth)
