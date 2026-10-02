@@ -767,6 +767,7 @@ ConfigDescription config_entry_global_options[] = {
      "Color format, only yuv420 is supported at this time, default is 1 [0: yuv400, 1: yuv420, 2: "
      "yuv422, 3: yuv444]"},
     {PROFILE_TOKEN, "Bitstream profile, default is 0 [0: main, 1: high, 2: professional]"},
+    {TIER_TOKEN, "Bitstream tier, default is 0 [0: main, 1: high]"},
     {LEVEL_TOKEN,
      "Bitstream level, defined in A.3 of the av1 spec, default is 0 [0: autodetect from input, "
      "2.0-7.3]"},

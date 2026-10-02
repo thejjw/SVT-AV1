@@ -471,6 +471,7 @@ void SequenceHeaderParser::input_obu_data(const uint8_t *obu_data,
 
         // update stream info
         stream_info->profile = seg_header.seq_profile;
+        stream_info->tier = seg_header.operating_point[0].seq_tier;
         stream_info->still_pic = seg_header.still_picture == 1;
         stream_info->sb_size = sb_size_;
         stream_info->force_integer_mv = seg_header.seq_force_integer_mv;
