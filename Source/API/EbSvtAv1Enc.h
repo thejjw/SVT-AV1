@@ -329,12 +329,13 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is MAIN_PROFILE.
      */
     EbAv1SeqProfile profile;
-    /* Constraints for bitstream in terms of max bitrate and max buffer size.
+    /**
+     * @brief Bitstream tier.
+     * 0: Main tier, for most applications.
+     * 1: High tier, for demanding applications.
      *
-     * 0 = Main, for most applications.
-     * 1 = High, for demanding applications.
-     *
-     * Default is 0. */
+     * Default is Main tier (0).
+     */
     uint32_t tier;
     /**
      * @brief Bitstream level.
