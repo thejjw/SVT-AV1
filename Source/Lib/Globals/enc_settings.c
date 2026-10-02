@@ -219,7 +219,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
     }
 
     if (config->tier > 1) {
-        SVT_ERROR("Tier must be 0 (Main) or 1 (High)\n");
+        SVT_ERROR("Tier must be 0 (Main tier) or 1 (High tier)\n");
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1125,12 +1125,17 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
 }
 
 static const char* tier_to_str(unsigned in) {
-    if (!in) {
-        return "(auto)";
+    switch (in) {
+    case 0:
+        return "Main";
+    case 1:
+        return "High";
+    default: {
+        static char ret[11];
+        snprintf(ret, sizeof(ret), "%u", in);
+        return ret;
     }
-    static char ret[11];
-    snprintf(ret, 11, "%u", in);
-    return ret;
+    }
 }
 
 static const char* level_to_str(unsigned in) {
