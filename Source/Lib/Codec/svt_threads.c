@@ -319,7 +319,14 @@ EbHandle svt_create_semaphore(uint32_t initial_count, uint32_t max_count) {
                                                  NULL); // semaphore is not named
 #elif defined(__APPLE__)
     UNUSED(max_count);
-    semaphore_handle = (EbHandle)dispatch_semaphore_create(initial_count);
+    // libdispatch traps when a semaphore is freed with a lower count than it was
+    // created with, and the encoder can end a stream one count short (#2251).
+    // Start at 0 and signal up to the initial count, so only the count matters,
+    // as on the other platforms.
+    semaphore_handle = (EbHandle)dispatch_semaphore_create(0);
+    for (uint32_t i = 0; semaphore_handle != NULL && i < initial_count; i++) {
+        dispatch_semaphore_signal((dispatch_semaphore_t)semaphore_handle);
+    }
 #else
     UNUSED(max_count);
 
