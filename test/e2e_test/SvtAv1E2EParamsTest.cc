@@ -85,6 +85,9 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     // test intra period length
     {"IntraPeriodTest1", {{"IntraPeriod", "3"}}, default_test_vectors},
 
+    // test fine-grained ROI map block size
+    {"RoiMapBlockSizeTest", {{"RoiMapBlockSize", "16"}}, dummy_test_vectors},
+
     // test different qp
     {"QpTest1",
      {{"RateControlMode", "0"}, {"QP", "20"}}, default_test_vectors},
