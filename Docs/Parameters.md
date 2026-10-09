@@ -127,6 +127,7 @@ For more information on valid values for specific keys, refer to the [EbEncSetti
 | **MaxChromaQmLevel**             | --chroma-qm-max                  | [0-15]     | 15          | Max chroma quant matrix flatness                                                                                                                     |
 | **LambdaScaleFactors**           | --lambda-scale-factors           | [0- ]      | '128,.,128' | list of scale factors for lambda values used for different SvtAv1FrameUpdateType, separated by `,` divide by 128 is the actual scale factor in float |
 | **RoiMapFile**                   | --roi-map-file                   | any string | Null        | Path to a file containing picture based QP offset map                                                                                                |
+| **RoiMapBlockSize**               | --roi-map-block-size              | 16 or 64   | 64          | Width and height in pixels of each ROI map entry                                                                                                    |
 | **TemporalFilteringStrength**    | --tf-strength                    | [0-4]      | 3           | Manually adjust temporal filtering strength. Higher values = stronger temporal filtering                                                             |
 | **LuminanceQpBias**              | --luminance-qp-bias              | [0-100]    | 0           | Adjusts a frame's QP based on its average luma value                                                                                                 |
 | **Sharpness**                    | --sharpness                      | [-7-7]     | 0           | Bias towards decreased/increased sharpness                                                                                                           |
@@ -217,12 +218,15 @@ In some applications such as AR / VR, identifying the ROI (Region Of Interest) h
 usage where it's needed. This is realized by allowing applications to pass a picture based ROI map to the encoder.
 
 The QP Offset Map file contains one or more picture based QP offset maps. Every line consists of a frame number and
-the QP offsets for each 64x64 block set in a row-by-row order. Below is an example ROI map file for a 352x288 content:
+the QP offsets for each ROI block set in a row-by-row order. Each offset must be in [-255, 255], and each line
+contains `ceil(width / block-size) * ceil(height / block-size)` offsets after the frame number. The default block
+size is 64x64; set `--roi-map-block-size 16` to provide finer 16x16 maps. Below is an example ROI map file for a
+352x288 content using the default block size:
 ```bash
 0 12 -32 -32 -32 -32 -32 12 -32 -32 -32 -32 -32 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16
 ```
 
-The encoder uses alternate quantizer segment feature to set block level qindex and uses alternate loop filter segment feature to set loop filter strength level.
+The encoder uses alternate quantizer segment feature to set block level qindex and uses alternate loop filter segment feature to set loop filter strength level. AV1 supports at most eight segment QP offsets per frame. If the map contains more than eight distinct offsets, SVT-AV1 groups map entries by population and uses each group's weighted median offset as its segment value.
 When both AQ mode 1 (variance base adaptive QP) and ROI are enabled, segment QP is decided by ROI map instead of by variance.
 
 An example command line is:
