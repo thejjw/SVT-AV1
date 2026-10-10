@@ -744,9 +744,7 @@ static const vector<uint32_t> valid_tier = {
     1,
 };
 static const vector<uint32_t> invalid_tier = {
-    /* tier override in code
     2,
-    */
 };
 
 /* Constraints for Bitstream in terms of max bitrate and max buffer size.

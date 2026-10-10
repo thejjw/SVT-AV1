@@ -99,6 +99,7 @@ class RefDecoder {
     typedef struct StreamInfo {
         std::vector<int> frame_type_list;
         uint32_t profile;
+        uint32_t tier;
         int monochrome;  // Monochorme video
         VideoColorFormat format;
         uint32_t bit_depth;
@@ -138,6 +139,7 @@ class RefDecoder {
         int frame_id_numbers_present_flag;
         StreamInfo() {
             format = IMG_FMT_420;
+            tier = 0;
             tile_rows = 0;
             tile_cols = 0;
             min_block_size = 128;

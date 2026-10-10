@@ -229,7 +229,7 @@ static void set_bitstream_level_tier(SequenceControlSet* scs) {
     }
     for (int32_t i = 0; i < MAX_NUM_OPERATING_POINTS; ++i) {
         scs->level[i]                               = bl;
-        scs->seq_header.operating_point[i].seq_tier = 0; // setting main tier by default
+        scs->seq_header.operating_point[i].seq_tier = bl.major > 3 ? scs->static_config.tier : 0;
     }
 }
 
