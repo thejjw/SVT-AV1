@@ -212,7 +212,8 @@ static int16_t roi_map_weighted_median(const size_t histogram[511], int low, int
 
 static EbErrorType parse_rio_map_file(EbConfig* app_cfg) {
     enum { MAX_SEGMENTS = 8 };
-    FILE*         file         = app_cfg->roi_map_file;
+
+    FILE* file = app_cfg->roi_map_file;
     if (file == NULL) {
         return EB_ErrorBadParameter;
     }
@@ -226,9 +227,9 @@ static EbErrorType parse_rio_map_file(EbConfig* app_cfg) {
     // One ROI event per line. The event is in below format
     // <pic_num> <qp_offset> <qp_offset> ... <qp_offset>\n
     // qp_offset range -255 ~ 255
-    EbErrorType      ret      = EB_ErrorNone;
-    SvtAv1RoiMap*    roi_map  = calloc(1, sizeof(*app_cfg->roi_map));
-    SvtAv1RoiMapEvt* last_evt = NULL;
+    EbErrorType      ret         = EB_ErrorNone;
+    SvtAv1RoiMap*    roi_map     = calloc(1, sizeof(*app_cfg->roi_map));
+    SvtAv1RoiMapEvt* last_evt    = NULL;
     const size_t     map_columns = (app_cfg->config.source_width + block_size - 1) / block_size;
     const size_t     map_rows    = (app_cfg->config.source_height + block_size - 1) / block_size;
     const size_t     map_num     = map_columns * map_rows;

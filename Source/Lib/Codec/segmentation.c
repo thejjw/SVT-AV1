@@ -94,14 +94,14 @@ static void roi_map_apply_segmentation_based_quantization(PictureControlSet* pcs
     const int              map_columns         = (scs->max_input_luma_width + map_block_size - 1) / map_block_size;
     const int              map_rows            = (scs->max_input_luma_height + map_block_size - 1) / map_block_size;
     uint8_t                segment_id          = MAX_SEGMENTS;
-    const int blk_org_x = sb_ptr->org_x + org_x;
-    const int blk_org_y = sb_ptr->org_y + org_y;
-    const int bwidth    = block_size_wide[bsize];
-    const int bheight   = block_size_high[bsize];
-    const int first_col = blk_org_x / map_block_size;
-    const int first_row = blk_org_y / map_block_size;
-    const int last_col  = MIN((blk_org_x + bwidth - 1) / map_block_size, map_columns - 1);
-    const int last_row  = MIN((blk_org_y + bheight - 1) / map_block_size, map_rows - 1);
+    const int              blk_org_x           = sb_ptr->org_x + org_x;
+    const int              blk_org_y           = sb_ptr->org_y + org_y;
+    const int              bwidth              = block_size_wide[bsize];
+    const int              bheight             = block_size_high[bsize];
+    const int              first_col           = blk_org_x / map_block_size;
+    const int              first_row           = blk_org_y / map_block_size;
+    const int              last_col            = MIN((blk_org_x + bwidth - 1) / map_block_size, map_columns - 1);
+    const int              last_row            = MIN((blk_org_y + bheight - 1) / map_block_size, map_rows - 1);
     for (int row = first_row; row <= last_row; ++row) {
         for (int column = first_col; column <= last_col; ++column) {
             segment_id = MIN(segment_id, roi_map->b64_seg_map[row * map_columns + column]);
