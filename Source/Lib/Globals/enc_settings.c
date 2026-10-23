@@ -186,6 +186,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             (unsigned)config->sframe_posi.sframe_num);
         return_error = EB_ErrorBadParameter;
     }
+    if (scs->allintra && (config->sframe_dist > 0 || config->sframe_posi.sframe_posis)) {
+        SVT_ERROR("Switch frames are not supported with all-intra or AVIF coding\n");
+        return_error = EB_ErrorBadParameter;
+    }
     // Runtime MG-size change: ABI cap, restricted to where MG_SIZE_CHANGE_EVENT
     // is accepted, and never below the level count already configured.
     if (config->max_hierarchical_levels > 2) {
@@ -489,12 +493,42 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         SVT_ERROR("Invalid adaptive quantization (AQ) mode. AQ mode must be [0-2]\n");
         return_error = EB_ErrorBadParameter;
     }
+#if SVT_RTC_OR_MOBILE_BUILD
+    // RTC and MOBILE builds code the MD decisions without the EncDec pass (encode_b()): reject what turns the bypass
+    // off, segmentation (AQ mode 1, ROI maps) and 10-bit input at M7 (svt_aom_get_bypass_encdec_rtc()).
+    if (config->aq_mode == 1 || config->enable_roi_map) {
+        SVT_ERROR("AQ mode 1 and ROI maps (segmentation) are not supported by this build\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (SVT_EFFECTIVE_BIT_DEPTH(config->encoder_bit_depth) > 8 && config->enc_mode <= ENC_M7) {
+        SVT_ERROR("10-bit input at presets 7 and below is not supported by this build\n");
+        return_error = EB_ErrorBadParameter;
+    }
+#endif
 
     if ((SVT_EFFECTIVE_BIT_DEPTH(config->encoder_bit_depth) != 8) &&
         (SVT_EFFECTIVE_BIT_DEPTH(config->encoder_bit_depth) != 10)) {
         SVT_ERROR("Encoder Bit Depth shall be only 8 or 10 \n");
         return_error = EB_ErrorBadParameter;
     }
+#if !CONFIG_ENABLE_HIGH_BIT_DEPTH
+    if (config->encoder_bit_depth != 8) {
+        SVT_ERROR("Encoder bit depth %u is not supported by this 8-bit build\n", config->encoder_bit_depth);
+        return_error = EB_ErrorBadParameter;
+    }
+#endif
+#if !CONFIG_ENABLE_LOSSLESS
+    if (config->lossless) {
+        SVT_ERROR("Lossless coding is not supported by this build\n");
+        return_error = EB_ErrorBadParameter;
+    }
+#else
+    // RTC coding is not lossless at M9 and has no 8x8 blocks at M10+, which lossless frames need.
+    if (config->lossless && SVT_RTC_TUNE(scs)) {
+        SVT_ERROR("Lossless coding is not supported in RTC mode\n");
+        return_error = EB_ErrorBadParameter;
+    }
+#endif
     // Check if the EncoderBitDepth is conformant with the Profile constraint
     if ((config->profile == 0 || config->profile == 1) && SVT_EFFECTIVE_BIT_DEPTH(config->encoder_bit_depth) > 10) {
         SVT_ERROR("The encoder bit depth shall be equal to 8 or 10 for Main/High Profile\n");
@@ -717,6 +751,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
 
     if (config->intra_refresh_type != 2 && pass > 0) {
         SVT_ERROR("Multi-pass encode only supports closed-gop configurations.\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (config->intra_refresh_type == SVT_AV1_FWDKF_REFRESH && config->rate_control_mode == SVT_AV1_RC_MODE_CBR) {
+        SVT_ERROR("Forward key frames (intra refresh type 1) are not supported with CBR.\n");
         return_error = EB_ErrorBadParameter;
     }
     if (config->pass > 1 && config->rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF) {

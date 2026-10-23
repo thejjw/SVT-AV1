@@ -1675,6 +1675,11 @@ static void svt_aom_set_dlf_controls(PictureParentControlSet* pcs, uint8_t dlf_l
 
 static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
     IntrabcCtrls* intrabc_ctrls = &pcs->intrabc_ctrls;
+#if !CONFIG_ENABLE_INTRA_BC
+    // IntraBC is compiled out (block_structures.h folds use_intrabc to 0): never signal allow_intrabc, which
+    // would also turn off deblocking, CDEF and restoration for the frame (RTC sets it on screen content).
+    ibc_level = 0;
+#endif
 
     // Defaults for the clean-room RTC knobs; only the dedicated RTC level overrides them.
     intrabc_ctrls->pred_first      = 0;
@@ -1901,6 +1906,11 @@ static void set_intrabc_level(PictureParentControlSet* pcs, uint8_t ibc_level) {
 */
 static void set_palette_level(PictureParentControlSet* pcs, uint8_t palette_level) {
     PaletteCtrls* palette_ctrls = &pcs->palette_ctrls;
+#if !CONFIG_ENABLE_PALETTE
+    // Palette is compiled out (svt_aom_allow_palette() folds to 0, so no palette syntax is written): a nonzero level
+    // would signal allow_screen_content_tools, and the decoder would read palette flags the stream lacks.
+    pcs->palette_level = palette_level = 0;
+#endif
 
     switch (palette_level) {
     case 0:
@@ -3912,9 +3922,14 @@ static void md_subpel_pme_controls(ModeDecisionContext* ctx, uint8_t md_subpel_p
 /*
  * Control RDOQ
  */
-static void set_rdoq_controls(ModeDecisionContext* ctx, uint8_t rdoq_level) {
+static void set_rdoq_controls(PictureControlSet* pcs, ModeDecisionContext* ctx, uint8_t rdoq_level) {
     RdoqCtrls* rdoq_ctrls = &ctx->rdoq_ctrls;
 
+    // Lossless frames are not quantized: turn RDOQ off here, once per call, rather than per transform block in
+    // svt_aom_quantize_inv_quantize(), the only reader of rdoq_ctrls.enabled.
+    if (svt_av1_is_lossless_segment(pcs, 0)) {
+        rdoq_level = 0;
+    }
     switch (rdoq_level) {
     case 0:
         rdoq_ctrls->enabled = 0;
@@ -5070,6 +5085,10 @@ void svt_aom_set_nsq_geom_ctrls(ModeDecisionContext* ctx, uint8_t nsq_geom_level
         assert(0);
         break;
     }
+#if !CONFIG_ENABLE_HV4
+    // The vertical 1:4 transforms are compiled out in this build: catch any preset that allows HV4.
+    assert(!nsq_geom_ctrls->allow_HV4);
+#endif
 
     if (allow_HVA_HVB) {
         *allow_HVA_HVB = nsq_geom_ctrls->allow_HVA_HVB;
@@ -7280,7 +7299,8 @@ void svt_aom_sig_deriv_enc_dec_common(SequenceControlSet* scs, PictureControlSet
         set_lpd1_ctrls(ctx, pcs->pic_lpd1_lvl);
     } else {
         int lpd1_lvl = pcs->pic_lpd1_lvl;
-        if (pcs->slice_type != I_SLICE) {
+        // Lossless frames keep light PD1 off (set in md_config_process): it does not code the 4x4 WHT.
+        if (pcs->slice_type != I_SLICE && !pcs->ppcs->frm_hdr.coded_lossless) {
             int me_8x8 = pcs->ppcs->me_8x8_cost_variance[ctx->sb_index];
             int th     = enc_mode <= ENC_M8 ? 3 * ctx->qp_index : 3000;
             if (lpd1_lvl == 0) {
@@ -7601,7 +7621,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd1_default(PictureControlSet* pcs, ModeDec
             rdoq_level = MAX(rdoq_level, pcs->rdoq_level);
         }
     }
-    set_rdoq_controls(ctx, rdoq_level);
+    set_rdoq_controls(pcs, ctx, rdoq_level);
 
     set_coeff_shaving_controls(ctx, pcs->coeff_shaving_level);
 
@@ -7789,7 +7809,7 @@ void svt_aom_sig_deriv_enc_dec_light_pd1_rtc(PictureControlSet* pcs, ModeDecisio
             rdoq_level = MAX(rdoq_level, pcs->rdoq_level);
         }
     }
-    set_rdoq_controls(ctx, rdoq_level);
+    set_rdoq_controls(pcs, ctx, rdoq_level);
 
     set_coeff_shaving_controls(ctx, pcs->coeff_shaving_level);
 
@@ -8003,7 +8023,7 @@ void svt_aom_sig_deriv_enc_dec_default(PictureControlSet* pcs, ModeDecisionConte
     }
 
     uint8_t rdoq_level = pcs->rdoq_level;
-    set_rdoq_controls(ctx, rdoq_level);
+    set_rdoq_controls(pcs, ctx, rdoq_level);
 
     uint8_t coeff_shaving_level = pcs->coeff_shaving_level;
     set_coeff_shaving_controls(ctx, coeff_shaving_level);
@@ -8120,7 +8140,7 @@ void svt_aom_sig_deriv_enc_dec_rtc(PictureControlSet* pcs, ModeDecisionContext* 
     }
 
     uint8_t rdoq_level = pcs->rdoq_level;
-    set_rdoq_controls(ctx, rdoq_level);
+    set_rdoq_controls(pcs, ctx, rdoq_level);
 
     uint8_t coeff_shaving_level = pcs->coeff_shaving_level;
     set_coeff_shaving_controls(ctx, coeff_shaving_level);
@@ -8231,7 +8251,7 @@ void svt_aom_sig_deriv_enc_dec_allintra(PictureControlSet* pcs, ModeDecisionCont
     }
 
     uint8_t rdoq_level = pcs->rdoq_level;
-    set_rdoq_controls(ctx, rdoq_level);
+    set_rdoq_controls(pcs, ctx, rdoq_level);
 
     uint8_t coeff_shaving_level = pcs->coeff_shaving_level;
     set_coeff_shaving_controls(ctx, coeff_shaving_level);
@@ -9156,6 +9176,15 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
     ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod);
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable || ppcs->pic_obmc_level;
+#if MOBILE_BUILD && !CONFIG_ENABLE_OBMC
+    // OBMC is compiled out (obmc_level is nonzero only at M6-M8): the switchable motion mode signals warped motion
+    // only; svt_aom_motion_mode_allowed() still writes the spec's use_obmc = 0 symbols.
+    ppcs->pic_obmc_level = 0;
+#if !CONFIG_ENABLE_WARP
+    frm_hdr->allow_warped_motion = 0; // compiled out too: no motion_mode symbols are written
+#endif
+    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+#endif
 
     if (enc_mode <= ENC_M9) {
         pcs->approx_inter_rate = 0;
@@ -9748,6 +9777,15 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
     ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod);
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable || ppcs->pic_obmc_level;
+#if MOBILE_BUILD && !CONFIG_ENABLE_OBMC
+    // OBMC is compiled out (obmc_level is nonzero only at M6-M8): the switchable motion mode signals warped motion
+    // only; svt_aom_motion_mode_allowed() still writes the spec's use_obmc = 0 symbols.
+    ppcs->pic_obmc_level = 0;
+#if !CONFIG_ENABLE_WARP
+    frm_hdr->allow_warped_motion = 0; // compiled out too: no motion_mode symbols are written
+#endif
+    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+#endif
     if (enc_mode <= ENC_M8) {
         pcs->approx_inter_rate = 0;
     } else {
