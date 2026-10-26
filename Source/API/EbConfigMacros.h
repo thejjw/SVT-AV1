@@ -228,6 +228,10 @@
 #ifndef CONFIG_ENABLE_TF_ZZ_FILTER
 #define CONFIG_ENABLE_TF_ZZ_FILTER          0
 #endif
+// 8x8 TF prediction (tf_ctrls.enable_8x8_pred) is selected only by TF levels 1-3, i.e. at <= M2.
+#ifndef CONFIG_ENABLE_TF_8X8_PRED
+#define CONFIG_ENABLE_TF_8X8_PRED           0
+#endif
 // Every preset >= M6 selects 64x64 superblocks (enc_handle.c), so the 128-wide kernels are never dispatched.
 #ifndef CONFIG_RTC_SB64
 #define CONFIG_RTC_SB64                     1
@@ -317,6 +321,9 @@
 
 #ifndef CONFIG_ENABLE_TF_ZZ_FILTER
 #define CONFIG_ENABLE_TF_ZZ_FILTER          1
+#endif
+#ifndef CONFIG_ENABLE_TF_8X8_PRED
+#define CONFIG_ENABLE_TF_8X8_PRED           1
 #endif
 
 #ifndef CONFIG_ENABLE_GLOBAL_MOTION
@@ -445,6 +452,40 @@
 #define SVT_FOLD_BIT_DEPTH(bit_depth)      ((bit_depth) = EB_EIGHT_BIT)
 #endif
 
+// The same folding for the run-time switches of features MOBILE compiles out, which its signal derivations keep 0:
+// reading a switch through SVT_EFFECTIVE_* lets the optimizer drop the code it guards. Other builds read the switch
+// itself, so their code and PGO profiles are unchanged.
+#if CONFIG_ENABLE_GLOBAL_MOTION || !MOBILE_BUILD
+#define SVT_EFFECTIVE_GM(v)                (v)
+#else
+#define SVT_EFFECTIVE_GM(v)                (0 ? (v) : 0)
+#endif
+#if CONFIG_ENABLE_OBMC || !MOBILE_BUILD
+#define SVT_EFFECTIVE_OBMC(v)              (v)
+#else
+#define SVT_EFFECTIVE_OBMC(v)              (0 ? (v) : 0)
+#endif
+#if CONFIG_ENABLE_TF_8X8_PRED || !MOBILE_BUILD
+#define SVT_EFFECTIVE_TF_8X8_PRED(v)       (v)
+#else
+#define SVT_EFFECTIVE_TF_8X8_PRED(v)       (0 ? (v) : 0)
+#endif
+#if CONFIG_ENABLE_RESTORATION || !MOBILE_BUILD
+#define SVT_EFFECTIVE_RESTORATION(v)       (v)
+#else
+#define SVT_EFFECTIVE_RESTORATION(v)       (0 ? (v) : 0)
+#endif
+#if CONFIG_ENABLE_PALETTE || !MOBILE_BUILD
+#define SVT_EFFECTIVE_PALETTE(v)           (v)
+#else
+#define SVT_EFFECTIVE_PALETTE(v)           (0 ? (v) : 0)
+#endif
+#if CONFIG_ENABLE_COMPOUND_TYPES
+#define SVT_EFFECTIVE_COMPOUND_TYPES(v)    (v)
+#else
+#define SVT_EFFECTIVE_COMPOUND_TYPES(v)    (0 ? (v) : 0)
+#endif
+
 // clang-format on
 
 // RTC-minimal is always rtc-tuned and never all-intra; fold these to compile-time constants so the
@@ -460,6 +501,14 @@
 #define SVT_RTC_OR_MOBILE_BUILD 1
 #else
 #define SVT_RTC_OR_MOBILE_BUILD 0
+#endif
+
+// MOBILE rejects presets below MIN_ENC_PRESET (svt_av1_verify_settings()): clamping the preset where the signal
+// derivations read it lets the compiler drop their branches for the lower presets.
+#if MOBILE_BUILD
+#define SVT_ENC_MODE(enc_mode) ((enc_mode) < MIN_ENC_PRESET ? MIN_ENC_PRESET : (enc_mode))
+#else
+#define SVT_ENC_MODE(enc_mode) (enc_mode)
 #endif
 
 #endif // EbConfigMacros_h
